@@ -1,14 +1,14 @@
 #[cfg(test)]
-mod tescsts {
-    use crate::utils::files::files::read;
+mod tests {
+    use rust_git::utils::files::files::read;
     use std::path::Path;
 
-    const TESTS_PATH: &str = "src/utils/files/tests";
-    const FOLDER_PATH: &str = "src/utils/files/tests/folder";
-    const FILE_1_PATH: &str = "src/utils/files/tests/file1.txt";
-    const FILE_2_PATH: &str = "src/utils/files/tests/file2.txt";
-    const FILE_3_PATH: &str = "src/utils/files/tests/folder/file3.txt";
-    const INEXIST_FILE_PATH: &str = "src/utils/files/tests/folder/file4.txt";
+    const TESTS_PATH: &str = "tests/utils/files";
+    const FOLDER_PATH: &str = "tests/utils/files/folder";
+    const FILE_1_PATH: &str = "tests/utils/files/file1.txt";
+    const FILE_2_PATH: &str = "tests/utils/files/file2.txt";
+    const FILE_3_PATH: &str = "tests/utils/files/folder/file3.txt";
+    const INEXIST_FILE_PATH: &str = "tests/utils/files/folder/file4.txt";
     const TEST_ERROR: &str = "ERROR: An error ocurred while running the test";
 
     #[test]
