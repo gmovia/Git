@@ -1,6 +1,8 @@
-pub mod current_files{
-    pub mod current_files;
-    pub mod tests{
-        pub mod test;
+pub mod utils {
+    pub mod files {
+        pub mod files;
+        pub mod tests {
+            pub mod tests;
+        }
     }
 }
