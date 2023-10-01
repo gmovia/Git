@@ -14,13 +14,9 @@ mod tescsts {
     #[test]
     fn test_01_contain_file_1() {
         let directory = Path::new(TESTS_PATH);
-        let file = Path::new(FILE_1_PATH);
 
-        match read(directory.to_str().unwrap().to_string()) {
-            Ok(files) => assert_eq!(
-                files.contains_key(&file.to_str().unwrap().to_string()),
-                true
-            ),
+        match read(directory) {
+            Ok(files) => assert_eq!(files.contains_key(FILE_1_PATH), true),
             Err(_) => panic!("{}", TEST_ERROR),
         }
     }
@@ -28,13 +24,9 @@ mod tescsts {
     #[test]
     fn test_02_contain_file_2() {
         let directory = Path::new(TESTS_PATH);
-        let file = Path::new(FILE_2_PATH);
 
-        match read(directory.to_str().unwrap().to_string()) {
-            Ok(files) => assert_eq!(
-                files.contains_key(&file.to_str().unwrap().to_string()),
-                true
-            ),
+        match read(directory) {
+            Ok(files) => assert_eq!(files.contains_key(FILE_2_PATH), true),
             Err(_) => panic!("{}", TEST_ERROR),
         }
     }
@@ -42,13 +34,9 @@ mod tescsts {
     #[test]
     fn test_03_contain_file_3() {
         let directory = Path::new(TESTS_PATH);
-        let file = Path::new(FILE_3_PATH);
 
-        match read(directory.to_str().unwrap().to_string()) {
-            Ok(files) => assert_eq!(
-                files.contains_key(&file.to_str().unwrap().to_string()),
-                true
-            ),
+        match read(directory) {
+            Ok(files) => assert_eq!(files.contains_key(FILE_3_PATH), true),
             Err(_) => panic!("{}", TEST_ERROR),
         }
     }
@@ -56,13 +44,9 @@ mod tescsts {
     #[test]
     fn test_04_contain_folder() {
         let directory = Path::new(TESTS_PATH);
-        let file = Path::new(FOLDER_PATH);
 
-        match read(directory.to_str().unwrap().to_string()) {
-            Ok(files) => assert_eq!(
-                files.contains_key(&file.to_str().unwrap().to_string()),
-                true
-            ),
+        match read(directory) {
+            Ok(files) => assert_eq!(files.contains_key(FOLDER_PATH), true),
             Err(_) => panic!("{}", TEST_ERROR),
         }
     }
@@ -71,11 +55,8 @@ mod tescsts {
     fn test_05_contain_file_1() {
         let file = Path::new(FILE_1_PATH);
 
-        match read(file.to_str().unwrap().to_string()) {
-            Ok(files) => assert_eq!(
-                files.contains_key(&file.to_str().unwrap().to_string()),
-                true
-            ),
+        match read(file) {
+            Ok(files) => assert_eq!(files.contains_key(FILE_1_PATH), true),
             Err(_) => panic!("{}", TEST_ERROR),
         }
     }
@@ -83,13 +64,9 @@ mod tescsts {
     #[test]
     fn test_06_not_contain_file_2() {
         let directory = Path::new(FOLDER_PATH);
-        let file = Path::new(FILE_2_PATH);
 
-        match read(directory.to_str().unwrap().to_string()) {
-            Ok(files) => assert_eq!(
-                files.contains_key(&file.to_str().unwrap().to_string()),
-                false
-            ),
+        match read(directory) {
+            Ok(files) => assert_eq!(files.contains_key(FILE_2_PATH), false),
             Err(_) => panic!("{}", TEST_ERROR),
         }
     }
@@ -97,13 +74,9 @@ mod tescsts {
     #[test]
     fn test_07_not_contain_file_4() {
         let directory = Path::new(FOLDER_PATH);
-        let file = Path::new(INEXIST_FILE_PATH);
 
-        match read(directory.to_str().unwrap().to_string()) {
-            Ok(files) => assert_eq!(
-                files.contains_key(&file.to_str().unwrap().to_string()),
-                false
-            ),
+        match read(directory) {
+            Ok(files) => assert_eq!(files.contains_key(INEXIST_FILE_PATH), false),
             Err(_) => panic!("{}", TEST_ERROR),
         }
     }
@@ -112,7 +85,7 @@ mod tescsts {
     fn test_08_contain_two_files() {
         let directory = Path::new(FOLDER_PATH);
 
-        match read(directory.to_str().unwrap().to_string()) {
+        match read(directory) {
             Ok(files) => assert_eq!(files.len(), 2),
             Err(_) => panic!("{}", TEST_ERROR),
         }
@@ -122,7 +95,7 @@ mod tescsts {
     fn test_09_contain_four_files() {
         let directory = Path::new(TESTS_PATH);
 
-        match read(directory.to_str().unwrap().to_string()) {
+        match read(directory) {
             Ok(files) => assert_eq!(files.len(), 6),
             Err(_) => panic!("{}", TEST_ERROR),
         }
@@ -132,7 +105,7 @@ mod tescsts {
     fn test_10_contain_one_file() {
         let directory = Path::new(FILE_1_PATH);
 
-        match read(directory.to_str().unwrap().to_string()) {
+        match read(directory) {
             Ok(files) => assert_eq!(files.len(), 1),
             Err(_) => panic!("{}", TEST_ERROR),
         }
@@ -142,11 +115,8 @@ mod tescsts {
     fn test_11_contain_file_1() {
         let file = Path::new(FILE_1_PATH);
 
-        match read(file.to_str().unwrap().to_string()) {
-            Ok(files) => assert_eq!(
-                files.contains_key(&file.to_str().unwrap().to_string()),
-                true
-            ),
+        match read(file) {
+            Ok(files) => assert_eq!(files.contains_key(FILE_1_PATH), true),
             Err(_) => panic!("{}", TEST_ERROR),
         }
     }
