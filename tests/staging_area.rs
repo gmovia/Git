@@ -4,7 +4,6 @@ mod tests {
     use rust_git::staging_area::StagingArea;
 
     #[test]
-    #[ignore]
     fn test_01_add_file() {
         let mut staging_area = StagingArea::new();
         let path = Path::new("tests/utils/files/file1.txt");
@@ -52,56 +51,82 @@ mod tests {
             .area
             .contains_key("tests/utils/files/file1.txt"));
     }
-    /*
 
     #[test]
-    #[ignore]
-    fn test_06_remove_file() {
-        let staging_area = StagingArea::new();
-        staging_area.add(file_path);
+    fn test_06_add_folder() {
+        let mut staging_area = StagingArea::new();
+        let path = Path::new("tests/utils/noexiste");
 
-        staging_area.remove(file_path)
+        let _ = staging_area.add(path);
+        assert!(staging_area
+            .area
+            .len() == 0);
+    }
+
+    #[test]
+    fn test_07_remove_file() {
+        let mut staging_area = StagingArea::new();
+        let path = Path::new("tests/utils/files/file1.txt");
+        let _ = staging_area.add(path);
+
+        let _ = staging_area.remove(path);
         assert_eq!(staging_area.area.len(), 0);
     }
 
     #[test]
-    #[ignore]
-    fn test_07_remove_file() {
-        let staging_area = StagingArea::new();
-        staging_area.add(file_path);
-
-        staging_area.remove(file_path);
-        assert!(!staging_area.include(FILE_PATH));
+    fn test_08_remove_file() {
+        let mut staging_area = StagingArea::new();
+        let path = Path::new("tests/utils/files/file1.txt");
+        let _ = staging_area.add(path);
+        
+        let _ = staging_area.remove(path);
+        assert!(!staging_area.area.contains_key("tests/utils/files/file1.txt"));
     }
-
+    
     #[test]
-    #[ignore]
-    fn test_08_remove_folder() {
-        let staging_area = StagingArea::new();
-        staging_area.add(folder_path);
-
-        staging_area.remove(folder_path)
-        assert!(staging_area.area.len(), 0);
-    }
-
-    #[test]
-    #[ignore]
     fn test_09_remove_folder() {
-        let staging_area = StagingArea::new();
-        staging_area.add(folder_path);
+        let mut staging_area = StagingArea::new();
+        let path = Path::new("tests/utils/files");
 
-        staging_area.remove(folder_path)
-        assert!(!staging_area.include(FOLDER_PATH));
+        let _ = staging_area.add(path);
+        
+        let _ = staging_area.remove(path);
+        assert_eq!(staging_area.area.len(), 0);
+    }
+    
+    #[test]
+    fn test_10_remove_folder() {
+        let mut staging_area = StagingArea::new();
+        let path = Path::new("tests/utils/files");
+
+        let _ = staging_area.add(path);
+
+        let _ = staging_area.remove(path);
+        assert!(!staging_area.area.contains_key("tests/utils/files"));
     }
 
     #[test]
-    #[ignore]
-    fn test_10_remove_folder() {
-        let staging_area = StagingArea::new();
-        staging_area.add(folder_path);
+    fn test_11_remove_folder() {
+        let mut staging_area = StagingArea::new();
+        let path = Path::new("tests/utils/files");
 
-        staging_area.remove(folder_path)
-        assert!(!staging_area.include(FILE_PATH));
+        let _ = staging_area.add(path);
+
+        let _ = staging_area.remove(path);
+        assert!(!staging_area.area.contains_key("tests/utils/files/file1.txt"));
     }
-    */
+
+    #[test]
+    fn test_12_delete_folder() {
+        let mut staging_area = StagingArea::new();
+        let path = Path::new("tests/utils/files");
+        let _ = staging_area.add(path);
+
+        assert!(staging_area.area.len() == 6);
+
+        let other_path = Path::new("tests/utils/noexiste");
+        let _ = staging_area.add(other_path);
+
+        assert!(staging_area.area.len() == 6);
+    }
 }
