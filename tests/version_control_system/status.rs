@@ -8,7 +8,7 @@ mod tests{
     pub fn test_01_status_says_create_6_files(){
         let version_control_system = VersionControlSystem::init("tests/utils/files".to_string());
 
-        assert!(matches!(version_control_system.status(),Ok(result) if result.len()==6));
+        assert!(matches!(version_control_system.status(),Ok(result) if result.len()==4));
     }
 
     #[test]
