@@ -17,7 +17,6 @@ fn read_files(
     }
 
     if path.is_dir() {
-        files.insert(path.display().to_string(), path.display().to_string());
         if let Ok(entrys) = fs::read_dir(path) {
             for entry in entrys {
                 if let Ok(entry) = entry {

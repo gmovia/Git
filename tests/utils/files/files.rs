@@ -25,10 +25,10 @@ mod tests {
     }
 
     #[test]
-    fn test_04_contain_folder() {
+    fn test_04_not_contain_folder() {
         let directory = Path::new("tests/utils/files");
         let path = directory.join("folder");
-        assert!(matches!(read(directory), Ok(files) if files.contains_key(&path.display().to_string())));
+        assert!(matches!(read(directory), Ok(files) if !files.contains_key(&path.display().to_string())));
     }
 
     #[test]
@@ -50,15 +50,15 @@ mod tests {
     }
 
     #[test]
-    fn test_08_contain_two_files() {
+    fn test_08_contain_one_files() {
         let directory = Path::new("tests/utils/files/folder");
-        assert!(matches!(read(directory), Ok(files) if files.len() == 2));
+        assert!(matches!(read(directory), Ok(files) if files.len() == 1));
     }
 
     #[test]
     fn test_09_contain_four_files() {
         let directory = Path::new("tests/utils/files");
-        assert!(matches!(read(directory), Ok(files) if files.len() == 6));
+        assert!(matches!(read(directory), Ok(files) if files.len() == 4));
     }
 
     #[test]

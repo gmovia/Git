@@ -29,7 +29,7 @@ mod tests {
         let path = Path::new("tests/utils/files");
 
         let _ = staging_area.add(path);
-        assert_eq!(staging_area.area.len(), 6);
+        assert_eq!(staging_area.area.len(), 4);
     }
 
     #[test]
@@ -38,7 +38,7 @@ mod tests {
         let path = Path::new("tests/utils/files");
 
         let _ = staging_area.add(path);
-        assert!(staging_area.area.contains_key("tests/utils/files"));
+        assert!(!staging_area.area.contains_key("tests/utils/files"));
     }
 
     #[test]
