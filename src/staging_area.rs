@@ -21,15 +21,4 @@ impl StagingArea {
         }
         Ok(())
     }
-
-    // Recibe un path.
-    // Elimina del area de staging todos los archivos y carpetas.
-
-    pub fn remove(&mut self, path: &Path) -> Result<(), std::io::Error> {
-        let files = read(path)?;
-        for key in files.keys(){
-            self.area.remove(key);
-        }
-        Ok(())    
-    }
 }
