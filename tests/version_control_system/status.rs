@@ -23,7 +23,7 @@ mod tests{
     pub fn test_03_status_says_update_file_1(){
         let mut version_control_system = VersionControlSystem::init("tests/utils/files".to_string());
         let file_1 = Path::new("tests/utils/files").join("file1.txt");
-        version_control_system.repository.insert(file_1.display().to_string(), "fffffff".to_string());
+        version_control_system.local_repository.insert(file_1.display().to_string(), "fffffff".to_string());
 
         assert!(matches!(version_control_system.status(),Ok(result) if result.contains(&format!("UPDATE: {:?}",&file_1.display().to_string()))));
     }
@@ -32,7 +32,7 @@ mod tests{
     pub fn test_04_status_says_delete_file_3(){
         let mut version_control_system = VersionControlSystem::init("tests/utils/files".to_string());
         let file_3 = Path::new("tests/utils/files").join("/folder/file3.txt");
-        version_control_system.repository.insert(file_3.display().to_string(), "File 3".to_string());
+        version_control_system.local_repository.insert(file_3.display().to_string(), "File 3".to_string());
 
         assert!(matches!(version_control_system.status(),Ok(result) if result.contains(&format!("DELETE: {:?}",&file_3.display().to_string()))));
     }
@@ -43,7 +43,7 @@ mod tests{
         let file_3 = Path::new("tests/utils/files").join("/folder/file3.txt");
         let file_1 = Path::new("tests/utils/files").join("file1.txt");
 
-        version_control_system.repository.insert(file_3.display().to_string(), "File 3".to_string());
+        version_control_system.local_repository.insert(file_3.display().to_string(), "File 3".to_string());
 
         assert!(matches!(version_control_system.status(),Ok(result) if result.contains(&format!("DELETE: {:?}",&file_3.display().to_string()))));
         assert!(matches!(version_control_system.status(),Ok(result) if result.contains(&format!("CREATE: {:?}",&file_1.display().to_string()))));
@@ -56,8 +56,8 @@ mod tests{
         let file_1 = Path::new("tests/utils/files").join("file1.txt");
         let file_2 = Path::new("tests/utils/files").join("file2.txt");
 
-        version_control_system.repository.insert(file_3.display().to_string(), "File 3".to_string());
-        version_control_system.repository.insert(file_2.display().to_string(), "File 2, File 2, File 2".to_string());
+        version_control_system.local_repository.insert(file_3.display().to_string(), "File 3".to_string());
+        version_control_system.local_repository.insert(file_2.display().to_string(), "File 2, File 2, File 2".to_string());
 
         assert!(matches!(version_control_system.status(),Ok(result) if result.contains(&format!("DELETE: {:?}",&file_3.display().to_string()))));
         assert!(matches!(version_control_system.status(),Ok(result) if result.contains(&format!("CREATE: {:?}",&file_1.display().to_string()))));

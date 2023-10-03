@@ -4,7 +4,7 @@ use crate::utils::{files::files:: read, sets::sets::{difference, idem_set_differ
 
 pub struct VersionControlSystem{
     path: String,
-    pub repository: HashMap<String, String>,
+    pub local_repository: HashMap<String, String>,
 }
 
 impl VersionControlSystem{
@@ -13,7 +13,7 @@ impl VersionControlSystem{
     pub fn init(path: String) -> VersionControlSystem{
         VersionControlSystem{
             path,
-            repository: HashMap::new(), 
+            local_repository: HashMap::new(), 
         }
     }
 
@@ -23,13 +23,13 @@ impl VersionControlSystem{
     pub fn status(&self) -> Result<Vec<String>, std::io::Error>{
         let files = read(Path::new(&self.path.clone()))?;
         let mut status: Vec<String> = Vec::new();
-        for key in difference(files.clone(), self.repository.clone()).keys(){
+        for key in difference(files.clone(), self.local_repository.clone()).keys(){
             status.push(format!("CREATE: {:?}",key));
         }
-        for key in idem_set_different_content(files.clone(), self.repository.clone()).keys(){
+        for key in idem_set_different_content(files.clone(), self.local_repository.clone()).keys(){
             status.push(format!("UPDATE: {:?}",key));
         }
-        for key in difference(self.repository.clone(),files).keys(){
+        for key in difference(self.local_repository.clone(),files).keys(){
             status.push(format!("DELETE: {:?}",key));
         }
         Ok(status)
