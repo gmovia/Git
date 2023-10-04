@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
     use rust_git::staging_area::StagingArea;
+    use std::path::Path;
 
     #[test]
     fn test_01_add_file() {
@@ -36,7 +36,6 @@ mod tests {
     fn test_04_add_folder() {
         let mut staging_area = StagingArea::new();
         let path = Path::new("tests/utils/files");
-
         let _ = staging_area.add(path);
         assert!(!staging_area.area.contains_key("tests/utils/files"));
     }
@@ -47,9 +46,11 @@ mod tests {
         let path = Path::new("tests/utils/files");
 
         let _ = staging_area.add(path);
+        let file = path.join("file1.txt");
+
         assert!(staging_area
             .area
-            .contains_key("tests/utils/files/file1.txt"));
+            .contains_key(&file.display().to_string()));
     }
 
     #[test]
@@ -58,8 +59,6 @@ mod tests {
         let path = Path::new("tests/utils/noexiste");
 
         let _ = staging_area.add(path);
-        assert!(staging_area
-            .area
-            .len() == 0);
+        assert!(staging_area.area.len() == 0);
     }
 }
