@@ -36,6 +36,7 @@ mod tests {
     fn test_04_add_folder() {
         let mut staging_area = StagingArea::new();
         let path = Path::new("tests/utils/files");
+        
         let _ = staging_area.add(path);
         assert!(!staging_area.area.contains_key("tests/utils/files"));
     }
@@ -48,9 +49,7 @@ mod tests {
         let _ = staging_area.add(path);
         let file = path.join("file1.txt");
 
-        assert!(staging_area
-            .area
-            .contains_key(&file.display().to_string()));
+        assert!(staging_area.area.contains_key(&file.display().to_string()));
     }
 
     #[test]
