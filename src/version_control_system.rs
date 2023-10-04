@@ -23,7 +23,7 @@ impl VersionControlSystem {
         }
     }
 
-    /// Me devuelve la informacion de los archivos creados y modificados recientemente (en comparacion con el repositorio local).
+    /// Devuelve la informacion de los archivos creados y modificados recientemente (en comparacion con el repositorio local).
     /// Tambien me da informacion de los archivos eliminados recientemente.
 
     pub fn status(&self) -> Result<HashMap<String, String>, std::io::Error> {
@@ -41,15 +41,20 @@ impl VersionControlSystem {
         Ok(status)
     }
 
+    /// Recibe un path
+    /// Agrega los archivos que se encuentran dentro del path al area de staging
+    /// Devuelve el area de staging
+
     pub fn add(&mut self, path: &Path) -> Result<HashMap<String, VSCFile>, std::io::Error> {
         let status = self.status()?;
-        let files = read(path)?;
 
-        for (key, value) in &files {
-            if status.contains_key(key) {
-                if let Some(state) = status.get(key) {
-                    let file = VSCFile::new(key.clone(), value.clone(), state.clone());
-                    self.staging_area.insert(key.to_string(), file);
+        if let Ok(files) = read(path){
+            for (key, value) in &files {
+                if status.contains_key(key) {
+                    if let Some(state) = status.get(key) {
+                        let file = VSCFile::new(key.clone(), value.clone(), state.clone());
+                        self.staging_area.insert(key.to_string(), file);
+                    }
                 }
             }
         }
