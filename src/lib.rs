@@ -8,6 +8,5 @@ pub mod utils {
     }
 }
 
-pub mod staging_area;
-
+pub mod file;
 pub mod version_control_system;
