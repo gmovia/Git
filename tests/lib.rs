@@ -11,3 +11,5 @@ pub mod version_control_system {
     pub mod add;
     pub mod status;
 }
+
+pub mod tests_functions;
