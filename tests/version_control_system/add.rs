@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use rust_git::version_control_system::VersionControlSystem;
-    use std::path::Path;    
+    use std::path::Path;
 
     #[test]
     pub fn test_01_add_file_1_to_staging_area() {
@@ -10,7 +10,7 @@ mod tests {
         let path = Path::new("tests/utils/files/file1.txt");
 
         let _ = version_control_system.add(path);
-        assert_eq!(version_control_system.staging_area.area.len(), 1);
+        assert_eq!(version_control_system.staging_area.len(), 1);
     }
 
     #[test]
@@ -20,7 +20,7 @@ mod tests {
         let path = Path::new("tests/utils/files");
 
         let _ = version_control_system.add(path);
-        assert_eq!(version_control_system.staging_area.area.len(), 4);
+        assert_eq!(version_control_system.staging_area.len(), 4);
     }
 
     // Ahora si, ver como contemplar el caso del "." o el caso de que mandes mas de un archivo

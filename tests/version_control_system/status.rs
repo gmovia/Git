@@ -1,18 +1,24 @@
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
+    use std::{
+        collections::HashMap,
+        path::{Path, PathBuf},
+    };
 
     use rust_git::version_control_system::VersionControlSystem;
 
-    pub fn status_contains(result: Vec<String>, status: &str, file: &PathBuf) -> bool {
-        result.contains(&format!("{}: {:?}", status, &file.display().to_string()))
+    pub fn status_contains(result: HashMap<String, String>, status: &str, file: &PathBuf) -> bool {
+        if let Some(value) = result.get(&file.display().to_string()) {
+            return value.as_str() == status;
+        }
+        false
     }
 
     #[test]
     pub fn test_01_status_says_create_6_files() {
         let version_control_system = VersionControlSystem::init("tests/utils/files".to_string());
 
-        assert!(matches!(version_control_system.status(),Ok(result) if result.len()==4));
+        assert!(matches!(version_control_system.status(), Ok(result) if result.len()==4));
     }
 
     #[test]
@@ -22,12 +28,12 @@ mod tests {
         let file_1 = Path::new("tests/utils/files").join("file1.txt");
 
         assert!(
-            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "CREATE", &file_1))
+            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "CREATED", &file_1))
         );
     }
 
     #[test]
-    pub fn test_03_status_says_update_file_1() {
+    pub fn test_03_status_says_modified_file_1() {
         let mut version_control_system =
             VersionControlSystem::init("tests/utils/files".to_string());
 
@@ -37,7 +43,7 @@ mod tests {
             .local_repository
             .insert(file_1.display().to_string(), "".to_string());
         assert!(
-            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "UPDATE", &file_1))
+            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "MODIFIED", &file_1))
         );
     }
 
@@ -53,7 +59,7 @@ mod tests {
             .insert(file_3.display().to_string(), "File 3".to_string());
 
         assert!(
-            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "DELETE", &file_3))
+            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "DELETED", &file_3))
         );
     }
 
@@ -70,15 +76,15 @@ mod tests {
             .insert(file_3.display().to_string(), "File 3".to_string());
 
         assert!(
-            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "DELETE", &file_3))
+            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "DELETED", &file_3))
         );
         assert!(
-            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "CREATE", &file_1))
+            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "CREATED", &file_1))
         );
     }
 
     #[test]
-    pub fn test_06_status_says_delete_file_3_update_file_2_and_create_file_1() {
+    pub fn test_06_status_says_delete_file_3_modify_file_2_and_create_file_1() {
         let mut version_control_system =
             VersionControlSystem::init("tests/utils/files".to_string());
 
@@ -95,13 +101,13 @@ mod tests {
         );
 
         assert!(
-            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "DELETE", &file_3))
+            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "DELETED", &file_3))
         );
         assert!(
-            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "CREATE", &file_1))
+            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "CREATED", &file_1))
         );
         assert!(
-            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "UPDATE", &file_2))
+            matches!(version_control_system.status(), Ok(result) if status_contains(result.clone(), "MODIFIED", &file_2))
         );
     }
 }
