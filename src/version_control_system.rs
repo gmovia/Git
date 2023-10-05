@@ -8,7 +8,7 @@ use crate::{
 use std::{collections::HashMap, path::Path};
 
 pub struct VersionControlSystem {
-    path: String,
+    pub path: String,
     pub local_repository: HashMap<String, String>,
     pub staging_area: HashMap<String, VSCFile>,
 }
