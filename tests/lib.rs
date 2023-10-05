@@ -10,3 +10,5 @@ pub mod utils{
 pub mod version_control_system{
     pub mod status;
 }
+
+pub mod tests_functions;
