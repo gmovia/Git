@@ -9,6 +9,7 @@ pub struct Repository {
 
 impl Repository {
 
+    /// Inicia el repositorio 
     pub fn init(repository_name: &str) -> Repository {
 
         let new_files: HashMap<String, File> = HashMap::new();
