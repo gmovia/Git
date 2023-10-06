@@ -7,6 +7,7 @@ pub struct Init {
 
 impl Init {
     
+    /// Esta funcion es el constructor de init. Se crean los directorios y archivos necesarios.
     pub fn git_init() -> Init {
         let init = { Init { example_text: "hola".to_string() } };
         
@@ -16,6 +17,7 @@ impl Init {
         init
     }
 
+    /// Esta funcion es la encargada de crear todsas las carpetas y archivos necesarios luego de ejecutar git init.
     fn create_initial_folders(&self) -> Result<(),std::io::Error> {
         let path = Path::new(".git");
         fs::create_dir(path)?;
