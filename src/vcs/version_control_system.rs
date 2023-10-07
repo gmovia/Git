@@ -83,7 +83,12 @@ impl VersionControlSystem {
                 self.staging_area.insert(key.clone(), file);
             }
         }
-    
+
+        if self.local_repository.contains_key(&path.display().to_string()) && !read(path)?.contains_key(&path.display().to_string()){
+            let file = VCSFile::new(path.display().to_string(), "".to_string(), "DELETED".to_string());
+            self.staging_area.insert(path.display().to_string(), file);
+        }
+
         Ok(self.staging_area.clone())
     }
     
