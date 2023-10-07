@@ -73,6 +73,3 @@ fn main(){
         }
     }
 }
-
-// CASO A ANALIZAR, INTERESANTE, SI EL ARCHIVO ESTA ELIMINADO Y EN EL REPO ENTONCES GIT ADD NO LO AGREGA => mandas algo que NO existe => cazar el caso de que no exista y este en el repo
-// si no esta en files y esta en repo local, entonces no hay otra que un DELETE
