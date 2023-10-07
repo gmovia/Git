@@ -56,8 +56,9 @@ impl VersionControlSystem {
         for key in difference(idem_set_different_content(files.clone(), self.local_repository.clone()),area.clone()).keys(){
             changes_not_staged_for_commit.insert(key.to_string(), "MODIFIED".to_string());
         }
+        
         for key in idem_set_different_content(files.clone(), area.clone()).keys(){
-            changes_not_staged_for_commit.insert(key.to_string(), "MODIFIED".to_string());
+            changes_not_staged_for_commit.insert(key.to_string(), "MODIFIED".to_string()); 
         }
 
         Ok((untracked_files, changes_not_staged_for_commit, changes_to_be_commited))
@@ -73,16 +74,17 @@ impl VersionControlSystem {
         if let Ok(files) = read(path) {
             for (key, value) in &files {
                 let state = match (untracked_files.get(key), changes_not_staged_for_commit.get(key)) {
-                    (Some(state), _) => state,
-                    (_, Some(state)) => state,
+                    (Some(state), _) => state.to_string(),
+                    (_, Some(_)) if !self.local_repository.contains_key(key) => "CREATED".to_string(),
+                    (_, Some(state)) => state.to_string(),
                     _ => continue,
                 };
-    
-                let file = VSCFile::new(key.clone(), value.clone(), state.clone());
-                self.staging_area.insert(key.to_string(), file);
+                let file = VSCFile::new(key.clone(), value.clone(), state);
+                self.staging_area.insert(key.clone(), file);
             }
         }
     
         Ok(self.staging_area.clone())
     }
+    
 }
