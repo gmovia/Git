@@ -27,14 +27,14 @@ impl Init {
                 }   
             }
         }
-        
+
         let repository = Repository::init(repository_name);        
         repository
     }
 
     /// Esta funcion es la encargada de crear todsas las carpetas y archivos necesarios luego de ejecutar git init.
     fn create_initial_folders(&self, branch_name: &str) -> Result<(),std::io::Error> {
-        let path = Path::new(".git");
+        let path = Path::new(".rust_git");
         fs::create_dir(path)?;
 
         self.create_git_hooks_folder(path)?;
