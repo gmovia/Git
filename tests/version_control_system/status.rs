@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use std::path::Path;
-    use rust_git::file::VSCFile;
+    use rust_git::file::VCSFile;
     use rust_git::version_control_system::VersionControlSystem;
     use crate::tests_functions::{create_file, set_up, status_contains};
 
@@ -90,7 +90,7 @@ mod tests {
         let (temp_dir, mut vsc) = set_up();
         let path = create_file(&temp_dir, "file1.txt");    
 
-        vsc.staging_area.insert(path.display().to_string(), VSCFile::new(path.display().to_string(), "A".to_string(), "CREATED".to_string()));
+        vsc.staging_area.insert(path.display().to_string(), VCSFile::new(path.display().to_string(), "A".to_string(), "CREATED".to_string()));
         assert!(matches!(vsc.status(), Ok((_, _, changes_to_be_commited)) if status_contains(changes_to_be_commited.clone(), "CREATED", &path)));
         assert!(matches!(vsc.status(), Ok((untracked_file, _, _)) if untracked_file.len() == 0));
     }
@@ -100,7 +100,7 @@ mod tests {
         let (temp_dir, mut vsc) = set_up();
         let path = create_file(&temp_dir, "file1.txt");    
 
-        vsc.staging_area.insert(path.display().to_string(), VSCFile::new(path.display().to_string(), "A".to_string(), "MODIFIED".to_string()));
+        vsc.staging_area.insert(path.display().to_string(), VCSFile::new(path.display().to_string(), "A".to_string(), "MODIFIED".to_string()));
         vsc.local_repository.insert(path.display().to_string(), "File 3".to_string());
 
         assert!(matches!(vsc.status(), Ok((_, _, changes_to_be_commited)) if status_contains(changes_to_be_commited.clone(), "MODIFIED", &path)));
@@ -113,7 +113,7 @@ mod tests {
         let (temp_dir, mut vsc) = set_up();
         let path = create_file(&temp_dir, "file1.txt");    
 
-        vsc.staging_area.insert(path.display().to_string(), VSCFile::new(path.display().to_string(), "".to_string(), "MODIFIED".to_string()));
+        vsc.staging_area.insert(path.display().to_string(), VCSFile::new(path.display().to_string(), "".to_string(), "MODIFIED".to_string()));
         vsc.local_repository.insert(path.display().to_string(), "File 3".to_string());
 
         assert!(matches!(vsc.status(), Ok((_, _, changes_to_be_commited)) if status_contains(changes_to_be_commited.clone(), "MODIFIED", &path)));
@@ -137,7 +137,7 @@ mod tests {
         let (_, mut vsc) = set_up();
         let path = Path::new("file1.txt");   
 
-        vsc.staging_area.insert(path.display().to_string(), VSCFile::new(path.display().to_string(), "".to_string(), "DELETED".to_string()));
+        vsc.staging_area.insert(path.display().to_string(), VCSFile::new(path.display().to_string(), "".to_string(), "DELETED".to_string()));
         vsc.local_repository.insert(path.display().to_string(), "File 3".to_string());
 
         assert!(matches!(vsc.status(), Ok((_, _, changes_to_be_commited)) if changes_to_be_commited.len() == 1));

@@ -1,5 +1,5 @@
 use crate::{
-    file::VSCFile,
+    file::VCSFile,
     utils::{
         files::files::read,
         sets::sets::{difference, idem_set_different_content},
@@ -10,7 +10,7 @@ use std::{collections::HashMap, path::Path};
 pub struct VersionControlSystem {
     pub path: String,
     pub local_repository: HashMap<String, String>,
-    pub staging_area: HashMap<String, VSCFile>,
+    pub staging_area: HashMap<String, VCSFile>,
 }
 
 impl VersionControlSystem {
@@ -68,7 +68,7 @@ impl VersionControlSystem {
     /// Agrega los archivos que se encuentran dentro del path al area de staging
     /// Devuelve el area de staging
 
-    pub fn add(&mut self, path: &Path) -> Result<HashMap<String, VSCFile>, std::io::Error> {
+    pub fn add(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         let (untracked_files, changes_not_staged_for_commit, _) = self.status()?;
     
         if let Ok(files) = read(path) {
@@ -79,7 +79,7 @@ impl VersionControlSystem {
                     (_, Some(state)) => state.to_string(),
                     _ => continue,
                 };
-                let file = VSCFile::new(key.clone(), value.clone(), state);
+                let file = VCSFile::new(key.clone(), value.clone(), state);
                 self.staging_area.insert(key.clone(), file);
             }
         }

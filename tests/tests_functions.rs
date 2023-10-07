@@ -1,8 +1,8 @@
-use rust_git::{file::VSCFile, version_control_system::VersionControlSystem};
+use rust_git::{file::VCSFile, version_control_system::VersionControlSystem};
 use std::{collections::HashMap, path::{Path, PathBuf}, fs::File};
 use tempdir::TempDir;
 
-pub fn equals(staging_area: HashMap<String, VSCFile>, path: &Path, state: &str) -> bool {
+pub fn equals(staging_area: HashMap<String, VCSFile>, path: &Path, state: &str) -> bool {
     if let Some(value) = staging_area.get(&path.display().to_string()) {
         return value.state == state.to_string();
     }
