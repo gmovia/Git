@@ -8,5 +8,9 @@ pub mod utils {
     }
 }
 
-pub mod file;
-pub mod version_control_system;
+pub mod vcs{
+    pub mod files{
+        pub mod vcs_file;
+    }
+    pub mod version_control_system;
+}

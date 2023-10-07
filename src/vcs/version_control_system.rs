@@ -1,5 +1,5 @@
 use crate::{
-    file::VCSFile,
+    vcs::files::vcs_file::VCSFile,
     utils::{
         files::files::read,
         sets::sets::{difference, idem_set_different_content},

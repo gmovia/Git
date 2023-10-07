@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
     use std::path::Path;
-    use rust_git::file::VCSFile;
-    use rust_git::version_control_system::VersionControlSystem;
+    use rust_git::vcs::files::vcs_file::VCSFile;
+    use rust_git::vcs::version_control_system::VersionControlSystem;
     use crate::tests_functions::{create_file, set_up, status_contains};
 
     #[test]

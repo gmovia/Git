@@ -1,4 +1,4 @@
-use rust_git::version_control_system::VersionControlSystem;
+use rust_git::vcs::version_control_system::VersionControlSystem;
 use std::{io::{self, Write}, path::Path};
 
 fn main() { // PARA VER COMO FUNCIONA! NO SUBIR ESTO A DEVELOPMENT!

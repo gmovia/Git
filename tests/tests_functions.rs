@@ -1,4 +1,4 @@
-use rust_git::{file::VCSFile, version_control_system::VersionControlSystem};
+use rust_git::{vcs::files::vcs_file::VCSFile, vcs::version_control_system::VersionControlSystem};
 use std::{collections::HashMap, path::{Path, PathBuf}, fs::File};
 use tempdir::TempDir;
 
