@@ -5,6 +5,7 @@ use crate::commands::init::Init;
 pub struct Repository {
     name: String,
     files: HashMap<String, File>,
+    is_shared: bool,
 }
 
 impl Repository {
@@ -13,10 +14,8 @@ impl Repository {
     pub fn init(repository_name: &str) -> Repository {
 
         let new_files: HashMap<String, File> = HashMap::new();
-        
-        let init = Init::git_init();
 
-        Repository { name: repository_name.to_string(), files: new_files }
+        Repository { name: repository_name.to_string(), files: new_files, is_shared: true }
     }
 
 

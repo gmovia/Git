@@ -1,5 +1,7 @@
 use std::{path::Path, fs::{self, File}};
 
+use crate::repository::Repository;
+
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
     example_text: String,
@@ -8,13 +10,15 @@ pub struct Init {
 impl Init {
     
     /// Esta funcion es el constructor de init. Se crean los directorios y archivos necesarios.
-    pub fn git_init() -> Init {
+    pub fn git_init(repository_name: &str) -> Repository {
         let init = { Init { example_text: "hola".to_string() } };
         
         if let Err(e) = init.create_initial_folders() {
             println!("Error: {}",e);
-        }        
-        init
+        }
+
+        let repository = Repository::init(repository_name);        
+        repository
     }
 
     /// Esta funcion es la encargada de crear todsas las carpetas y archivos necesarios luego de ejecutar git init.
