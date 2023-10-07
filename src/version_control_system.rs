@@ -26,19 +26,41 @@ impl VersionControlSystem {
     /// Devuelve la informacion de los archivos creados y modificados recientemente (en comparacion con el repositorio local).
     /// Tambien me da informacion de los archivos eliminados recientemente.
 
-    pub fn status(&self) -> Result<HashMap<String, String>, std::io::Error> {
+    pub fn status(&self) -> Result<(HashMap<String, String>, HashMap<String, String>, HashMap<String, String>), std::io::Error> {
         let files = read(Path::new(&self.path.clone()))?;
-        let mut status = HashMap::new();
-        for key in difference(files.clone(), self.local_repository.clone()).keys() {
-            status.insert(key.clone(), "CREATED".to_string());
+
+        let mut area: HashMap<String, String> = HashMap::new();
+        for (key, value) in &self.staging_area{
+            area.insert(key.to_string(), value.content.to_string());
         }
-        for key in idem_set_different_content(files.clone(), self.local_repository.clone()).keys() {
-            status.insert(key.clone(), "MODIFIED".to_string());
+            
+        // UNTRACKED FILES
+        let mut untracked_files = HashMap::new();
+        for key in difference(difference(files.clone(), self.local_repository.clone()), area.clone()).keys(){
+            untracked_files.insert(key.to_string(), "CREATED".to_string());            
         }
-        for key in difference(self.local_repository.clone(), files).keys() {
-            status.insert(key.clone(), "DELETED".to_string());
+
+        // CHANGES TO BE COMMITED
+        let mut changes_to_be_commited = HashMap::new();
+        for (key, value) in self.staging_area.clone(){
+            changes_to_be_commited.insert(key, value.state.to_string());
         }
-        Ok(status)
+        
+        // CHANGES NOT STAGED FOR COMMIT
+        let mut changes_not_staged_for_commit = HashMap::new();
+        
+        for key in difference(difference(self.local_repository.clone(), files.clone()),area.clone()).keys(){
+            changes_not_staged_for_commit.insert(key.to_string(), "DELETED".to_string());
+        }
+        
+        for key in difference(idem_set_different_content(files.clone(), self.local_repository.clone()),area.clone()).keys(){
+            changes_not_staged_for_commit.insert(key.to_string(), "MODIFIED".to_string());
+        }
+        for key in idem_set_different_content(files.clone(), area.clone()).keys(){
+            changes_not_staged_for_commit.insert(key.to_string(), "MODIFIED".to_string());
+        }
+
+        Ok((untracked_files, changes_not_staged_for_commit, changes_to_be_commited))
     }
 
     /// Recibe un path
@@ -46,18 +68,21 @@ impl VersionControlSystem {
     /// Devuelve el area de staging
 
     pub fn add(&mut self, path: &Path) -> Result<HashMap<String, VSCFile>, std::io::Error> {
-        let status = self.status()?;
-
-        if let Ok(files) = read(path){
+        let (untracked_files, changes_not_staged_for_commit, _) = self.status()?;
+    
+        if let Ok(files) = read(path) {
             for (key, value) in &files {
-                if status.contains_key(key) {
-                    if let Some(state) = status.get(key) {
-                        let file = VSCFile::new(key.clone(), value.clone(), state.clone());
-                        self.staging_area.insert(key.to_string(), file);
-                    }
-                }
+                let state = match (untracked_files.get(key), changes_not_staged_for_commit.get(key)) {
+                    (Some(state), _) => state,
+                    (_, Some(state)) => state,
+                    _ => continue,
+                };
+    
+                let file = VSCFile::new(key.clone(), value.clone(), state.clone());
+                self.staging_area.insert(key.to_string(), file);
             }
         }
+    
         Ok(self.staging_area.clone())
     }
 }
