@@ -54,8 +54,7 @@ fn handle_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::
 
 fn main(){
     let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/FIUBA/repo-git-test".to_string());
-    vcs.local_repository.insert("/Users/gmovia/Desktop/FIUBA/repo-git-test/archivo1.txt".to_string(), "content".to_string());
-
+    
     loop{
         let mut input = String::new();
         io::stdout().flush().unwrap();
