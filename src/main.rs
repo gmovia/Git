@@ -1,24 +1,22 @@
-use std::env;
+use std::{env, io::{self, Write}};
 
 use rust_git::{repository::{self, Repository}, commands::init::Init, version_control_system::{self, VersionControlSystem}};
 
 fn main() {
-    println!("Hello, world!");
+    println!("Hello, world!"); 
 
-    let args: Vec<String> = env::args().collect();
-
-    if args.len() <= 1 {
-        println!("Please complete the arguments");
+    loop{
+        let mut input = String::new();
+        io::stdout().flush().unwrap();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim(); 
+        let argss: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
+        match argss[1].as_str() {
+            "init" => {
+                VersionControlSystem::init("nombre_repo", input.to_string().split_whitespace().map(|s| s.to_string()).collect());
+            },
+            _ => ()
+        }
     }
-
-    match &args[1] as &str {
-        "init" => {
-            let version_control_system = VersionControlSystem::init("repository_name", args[2..].to_vec());
-        }
-        _ => {
-            println!("Opción no reconocida.");
-        }
-    
-    } 
 
 }
