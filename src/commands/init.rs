@@ -11,7 +11,6 @@ impl Init {
     
     /// Esta funcion es el constructor de init. Se crean los directorios y archivos necesarios.
     pub fn git_init(repository_name: &str, args: Vec<String>) -> Repository {
-        println!("{}",args[0]);
 
         let init = { Init { example_text: "hola".to_string() } };
 
