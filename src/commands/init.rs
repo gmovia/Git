@@ -14,22 +14,25 @@ impl Init {
 
         let init = { Init { example_text: "hola".to_string() } };
 
-        if args.len() < 3 {
+        if args.len() < 4 {
             if let Err(e) = init.create_initial_folders("master") {
                 println!("Error: {}",e);
             }   
         }
         else {
-            match args[2].as_str() {
-                "-b" => {
-                    if let Err(e) = init.create_initial_folders(args[3].as_str()) {
+            if args.contains(&"-b".to_string()) {
+                if let Some(index) = args.iter().position(|s| s == &"-b"){
+                    if let Err(e) = init.create_initial_folders(args[index+1].as_str()) {
                         println!("Error: {}",e);
                     }
-                },
-                _ => {
-                    if let Err(e) = init.create_initial_folders("master") {
-                        println!("Error: {}",e);
-                    }   
+                }
+                else {
+                    println!("Error creating git folder")
+                }
+            }
+            else {
+                if let Err(e) = init.create_initial_folders("master") {
+                    println!("Error: {}",e);
                 }
             }
         }
