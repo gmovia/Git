@@ -101,7 +101,11 @@ impl Init {
         if let Ok(_) = fs::File::open(&config_path) {
 
         } else {
-            File::create(config_path)?;
+            let mut file = File::create(config_path)?;
+            file.write_all(format!("[core]\n").as_bytes())?;
+            file.write_all(format!("    repostiryformatversion = 0\n").as_bytes())?;
+            file.write_all(format!("    filemode = false\n").as_bytes())?;
+            file.write_all(format!("    bare = false\n").as_bytes())?;
         }
 
         Ok(())
