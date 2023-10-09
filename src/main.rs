@@ -1,6 +1,6 @@
-use std::{env, io::{self, Write}};
+use std::io::{self, Write};
 
-use rust_git::{repository::{self, Repository}, commands::init::Init, version_control_system::{self, VersionControlSystem}};
+use rust_git::vcs::version_control_system::VersionControlSystem;
 
 fn main() {
     println!("Hello, world!"); 

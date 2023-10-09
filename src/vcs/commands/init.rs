@@ -1,10 +1,10 @@
 use std::{path::Path, fs::{self, File}, io::Write};
 
-use crate::repository::Repository;
+use crate::vcs::repository::Repository;
 
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
-    example_text: String,
+    pub example_text: String,
 }
 
 impl Init {

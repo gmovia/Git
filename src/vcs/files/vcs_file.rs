@@ -1,13 +1,13 @@
 #[derive(Clone)]
-pub struct VSCFile {
+pub struct VCSFile {
     pub path: String,
     pub content: String,
     pub state: String,
 }
 
-impl VSCFile {
-    pub fn new(path: String, content: String, state: String) -> VSCFile {
-        VSCFile {
+impl VCSFile {
+    pub fn new(path: String, content: String, state: String) -> VCSFile {
+        VCSFile {
             path,
             content,
             state,

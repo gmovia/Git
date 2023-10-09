@@ -1,16 +1,13 @@
-use crate::{
-    file::VSCFile,
-    utils::{
-        files::files::read,
-        sets::sets::{difference, idem_set_different_content},
-    }, repository::{self, Repository}, commands::init::Init,
+use crate::vcs::{
+    files::vcs_file::VCSFile,
+    repository::Repository, commands::init::Init,
 };
-use std::{collections::HashMap, path::Path};
+use std::collections::HashMap;
 
 pub struct VersionControlSystem {
     pub path: String,
     pub local_repository: Repository,
-    pub staging_area: HashMap<String, VSCFile>,
+    pub staging_area: HashMap<String, VCSFile>,
 }
 
 impl VersionControlSystem {

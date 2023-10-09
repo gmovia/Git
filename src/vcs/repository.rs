@@ -1,11 +1,9 @@
 use std::{collections::HashMap, fs::File};
 
-use crate::commands::init::Init;
-
 pub struct Repository {
-    name: String,
-    files: HashMap<String, File>,
-    is_shared: bool,
+    pub name: String,
+    pub files: HashMap<String, File>,
+    pub is_shared: bool,
 }
 
 impl Repository {
