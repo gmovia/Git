@@ -1,7 +1,7 @@
 extern crate sha1;
 use sha1::{Digest, Sha1};
 
-use std::{fs, path::Path, io::Write};
+use std::{fs::{self, File}, path::Path, io::Write, fmt::format};
 
 pub struct HashObject;
 
@@ -38,6 +38,20 @@ impl HashObject{
 
         let result_in_bytes = hasher.finalize().to_vec();
         let hex_hash = result_in_bytes.iter().map(|byte| format!("{:02x}", byte)).collect::<String>();
+
+        let folder_name = hex_hash.chars().take(2).collect::<String>();
+        
+        let path = Path::new(".rust_git/objects/");
+        let new_object = path.join(format!("{}",folder_name));
+        fs::create_dir_all(&new_object)?;
+        let file_path = path.join(format!("{}/{}",folder_name,&hex_hash[2..]).as_str());
+        
+        if let Ok(_) = fs::File::open(&file_path) {
+
+        } else {
+            let mut file = File::create(file_path)?;
+            file.write_all((&hex_hash[2..]).as_bytes())?;
+        }
 
         // falta escribir en el archivo
         //HashObject::write_object(&hex_hash, &file)?; //ME TIRA ERROR DE PERMISOS DE LECTURA, si desactivas no pasan los test => mirar abajo
