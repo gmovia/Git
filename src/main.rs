@@ -1,5 +1,5 @@
-use rust_git::vcs::{version_control_system::VersionControlSystem, files::vcs_file::VCSFile};
-use std::{io::{self, Write}, path::{Path, self}};
+use rust_git::vcs::version_control_system::VersionControlSystem;
+use std::{io::{self, Write}, path::Path};
 
 fn handle_status(vcs: &VersionControlSystem){
     if let Ok((untracked, not_commited, commited)) = vcs.status(){
@@ -53,7 +53,7 @@ fn handle_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::
 }
 
 fn main(){
-    let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/FIUBA/repo-git-test".to_string());
+    let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust".to_string());
     
     loop{
         let mut input = String::new();
