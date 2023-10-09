@@ -13,8 +13,8 @@ fn main() -> Result<(), std::io::Error>{
                 VersionControlSystem::init("nombre_repo".to_string(), input.to_string().split_whitespace().map(|s| s.to_string()).collect());
             },
             "a" => {
-                //let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
-                let path = std::path::Path::new(r"C:\Users\Administrator\Desktop\FIUBA\TALLER\TP 2023\23C2-4Rust\README.md");
+                let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
+                //let path = std::path::Path::new(r"C:\Users\Administrator\Desktop\FIUBA\TALLER\TP 2023\23C2-4Rust\README.md");
                 let result = VersionControlSystem::hash_object(&path)?;
                 println!("{:?}", result);
             }
