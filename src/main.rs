@@ -53,7 +53,8 @@ fn handle_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::
 }
 
 fn main(){
-    let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust".to_string());
+    //let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust".to_string());
+    let mut vcs = VersionControlSystem::init(r"C:\Users\Administrator\Desktop\PRUEBA\".to_string());
     
     loop{
         let mut input = String::new();

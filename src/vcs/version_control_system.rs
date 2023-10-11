@@ -34,4 +34,5 @@ impl VersionControlSystem {
     pub fn add(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Add::add(self, path)        
     }
+
 }
