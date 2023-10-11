@@ -3,10 +3,16 @@ use sha1::{Digest, Sha1};
 
 use std::{fs::{self, File}, path::Path, io::Write};
 
+pub enum WriteOption {
+    Write,
+    NoWrite,
+}
+
 pub struct HashObject;
 
 impl HashObject{
-
+    /// Recibe un hash y un contenido.
+    /// Escribe el contenido dentro de un archivo cuya ruta depende del hash.
     pub fn write_object(hash: &str, data: &[u8]) -> Result<(), std::io::Error> {
         let folder_name = hash.chars().take(2).collect::<String>();
 
@@ -24,8 +30,10 @@ impl HashObject{
         Ok(())
     }
 
-    // SI LE LLEGA -w entonces GUARDA y sino no, falta implementar esos 2 casos, ahora guarda todo 
-    pub fn hash_object(path: &Path) -> Result<String, std::io::Error>{
+    /// Recibe una ruta y una opcion. 
+    /// Si la opcion es Write entonces escribe en el archivo objects, cuya ruta se calcula a partir del hash.
+    /// Devuelve el hash del archivo.
+    pub fn hash_object(path: &Path, option: WriteOption) -> Result<String, std::io::Error>{ // mejorar el char
         if path.is_dir(){
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "The path is an directory"));
         }
@@ -40,7 +48,10 @@ impl HashObject{
         let result_in_bytes = hasher.finalize().to_vec();
         let hex_hash = result_in_bytes.iter().map(|byte| format!("{:02x}", byte)).collect::<String>();
 
-        let _ = HashObject::write_object(&hex_hash, &file);
+        match option{
+            WriteOption::Write => HashObject::write_object(&hex_hash, &file)?,
+            WriteOption::NoWrite => ()
+        }
 
         Ok(hex_hash) 
     }        
