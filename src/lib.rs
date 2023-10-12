@@ -12,6 +12,7 @@ pub mod vcs{
     pub mod commands{
         pub mod init;
         pub mod hash_object;
+        pub mod cat_file;
     }
     pub mod files{
         pub mod vcs_file;

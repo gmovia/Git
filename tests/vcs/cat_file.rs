@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use std::{path::Path, fs::{File, self}, io::{Write, Read}};
+
+    use std::fs;
 
     use rust_git::vcs::version_control_system::VersionControlSystem;
     use rust_git::vcs::commands::hash_object::WriteOption;

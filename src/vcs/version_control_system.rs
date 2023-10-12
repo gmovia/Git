@@ -1,10 +1,10 @@
 
 use crate::vcs::{
     files::vcs_file::VCSFile,
-    repository::Repository, commands::{init::Init, hash_object::HashObject}
+    repository::Repository, commands::{init::Init, hash_object::HashObject,cat_file::CatFile}
 
 };
-use std::{collections::HashMap, path::Path, fs::{self, File}, io::Read};
+use std::{collections::HashMap, path::Path};
 use super::commands::hash_object::WriteOption;
 pub struct VersionControlSystem {
     pub path: String,
@@ -33,19 +33,6 @@ impl VersionControlSystem {
     /// Recibe un hash
     /// Obtiene el path del hash y devuelve el contenido que hay en el archivo del path
     pub fn cat_file(hash: &str) -> Result<String, std::io::Error>{
-        let folder_name = hash.chars().take(2).collect::<String>();
-
-        let object_path = Path::new(".rust_git/objects/");
-
-        let file_path = object_path.join(format!("{}/{}",folder_name,&hash[2..]).as_str());
-        let path = Path::new(&file_path);
-
-        if !path.exists(){
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No such file or directory"));
-        }
-        
-        let data = fs::read_to_string(&path)?;
-
-        Ok(data)
+        Ok(CatFile::cat_file(hash)?)
     }
 }
