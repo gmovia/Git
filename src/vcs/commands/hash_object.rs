@@ -37,6 +37,10 @@ impl HashObject{
         if path.is_dir(){
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "The path is an directory"));
         }
+        
+        if !fs::metadata(path).is_ok(){
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No such file or directory"));
+        }
 
         let file = fs::read(path)?;
         let file_size = file.len().to_string();
