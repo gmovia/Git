@@ -21,5 +21,12 @@ mod tests {
         assert!(matches!(result, Err(e) if e.to_string().contains("No such file or directory")));    
         Ok(())
     }
-    // Falta test para probar el directorio
+
+    #[test]
+    pub fn test_03_calculate_hash_object_error() -> Result<(), std::io::Error> {
+        let (temp_dir, _) = set_up();
+        let result = VersionControlSystem::hash_object(&temp_dir.path(), WriteOption::NoWrite);
+        assert!(matches!(result, Err(e) if e.to_string().contains("The path is an directory")));    
+        Ok(())
+    }
 }
