@@ -11,7 +11,7 @@ pub mod utils {
 pub mod vcs{
     pub mod commands{
         pub mod init;
-
+        pub mod hash_object;
     }
     pub mod files{
         pub mod vcs_file;
