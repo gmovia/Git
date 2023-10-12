@@ -30,6 +30,8 @@ impl VersionControlSystem {
         Ok(HashObject::hash_object(path, option)?)
     }
 
+    /// Recibe un hash
+    /// Obtiene el path del hash y devuelve el contenido que hay en el archivo del path
     pub fn cat_file(hash: &str) -> Result<String, std::io::Error>{
         let folder_name = hash.chars().take(2).collect::<String>();
 
