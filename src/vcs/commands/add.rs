@@ -47,12 +47,14 @@ impl Add{
         let mut content = String::new();
         file.read_to_string(&mut content)?;
 
-        if let Ok(exist) = Add::path_exist_in_index(path, index_path) {
+
+        let path_str = path.to_str().ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "Path no válido"))?;
+        if let Ok(exist) = Add::path_exist_in_index(path_str, index_path) {
             if exist {
-                Add::overwrite_aggregate(path, index_path)?;
+                Add::overwrite_aggregate(path_str, index_path)?;
             }
             else {
-                index_file.write_all(path.to_str().unwrap().as_bytes())?;
+                index_file.write_all(path_str.as_bytes())?;
                 index_file.write_all("-".as_bytes())?;
                 index_file.write_all(state.as_bytes())?;
                 index_file.write_all("-".as_bytes())?;
@@ -67,7 +69,7 @@ impl Add{
     /// Recibe el path del archivo y el path del archivo .rust_git/index
     /// Verifica si el path del archivo se encuentra escrito dentro del index 
     /// Devuelve un booleano en caso de que este
-    pub fn path_exist_in_index(path: &Path, index_path: &Path) -> Result<bool,std::io::Error> {
+    pub fn path_exist_in_index(path: &str, index_path: &Path) -> Result<bool,std::io::Error> {
         let file = File::open(index_path)?;
         let reader = BufReader::new(&file);
         
@@ -76,7 +78,7 @@ impl Add{
             let line = line?;
             let parts: Vec<&str> = line.split('-').collect();
             
-            if parts.len() == 3 && parts[0] == path.to_str().unwrap() {
+            if parts.len() == 3 && parts[0] == path {
                 existe = true;
             }
         }
@@ -85,7 +87,7 @@ impl Add{
 
     /// Recibe el path del archivo y el path del archivo .rust_git/index
     /// Sobre escribe el archivo index para un path especifico 
-    pub fn overwrite_aggregate(file_path: &Path, index_path: &Path) -> Result<(),std::io::Error> {
+    pub fn overwrite_aggregate(file_path: &str, index_path: &Path) -> Result<(),std::io::Error> {
         let file = File::open(index_path)?;
         let reader = BufReader::new(&file);
 
@@ -99,7 +101,7 @@ impl Add{
             let line = line?;
             let mut parts: Vec<&str> = line.split('-').collect();
 
-            if parts.len() == 3 && parts[0] == file_path.to_str().unwrap() {
+            if parts.len() == 3 && parts[0] == file_path {
                 parts[2] = &content;
             }
 
