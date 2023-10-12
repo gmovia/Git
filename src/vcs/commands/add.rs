@@ -30,6 +30,7 @@ impl Add{
         if vcs.local_repository.contains_key(&path.display().to_string()) && !read(path)?.contains_key(&path.display().to_string()){
             let file = VCSFile::new(path.display().to_string(), "".to_string(), "DELETED".to_string());
             vcs.staging_area.insert(path.display().to_string(), file);
+            Add::add_index(&path, &"DELETED".to_string())?;
         }
         Ok(vcs.staging_area.clone())
     }
