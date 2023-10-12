@@ -33,9 +33,9 @@ impl VersionControlSystem {
     pub fn cat_file(hash: &str) -> Result<String, std::io::Error>{
         let folder_name = hash.chars().take(2).collect::<String>();
 
-        let path = Path::new(".rust_git/objects/");
+        let object_path = Path::new(".rust_git/objects/");
 
-        let file_path = path.join(format!("{}/{}",folder_name,&hash[2..]).as_str());
+        let file_path = object_path.join(format!("{}/{}",folder_name,&hash[2..]).as_str());
         let path = Path::new(&file_path);
 
         if !path.exists(){

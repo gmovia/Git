@@ -22,6 +22,12 @@ fn main() -> Result<(), std::io::Error>{
                 let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
                 let result = VersionControlSystem::hash_object(&path, WriteOption::NoWrite)?;
                 println!("{:?}", result);
+            },
+            "git cat-file" => {
+                let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
+                let hash = VersionControlSystem::hash_object(&path, WriteOption::NoWrite)?;
+                let result = VersionControlSystem::cat_file(&hash)?;
+                println!("{:?}", result);
             }
             _ => ()
         }
