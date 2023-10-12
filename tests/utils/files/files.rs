@@ -7,28 +7,36 @@ mod tests {
     fn test_01_contain_file_1() {
         let directory = Path::new("tests/utils/files");
         let path = directory.join("file1.txt");
-        assert!(matches!(read(directory), Ok(files) if files.contains_key(&path.display().to_string())));
+        assert!(
+            matches!(read(directory), Ok(files) if files.contains_key(&path.display().to_string()))
+        );
     }
 
     #[test]
     fn test_02_contain_file_2() {
         let directory = Path::new("tests/utils/files");
         let path = directory.join("file2.txt");
-        assert!(matches!(read(directory), Ok(files) if files.contains_key(&path.display().to_string())));
+        assert!(
+            matches!(read(directory), Ok(files) if files.contains_key(&path.display().to_string()))
+        );
     }
 
     #[test]
     fn test_03_contain_file_3() {
         let directory = Path::new("tests/utils/files");
         let path = directory.join("folder").join("file3.txt");
-        assert!(matches!(read(directory), Ok(files) if files.contains_key(&path.display().to_string())));
+        assert!(
+            matches!(read(directory), Ok(files) if files.contains_key(&path.display().to_string()))
+        );
     }
 
     #[test]
     fn test_04_not_contain_folder() {
         let directory = Path::new("tests/utils/files");
         let path = directory.join("folder");
-        assert!(matches!(read(directory), Ok(files) if !files.contains_key(&path.display().to_string())));
+        assert!(
+            matches!(read(directory), Ok(files) if !files.contains_key(&path.display().to_string()))
+        );
     }
 
     #[test]
@@ -40,13 +48,17 @@ mod tests {
     #[test]
     fn test_06_not_contain_file_2() {
         let directory = Path::new("tests/utils/files/folder");
-        assert!(!matches!(read(directory), Ok(files) if files.contains_key("tests/utils/files/file2.txt")));
+        assert!(
+            !matches!(read(directory), Ok(files) if files.contains_key("tests/utils/files/file2.txt"))
+        );
     }
 
     #[test]
     fn test_07_not_contain_file_4() {
         let directory = Path::new("tests/utils/files/folder");
-        assert!(!matches!(read(directory), Ok(files) if files.contains_key("tests/utils/files/folder/file4.txt")));
+        assert!(
+            !matches!(read(directory), Ok(files) if files.contains_key("tests/utils/files/folder/file4.txt"))
+        );
     }
 
     #[test]

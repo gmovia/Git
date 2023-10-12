@@ -14,7 +14,7 @@ mod tests {
         other_set.insert("A".to_string(), "1".to_string());
         other_set.insert("C".to_string(), "2".to_string());
 
-        let difference = difference(set, other_set);
+        let difference = difference(&set, &other_set);
         assert_eq!(difference.len(), 1)
     }
     
@@ -29,7 +29,7 @@ mod tests {
         other_set.insert("A".to_string(), "1".to_string());
         other_set.insert("C".to_string(), "2".to_string());
 
-        let difference = difference(set, other_set);
+        let difference = difference(&set, &other_set);
         assert_eq!(difference.contains_key("B"), true);
     }
     
@@ -44,7 +44,7 @@ mod tests {
         other_set.insert("A".to_string(), "1".to_string());
         other_set.insert("B".to_string(), "3".to_string());
         
-        let result = idem_set_different_content(set, other_set);
+        let result = idem_set_different_content(&set, &other_set);
         assert_eq!(result.len(), 1);
     }
     
@@ -59,7 +59,7 @@ mod tests {
         other_set.insert("A".to_string(), "1".to_string());
         other_set.insert("B".to_string(), "3".to_string());
         
-        let result = idem_set_different_content(set, other_set);
+        let result = idem_set_different_content(&set, &other_set);
         assert_eq!(result.contains_key("B"), true);
     }
     
