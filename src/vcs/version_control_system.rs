@@ -14,9 +14,8 @@ pub struct VersionControlSystem {
 
 impl VersionControlSystem {
     /// Inicializacion del versionControlSystem --> posee el repositorio local y la ruta de la carpeta a informar.
-    pub fn init(path: String, args: Vec<String>) -> VersionControlSystem {
-        let repository = Init::git_init("repository_name", args);
-        
+    pub fn init(path: &str, args: Vec<String>) -> VersionControlSystem {
+        let repository = Init::git_init(path, "repository_name", args);
         VersionControlSystem {
             path: path.to_string(),
             local_repository: repository,

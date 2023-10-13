@@ -11,7 +11,7 @@ fn main() -> Result<(), std::io::Error>{
         let _: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
         match input {
             "git init" => {
-                VersionControlSystem::init("nombre_repo".to_string(), input.to_string().split_whitespace().map(|s| s.to_string()).collect());
+                VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA-REPO", input.to_string().split_whitespace().map(|s| s.to_string()).collect());
             },
             "git hash-object -w README.md" => {
                 let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
