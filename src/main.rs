@@ -1,4 +1,4 @@
-use std::{io::{self, Write}};
+use std::io::{self, Write};
 use rust_git::vcs::commands::hash_object::WriteOption;
 use rust_git::vcs::version_control_system::VersionControlSystem;
 
@@ -8,7 +8,7 @@ fn main() -> Result<(), std::io::Error>{
         io::stdout().flush().unwrap();
         io::stdin().read_line(&mut input).unwrap();
         let input = input.trim(); 
-        let argss: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
+        let _: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
         match input {
             "git init" => {
                 VersionControlSystem::init("nombre_repo".to_string(), input.to_string().split_whitespace().map(|s| s.to_string()).collect());
@@ -21,6 +21,12 @@ fn main() -> Result<(), std::io::Error>{
             "git hash-object README.md" => {
                 let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
                 let result = VersionControlSystem::hash_object(&path, WriteOption::NoWrite)?;
+                println!("{:?}", result);
+            },
+            "git cat-file" => {
+                let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
+                let hash = VersionControlSystem::hash_object(&path, WriteOption::NoWrite)?;
+                let result = VersionControlSystem::cat_file(&hash)?;
                 println!("{:?}", result);
             }
             _ => ()
