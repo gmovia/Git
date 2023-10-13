@@ -1,26 +1,42 @@
-
-use crate::vcs::{
-    files::vcs_file::VCSFile,
-    repository::Repository, commands::{init::Init, hash_object::HashObject,cat_file::CatFile}
-
+use crate::{
+    vcs::files::vcs_file::VCSFile,
+    utils::files::files::read,
+    types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
+    vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
-use std::{collections::HashMap, path::Path};
 use super::commands::hash_object::WriteOption;
+use std::{collections::HashMap, path::Path};
+use super::files::index::Index;
+
 pub struct VersionControlSystem {
     pub path: String,
-    pub local_repository: Repository,
-    pub staging_area: HashMap<String, VCSFile>,
+    pub local_repository: HashMap<String, String>,
+    pub index: Index
 }
 
 impl VersionControlSystem {
     /// Inicializacion del versionControlSystem --> posee el repositorio local y la ruta de la carpeta a informar.
     pub fn init(path: &str, args: Vec<String>) -> VersionControlSystem {
-        let repository = Init::git_init(path, "repository_name", args);
+        let _ = Init::git_init(path, args);
         VersionControlSystem {
             path: path.to_string(),
-            local_repository: repository,
-            staging_area: HashMap::new(),
+            local_repository: HashMap::new(),
+            index: Index::init(path)
         }
+    }
+
+    /// Devuelve la informacion de los archivos creados, modificados y eliminados recientemente, junto con el area de staging.
+    pub fn status(&self) -> Result<(UntrackedFiles, ChangesNotStagedForCommit, ChangesToBeCommited), std::io::Error> {
+        let files = read(Path::new(&self.path.clone()))?;
+        let staging_area = self.index.read_index_write_staging()?;
+        Ok(Status::status(&files, &staging_area, &self.local_repository))
+    }
+
+    /// Recibe un path
+    /// Agrega los archivos que se encuentran dentro del path al area de staging
+    /// Devuelve el area de staging
+    pub fn add(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+        Add::add(self, path)        
     }
 
     /// Calcula el hash object de un archivo. En el caso de que sea una carpeta, debe devolver un error.

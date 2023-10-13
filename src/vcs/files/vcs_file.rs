@@ -1,4 +1,5 @@
-#[derive(Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+
 pub struct VCSFile {
     pub path: String,
     pub content: String,

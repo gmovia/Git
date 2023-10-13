@@ -1,7 +1,4 @@
 use std::{path::Path, fs::{self, File}, io::Write};
-
-use crate::vcs::repository::Repository;
-
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
     pub example_text: String,
@@ -10,8 +7,7 @@ pub struct Init {
 impl Init {
     
     /// Esta funcion es el constructor de init. Se crean los directorios y archivos necesarios.
-    pub fn git_init(path: &str, repository_name: &str, args: Vec<String>) -> Repository {
-
+    pub fn git_init(path: &str, args: Vec<String>){
         let init = { Init { example_text: "hola".to_string() } };
 
         if args.len() < 4 {
@@ -36,9 +32,6 @@ impl Init {
                 }
             }
         }
-
-        let repository = Repository::init(repository_name);        
-        repository
     }
 
     /// Esta funcion es la encargada de crear todsas las carpetas y archivos necesarios luego de ejecutar git init.
@@ -53,7 +46,14 @@ impl Init {
         self.create_git_refs_folder(&path)?;
         self.create_git_config_file(&path)?;
         self.create_head_file(&path, branch_name)?;
-        
+        self.create_index(&path)?;        
+        Ok(())
+    }
+
+    // Crea el archivo index
+    fn create_index(&self, git_path: &Path) -> Result<(),std::io::Error>{
+        let index_path = git_path.join("index");
+        fs::OpenOptions::new().create(true).append(true).open(&index_path)?;
         Ok(())
     }
 
