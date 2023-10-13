@@ -2,10 +2,10 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::commands::{status::Status, add::Add, init::Init},
+    vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
+use super::commands::hash_object::WriteOption;
 use std::{collections::HashMap, path::Path};
-
 use super::files::index::Index;
 
 pub struct VersionControlSystem {
@@ -39,4 +39,15 @@ impl VersionControlSystem {
         Add::add(self, path)        
     }
 
+    /// Calcula el hash object de un archivo. En el caso de que sea una carpeta, debe devolver un error.
+    /// Si se añade el comando -w lo que sucede es que se guardan los datos en .git/objects (investigar bien) FALTA HACER
+    pub fn hash_object(path: &Path, option: WriteOption) -> Result<String, std::io::Error>{
+        Ok(HashObject::hash_object(path, option)?)
+    }
+
+    /// Recibe un hash
+    /// Obtiene el path del hash y devuelve el contenido que hay en el archivo del path
+    pub fn cat_file(hash: &str) -> Result<String, std::io::Error>{
+        Ok(CatFile::cat_file(hash)?)
+    }
 }

@@ -1,4 +1,6 @@
 use rust_git::vcs::version_control_system::VersionControlSystem;
+use rust_git::vcs::commands::hash_object::WriteOption;
+
 use std::{io::{self, Write}, path::Path};
 
 fn handle_status(vcs: &VersionControlSystem){
@@ -53,24 +55,44 @@ fn handle_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::
     Ok(())
 }
 
-fn main(){
+
+fn main() -> Result<(), std::io::Error>{
     //let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA", Vec::new());
     //let mut vcs = VersionControlSystem::init(r"C:\Users\Administrator\Desktop\PRUEBA\", Vec::new());
-    let mut vcs = VersionControlSystem::init(r"C:\Users\laura\OneDrive\Escritorio\FIUBA\Taller de programacion I\Trabajo practico grupal\PRUEBA", Vec::new());
+    //let mut vcs = VersionControlSystem::init(r"C:\Users\laura\OneDrive\Escritorio\FIUBA\Taller de programacion I\Trabajo practico grupal\PRUEBA", Vec::new());
     loop{
         let mut input = String::new();
         io::stdout().flush().unwrap();
         io::stdin().read_line(&mut input).unwrap();
-        let input = input.trim();
+        let input = input.trim(); 
+        let _: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
+        let vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA-REPO", input.to_string().split_whitespace().map(|s| s.to_string()).collect());
 
-        match input{
-            "git status" => handle_status(&vcs),
-            x if x.contains("git add") => {
-                if let Err(err) = handle_add(&mut vcs, x.to_string()) {
-                    eprintln!("Error al ejecutar 'git add': {}", err);
-                }
+        match input {
+            "git hash-object -w README.md" => {
+                let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
+                let result = VersionControlSystem::hash_object(&path, WriteOption::Write)?;
+                println!("{:?}", result);
             },
+            "git hash-object README.md" => {
+                let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
+                let result = VersionControlSystem::hash_object(&path, WriteOption::NoWrite)?;
+                println!("{:?}", result);
+            },
+            "git cat-file" => {
+                let path = std::path::Path::new("/Users/gmovia/Desktop/T1-RustGit/23C2-4Rust/README.md");
+                let hash = VersionControlSystem::hash_object(&path, WriteOption::NoWrite)?;
+                let result = VersionControlSystem::cat_file(&hash)?;
+                println!("{:?}", result);
+            },
+            "git status" => handle_status(&vcs),
+              x if x.contains("git add") => {
+                  if let Err(err) = handle_add(&mut vcs, x.to_string()) {
+                      eprintln!("Error al ejecutar 'git add': {}", err);
+                  }
+              },
             _ => ()
         }
     }
 }
+

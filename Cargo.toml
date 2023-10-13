@@ -7,5 +7,8 @@ edition = "2021"
 
 [dependencies]
 
+crypto = "0.5.1"
+sha1 = "0.10.6"
+
 [dev-dependencies]
 tempdir = "0.3.7"

@@ -1,5 +1,4 @@
 use std::{path::Path, fs::{self, File}, io::Write};
-
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
     pub example_text: String,
@@ -9,7 +8,6 @@ impl Init {
     
     /// Esta funcion es el constructor de init. Se crean los directorios y archivos necesarios.
     pub fn git_init(path: &str, args: Vec<String>){
-
         let init = { Init { example_text: "hola".to_string() } };
 
         if args.len() < 4 {
@@ -48,8 +46,7 @@ impl Init {
         self.create_git_refs_folder(&path)?;
         self.create_git_config_file(&path)?;
         self.create_head_file(&path, branch_name)?;
-        self.create_index(&path)?;
-        
+        self.create_index(&path)?;        
         Ok(())
     }
 
