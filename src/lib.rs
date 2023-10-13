@@ -15,6 +15,7 @@ pub mod utils {
 pub mod vcs{
     pub mod files{
         pub mod vcs_file;
+        pub mod index;
     }
 
     pub mod commands{
