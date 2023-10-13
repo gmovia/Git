@@ -1,5 +1,5 @@
 use crate::{
-    vcs::{files::{vcs_file::VCSFile, index::write}, version_control_system::VersionControlSystem},
+    vcs::{files::{vcs_file::VCSFile, index::read_staging_write_index}, version_control_system::VersionControlSystem},
     utils::files::files::read,
 };
 
@@ -32,7 +32,7 @@ impl Add{ // OBSERVACION PONER ALGUN OPTION PARA ESCRIBIR EN EL TEST PORQUE SINO
             }
         }
     
-        let _ = write(&vcs.staging_area);
+        let _ = read_staging_write_index(&vcs.staging_area);
         Ok(vcs.staging_area.clone())
     }
 
