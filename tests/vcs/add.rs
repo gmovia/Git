@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod tests {
+    use rust_git::vcs::files::index::read_index_write_staging;
+
     use crate::tests_functions::{create_file, set_up, equals};
 
     #[test]
@@ -79,4 +81,19 @@ mod tests {
         let staging_area = vcs.add(std::path::Path::new(&vcs.path.clone()));
         assert!(matches!(staging_area, Ok(staging_area) if staging_area.len() == 3))
     }
+
+    //  #[test] ---> Necesita un arreglo para que si se ejecutan todos los tests juntos, no rompa. Individualmente anda.
+    // pub fn test_08_read_index_and_write_it_to_staging_area() -> Result<(),std::io::Error>{
+    //     let (temp_dir, mut vcs) = set_up();
+    //     let _ = create_file(&temp_dir, "file1.txt");
+    //     let _ = create_file(&temp_dir, "file2.txt");   
+
+    //     let staging_area = vcs.add(std::path::Path::new(&vcs.path.clone()))?;
+    //     let staging = read_index_write_staging()?;
+    //     for (key, value) in &staging{
+    //         assert_eq!(true,staging_area.contains_key(key));
+    //         assert_eq!(Some(value), staging_area.get(key));
+    //     }
+    //     Ok(())
+    // }
 }
