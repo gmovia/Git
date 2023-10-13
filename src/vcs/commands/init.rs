@@ -10,19 +10,19 @@ pub struct Init {
 impl Init {
     
     /// Esta funcion es el constructor de init. Se crean los directorios y archivos necesarios.
-    pub fn git_init(repository_name: &str, args: Vec<String>) -> Repository {
+    pub fn git_init(path: &str, repository_name: &str, args: Vec<String>) -> Repository {
 
         let init = { Init { example_text: "hola".to_string() } };
 
         if args.len() < 4 {
-            if let Err(e) = init.create_initial_folders("master") {
+            if let Err(e) = init.create_initial_folders(path, "master") {
                 println!("Error: {}",e);
             }   
         }
         else {
             if args.contains(&"-b".to_string()) {
                 if let Some(index) = args.iter().position(|s| s == &"-b"){
-                    if let Err(e) = init.create_initial_folders(args[index+1].as_str()) {
+                    if let Err(e) = init.create_initial_folders(path, args[index+1].as_str()) {
                         println!("Error: {}",e);
                     }
                 }
@@ -31,7 +31,7 @@ impl Init {
                 }
             }
             else {
-                if let Err(e) = init.create_initial_folders("master") {
+                if let Err(e) = init.create_initial_folders(path, "master") {
                     println!("Error: {}",e);
                 }
             }
@@ -42,17 +42,17 @@ impl Init {
     }
 
     /// Esta funcion es la encargada de crear todsas las carpetas y archivos necesarios luego de ejecutar git init.
-    fn create_initial_folders(&self, branch_name: &str) -> Result<(),std::io::Error> {
-        let path = Path::new(".rust_git");
-        fs::create_dir_all(path)?;
+    fn create_initial_folders(&self, path: &str, branch_name: &str) -> Result<(),std::io::Error> {
+        let path = Path::new(path).join(".rust_git");
+        fs::create_dir_all(&path)?;
 
-        self.create_git_hooks_folder(path)?;
-        self.create_git_info_folder(path)?;
-        self.create_git_logs_folder(path)?;
-        self.create_git_objects_folder(path)?;
-        self.create_git_refs_folder(path)?;
-        self.create_git_config_file(path)?;
-        self.create_head_file(path, branch_name)?;
+        self.create_git_hooks_folder(&path)?;
+        self.create_git_info_folder(&path)?;
+        self.create_git_logs_folder(&path)?;
+        self.create_git_objects_folder(&path)?;
+        self.create_git_refs_folder(&path)?;
+        self.create_git_config_file(&path)?;
+        self.create_head_file(&path, branch_name)?;
         
         Ok(())
     }

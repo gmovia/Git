@@ -13,7 +13,7 @@ fn main() {
         let argss: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
         match argss[1].as_str() {
             "init" => {
-                VersionControlSystem::init("nombre_repo", input.to_string().split_whitespace().map(|s| s.to_string()).collect());
+                VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA-REPO", input.to_string().split_whitespace().map(|s| s.to_string()).collect());
             },
             _ => ()
         }
