@@ -13,8 +13,8 @@ impl Status{
     /// Changes to be commited => Archivos que se encuentran en el area de staging.
     pub fn status(files: &HashMap<String, String>, staging_area: &HashMap<String, VCSFile>, repository: &HashMap<String, String>) -> (UntrackedFiles, ChangesNotStagedForCommit, ChangesToBeCommited){
         let untracked_files = get_untracked_files(files, &transform_to_string_hashmap(staging_area), repository);
-        let changes_not_staged_for_commit = get_changes_not_staged_for_commit(files, &transform_to_string_hashmap(staging_area), repository);
         let changes_to_be_commited = get_changes_to_be_commited(staging_area);
+        let changes_not_staged_for_commit = get_changes_not_staged_for_commit(files, staging_area, repository);
         (untracked_files, changes_not_staged_for_commit, changes_to_be_commited)
     }
 }
