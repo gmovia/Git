@@ -43,7 +43,8 @@ fn handle_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::
         let vcs_path = vcs.path.clone();
         
         path_file.push_str(&vcs_path);
-        path_file.push_str("/");
+        path_file.push_str(r"\"); //es para windows
+        //path_file.push_str("/"); //es para linux
         path_file.push_str(&path_string);
 
         let path = Path::new(&path_file);
@@ -53,9 +54,9 @@ fn handle_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::
 }
 
 fn main(){
-    let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA-REPO".to_string());
-    //let mut vcs = VersionControlSystem::init(r"C:\Users\Administrator\Desktop\PRUEBA\".to_string());
-    //let mut vcs = VersionControlSystem::init(r"C:\Users\laura\OneDrive\Documentos\VARIOS\23C2-4Rust\tests\utils\files\folder\".to_string());
+    //let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA", Vec::new());
+    //let mut vcs = VersionControlSystem::init(r"C:\Users\Administrator\Desktop\PRUEBA\", Vec::new());
+    let mut vcs = VersionControlSystem::init(r"C:\Users\laura\OneDrive\Escritorio\FIUBA\Taller de programacion I\Trabajo practico grupal\PRUEBA", Vec::new());
     loop{
         let mut input = String::new();
         io::stdout().flush().unwrap();

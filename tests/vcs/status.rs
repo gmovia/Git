@@ -1,14 +1,16 @@
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-    use rust_git::vcs::files::vcs_file::VCSFile;
-    use rust_git::vcs::version_control_system::VersionControlSystem;
+    use std::{path::Path, fs, io::Write};
     use crate::tests_functions::{create_file, set_up, status_contains};
 
     #[test]
     pub fn test_01_untracked_files_contains_four_files() {
-        let version_control_system = VersionControlSystem::init("tests/utils/files".to_string());
-        assert!(matches!(version_control_system.status(), Ok((untracked_files, _, _)) if untracked_files.len() == 4));
+        let (temp_dir, vsc) = set_up();
+        let _ = create_file(&temp_dir, "file1.txt");        
+        let _ = create_file(&temp_dir, "file2.txt");        
+        let _ = create_file(&temp_dir, "file3.txt");        
+        let _ = create_file(&temp_dir, "file4.txt");        
+        assert!(matches!(vsc.status(), Ok((untracked_files, _, _)) if untracked_files.len() == 4));
     }
 
     #[test]
@@ -40,7 +42,7 @@ mod tests {
 
     #[test]
     pub fn test_05_changes_not_staged_for_commit_contains_one_file() {
-        let (_, mut vsc) = set_up();
+        let (_temp_dir, mut vsc) = set_up();
         let path = Path::new("file1.txt");
         
         vsc.local_repository.insert(path.display().to_string(), "contenido".to_string());
@@ -83,76 +85,74 @@ mod tests {
         assert!(matches!(vsc.status(), Ok((_, changes_not_staged_for_commit, _)) if changes_not_staged_for_commit.len() == 2));
     }
 
-    // AGREGAR TESTS QUE AHORA INCLUYAN AL AREA DE STAGING
-
     #[test]
     pub fn test_08_staging_area_contain_file_1() {
         let (temp_dir, mut vsc) = set_up();
         let path = create_file(&temp_dir, "file1.txt");    
 
-        vsc.staging_area.insert(path.display().to_string(), VCSFile::new(path.display().to_string(), "A".to_string(), "CREATED".to_string()));
+        let _ = vsc.add(&path);
         assert!(matches!(vsc.status(), Ok((_, _, changes_to_be_commited)) if status_contains(changes_to_be_commited.clone(), "CREATED", &path)));
         assert!(matches!(vsc.status(), Ok((untracked_file, _, _)) if untracked_file.len() == 0));
     }
 
     #[test]
-    pub fn test_09_staging_area_contain_file_1_and_changes_not_staged_for_commit_contain_file1() {
+    pub fn test_09_staging_area_contain_file_1_and_changes_not_staged_for_commit_contain_file1() -> Result<(), std::io::Error>{
         let (temp_dir, mut vsc) = set_up();
         let path = create_file(&temp_dir, "file1.txt");    
-
-        vsc.staging_area.insert(path.display().to_string(), VCSFile::new(path.display().to_string(), "A".to_string(), "MODIFIED".to_string()));
         vsc.local_repository.insert(path.display().to_string(), "File 3".to_string());
 
-        assert!(matches!(vsc.status(), Ok((_, _, changes_to_be_commited)) if status_contains(changes_to_be_commited.clone(), "MODIFIED", &path)));
-        assert!(matches!(vsc.status(), Ok((untracked_file, _, _)) if untracked_file.len() == 0));
-        assert!(matches!(vsc.status(), Ok((_, changes_not_staged_for_commit, _)) if changes_not_staged_for_commit.len() == 1));
+        let _ = vsc.add(&path);
+        let mut file = fs::OpenOptions::new().write(true).create(true).append(true).open(&path)?;
+        let _ = file.write_all(b"modified");
+        let (untracked_files, changes_not_staged_for_commit, changes_to_be_commited) = vsc.status()?;
+
+        assert_eq!(status_contains(changes_to_be_commited.clone(), "MODIFIED", &path), true);
+        assert_eq!(untracked_files.len(), 0);
+        assert_eq!(changes_not_staged_for_commit.len(), 1);
+        Ok(())
     }
-
+    
+    
     #[test]
-    pub fn test_10_changes_to_be_commited_includes_file_1() {
-        let (temp_dir, mut vsc) = set_up();
-        let path = create_file(&temp_dir, "file1.txt");    
-
-        vsc.staging_area.insert(path.display().to_string(), VCSFile::new(path.display().to_string(), "".to_string(), "MODIFIED".to_string()));
-        vsc.local_repository.insert(path.display().to_string(), "File 3".to_string());
-
-        assert!(matches!(vsc.status(), Ok((_, _, changes_to_be_commited)) if status_contains(changes_to_be_commited.clone(), "MODIFIED", &path)));
-        assert!(matches!(vsc.status(), Ok((untracked_file, _, _)) if untracked_file.len() == 0));
-        assert!(matches!(vsc.status(), Ok((_, changes_not_staged_for_commit, _)) if changes_not_staged_for_commit.len() == 0));
-    }
-
-    #[test]
-    pub fn test_11_changes_not_staged_for_commit_contain_file_1() {
-        let (_, mut vsc) = set_up();
+    pub fn test_10_changes_not_staged_for_commit_contain_file_1() -> Result<(), std::io::Error> {
+        let (_temp_dir, mut vsc) = set_up(); // SI SACAS TEMP_DIR ROMPE!
         let path = Path::new("file1.txt");   
-
         vsc.local_repository.insert(path.display().to_string(), "File 3".to_string());
-
-        assert!(matches!(vsc.status(), Ok((untracked_file, _, _)) if untracked_file.len() == 0));
-        assert!(matches!(vsc.status(), Ok((_, changes_not_staged_for_commit, _)) if changes_not_staged_for_commit.len() == 1));
+        
+        let (untracked_files, changes_not_staged_for_commit, _) = vsc.status()?;
+        assert_eq!(untracked_files.len(), 0);
+        assert_eq!(changes_not_staged_for_commit.len(), 1);
+        Ok(())
     }
-
+    
+    
     #[test]
-    pub fn test_12_changes_to_be_commited_contain_file_1() {
-        let (_, mut vsc) = set_up();
+    pub fn test_11_changes_to_be_commited_contain_file_1() -> Result<(), std::io::Error>{
+        let (_temp_dir, mut vsc) = set_up();
         let path = Path::new("file1.txt");   
-
-        vsc.staging_area.insert(path.display().to_string(), VCSFile::new(path.display().to_string(), "".to_string(), "DELETED".to_string()));
         vsc.local_repository.insert(path.display().to_string(), "File 3".to_string());
+        
+        let _ = vsc.add(&path);
 
-        assert!(matches!(vsc.status(), Ok((_, _, changes_to_be_commited)) if changes_to_be_commited.len() == 1));
-        assert!(matches!(vsc.status(), Ok((_, changes_not_staged_for_commit, _)) if changes_not_staged_for_commit.len() == 0));
+        let (_, changes_not_staged_for_commit, changes_to_be_commited) = vsc.status()?;
+        assert_eq!(changes_to_be_commited.len(), 1);
+        assert_eq!(changes_not_staged_for_commit.len(), 0);
+        Ok(())
     }
 
     #[test]
-    pub fn test_13_three_sets_are_empty() {
+    pub fn test_12_three_sets_are_empty() -> Result<(), std::io::Error>{
         let (temp_dir, mut vsc) = set_up();
         let path = create_file(&temp_dir, "file1.txt");    
-
         vsc.local_repository.insert(path.display().to_string(), "".to_string());
 
-        assert!(matches!(vsc.status(), Ok((untracked_file, _, _)) if untracked_file.len() == 0));
-        assert!(matches!(vsc.status(), Ok((_, _, changes_to_be_commited)) if changes_to_be_commited.len() == 0));
-        assert!(matches!(vsc.status(), Ok((_, changes_not_staged_for_commit, _)) if changes_not_staged_for_commit.len() == 0));
+        let _ = vsc.add(&path);
+        let (untracked_file, changes_not_staged_for_commit, changes_to_be_commited) = vsc.status()?;
+
+        assert_eq!(untracked_file.len(), 0);
+        assert_eq!(changes_to_be_commited.len(), 0);
+        assert_eq!(changes_not_staged_for_commit.len(), 0);
+        Ok(())
     }
+
 }

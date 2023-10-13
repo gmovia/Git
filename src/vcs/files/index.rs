@@ -32,12 +32,12 @@ impl Index{
         let index_path = Path::new(&self.path).join("index");
         let index_file = OpenOptions::new().read(true).open(&index_path)?;
         let reader = io::BufReader::new(index_file);
-    
+        
         for line in reader.lines().filter_map(Result::ok){
             let parts: Vec<&str> = line.split("-").collect();
-                    let file = VCSFile::new(parts[0].to_string(), parts[2].to_string(), parts[1].to_string());
-                    staging_area.insert(parts[0].to_string(), file);
-                }
+            let file = VCSFile::new(parts[0].to_string(), parts[2].to_string(), parts[1].to_string());
+            staging_area.insert(parts[0].to_string(), file);
+        }
         Ok(staging_area)
     }
     
