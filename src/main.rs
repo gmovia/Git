@@ -45,8 +45,8 @@ fn handle_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::
         let vcs_path = vcs.path.clone();
         
         path_file.push_str(&vcs_path);
-        path_file.push_str(r"\"); //es para windows
-        //path_file.push_str("/"); //es para linux
+        //path_file.push_str(r"\"); //es para windows
+        path_file.push_str("/"); //es para linux
         path_file.push_str(&path_string);
 
         let path = Path::new(&path_file);
@@ -57,7 +57,7 @@ fn handle_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::
 
 
 fn main() -> Result<(), std::io::Error>{
-    //let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA", Vec::new());
+    let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA", Vec::new());
     //let mut vcs = VersionControlSystem::init(r"C:\Users\Administrator\Desktop\PRUEBA\", Vec::new());
     //let mut vcs = VersionControlSystem::init(r"C:\Users\laura\OneDrive\Escritorio\FIUBA\Taller de programacion I\Trabajo practico grupal\PRUEBA", Vec::new());
     loop{
@@ -66,7 +66,6 @@ fn main() -> Result<(), std::io::Error>{
         io::stdin().read_line(&mut input).unwrap();
         let input = input.trim(); 
         let _: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
-        let vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA-REPO", input.to_string().split_whitespace().map(|s| s.to_string()).collect());
 
         match input {
             "git hash-object -w README.md" => {
@@ -95,4 +94,3 @@ fn main() -> Result<(), std::io::Error>{
         }
     }
 }
-
