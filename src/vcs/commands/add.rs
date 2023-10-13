@@ -1,12 +1,12 @@
 use crate::{
-    vcs::{files::{vcs_file::VCSFile, index::read_staging_write_index}, version_control_system::VersionControlSystem},
+    vcs::{files::vcs_file::VCSFile, version_control_system::VersionControlSystem},
     utils::files::files::read,
 };
 
 use std::{collections::HashMap, path::Path};
 pub struct Add;
 
-impl Add{ // OBSERVACION PONER ALGUN OPTION PARA ESCRIBIR EN EL TEST PORQUE SINO SE LLENA EL INDEX DE BASURA! REVISAR ESTO
+impl Add{
     /// Recibe el sistema de control de versiones y un path
     /// Inserta los archivos correspondientes al area de staging, junto con sus respectivos estados.
     /// Devuelve el area de staging.
@@ -32,7 +32,7 @@ impl Add{ // OBSERVACION PONER ALGUN OPTION PARA ESCRIBIR EN EL TEST PORQUE SINO
             }
         }
     
-        let _ = read_staging_write_index(&vcs.staging_area);
+        let _ = vcs.index.read_staging_write_index(&vcs.staging_area);
         Ok(vcs.staging_area.clone())
     }
 

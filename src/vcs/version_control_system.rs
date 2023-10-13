@@ -6,19 +6,23 @@ use crate::{
 };
 use std::{collections::HashMap, path::Path};
 
+use super::files::index::Index;
+
 pub struct VersionControlSystem {
     pub path: String,
     pub local_repository: HashMap<String, String>,
     pub staging_area: HashMap<String, VCSFile>,
+    pub index: Index
 }
 
 impl VersionControlSystem {
     /// Inicializacion del versionControlSystem --> posee el repositorio local y la ruta de la carpeta a informar.
     pub fn init(path: String) -> VersionControlSystem {
         VersionControlSystem {
-            path,
+            path: path.to_string(),
             local_repository: HashMap::new(),
             staging_area: HashMap::new(),
+            index: Index::init(path.as_str())
         }
     }
 

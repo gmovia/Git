@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use rust_git::vcs::files::index::read_index_write_staging;
+    //use rust_git::vcs::files::index::read_index_write_staging;
 
     use crate::tests_functions::{create_file, set_up, equals};
 
