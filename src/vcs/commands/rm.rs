@@ -22,11 +22,11 @@ impl Rm{
         Ok(())
     }
 
-    pub fn git_rm(vcs: &mut VersionControlSystem, path: &Path, args: Vec<String>) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+    pub fn rm(vcs: &mut VersionControlSystem, path: &Path, args: Vec<String>) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         if args.iter().any(|arg| arg.contains("-r")) {
             Rm::rm_r(vcs, path)
         } else {
-            Rm::rm(vcs, path)
+            Rm::rm_(vcs, path)
         }
     }
     
@@ -34,7 +34,7 @@ impl Rm{
     /// Recibe el sistema control de versiones y un path
     /// Setea estado eliminado a los archivos correspondiente en el area de staging
     /// Devuelve el area de staging
-    pub fn rm(vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {   
+    pub fn rm_(vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {   
 
         if path.is_dir(){
             return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: not removing '{:?}' recursively without -r", path)));
@@ -66,7 +66,7 @@ impl Rm{
         if let Ok(files) = read(dir_path) {
             for (key, _) in &files {
                 let file_path = Path::new(key);
-                result = Rm::rm(vcs,file_path)?;
+                result = Rm::rm_(vcs,file_path)?;
             }
         }
         Ok(result)

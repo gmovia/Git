@@ -42,20 +42,20 @@ impl VersionControlSystem {
     /// Calcula el hash object de un archivo. En el caso de que sea una carpeta, debe devolver un error.
     /// Si se añade el comando -w lo que sucede es que se guardan los datos en .git/objects (investigar bien) FALTA HACER
     pub fn hash_object(path: &Path, option: WriteOption) -> Result<String, std::io::Error>{
-        Ok(HashObject::hash_object(path, option)?)
+        HashObject::hash_object(path, option)
     }
 
     /// Recibe un hash
     /// Obtiene el path del hash y devuelve el contenido que hay en el archivo del path
     pub fn cat_file(hash: &str) -> Result<String, std::io::Error>{
-        Ok(CatFile::cat_file(hash)?)
+        CatFile::cat_file(hash)
     }
 
     /// Recibe un path
     /// Elimina los archivos del workspace y repositorio local dado el path
     /// Si el comando tiene un -r se eliminan los archivos de un directorio entero
     pub fn rm(&mut self, path: &Path, args: Vec<String>) -> Result<HashMap<String, VCSFile>, std::io::Error> {
-        Rm::git_rm(self, path, args)
+        Rm::rm(self, path, args)
     }
     
 }
