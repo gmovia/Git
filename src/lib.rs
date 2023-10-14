@@ -1,3 +1,10 @@
+pub mod handlers{
+    pub mod status;
+    pub mod hash_object;
+    pub mod add;
+    pub mod rm;
+    pub mod cat_file;
+}
 pub mod types{
     pub mod types;
 }
