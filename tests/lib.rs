@@ -13,6 +13,7 @@ pub mod vcs{
     pub mod cat_file;
     pub mod status;
     pub mod add;
+    pub mod rm;
 }
 
 pub mod tests_functions;
