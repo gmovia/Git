@@ -1,4 +1,4 @@
-use std::{path::Path, fs::{self, File}, io::Write};
+use std::{path::{Path, PathBuf}, fs::{self, File}, io::Write};
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
     pub example_text: String,
@@ -122,6 +122,12 @@ impl Init {
             file.write_all(format!("ref: refs/heads/{}", branch_name).as_bytes())?;
         }            
         Ok(())
+    }
+
+    pub fn get_object_path(path: &String) -> Result<PathBuf,std::io::Error>{
+        let mut objects_path = String::from(path);
+        objects_path.push_str("/.rust_git/objects/");
+        Ok(Path::new(&objects_path).to_path_buf())
     }
 
 }
