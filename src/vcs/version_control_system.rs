@@ -51,6 +51,9 @@ impl VersionControlSystem {
         Ok(CatFile::cat_file(hash)?)
     }
 
+    /// Recibe un path
+    /// Elimina los archivos que se encuentran dentro del path al area de staging
+    /// Devuelve el area de staging
     pub fn rm(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Rm::rm(self, path)
     }
