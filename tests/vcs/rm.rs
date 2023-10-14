@@ -12,7 +12,7 @@ mod tests {
 
         vcs.local_repository.insert(path.to_string_lossy().to_string(), "content".to_string());
         
-        let staging_area = vcs.rm(&path)?;
+        let staging_area = vcs.rm(&path, vec!["rm".to_string()])?;
         assert_eq!(staging_area.len(), 1);
         Ok(())
     }
@@ -24,7 +24,7 @@ mod tests {
 
         vcs.local_repository.insert(path.to_string_lossy().to_string(), "content".to_string());
         
-        let staging_area = vcs.rm(&path)?;
+        let staging_area = vcs.rm(&path,vec!["rm".to_string()])?;
         assert_eq!(equals(staging_area, &path, "DELETED"), true);
         Ok(())
     }
@@ -40,8 +40,8 @@ mod tests {
         vcs.local_repository.insert(file2_path.to_string_lossy().to_string(), "content".to_string());
 
 
-        let _ = vcs.rm(&file1_path);
-        let staging_area = vcs.rm(&file2_path)?;
+        let _ = vcs.rm(&file1_path,vec!["rm".to_string()]);
+        let staging_area = vcs.rm(&file2_path, vec!["rm".to_string()])?;
 
         assert_eq!(staging_area.len(), 2);
         Ok(())
@@ -53,7 +53,7 @@ mod tests {
         let dir_path = create_dir(&temp_dir, "directory/");      
 
         vcs.local_repository.insert(dir_path.to_string_lossy().to_string(), "content".to_string());
-        let result = vcs.rm(&dir_path);
+        let result = vcs.rm(&dir_path, vec!["rm".to_string()]);
         
         assert!(matches!(result, Err(e) if e.to_string().contains("recursively without -r")));    
         Ok(())
@@ -65,7 +65,7 @@ mod tests {
         let dir_path = create_dir(&temp_dir, "directory/");      
         
         vcs.local_repository.insert(dir_path.to_string_lossy().to_string(), "content".to_string());
-        let _ = vcs.rm(&dir_path).unwrap_or(HashMap::new());        
+        let _ = vcs.rm(&dir_path, vec!["rm".to_string()]).unwrap_or(HashMap::new());        
         
         let staging_area = vcs.index.read_index_write_staging()?;
 
@@ -81,7 +81,7 @@ mod tests {
         let _ = File::create(&file_path);
     
         vcs.local_repository.insert(file_path.to_string_lossy().to_string(), "content".to_string());
-        let staging_area = vcs.rm_r(&dir_path)?;
+        let staging_area = vcs.rm(&dir_path, vec!["rm -r".to_string()])?;
     
         assert_eq!(staging_area.len(), 1);    
         Ok(())
@@ -95,7 +95,7 @@ mod tests {
 
         vcs.local_repository.insert(path.to_string_lossy().to_string(), "content".to_string());
         
-        let _ = vcs.rm(&path);
+        let _ = vcs.rm(&path, vec!["rm".to_string()]);
         assert!(!path.exists());
         Ok(())
 
@@ -113,7 +113,7 @@ mod tests {
         let _ = File::create(&file_path2);
 
         vcs.local_repository.insert(file_path.to_string_lossy().to_string(), "content".to_string());
-        let staging_area = vcs.rm_r(&dir_path)?;
+        let staging_area = vcs.rm(&dir_path, vec!["rm -r".to_string()])?;
     
         assert_eq!(staging_area.len(), 1);
         Ok(())
@@ -134,7 +134,7 @@ mod tests {
         vcs.local_repository.insert(file_path.to_string_lossy().to_string(), "content".to_string());
         vcs.local_repository.insert(file_path2.to_string_lossy().to_string(), "content".to_string());
         
-        let staging_area = vcs.rm_r(&dir_path)?;
+        let staging_area = vcs.rm(&dir_path, vec!["rm -r".to_string()])?;
     
         assert_eq!(staging_area.len(), 2);
         Ok(())

@@ -5,7 +5,7 @@ use crate::{
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
 use super::commands::{hash_object::WriteOption, rm::Rm};
-use std::{collections::HashMap, path::{Path, self}};
+use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
 pub struct VersionControlSystem {
@@ -52,14 +52,10 @@ impl VersionControlSystem {
     }
 
     /// Recibe un path
-    /// Elimina los archivos que se encuentran dentro del path al area de staging
-    /// Devuelve el area de staging
-    pub fn rm(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
-        Rm::rm(self, path)
-    }
-
-    pub fn rm_r(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
-        Rm::rm_r(self, path)
+    /// Elimina los archivos del workspace y repositorio local dado el path
+    /// Si el comando tiene un -r se eliminan los archivos de un directorio entero
+    pub fn rm(&mut self, path: &Path, args: Vec<String>) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+        Rm::git_rm(self, path, args)
     }
     
 }

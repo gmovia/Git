@@ -21,6 +21,15 @@ impl Rm{
         }
         Ok(())
     }
+
+    pub fn git_rm(vcs: &mut VersionControlSystem, path: &Path, args: Vec<String>) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+        if args.iter().any(|arg| arg.contains("-r")) {
+            Rm::rm_r(vcs, path)
+        } else {
+            Rm::rm(vcs, path)
+        }
+    }
+    
     
     /// Recibe el sistema control de versiones y un path
     /// Setea estado eliminado a los archivos correspondiente en el area de staging
