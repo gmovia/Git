@@ -5,6 +5,11 @@ use crate::{
 };
 pub struct Rm;
 
+pub enum RemoveOption {
+    Directory,
+    NoDirectory,
+}
+
 impl Rm{
 
     /// Recibe un path 
@@ -22,11 +27,10 @@ impl Rm{
         Ok(())
     }
 
-    pub fn rm(vcs: &mut VersionControlSystem, path: &Path, args: Vec<String>) -> Result<HashMap<String, VCSFile>, std::io::Error> {
-        if args.iter().any(|arg| arg.contains("-r")) {
-            Rm::rm_r(vcs, path)
-        } else {
-            Rm::rm_(vcs, path)
+    pub fn rm(vcs: &mut VersionControlSystem, path: &Path, option: RemoveOption) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+        match option {
+            RemoveOption::NoDirectory => Rm::rm_(vcs, path),
+            RemoveOption::Directory => Rm:: rm_r(vcs, path)
         }
     }
     

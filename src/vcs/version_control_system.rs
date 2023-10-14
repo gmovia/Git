@@ -4,7 +4,7 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
-use super::commands::{hash_object::WriteOption, rm::Rm};
+use super::commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}};
 use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
@@ -45,7 +45,7 @@ impl VersionControlSystem {
         let object_path = Init::get_object_path(&self.path)?;
         HashObject::hash_object(path, object_path, option)
     }
-
+ 
     /// Recibe un hash
     /// Obtiene el path del hash y devuelve el contenido que hay en el archivo del path
     pub fn cat_file(&self, hash: &str) -> Result<String, std::io::Error>{
@@ -56,8 +56,8 @@ impl VersionControlSystem {
     /// Recibe un path
     /// Elimina los archivos del workspace y repositorio local dado el path
     /// Si el comando tiene un -r se eliminan los archivos de un directorio entero
-    pub fn rm(&mut self, path: &Path, args: Vec<String>) -> Result<HashMap<String, VCSFile>, std::io::Error> {
-        Rm::rm(self, path, args)
+    pub fn rm(&mut self, path: &Path, option: RemoveOption) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+        Rm::rm(self, path, option)
     }
     
 }
