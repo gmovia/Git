@@ -51,9 +51,8 @@ impl VersionControlSystem {
         Ok(CatFile::cat_file(hash)?)
     }
 
-
-    // pub fn rm(&mut self, path: &Path) -> Result<String, std::io::Error> {
-    //     Rm::rm(self, path)?
-    // }
+    pub fn rm(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+        Rm::rm(self, path)
+    }
     
 }

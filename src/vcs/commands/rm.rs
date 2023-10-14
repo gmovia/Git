@@ -7,7 +7,7 @@ pub struct Rm;
 
 impl Rm{
     
-    pub fn remove_from_workspace(&mut self, path: &str) -> std::io::Result<()> {
+    pub fn remove_from_workspace(path: &str) -> std::io::Result<()> {
         let path = Path::new(path);
         let metadata = fs::metadata(path)?;
     
@@ -20,7 +20,7 @@ impl Rm{
         Ok(())
     }
     
-    pub fn rm(&mut self, vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {   
+    pub fn rm(vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {   
 
         if path.is_dir(){
             return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: not removing '{:?}' recursively without -r", path)));
@@ -31,7 +31,7 @@ impl Rm{
         if let Ok(files) = read(path){
             for(key,value) in &files{
                 if vcs.local_repository.contains_key(key){
-                    self.remove_from_workspace(&key)?;
+                    Rm::remove_from_workspace(&key)?;
                     let file = VCSFile::new(key.clone(), value.clone(), "DELETED".to_string());
                     staging_area.insert(key.to_owned(), file);
                     return Ok(staging_area.clone());
@@ -51,7 +51,7 @@ impl Rm{
         if let Ok(files) = read(path) {
             for (key, _) in &files {
                 let file_path = Path::new(key);
-                result = self.rm(vcs,file_path)?;
+                result = Rm::rm(vcs,file_path)?;
             }
         }
         Ok(result)
