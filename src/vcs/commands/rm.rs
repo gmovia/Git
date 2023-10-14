@@ -22,7 +22,9 @@ impl Rm{
         Ok(())
     }
     
-    
+    /// Recibe el sistema control de versiones y un path
+    /// Setea estado eliminado a los archivos correspondiente en el area de staging
+    /// Devuelve el area de staging
     pub fn rm(vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {   
 
         if path.is_dir(){
@@ -47,6 +49,9 @@ impl Rm{
         Ok(staging_area.clone())
     }
 
+    /// Recibe el sistema control de versiones y un path correspondiente a un directorio
+    /// Recorre el path del directorio y a rm manda el archivo leido para ser seteado con el estado correspondiente
+    /// Devuelve el area de staging
     pub fn rm_r(vcs: &mut VersionControlSystem, dir_path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         let mut result = HashMap::new();
         if let Ok(files) = read(dir_path) {
