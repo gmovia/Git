@@ -54,5 +54,9 @@ impl VersionControlSystem {
     pub fn rm(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Rm::rm(self, path)
     }
+
+    pub fn rm_r(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+        Rm::rm_r(self, path)
+    }
     
 }

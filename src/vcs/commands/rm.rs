@@ -6,7 +6,9 @@ use crate::{
 pub struct Rm;
 
 impl Rm{
-    
+
+    /// Recibe un path 
+    /// Se elimina al path correspondiente segun sea archivo o directorio
     pub fn remove_from_workspace(path: &str) -> std::io::Result<()> {
         let path = Path::new(path);
         let metadata = fs::metadata(path)?;
@@ -20,6 +22,7 @@ impl Rm{
         Ok(())
     }
     
+    
     pub fn rm(vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {   
 
         if path.is_dir(){
@@ -27,28 +30,26 @@ impl Rm{
         }
 
         let mut staging_area = vcs.index.read_index_write_staging()?;
-
+        
         if let Ok(files) = read(path){
             for(key,value) in &files{
                 if vcs.local_repository.contains_key(key){
                     Rm::remove_from_workspace(&key)?;
                     let file = VCSFile::new(key.clone(), value.clone(), "DELETED".to_string());
                     staging_area.insert(key.to_owned(), file);
+                    let _ = vcs.index.read_staging_write_index(&staging_area);
                     return Ok(staging_area.clone());
                 }
                 else{
-                    return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: pathspec '{}' did not match any files", key)));
-                }
+                    println!("fatal: pathspec '{}' did not match any files", key);                }
             }
         }
-        let _ = vcs.index.read_staging_write_index(&staging_area);
         Ok(staging_area.clone())
     }
 
-
-    pub fn rm_r(&mut self, vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+    pub fn rm_r(vcs: &mut VersionControlSystem, dir_path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         let mut result = HashMap::new();
-        if let Ok(files) = read(path) {
+        if let Ok(files) = read(dir_path) {
             for (key, _) in &files {
                 let file_path = Path::new(key);
                 result = Rm::rm(vcs,file_path)?;

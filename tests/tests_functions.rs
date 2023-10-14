@@ -1,5 +1,5 @@
 use rust_git::{vcs::files::vcs_file::VCSFile, vcs::version_control_system::VersionControlSystem};
-use std::{collections::HashMap, path::{Path, PathBuf}, fs::File};
+use std::{collections::HashMap, path::{Path, PathBuf}, fs::{File, self}};
 use tempdir::TempDir;
 
 pub fn equals(staging_area: HashMap<String, VCSFile>, path: &Path, state: &str) -> bool {
@@ -19,6 +19,12 @@ pub fn create_file(temp_dir: &TempDir, filename: &str) -> PathBuf {
     let file_path = temp_dir.path().join(filename);
     let _ = File::create(&file_path).expect("Failed to create file");
     file_path
+}
+
+pub fn create_dir(temp_dir: &TempDir, dirname: &str) -> PathBuf {
+    let dir_path = temp_dir.path().join(dirname);
+    fs::create_dir_all(&dir_path).expect("Failed to create directory");
+    dir_path
 }
 
 pub fn status_contains(result: HashMap<String, String>, status: &str, file: &PathBuf) -> bool {
