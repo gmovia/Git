@@ -17,6 +17,10 @@ pub mod utils {
     pub mod sets {
         pub mod sets;
     }
+
+    pub mod hasher{
+        pub mod hasher;
+    }
 }
 
 pub mod vcs{
