@@ -1,4 +1,4 @@
-use crate::vcs::{files::vcs_file::VCSFile, commands::hash_object::{HashObject, WriteOption}};
+use crate::vcs::files::vcs_file::VCSFile;
 use std::{path::{Path, PathBuf}, fs::{OpenOptions, File}, io::{Write, self, BufRead}, collections::HashMap};
 
 pub struct Index{

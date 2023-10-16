@@ -1,8 +1,6 @@
 #[cfg(test)]
 mod tests {
     use std::{path::Path, fs, io::Write};
-    use rust_git::utils::hasher::hasher::Hasher;
-
     use crate::tests_functions::{create_file, set_up, status_contains};
 
     #[test]
