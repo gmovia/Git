@@ -4,7 +4,7 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit}, files::repository::Repository};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log}, files::repository::Repository};
 use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
@@ -65,6 +65,10 @@ impl VersionControlSystem {
     /// Crea una entrada en la tabla de commits con su correspondiente id, hash del repositorio y mensaje.
     pub fn commit(&mut self, message: String) -> Result<HashMap<String, String>, std::io::Error>{
         Commit::commit(self, message)
+    }
+
+    pub fn log(&mut self) -> Result<(), std::io::Error> {
+        Log::log(&self)
     }
     
 }

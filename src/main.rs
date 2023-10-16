@@ -6,10 +6,11 @@ use rust_git::handlers::{status::handler_status, add::handler_add, hash_object::
 
 
 fn main() -> Result<(), std::io::Error>{
-    let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA", Vec::new());
+    //let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA", Vec::new());
     //let mut vcs = VersionControlSystem::init(r"C:\Users\Administrator\Desktop\PRUEBA\", Vec::new());
     //let mut vcs = VersionControlSystem::init(r"C:\Users\laura\OneDrive\Escritorio\FIUBA\Taller de programacion I\Trabajo practico grupal\PRUEBA", Vec::new());
     //let mut vcs = VersionControlSystem::init("/Users/luz.diazc/Desktop/PruebaTaller", Vec::new());
+    let mut vcs = VersionControlSystem::init(r"C:\Users\luzmi\OneDrive\Escritorio\PruebaTaller", Vec::new());
 
     loop{
         let mut input = String::new();
@@ -25,6 +26,7 @@ fn main() -> Result<(), std::io::Error>{
             x if x.contains("git cat-file") => {println!("{:?}",handler_cat_file(&vcs, x.to_string())?);},
             x if x.contains("git rm") => {handler_rm(&mut vcs, x.to_string())?;},
             "git commit" => {vcs.commit("hola".to_string())?;},
+            "git log" => {vcs.log()?},
             _ => {}
         }
     }

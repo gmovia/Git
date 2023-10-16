@@ -25,6 +25,7 @@ pub mod utils {
     pub mod random{
         pub mod random;
     }
+
 }
 
 pub mod vcs{
@@ -42,6 +43,7 @@ pub mod vcs{
         pub mod add;
         pub mod rm;
         pub mod commit;
+        pub mod log;
     }
 
     pub mod sets{
