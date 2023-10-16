@@ -1,8 +1,5 @@
 use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
-
-use rand::Rng;
-
-use crate::vcs::{version_control_system::VersionControlSystem, commands::{cat_file::CatFile, hash_object::{WriteOption, HashObject}}};
+use crate::vcs::commands::{hash_object::{WriteOption, HashObject}, cat_file::CatFile};
 
 
 pub struct Repository{

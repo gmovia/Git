@@ -1,4 +1,4 @@
-use std::{fs::{OpenOptions, File}, self, io::Write, collections::HashMap};
+use std::{fs::OpenOptions, self, io::Write, collections::HashMap};
 use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
 use super::init::Init;
 
