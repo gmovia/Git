@@ -1,13 +1,8 @@
 use std::{fs::{OpenOptions, File}, self, io::Write, collections::HashMap};
-
-use crate::vcs::version_control_system::VersionControlSystem;
-
+use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
 use super::init::Init;
 
-
-
 pub struct Commit;
-
 
 impl Commit{
 
@@ -24,30 +19,19 @@ impl Commit{
             }
         }
 
-        let commit = vcs.repository.write_repository(vcs, message, &repository)?;
-        let _ = Commit::write_commit(vcs,commit)?;
+        let _ = Commit::write_commit(vcs, &message, &repository)?;
         let _ = vcs.index.clear(); //limpio el index
         Ok(repository)
     }
     
-    
 
     /// leo la tupla del commit actual y la escribo en la tabla ubicada en commits_file
-    pub fn write_commit(vcs: &VersionControlSystem,commit: (String, String, String)) -> Result<(),std::io::Error>{
+    pub fn write_commit(vcs: &VersionControlSystem, message: &String, repository: &HashMap<String, String>) -> Result<(),std::io::Error>{
+        let id = Random::random();
+        let hash = vcs.repository.write_repository(&repository)?;
         let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&vcs.path)?)?; //abro la tabla de commits para escribir - si no existe, la creo
-        let _ = Commit::add(&mut commits_file, commit)?;
+        let commit = format!("{}-{}-{}\n", id, hash, message);
+        commits_file.write_all(commit.as_bytes())?;
         Ok(())
     }
-
-    /// Escribo la tabla de commits --> Formato: id-hash object del commit-mensaje
-    pub fn add(commits: &mut File, commit: (String, String, String))-> Result<(),std::io::Error> {
-        commits.write_all(&commit.0.as_bytes())?;
-        commits.write_all("-".as_bytes())?;
-        commits.write_all(commit.1.as_bytes())?;
-        commits.write_all("-".as_bytes())?;
-        commits.write_all(commit.2.as_bytes())?;
-        commits.write_all("\n".as_bytes())?;
-        Ok(())
-    }
-
 }

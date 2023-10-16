@@ -2,10 +2,11 @@ use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, 
 
 use rand::Rng;
 
-use crate::vcs::{version_control_system::VersionControlSystem, commands::{cat_file::CatFile, hash_object::WriteOption}};
+use crate::vcs::{version_control_system::VersionControlSystem, commands::{cat_file::CatFile, hash_object::{WriteOption, HashObject}}};
 
 
 pub struct Repository{
+    vcs_path: PathBuf,
     commits_path: PathBuf,
     object_path: PathBuf,
 }
@@ -13,9 +14,10 @@ pub struct Repository{
 impl Repository{
 
     pub fn init(path: &str) -> Repository{
+        let vcs_path = Path::new(path).to_path_buf();
         let commits_path = Path::new(path).join(".rust_git").join("logs").join("commits");//?.display().to_string();  // VER EL PATH, NO SE SI ESTA BIEN ESTO
         let object_path = Path::new(path).join(".rust_git").join("objects");//?.display().toi_string();
-        Repository{commits_path, object_path}
+        Repository{vcs_path, commits_path, object_path}
     }
 
     /// Leo el archivo commits donde esta la tabla y lo paso al HashMap del local_repository
@@ -45,22 +47,16 @@ impl Repository{
     /// leo del hashmap local repository y armo un archivo commit_file que es temporal del commit.
     /// Luego se lo mando al hash_object para que me genere su hash.
     /// Genero una tupla (id,commit_hash_message)
-    pub fn write_repository(&self,vcs: &VersionControlSystem, message: String, repository: &HashMap<String,String>) -> Result<(String, String, String), std::io::Error>{
-        let mut rng = rand::thread_rng();
-        let id = rng.gen_range(1..=100).to_string(); // Genera un número entre 1 y 100 (ambos inclusive)
-        let path = Path::new(&vcs.path).join("temp");
+    pub fn write_repository(&self, repository: &HashMap<String,String>) -> Result<String, std::io::Error>{
+        let path = self.vcs_path.join("temp");
         let mut commit_file = OpenOptions::new().write(true).create(true).append(true).open(&path)?; 
-        for (key,value) in repository{
-            commit_file.write_all(key.as_bytes())?;
-            commit_file.write_all("-".as_bytes())?;
-            commit_file.write_all(value.as_bytes())?;
-            commit_file.write_all("\n".as_bytes())?;
+        for (key, value) in repository {
+            let entry = format!("{}-{}\n", key, value);
+            commit_file.write_all(entry.as_bytes())?;
         }
-        let commit_hash = vcs.hash_object(&path, WriteOption::Write)?; 
+        let hash = HashObject::hash_object(&path, self.object_path.clone(), WriteOption::Write)?;
         let _ = fs::remove_file(path);
-        Ok((id,commit_hash,message))
+        Ok(hash)
     }
-
-
 }
 

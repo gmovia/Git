@@ -10,7 +10,6 @@ use super::files::index::Index;
 
 pub struct VersionControlSystem {
     pub path: String,
-    //pub local_repository: HashMap<String, String>,
     pub repository: Repository,
     pub index: Index
 }
@@ -21,7 +20,6 @@ impl VersionControlSystem {
         let _ = Init::git_init(path, args);
         VersionControlSystem {
             path: path.to_string(),
-            //local_repository: HashMap::new(),
             repository: Repository::init(path),
             index: Index::init(path)
         }
@@ -32,7 +30,6 @@ impl VersionControlSystem {
         let files = read(Path::new(&self.path.clone()))?;
         let staging_area = self.index.read_index()?;
         let repository = self.repository.read_repository()?;
-        //println!("EL REPOSITORIO QUEDO ASI{:?}", repository);
         Ok(Status::status(&files, &staging_area, &repository))
     }
 
@@ -64,6 +61,8 @@ impl VersionControlSystem {
         Rm::rm(self, path, option)
     }
 
+    /// Recibe un mensaje
+    /// Crea una entrada en la tabla de commits con su correspondiente id, hash del repositorio y mensaje.
     pub fn commit(&mut self, message: String) -> Result<HashMap<String, String>, std::io::Error>{
         Commit::commit(self, message)
     }

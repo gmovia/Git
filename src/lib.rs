@@ -21,6 +21,10 @@ pub mod utils {
     pub mod hasher{
         pub mod hasher;
     }
+
+    pub mod random{
+        pub mod random;
+    }
 }
 
 pub mod vcs{
