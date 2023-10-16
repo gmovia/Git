@@ -1,23 +1,26 @@
-use crate::vcs::files::vcs_file::VCSFile;
-use std::{path::Path, fs::{self, OpenOptions, File}, io::{Write, self, BufRead}, collections::HashMap};
+use crate::vcs::{files::vcs_file::VCSFile, commands::hash_object::{HashObject, WriteOption}};
+use std::{path::{Path, PathBuf}, fs::{OpenOptions, File}, io::{Write, self, BufRead}, collections::HashMap};
 
 pub struct Index{
-    pub path: String
+    path: PathBuf
 }
 
 impl Index{
     pub fn init(vcs_path: &str) -> Index{
-        let path = vcs_path.to_owned() + "/.rust_git";
+        let path = Path::new(vcs_path).join(".rust_git").join("index");
         Index{path}
+    }
+
+    /// Vacia index
+    pub fn clear(&self) -> Result<(), std::io::Error>{
+        self.write_index(&HashMap::new())
     }
 
     /// Recibe el area de staging.
     /// Vacia index y luego escribe cada archivo del area de staging en el.
-    pub fn read_staging_write_index(&self, staging_area: &HashMap<String, VCSFile>) -> Result<(),std::io::Error>{
-        fs::create_dir_all(&self.path)?;
-        let index_path = Path::new(&self.path).join("index");
-        let mut index_file = OpenOptions::new().write(true).create(true).append(true).open(&index_path)?;
-        let _ = self.clear(&mut index_file);
+    pub fn write_index(&self, staging_area: &HashMap<String, VCSFile>) -> Result<(),std::io::Error>{
+        let mut index_file = OpenOptions::new().write(true).create(true).append(true).open(&self.path)?;
+        index_file.set_len(0)?;
         for value in staging_area.values(){
             let _ = self.add(&mut index_file,&value);
         }
@@ -27,10 +30,9 @@ impl Index{
     /// Lee index
     /// Crea el hashmap del area de staging insertando cada linea de index.
     /// Devuelve el hashmap.
-    pub fn read_index_write_staging(&self) -> Result<HashMap<String,VCSFile>,std::io::Error>{
+    pub fn read_index(&self) -> Result<HashMap<String,VCSFile>,std::io::Error>{
         let mut staging_area:HashMap<String, VCSFile>  = HashMap::new();
-        let index_path = Path::new(&self.path).join("index");
-        let index_file = OpenOptions::new().read(true).open(&index_path)?;
+        let index_file = OpenOptions::new().read(true).open(&self.path)?;
         let reader = io::BufReader::new(index_file);
         
         for line in reader.lines().filter_map(Result::ok){
@@ -41,22 +43,12 @@ impl Index{
         Ok(staging_area)
     }
     
-    /// Recibe index.
-    /// Vacia index.
-    fn clear(&self, index: &mut File) -> Result<(), std::io::Error>{
-        let _ = index.set_len(0);
-        Ok(())
-    }
     
     /// Recibe index y un archivo
     /// Escribe el archivo en index
     fn add(&self, index: &mut File, file: &VCSFile) -> Result<(),std::io::Error> {
-        index.write_all(file.path.as_bytes())?;
-        index.write_all("-".as_bytes())?;
-        index.write_all(file.state.as_bytes())?;
-        index.write_all("-".as_bytes())?;
-        index.write_all(file.content.as_bytes())?;                
-        index.write_all("\n".as_bytes())?;
+        let line = format!("{}-{}-{}\n", file.path, file.state, file.content);
+        index.write_all(line.as_bytes())?;
         Ok(())
     }
 }

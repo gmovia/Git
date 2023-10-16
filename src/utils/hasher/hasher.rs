@@ -3,12 +3,11 @@ use sha1::{Digest, Sha1};
 pub struct Hasher;
 
 impl Hasher{
-    pub fn hash(_type: &str, content: &Vec<u8>) -> String{
-        let _type = _type.to_string();
+    pub fn hash(content: &Vec<u8>) -> String{
         let size = content.len().to_string();
         let b = b"\0";
 
-        let input = [_type.as_bytes(), size.as_bytes(), b, &content].concat();
+        let input = ["blob ".as_bytes(), size.as_bytes(), b, &content].concat();
 
         let mut sha1 = Sha1::new();
         sha1.update(input);

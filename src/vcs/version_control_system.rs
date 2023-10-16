@@ -28,7 +28,7 @@ impl VersionControlSystem {
     /// Devuelve la informacion de los archivos creados, modificados y eliminados recientemente, junto con el area de staging.
     pub fn status(&self) -> Result<(UntrackedFiles, ChangesNotStagedForCommit, ChangesToBeCommited), std::io::Error> {
         let files = read(Path::new(&self.path.clone()))?;
-        let staging_area = self.index.read_index_write_staging()?;
+        let staging_area = self.index.read_index()?;
         Ok(Status::status(&files, &staging_area, &self.local_repository))
     }
 

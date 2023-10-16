@@ -2,7 +2,7 @@
 mod tests {
 
     use std::{fs::{File, self}, collections::HashMap};
-
+    use rust_git::utils::hasher::hasher::Hasher;
     use rust_git::vcs::commands::rm::RemoveOption;
 
     use crate::tests_functions::{create_file, set_up, equals, create_dir};
@@ -39,11 +39,12 @@ mod tests {
         let file2_path = create_file(&temp_dir, "file2.txt");      
 
         vcs.local_repository.insert(file1_path.to_string_lossy().to_string(), "content".to_string());
-        vcs.local_repository.insert(file2_path.to_string_lossy().to_string(), "content".to_string());
+        vcs.local_repository.insert(file2_path.to_string_lossy().to_string(), "content_two".to_string());
 
 
         let _ = vcs.rm(&file1_path, RemoveOption::Directory);
         let staging_area = vcs.rm(&file2_path, RemoveOption::NoDirectory)?;
+        println!("{:?}", staging_area);
 
         assert_eq!(staging_area.len(), 2);
         Ok(())
@@ -69,7 +70,7 @@ mod tests {
         vcs.local_repository.insert(dir_path.to_string_lossy().to_string(), "content".to_string());
         let _ = vcs.rm(&dir_path, RemoveOption::Directory).unwrap_or(HashMap::new());        
         
-        let staging_area = vcs.index.read_index_write_staging()?;
+        let staging_area = vcs.index.read_index()?;
 
         assert_eq!(staging_area.len(), 0);    
         Ok(())

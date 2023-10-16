@@ -94,7 +94,7 @@ mod tests {
         let _ = create_file(&temp_dir, "file2.txt");   
 
         let staging_area = vcs.add(std::path::Path::new(&vcs.path.clone()))?;
-        let staging = vcs.index.read_index_write_staging()?;
+        let staging = vcs.index.read_index()?;
         for (key, value) in &staging{
             assert_eq!(true,staging_area.contains_key(key));
             assert_eq!(Some(value), staging_area.get(key));

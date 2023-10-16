@@ -1,4 +1,4 @@
-use std::{fs::{self, File}, path::{Path, PathBuf}, io::Write, collections::HashMap};
+use std::{fs::{self, File}, path::{Path, PathBuf}, io::Write};
 
 use crate::utils::hasher::hasher::Hasher;
 
@@ -41,7 +41,7 @@ impl HashObject{
         }
 
         let file = fs::read(path)?;
-        let hash = Hasher::hash("blob ", &file);
+        let hash = Hasher::hash( &file);
 
         match option{
             WriteOption::Write => HashObject::write_object(&hash, object_path, &file)?,

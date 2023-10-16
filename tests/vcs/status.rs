@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
     use std::{path::Path, fs, io::Write};
+    use rust_git::utils::hasher::hasher::Hasher;
+
     use crate::tests_functions::{create_file, set_up, status_contains};
 
     #[test]
@@ -143,8 +145,8 @@ mod tests {
     #[test]
     pub fn test_12_three_sets_are_empty() -> Result<(), std::io::Error>{
         let (temp_dir, mut vsc) = set_up();
-        let path = create_file(&temp_dir, "file1.txt");    
-        vsc.local_repository.insert(path.display().to_string(), "".to_string());
+        let path = create_file(&temp_dir, "file1.txt");
+        vsc.local_repository.insert(path.display().to_string(), "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391".to_string());
 
         let _ = vsc.add(&path);
         let (untracked_file, changes_not_staged_for_commit, changes_to_be_commited) = vsc.status()?;
