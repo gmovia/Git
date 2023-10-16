@@ -106,4 +106,14 @@ mod tests {
         }
         Ok(())
     }
+
+    #[test]
+    pub fn test_09_trying_to_commit_a_file_before_adding_it() -> Result<(),std::io::Error>{
+        let (temp_dir, mut vcs) = set_up();
+        let _ = create_file(&temp_dir, "file1.txt");
+
+        let result = vcs.commit("first_commit".to_string());
+        assert!(result.is_err());
+        Ok(())
+    }
 }

@@ -1,4 +1,4 @@
-use std::{fs::OpenOptions, self, io::Write, collections::HashMap};
+use std::{fs::OpenOptions, self, io::{Write, self}, collections::HashMap};
 use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
 use super::init::Init;
 
@@ -12,7 +12,9 @@ impl Commit{
     pub fn commit(vcs: &VersionControlSystem, message: String) -> Result<HashMap<String, String>, std::io::Error>{
         let mut repository = vcs.repository.read_repository()?;
         let staging_area = vcs.index.read_index()?;
-        
+        if staging_area.is_empty(){
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "The staging area is empty, you need to add before commit"));
+        }
         for (key, value) in &staging_area{
             match value.clone().state.as_str(){
                 "CREATED" => {repository.insert(key.to_string(), value.clone().content);},
