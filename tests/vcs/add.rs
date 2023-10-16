@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod tests {
+    use std::{fs, io::Write};
+
     use crate::tests_functions::{create_file, set_up, equals};
 
     #[test]
@@ -18,9 +20,8 @@ mod tests {
         let file1_path = create_file(&temp_dir, "file1.txt");   
         let file2_path = create_file(&temp_dir, "file2.txt");        
      
-        let _ = vcs.add(&file1_path);
+        vcs.add(&file1_path)?;
         let staging_area = vcs.add(&file2_path)?;
-
         assert_eq!(staging_area.len(), 2);
         Ok(())
     }
@@ -41,7 +42,11 @@ mod tests {
         let (temp_dir, mut vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
-        vcs.local_repository.insert(path.display().to_string(), "content".to_string());  
+        let _ = vcs.add(&path)?;
+        let _ = vcs.commit("first commit".to_string());
+
+        let mut file = fs::OpenOptions::new().create(true).append(true).open(&path)?;
+        let _ = file.write_all(b"hola");
 
         let staging_area = vcs.add(&path)?;
         assert_eq!(equals(staging_area.clone(), &path, "MODIFIED"),true);
@@ -54,7 +59,7 @@ mod tests {
         let (temp_dir, mut vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
-        vcs.local_repository.insert(path.display().to_string(), "content".to_string());  
+        vcs.repository.read_repository()?.insert(path.display().to_string(), "content".to_string());  
 
         let _ = vcs.add(&path);
         let staging_area = vcs.add(&path)?;
@@ -94,7 +99,7 @@ mod tests {
         let _ = create_file(&temp_dir, "file2.txt");   
 
         let staging_area = vcs.add(std::path::Path::new(&vcs.path.clone()))?;
-        let staging = vcs.index.read_index_write_staging()?;
+        let staging = vcs.index.read_index()?;
         for (key, value) in &staging{
             assert_eq!(true,staging_area.contains_key(key));
             assert_eq!(Some(value), staging_area.get(key));

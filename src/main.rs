@@ -24,6 +24,7 @@ fn main() -> Result<(), std::io::Error>{
             x if x.contains("git add") => {handler_add(&mut vcs, x.to_string())?;},
             x if x.contains("git cat-file") => {println!("{:?}",handler_cat_file(&vcs, x.to_string())?);},
             x if x.contains("git rm") => {handler_rm(&mut vcs, x.to_string())?;},
+            "git commit" => {vcs.commit("hola".to_string())?;},
             _ => {}
         }
     }

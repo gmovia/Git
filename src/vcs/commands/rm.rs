@@ -44,19 +44,20 @@ impl Rm{
             return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: not removing '{:?}' recursively without -r", path)));
         }
 
-        let mut staging_area = vcs.index.read_index_write_staging()?;
+        let mut staging_area = vcs.index.read_index()?;
         
         if let Ok(files) = read(path){
-            for(key,value) in &files{
-                if vcs.local_repository.contains_key(key){
+            for key in files.keys(){
+                if vcs.repository.read_repository()?.contains_key(key){
                     Rm::remove_from_workspace(&key)?;
-                    let file = VCSFile::new(key.clone(), value.clone(), "DELETED".to_string());
+                    let file = VCSFile::new(key.clone(), "NULL".to_string(), "DELETED".to_string());
                     staging_area.insert(key.to_owned(), file);
-                    let _ = vcs.index.read_staging_write_index(&staging_area);
+                    let _ = vcs.index.write_index(&staging_area);
                     return Ok(staging_area.clone());
                 }
                 else{
-                    println!("fatal: pathspec '{}' did not match any files", key);                }
+                    println!("fatal: pathspec '{}' did not match any files", key);                
+                }
             }
         }
         Ok(staging_area.clone())

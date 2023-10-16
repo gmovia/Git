@@ -4,13 +4,14 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
-use super::commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit}, files::repository::Repository};
 use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
 pub struct VersionControlSystem {
     pub path: String,
-    pub local_repository: HashMap<String, String>,
+    //pub local_repository: HashMap<String, String>,
+    pub repository: Repository,
     pub index: Index
 }
 
@@ -20,7 +21,8 @@ impl VersionControlSystem {
         let _ = Init::git_init(path, args);
         VersionControlSystem {
             path: path.to_string(),
-            local_repository: HashMap::new(),
+            //local_repository: HashMap::new(),
+            repository: Repository::init(path),
             index: Index::init(path)
         }
     }
@@ -28,8 +30,10 @@ impl VersionControlSystem {
     /// Devuelve la informacion de los archivos creados, modificados y eliminados recientemente, junto con el area de staging.
     pub fn status(&self) -> Result<(UntrackedFiles, ChangesNotStagedForCommit, ChangesToBeCommited), std::io::Error> {
         let files = read(Path::new(&self.path.clone()))?;
-        let staging_area = self.index.read_index_write_staging()?;
-        Ok(Status::status(&files, &staging_area, &self.local_repository))
+        let staging_area = self.index.read_index()?;
+        let repository = self.repository.read_repository()?;
+        //println!("EL REPOSITORIO QUEDO ASI{:?}", repository);
+        Ok(Status::status(&files, &staging_area, &repository))
     }
 
     /// Recibe un path
@@ -58,6 +62,10 @@ impl VersionControlSystem {
     /// Si el comando tiene un -r se eliminan los archivos de un directorio entero
     pub fn rm(&mut self, path: &Path, option: RemoveOption) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Rm::rm(self, path, option)
+    }
+
+    pub fn commit(&mut self, message: String) -> Result<HashMap<String, String>, std::io::Error>{
+        Commit::commit(self, message)
     }
     
 }
