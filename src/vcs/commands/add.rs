@@ -20,7 +20,7 @@ impl Add{
             for key in files.keys() {
                 let state = match (untracked_files.get(key), changes_not_staged_for_commit.get(key)) {
                     (Some(state), _) => state.to_string(),
-                    (_, Some(_)) if !vcs.local_repository.contains_key(key) => "CREATED".to_string(),
+                    (_, Some(_)) if !vcs.repository.read_repository()?.contains_key(key) => "CREATED".to_string(),
                     (_, Some(state)) => state.to_string(),
                     _ => continue,
                 };
@@ -36,7 +36,6 @@ impl Add{
                 staging_area.insert(path.display().to_string(), file);
             }
         }
-    
         let _ = vcs.index.write_index(&staging_area);
         Ok(staging_area.clone())
     }

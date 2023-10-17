@@ -11,7 +11,8 @@ mod tests {
         let (temp_dir, mut vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
-        vcs.local_repository.insert(path.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&path)?;
+        vcs.commit("first commit".to_string())?;
         
         let staging_area = vcs.rm(&path, RemoveOption::NoDirectory)?;
         assert_eq!(staging_area.len(), 1);
@@ -23,7 +24,8 @@ mod tests {
         let (temp_dir, mut vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
-        vcs.local_repository.insert(path.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&path)?;
+        vcs.commit("first_commit".to_string())?;
         
         let staging_area = vcs.rm(&path, RemoveOption::NoDirectory)?;
         assert_eq!(equals(staging_area, &path, "DELETED"), true);
@@ -37,13 +39,12 @@ mod tests {
         let file1_path = create_file(&temp_dir, "file1.txt");      
         let file2_path = create_file(&temp_dir, "file2.txt");      
 
-        vcs.local_repository.insert(file1_path.to_string_lossy().to_string(), "content".to_string());
-        vcs.local_repository.insert(file2_path.to_string_lossy().to_string(), "content_two".to_string());
-
+        vcs.add(&file1_path)?;
+        vcs.add(&file2_path)?;
+        vcs.commit("first commit".to_string())?;
 
         let _ = vcs.rm(&file1_path, RemoveOption::Directory);
         let staging_area = vcs.rm(&file2_path, RemoveOption::NoDirectory)?;
-        println!("{:?}", staging_area);
 
         assert_eq!(staging_area.len(), 2);
         Ok(())
@@ -54,7 +55,8 @@ mod tests {
         let (temp_dir, mut vcs) = set_up();
         let dir_path = create_dir(&temp_dir, "directory/");      
 
-        vcs.local_repository.insert(dir_path.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&dir_path)?;
+        vcs.commit("first_commit".to_string())?;
         let result = vcs.rm(&dir_path, RemoveOption::NoDirectory);
         
         assert!(matches!(result, Err(e) if e.to_string().contains("recursively without -r")));    
@@ -66,7 +68,8 @@ mod tests {
         let (temp_dir, mut vcs) = set_up();
         let dir_path = create_dir(&temp_dir, "directory/");      
         
-        vcs.local_repository.insert(dir_path.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&dir_path)?;
+        vcs.commit("first_commit".to_string())?;
         let _ = vcs.rm(&dir_path, RemoveOption::Directory).unwrap_or(HashMap::new());        
         
         let staging_area = vcs.index.read_index()?;
@@ -78,11 +81,13 @@ mod tests {
     #[test]
     pub fn test_06_rm_directory_with_r() -> Result<(), std::io::Error>{ 
         let (temp_dir, mut vcs) = set_up();
-        let dir_path = create_dir(&temp_dir, "carpeta/");      
+        let dir_path = create_dir(&temp_dir, "carpeta");      
         let file_path = dir_path.join("file.txt");
         let _ = File::create(&file_path);
     
-        vcs.local_repository.insert(file_path.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&dir_path)?;
+        vcs.add(&file_path)?;
+        vcs.commit("first_commit".to_string())?;
         let staging_area = vcs.rm(&dir_path, RemoveOption::Directory)?;
     
         assert_eq!(staging_area.len(), 1);    
@@ -95,7 +100,8 @@ mod tests {
         let (temp_dir, mut vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
-        vcs.local_repository.insert(path.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&path)?;
+        vcs.commit("first_commit".to_string())?;
         
         let _ = vcs.rm(&path, RemoveOption::NoDirectory);
         assert!(!path.exists());
@@ -105,7 +111,7 @@ mod tests {
     #[test]
     pub fn test_08_rm_remove_only_file_that_was_commited_in_repository() -> Result<(), std::io::Error>{ 
         let (temp_dir, mut vcs) = set_up();
-        let dir_path = create_dir(&temp_dir, "carpeta/");   
+        let dir_path = create_dir(&temp_dir, "carpeta");   
 
         let file_path = dir_path.join("file.txt");
         let file_path2 = dir_path.join("file2.txt");
@@ -113,7 +119,8 @@ mod tests {
         let _ = File::create(&file_path);
         let _ = File::create(&file_path2);
 
-        vcs.local_repository.insert(file_path.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&file_path)?;
+        vcs.commit("first_commit".to_string())?;
         let staging_area = vcs.rm(&dir_path, RemoveOption::Directory)?;
     
         assert_eq!(staging_area.len(), 1);
@@ -123,7 +130,7 @@ mod tests {
     #[test]
     pub fn test_09_rm_remove_two_files_that_were_commited_in_repository() -> Result<(), std::io::Error>{ 
         let (temp_dir, mut vcs) = set_up();
-        let dir_path = create_dir(&temp_dir, "carpeta/");      
+        let dir_path = create_dir(&temp_dir, "carpeta");      
         
         let file_path = dir_path.join("file.txt");
         let file_path2 = dir_path.join("file2.txt");
@@ -131,9 +138,9 @@ mod tests {
         let _ = File::create(&file_path);
         let _ = File::create(&file_path2);
 
-        vcs.local_repository.insert(file_path.to_string_lossy().to_string(), "content".to_string());
-        vcs.local_repository.insert(file_path2.to_string_lossy().to_string(), "content".to_string());
-        
+        vcs.add(&file_path)?;
+        vcs.add(&file_path2)?;
+        vcs.commit("first_commit".to_string())?;
         let staging_area = vcs.rm(&dir_path, RemoveOption::Directory)?;
     
         assert_eq!(staging_area.len(), 2);
@@ -144,7 +151,7 @@ mod tests {
     pub fn test_10_rm_remove_one_file_commited_with_other_directory_with_files_that_not_are_commited() -> Result<(), std::io::Error>{ 
         let (temp_dir, mut vcs) = set_up();
 
-        let dir_path = create_dir(&temp_dir, "carpeta/");      
+        let dir_path = create_dir(&temp_dir, "carpeta");      
         let file_path = dir_path.join("file.txt");
 
         let dir_path2 = dir_path.join("subcarpeta");
@@ -156,8 +163,8 @@ mod tests {
         let _ = File::create(&file_path2);
         let _ = File::create(&file_path3);
 
-
-        vcs.local_repository.insert(file_path.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&file_path)?;
+        vcs.commit("first_commit".to_string())?;
         
         let staging_area = vcs.rm(&dir_path, RemoveOption::Directory)?;
     
@@ -169,7 +176,7 @@ mod tests {
     pub fn test_11_rm_remove_one_file_commited_with_other_directory_with_files_that_not_are_commited_and_exists_yet() -> Result<(), std::io::Error>{ 
         let (temp_dir, mut vcs) = set_up();
 
-        let dir_path = create_dir(&temp_dir, "carpeta/");      
+        let dir_path = create_dir(&temp_dir, "carpeta");      
         let file_path = dir_path.join("file.txt");
 
         let dir_path2 = dir_path.join("subcarpeta");
@@ -181,8 +188,8 @@ mod tests {
         let _ = File::create(&file_path2);
         let _ = File::create(&file_path3);
 
-
-        vcs.local_repository.insert(file_path.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&file_path)?;
+        vcs.commit("first_commit".to_string())?;
         
         let _ = vcs.rm(&dir_path, RemoveOption::Directory)?;
     
@@ -196,7 +203,7 @@ mod tests {
     pub fn test_12_rm_remove_one_file_commited_with_subdir_that_one_file_was_commited() -> Result<(), std::io::Error>{ 
         let (temp_dir, mut vcs) = set_up();
 
-        let dir_path = create_dir(&temp_dir, "carpeta/");      
+        let dir_path = create_dir(&temp_dir, "carpeta");      
         let file_path = dir_path.join("file.txt");
 
         let dir_path2 = dir_path.join("subcarpeta");
@@ -209,8 +216,9 @@ mod tests {
         let _ = File::create(&file_path3);
 
 
-        vcs.local_repository.insert(file_path.to_string_lossy().to_string(), "content".to_string());
-        vcs.local_repository.insert(file_path3.to_string_lossy().to_string(), "content".to_string());
+        vcs.add(&file_path)?;
+        vcs.add(&file_path3)?;
+        vcs.commit("first_commit".to_string())?;
 
         let staging_area = vcs.rm(&dir_path, RemoveOption::Directory)?;
     

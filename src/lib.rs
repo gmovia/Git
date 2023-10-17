@@ -21,12 +21,16 @@ pub mod utils {
     pub mod hasher{
         pub mod hasher;
     }
+    pub mod random{
+        pub mod random;
+    }
 }
 
 pub mod vcs{
     pub mod files{
         pub mod vcs_file;
         pub mod index;
+        pub mod repository;
     }
 
     pub mod commands{
@@ -36,6 +40,7 @@ pub mod vcs{
         pub mod status;
         pub mod add;
         pub mod rm;
+        pub mod commit;
     }
 
     pub mod sets{

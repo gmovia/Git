@@ -48,7 +48,7 @@ impl Rm{
         
         if let Ok(files) = read(path){
             for key in files.keys(){
-                if vcs.local_repository.contains_key(key){
+                if vcs.repository.read_repository()?.contains_key(key){
                     Rm::remove_from_workspace(&key)?;
                     let file = VCSFile::new(key.clone(), "NULL".to_string(), "DELETED".to_string());
                     staging_area.insert(key.to_owned(), file);

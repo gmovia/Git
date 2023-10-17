@@ -19,7 +19,7 @@ impl Index{
     /// Recibe el area de staging.
     /// Vacia index y luego escribe cada archivo del area de staging en el.
     pub fn write_index(&self, staging_area: &HashMap<String, VCSFile>) -> Result<(),std::io::Error>{
-        let mut index_file = OpenOptions::new().write(true).create(true).append(true).open(&self.path)?;
+        let mut index_file = OpenOptions::new().read(true).write(true).open(&self.path)?;
         index_file.set_len(0)?;
         for value in staging_area.values(){
             let _ = self.add(&mut index_file,&value);
@@ -37,6 +37,7 @@ impl Index{
         
         for line in reader.lines().filter_map(Result::ok){
             let parts: Vec<&str> = line.split("-").collect();
+            println!("{:?}",parts);
             let file = VCSFile::new(parts[0].to_string(), parts[2].to_string(), parts[1].to_string());
             staging_area.insert(parts[0].to_string(), file);
         }

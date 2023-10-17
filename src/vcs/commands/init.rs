@@ -74,7 +74,9 @@ impl Init {
     /// Crea el directorio logs al inicializar un nuevo repositorio
     fn create_git_logs_folder(&self, git_path: &Path) -> Result<(),std::io::Error> {
         let logs_path = git_path.join("logs");
+        let commits_path = logs_path.join("commits");
         fs::create_dir_all(logs_path)?;
+        fs::OpenOptions::new().create(true).append(true).open(&commits_path)?;
         Ok(())
     }
 
@@ -125,9 +127,15 @@ impl Init {
     }
 
     pub fn get_object_path(path: &String) -> Result<PathBuf,std::io::Error>{
-        let mut objects_path = String::from(path);
-        objects_path.push_str("/.rust_git/objects/");
+        let p = Path::new(path);
+        let objects_path = p.join(".rust_git").join("objects");
         Ok(Path::new(&objects_path).to_path_buf())
+    }
+
+    pub fn get_commits_path(path: &String) -> Result<PathBuf,std::io::Error>{
+        let p = Path::new(path);
+        let commit_path = p.join(".rust_git").join("logs").join("commits");
+        Ok(Path::new(&commit_path).to_path_buf())
     }
 
 }
