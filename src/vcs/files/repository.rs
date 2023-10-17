@@ -12,10 +12,11 @@ impl Repository{
 
     pub fn init(path: &str) -> Repository{
         let vcs_path = Path::new(path).to_path_buf();
-        let commits_path = Path::new(path).join(".rust_git").join("logs").join("commits");//?.display().to_string();  // VER EL PATH, NO SE SI ESTA BIEN ESTO
+        let commits_path = Path::new(path).join(".rust_git").join("logs").join("master");//?.display().to_string();  // VER EL PATH, NO SE SI ESTA BIEN ESTO
         let object_path = Path::new(path).join(".rust_git").join("objects");//?.display().toi_string();
         Repository{vcs_path, commits_path, object_path}
     }
+
 
     /// Leo el archivo commits donde esta la tabla y lo paso al HashMap del local_repository
      pub fn read_repository(&self) -> Result<HashMap<String,String>,std::io::Error>{

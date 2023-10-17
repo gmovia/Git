@@ -43,7 +43,7 @@ impl Init {
         self.create_git_info_folder(&path)?;
         self.create_git_logs_folder(&path)?;
         self.create_git_objects_folder(&path)?;
-        self.create_git_refs_folder(&path)?;
+        self.create_git_refs_folder(&path, branch_name)?;
         self.create_git_config_file(&path)?;
         self.create_head_file(&path, branch_name)?;
         self.create_index(&path)?;        
@@ -74,7 +74,7 @@ impl Init {
     /// Crea el directorio logs al inicializar un nuevo repositorio
     fn create_git_logs_folder(&self, git_path: &Path) -> Result<(),std::io::Error> {
         let logs_path = git_path.join("logs");
-        let commits_path = logs_path.join("commits");
+        let commits_path = logs_path.join("master");
         fs::create_dir_all(logs_path)?;
         fs::OpenOptions::new().create(true).append(true).open(&commits_path)?;
         Ok(())
@@ -88,10 +88,13 @@ impl Init {
     }
 
     /// Crea el directorio refs al inicializar un nuevo repositorio
-    fn create_git_refs_folder(&self, git_path: &Path) -> Result<(),std::io::Error> {
+    fn create_git_refs_folder(&self, git_path: &Path, branch_name: &str) -> Result<(),std::io::Error> {
         let refs_path = git_path.join("refs");
         fs::create_dir_all(&refs_path)?;
         fs::create_dir_all(&refs_path.join("heads"))?;
+        let master_path = Path::new(&refs_path.join("heads")).join(branch_name);
+        let mut master_file = File::create(master_path)?;
+        master_file.write_all(b"logs/master")?;
         fs::create_dir_all(&refs_path.join("tags"))?;
         Ok(())
     }   
@@ -134,7 +137,7 @@ impl Init {
 
     pub fn get_commits_path(path: &String) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
-        let commit_path = p.join(".rust_git").join("logs").join("commits");
+        let commit_path = p.join(".rust_git").join("logs").join("master");
         Ok(Path::new(&commit_path).to_path_buf())
     }
 
