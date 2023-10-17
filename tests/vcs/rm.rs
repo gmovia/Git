@@ -66,9 +66,10 @@ mod tests {
         Ok(())
     } 
 
-    #[test]
+     #[test]
     pub fn test_05_rm_directory_without_r_staging_area_without_any_change() -> Result<(), std::io::Error>{ 
         let (temp_dir, mut vcs) = set_up();
+
         let dir_path = create_dir(&temp_dir, "directory"); 
 
         let file_path = dir_path.join("file.txt");
