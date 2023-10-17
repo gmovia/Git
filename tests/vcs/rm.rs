@@ -2,7 +2,6 @@
 mod tests {
 
     use std::{fs::{File, self}, collections::HashMap};
-
     use rust_git::vcs::commands::rm::RemoveOption;
 
     use crate::tests_functions::{create_file, set_up, equals, create_dir};

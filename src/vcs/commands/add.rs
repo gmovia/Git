@@ -15,6 +15,7 @@ impl Add{
     pub fn add(vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         let (untracked_files, changes_not_staged_for_commit, _) = vcs.status()?;
         let mut staging_area = vcs.index.read_index()?;
+
         if let Ok(files) = read(path) {
             for key in files.keys() {
                 let state = match (untracked_files.get(key), changes_not_staged_for_commit.get(key)) {
