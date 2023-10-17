@@ -4,6 +4,7 @@ pub mod handlers{
     pub mod add;
     pub mod rm;
     pub mod cat_file;
+    pub mod commit;
 }
 pub mod types{
     pub mod types;
