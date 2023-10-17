@@ -37,7 +37,6 @@ impl Index{
         
         for line in reader.lines().filter_map(Result::ok){
             let parts: Vec<&str> = line.split("-").collect();
-            println!("{:?}",parts);
             let file = VCSFile::new(parts[0].to_string(), parts[2].to_string(), parts[1].to_string());
             staging_area.insert(parts[0].to_string(), file);
         }

@@ -6,6 +6,7 @@ pub mod handlers{
     pub mod cat_file;
     
     pub mod log;
+    pub mod commit;
 }
 pub mod types{
     pub mod types;
@@ -23,7 +24,6 @@ pub mod utils {
     pub mod hasher{
         pub mod hasher;
     }
-
     pub mod random{
         pub mod random;
     }

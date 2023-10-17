@@ -2,7 +2,6 @@
 mod tests {
 
     use std::{fs::{File, self}, collections::HashMap};
-
     use rust_git::vcs::commands::rm::RemoveOption;
 
     use crate::tests_functions::{create_file, set_up, equals, create_dir};
@@ -54,7 +53,7 @@ mod tests {
     #[test]
     pub fn test_04_try_rm_directory_without_r() -> Result<(), std::io::Error>{
         let (temp_dir, mut vcs) = set_up();
-        let dir_path = create_dir(&temp_dir, "directory/");      
+        let dir_path = create_dir(&temp_dir, "directory");      
 
         let file_path = dir_path.join("file.txt");
         let _ = File::create(&file_path);     
@@ -70,7 +69,8 @@ mod tests {
      #[test]
     pub fn test_05_rm_directory_without_r_staging_area_without_any_change() -> Result<(), std::io::Error>{ 
         let (temp_dir, mut vcs) = set_up();
-        let dir_path = create_dir(&temp_dir, "directory/"); 
+
+        let dir_path = create_dir(&temp_dir, "directory"); 
 
         let file_path = dir_path.join("file.txt");
         let _ = File::create(&file_path);     
