@@ -12,7 +12,6 @@ impl Repository{
         Repository{path}
     }
 
-
     /// Leo el archivo commits donde esta la tabla y lo paso al HashMap del local_repository
      pub fn read_repository(&self) -> Result<HashMap<String,String>,std::io::Error>{
         let mut local_repository:HashMap<String, String>  = HashMap::new();

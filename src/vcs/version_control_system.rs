@@ -4,7 +4,7 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log}, files::repository::Repository};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::Branch}, files::repository::Repository};
 use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
@@ -72,4 +72,7 @@ impl VersionControlSystem {
         Log::log(self)
     }
     
+    pub fn branch(&self,branch_name: &str) -> Result<(), std::io::Error>{
+        Branch::branch(&self.path, branch_name)
+    }
 }

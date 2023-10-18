@@ -1,4 +1,5 @@
 use std::{path::{Path, PathBuf}, fs::{self, File}, io::{Write, Read}};
+
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
     pub example_text: String,
@@ -41,7 +42,7 @@ impl Init {
 
         self.create_git_hooks_folder(&path)?;
         self.create_git_info_folder(&path)?;
-        self.create_git_logs_folder(&path)?;
+        self.create_git_logs_folder(&path, branch_name)?;
         self.create_git_objects_folder(&path)?;
         self.create_git_refs_folder(&path, branch_name)?;
         self.create_git_config_file(&path)?;
@@ -72,9 +73,9 @@ impl Init {
     }
 
     /// Crea el directorio logs al inicializar un nuevo repositorio
-    fn create_git_logs_folder(&self, git_path: &Path) -> Result<(),std::io::Error> {
+    fn create_git_logs_folder(&self, git_path: &Path, branch_name: &str) -> Result<(),std::io::Error> {
         let logs_path = git_path.join("logs");
-        let commits_path = logs_path.join("master");
+        let commits_path = logs_path.join(branch_name);
         fs::create_dir_all(logs_path)?;
         fs::OpenOptions::new().create(true).append(true).open(&commits_path)?;
         Ok(())
@@ -105,6 +106,7 @@ impl Init {
             
         Ok(())
     } 
+
 
     /// Crea el archivo config al inicializar un nuevo repositorio
     fn create_git_config_file(&self, git_path: &Path) -> Result<(),std::io::Error> {
@@ -162,4 +164,13 @@ impl Init {
         Ok(Path::new(&commits_path).to_path_buf())
     }
 
+    pub fn create_log_file(path: &str, branch_name: &str) -> Result<(),std::io::Error>{
+        let actual_commit_path = Self::get_commits_path(&path.to_string())?;
+        let p = Path::new(path);
+        let logs_path = p.join(".rust_git").join("logs").join(branch_name);
+        let mut file = File::create(&logs_path)?;
+        let content = fs::read_to_string(actual_commit_path)?;
+        file.write_all(content.as_bytes())?;
+        Ok(())
+    }
 }
