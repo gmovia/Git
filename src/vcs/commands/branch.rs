@@ -51,7 +51,7 @@ impl Branch{
             for entry in entries{
                 if let Ok(entry) = entry{
                     if let Some(file_name) = entry.path().file_name(){
-                        println!("{:?} \n",file_name.to_string_lossy().to_string());
+                        println!("{:?}",file_name.to_string_lossy().to_string());
                     }
 
                 }
