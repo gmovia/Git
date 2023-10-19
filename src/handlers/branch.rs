@@ -12,7 +12,7 @@ pub fn handler_branch(vcs: &VersionControlSystem, input: String) -> Result<(), s
             _ => {return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid parameters"));},
         }},
         3 => {vcs.branch(BranchOptions::NewBranch(args[2]))?;},
-        2 => {vcs.branch(BranchOptions::GetBranchs)?;},
+        2 => {vcs.branch(BranchOptions::GetBranches)?;},
         _ => {return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid parameters"));},
     }
     Ok(())

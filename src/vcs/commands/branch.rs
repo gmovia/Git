@@ -8,7 +8,7 @@ pub struct Branch;
 pub enum BranchOptions<'a>{
     NewBranch(&'a str),
     DeleteBranch(&'a str),
-    GetBranchs,
+    GetBranches,
 }
 
 impl Branch{
@@ -17,7 +17,7 @@ impl Branch{
         match option{
             BranchOptions::NewBranch(branch_name) => {Self::create_new_branch(path, branch_name)?;},
             BranchOptions::DeleteBranch(branch_name) => {Self::delete_branch(path, branch_name)?;},
-            BranchOptions::GetBranchs => {Self::get_branchs(path)?;},
+            BranchOptions::GetBranches => {Self::get_branches(path)?;},
         }
         Ok(())
     }
@@ -44,19 +44,21 @@ impl Branch{
         Ok(())
     }
 
-    pub fn get_branchs(path: &str) -> Result<(),std::io::Error>{
+    pub fn get_branches(path: &str) -> Result<Vec<String>,std::io::Error>{
+        let mut branches: Vec<String> = Vec::new();
         let p = Path::new(path);
         let branchs_dir_path = p.join(".rust_git").join("refs").join("heads");
         if let Ok(entries) = fs::read_dir(branchs_dir_path){
             for entry in entries{
                 if let Ok(entry) = entry{
                     if let Some(file_name) = entry.path().file_name(){
+                        branches.push(file_name.to_string_lossy().to_string());
                         println!("{:?}",file_name.to_string_lossy().to_string());
                     }
 
                 }
             }
         }
-        Ok(())
+        Ok(branches)
     }
 }
