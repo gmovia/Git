@@ -168,6 +168,10 @@ impl Init {
         let actual_commit_path = Self::get_commits_path(&path.to_string())?;
         let p = Path::new(path);
         let logs_path = p.join(".rust_git").join("logs").join(branch_name);
+        let branch_path = p.join(".rust_git").join("refs").join("heads").join(branch_name);
+        let mut branch_file = File::create(&branch_path)?;
+        branch_file.write_all(b"logs/")?;
+        branch_file.write_all(branch_name.as_bytes())?;
         let mut file = File::create(&logs_path)?;
         let content = fs::read_to_string(actual_commit_path)?;
         file.write_all(content.as_bytes())?;
