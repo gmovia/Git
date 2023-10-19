@@ -163,9 +163,13 @@ impl Init {
         Ok(Path::new(&commits_path).to_path_buf())
     }
 
-    pub fn create_log_file(path: PathBuf, branch_name: &str) -> Result<(),std::io::Error>{
+pub fn create_log_file(path: PathBuf, branch_name: &str) -> Result<(),std::io::Error>{
         let actual_commit_path = Self::get_commits_path(&path)?;
         let logs_path = path.join(".rust_git").join("logs").join(branch_name);
+        let branch_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);
+        let mut branch_file = File::create(&branch_path)?;
+        branch_file.write_all(b"logs/")?;
+        branch_file.write_all(branch_name.as_bytes())?;
         let mut file = File::create(&logs_path)?;
         let content = fs::read_to_string(actual_commit_path)?;
         file.write_all(content.as_bytes())?;
