@@ -1,14 +1,14 @@
-use std::{collections::HashMap, path::Path, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
+use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
 use crate::vcs::commands::{hash_object::{WriteOption, HashObject}, cat_file::CatFile, init::Init};
 
 pub struct Repository{
-    path: String,
+    path: PathBuf,
 }
 
 impl Repository{
 
-    pub fn init(path: &str) -> Repository{
-        let path = path.to_string();
+
+    pub fn init(path: PathBuf) -> Repository{
         Repository{path}
     }
 

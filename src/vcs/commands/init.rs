@@ -8,7 +8,7 @@ pub struct Init {
 impl Init {
     
     /// Esta funcion es el constructor de init. Se crean los directorios y archivos necesarios.
-    pub fn git_init(path: &str, args: Vec<String>){
+    pub fn git_init(path: &PathBuf, args: Vec<String>){
         let init = { Init { example_text: "hola".to_string() } };
 
         if args.len() < 4 {
@@ -36,8 +36,8 @@ impl Init {
     }
 
     /// Esta funcion es la encargada de crear todsas las carpetas y archivos necesarios luego de ejecutar git init.
-    fn create_initial_folders(&self, path: &str, branch_name: &str) -> Result<(),std::io::Error> {
-        let path = Path::new(path).join(".rust_git");
+    fn create_initial_folders(&self, path: &PathBuf, branch_name: &str) -> Result<(),std::io::Error> {
+        let path = path.join(".rust_git");
         fs::create_dir_all(&path)?;
 
         self.create_git_hooks_folder(&path)?;
@@ -138,16 +138,15 @@ impl Init {
         Ok(())
     }
 
-    pub fn get_object_path(path: &String) -> Result<PathBuf,std::io::Error>{
+    pub fn get_object_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
         let objects_path = p.join(".rust_git").join("objects");
         Ok(Path::new(&objects_path).to_path_buf())
     }
 
-    pub fn get_commits_path(path: &String) -> Result<PathBuf,std::io::Error>{
-        let p = Path::new(path); // OJO LAS BARRAS EN WINDOWS NO VAN A ANDAR! FIJATE QUE EN HEAD ESTAN ASI / Y NO ASI \
-        // VER COMO RESOLVERLO DSP! EN LINUX TODO OK!
-
+    pub fn get_commits_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
+        let p = Path::new(path);
+        
         let head_path = p.join(".rust_git").join("HEAD");
         let mut head_file = File::open(head_path)?;
         
@@ -164,11 +163,10 @@ impl Init {
         Ok(Path::new(&commits_path).to_path_buf())
     }
 
-    pub fn create_log_file(path: &str, branch_name: &str) -> Result<(),std::io::Error>{
-        let actual_commit_path = Self::get_commits_path(&path.to_string())?;
-        let p = Path::new(path);
-        let logs_path = p.join(".rust_git").join("logs").join(branch_name);
-        let branch_path = p.join(".rust_git").join("refs").join("heads").join(branch_name);
+pub fn create_log_file(path: PathBuf, branch_name: &str) -> Result<(),std::io::Error>{
+        let actual_commit_path = Self::get_commits_path(&path)?;
+        let logs_path = path.join(".rust_git").join("logs").join(branch_name);
+        let branch_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);
         let mut branch_file = File::create(&branch_path)?;
         branch_file.write_all(b"logs/")?;
         branch_file.write_all(branch_name.as_bytes())?;

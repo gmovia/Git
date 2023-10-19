@@ -22,17 +22,9 @@ pub fn handler_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), 
     }
 
     for path_string in &paths{
-        let mut path_file = String::new();
-        
-        let vcs_path = vcs.path.clone();
-        
-        path_file.push_str(&vcs_path);
-        path_file.push_str(r"\"); //es para windows
-        //path_file.push_str("/"); //es para linux
-        path_file.push_str(&path_string);
-
-        let path = Path::new(&path_file);
-        let _ = vcs.add(path);
+        let path = vcs.path.join(path_string);
+       
+        let _ = vcs.add(&path);
     }
     Ok(())
 }

@@ -1,13 +1,13 @@
 use crate::vcs::files::vcs_file::VCSFile;
-use std::{path::{Path, PathBuf}, fs::{OpenOptions, File}, io::{Write, self, BufRead}, collections::HashMap};
+use std::{path::PathBuf, fs::{OpenOptions, File}, io::{Write, self, BufRead}, collections::HashMap};
 
 pub struct Index{
     path: PathBuf
 }
 
 impl Index{
-    pub fn init(vcs_path: &str) -> Index{
-        let path = Path::new(vcs_path).join(".rust_git").join("index");
+    pub fn init(vcs_path: &PathBuf) -> Index{
+        let path = vcs_path.join(".rust_git").join("index");
         Index{path}
     }
 

@@ -1,4 +1,5 @@
 use std::io::{self, Write};
+use std::path::Path;
 
 use rust_git::handlers::branch::handler_branch;
 use rust_git::handlers::commit::handler_commit;
@@ -8,12 +9,8 @@ use rust_git::handlers::{status::handler_status, add::handler_add, hash_object::
 
 
 fn main() -> Result<(), std::io::Error>{
-    //let mut vcs = VersionControlSystem::init("/Users/gmovia/Desktop/PRUEBA", Vec::new());
-    //let mut vcs = VersionControlSystem::init(r"C:\Users\Administrator\Desktop\PRUEBA\", Vec::new());
-    //let mut vcs = VersionControlSystem::init(r"C:\Users\laura\OneDrive\Escritorio\FIUBA\Taller de programacion I\Trabajo practico grupal\PRUEBA", Vec::new());
-    let mut vcs = VersionControlSystem::init(r"C:\Users\laura\OneDrive\Documentos\VARIOS\PRUEBA", Vec::new());
-    //let mut vcs = VersionControlSystem::init("/Users/luz.diazc/Desktop/PruebaTaller", Vec::new());
-    //let mut vcs = VersionControlSystem::init(r"C:\Users\luzmi\OneDrive\Escritorio\PruebaTaller", Vec::new());
+    let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
+    
     loop{
         let mut input = String::new();
         io::stdout().flush().unwrap();
