@@ -146,7 +146,6 @@ impl Init {
 
     pub fn get_commits_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
-        let commit_path = p.join(".rust_git").join("logs").join("master");
         
         let head_path = p.join(".rust_git").join("HEAD");
         let mut head_file = File::open(head_path)?;
