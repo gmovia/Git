@@ -72,6 +72,8 @@ impl VersionControlSystem {
         Log::log(self)
     }
     
+    /// Recibe una opcion de branch (crear, borrar, listar)
+    /// Segun la opcion, el branch permite crear una rama, borrar una ya existente o listar todas las ramas
     pub fn branch(&self,option: BranchOptions) -> Result<(), std::io::Error>{
         Branch::branch(&self.path, option)
     }

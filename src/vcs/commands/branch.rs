@@ -13,6 +13,7 @@ pub enum BranchOptions<'a>{
 
 impl Branch{
 
+    /// Matcheo la opcion
     pub fn branch(path: &str, option: BranchOptions) -> Result<(), std::io::Error>{
         match option{
             BranchOptions::NewBranch(branch_name) => {Self::create_new_branch(path, branch_name)?;},
@@ -23,7 +24,8 @@ impl Branch{
     }
 
 
-
+    /// creo un archivo branch_name en el path /refs/heads/
+    /// luego genero el archivo en /logs/ con copia de los commits que estaban en la rama anterior
     pub fn create_new_branch(path: &str,branch_name: &str) -> Result<(),std::io::Error> { 
         let p = Path::new(path);
         let branch_path = p.join(".rust_git").join("refs").join("heads").join(branch_name);
@@ -32,6 +34,8 @@ impl Branch{
         Ok(())
     }
 
+    /// matcheo el archivo branch_name en /refs/heads/ y en /logs/
+    /// si no estoy parada en esa rama, entonces lo elimino de los dos directorios
     pub fn delete_branch(path: &str, branch_name: &str) -> Result<(),std::io::Error>{
         let p = Path::new(path);
         let branch_path = p.join(".rust_git").join("refs").join("heads").join(branch_name);
@@ -44,6 +48,7 @@ impl Branch{
         Ok(())
     }
 
+    /// obtengo todas las entradas del directorio /refs/heads/ que serian todas las ramas que tenemos
     pub fn get_branches(path: &str) -> Result<Vec<String>,std::io::Error>{
         let mut branches: Vec<String> = Vec::new();
         let p = Path::new(path);
