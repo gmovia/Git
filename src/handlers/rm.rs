@@ -6,7 +6,7 @@ use crate::vcs::{version_control_system::VersionControlSystem, commands::rm::Rem
 /// Se setea la option correspondiente de acuerdo al comando 
 pub fn handler_rm(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::io::Error>{
     let args: Vec<&str> = input.split_whitespace().collect();
-    let vcs_path = String::from(vcs.path.clone());
+    let vcs_path = String::from(vcs.path.to_string_lossy().clone());
     let mut option = RemoveOption::NoDirectory;
 
     if args.iter().any(|arg| arg.contains("-r")) {

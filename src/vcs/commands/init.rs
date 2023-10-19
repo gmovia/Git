@@ -7,7 +7,7 @@ pub struct Init {
 impl Init {
     
     /// Esta funcion es el constructor de init. Se crean los directorios y archivos necesarios.
-    pub fn git_init(path: &str, args: Vec<String>){
+    pub fn git_init(path: &PathBuf, args: Vec<String>){
         let init = { Init { example_text: "hola".to_string() } };
 
         if args.len() < 4 {
@@ -35,8 +35,8 @@ impl Init {
     }
 
     /// Esta funcion es la encargada de crear todsas las carpetas y archivos necesarios luego de ejecutar git init.
-    fn create_initial_folders(&self, path: &str, branch_name: &str) -> Result<(),std::io::Error> {
-        let path = Path::new(path).join(".rust_git");
+    fn create_initial_folders(&self, path: &PathBuf, branch_name: &str) -> Result<(),std::io::Error> {
+        let path = path.join(".rust_git");
         fs::create_dir_all(&path)?;
 
         self.create_git_hooks_folder(&path)?;
@@ -129,13 +129,13 @@ impl Init {
         Ok(())
     }
 
-    pub fn get_object_path(path: &String) -> Result<PathBuf,std::io::Error>{
+    pub fn get_object_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
         let objects_path = p.join(".rust_git").join("objects");
         Ok(Path::new(&objects_path).to_path_buf())
     }
 
-    pub fn get_commits_path(path: &String) -> Result<PathBuf,std::io::Error>{
+    pub fn get_commits_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
         let commit_path = p.join(".rust_git").join("logs").join("master");
         Ok(Path::new(&commit_path).to_path_buf())

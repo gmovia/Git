@@ -5,23 +5,23 @@ use crate::{
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log}, files::repository::Repository};
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
 pub struct VersionControlSystem {
-    pub path: String,
+    pub path: PathBuf,
     pub repository: Repository,
     pub index: Index
 }
 
 impl VersionControlSystem {
     /// Inicializacion del versionControlSystem --> posee el repositorio local y la ruta de la carpeta a informar.
-    pub fn init(path: &str, args: Vec<String>) -> VersionControlSystem {
-        let _ = Init::git_init(path, args);
+    pub fn init(path: &Path, args: Vec<String>) -> VersionControlSystem {
+        let _ = Init::git_init(&path.to_path_buf(), args);
         VersionControlSystem {
-            path: path.to_string(),
-            repository: Repository::init(path),
-            index: Index::init(path)
+            path: path.to_path_buf(),
+            repository: Repository::init(&path.to_path_buf()),
+            index: Index::init(&path.to_path_buf())
         }
     }
 

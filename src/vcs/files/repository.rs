@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
+use std::{collections::HashMap, path::PathBuf, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
 use crate::vcs::commands::{hash_object::{WriteOption, HashObject}, cat_file::CatFile};
 
 
@@ -10,11 +10,11 @@ pub struct Repository{
 
 impl Repository{
 
-    pub fn init(path: &str) -> Repository{
-        let vcs_path = Path::new(path).to_path_buf();
-        let commits_path = Path::new(path).join(".rust_git").join("logs").join("master");//?.display().to_string();  // VER EL PATH, NO SE SI ESTA BIEN ESTO
-        let object_path = Path::new(path).join(".rust_git").join("objects");//?.display().toi_string();
-        Repository{vcs_path, commits_path, object_path}
+    pub fn init(path: &PathBuf) -> Repository{
+        let vcs_path = path;
+        let commits_path = path.join(".rust_git").join("logs").join("master");//?.display().to_string();  // VER EL PATH, NO SE SI ESTA BIEN ESTO
+        let object_path = path.join(".rust_git").join("objects");//?.display().toi_string();
+        Repository{vcs_path: vcs_path.to_path_buf(), commits_path, object_path}
     }
 
 
