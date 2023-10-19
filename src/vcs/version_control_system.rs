@@ -4,7 +4,7 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log}, files::repository::Repository};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}}, files::repository::Repository};
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
@@ -20,7 +20,7 @@ impl VersionControlSystem {
         let _ = Init::git_init(&path.to_path_buf(), args);
         VersionControlSystem {
             path: path.to_path_buf(),
-            repository: Repository::init(&path.to_path_buf()),
+            repository: Repository::init(path.to_path_buf()),
             index: Index::init(&path.to_path_buf())
         }
     }
@@ -72,4 +72,9 @@ impl VersionControlSystem {
         Log::log(self)
     }
     
+    /// Recibe una opcion de branch (crear, borrar, listar)
+    /// Segun la opcion, el branch permite crear una rama, borrar una ya existente o listar todas las ramas
+    pub fn branch(&self,option: BranchOptions) -> Result<(), std::io::Error>{
+        Branch::branch(&self.path, option)
+    }
 }

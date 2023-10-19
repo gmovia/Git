@@ -14,6 +14,7 @@ pub mod vcs{
     pub mod status;
     pub mod add;
     pub mod rm;
+    pub mod branch;
 }
 
 pub mod tests_functions;
