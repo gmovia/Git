@@ -1,3 +1,5 @@
+
+
 #[cfg(test)]
 mod tests {
     use std::{fs, path::Path};
@@ -16,7 +18,7 @@ mod tests {
                 }
             }
         }
-    
+        println!("{:?}",file_count);
         Ok(file_count)
     }
 
@@ -32,6 +34,7 @@ mod tests {
         assert_eq!(count_files(&branch_path)?,2);
         Ok(())
     }
+
 
 
     #[test]
