@@ -5,7 +5,7 @@ pub mod handlers{
     pub mod rm;
     pub mod cat_file;
     pub mod branch;
-    
+    pub mod checkout;
     pub mod log;
     pub mod commit;
 }
@@ -48,6 +48,7 @@ pub mod vcs{
         pub mod commit;
         pub mod log;
         pub mod branch;
+        pub mod checkout;
     }
 
     pub mod sets{
