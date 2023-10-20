@@ -13,6 +13,8 @@ pub mod types{
     pub mod types;
 }
 
+pub mod client;
+
 pub mod utils {
     pub mod files {
         pub mod files;
