@@ -15,6 +15,7 @@ pub mod vcs{
     pub mod add;
     pub mod rm;
     pub mod branch;
+    pub mod checkout;
 }
 
 pub mod tests_functions;
