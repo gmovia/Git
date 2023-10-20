@@ -1,6 +1,8 @@
 use std::{path::Path, fs::File, io::Write};
 
-use super::branch::Branch;
+use crate::{vcs::files::repository::{self, Repository}, utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders}};
+
+use super::{branch::Branch, cat_file::CatFile, init::Init};
 
 
 pub struct Checkout;
@@ -28,6 +30,22 @@ impl Checkout{
         let head_path = rust_git_path.join("HEAD");
         let mut file = File::create(head_path)?;
         file.write_all(format!("refs/heads/{}", branch_name).as_bytes())?;
+        Self::update_cd(path)?;
+        Ok(())
+    }
+
+
+    pub fn update_cd(path: &str) -> Result<(), std::io::Error>{
+        let p = Path::new(path);
+        let repository = Repository::init(p.to_path_buf());
+        let repository_hashmap = repository.read_repository()?;
+
+        delete_all_files_and_folders(p)?;
+
+        for (key, value) in repository_hashmap{
+            let content = CatFile::cat_file(&value, Init::get_object_path(&p.to_path_buf())?)?;
+            create_file_and_their_folders(Path::new(&key), &content)?
+        }
         Ok(())
     }
 

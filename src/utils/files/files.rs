@@ -43,7 +43,7 @@ fn read_files(path: &Path, files: &mut HashMap<String, String>) -> Result<(), st
 pub fn create_file_and_their_folders(path: &Path, content: &str) -> Result<(), std::io::Error>{
     if let Some(parent) = path.parent(){
         if !parent.exists(){
-            fs::create_dir(parent)?;
+            fs::create_dir_all(parent)?;
         }
     }
     let mut file = fs::File::create(path)?;
@@ -54,13 +54,15 @@ pub fn create_file_and_their_folders(path: &Path, content: &str) -> Result<(), s
 pub fn delete_all_files_and_folders(path: &Path) -> Result<(), std::io::Error>{
     if let Ok(entries) = fs::read_dir(path){
         for entry in entries{
-            if let Ok(entry) = entry{                 
-                let path = entry.path();
-                if path.is_dir(){
-                    fs::remove_dir_all(path)?
-                }
-                else{
-                    fs::remove_file(path)?
+            if let Ok(entry) = entry{     
+                if !is_excluded_directory(&entry){
+                    let path = entry.path();
+                    if path.is_dir(){
+                        fs::remove_dir_all(path)?
+                    }
+                    else{
+                        fs::remove_file(path)?
+                    }
                 }
             }
         }
