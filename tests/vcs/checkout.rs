@@ -22,25 +22,25 @@ mod tests {
         let (temp_dir, mut vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");
 
-        vcs.branch(BranchOptions::NewBranch("new_branch"))?;
-        vcs.checkout(CheckoutOptions::ChangeBranch("new_branch"))?;
+        vcs.add(&path)?;
+        vcs.commit("commit in new branch".to_string())?;
 
+        vcs.branch(BranchOptions::NewBranch("new_branch"))?;
+        
         let vcs_path = Path::new(&vcs.path);
         let master_branch_path = vcs_path.join(".rust_git").join("logs").join("master");
         let changed_branch_path = vcs_path.join(".rust_git").join("logs").join("new_branch");
 
-        vcs.add(&path)?;
-        vcs.commit("commit in new branch".to_string())?;
+        vcs.checkout(CheckoutOptions::ChangeBranch("new_branch"))?;
 
         assert_eq!(count_lines(&changed_branch_path.display().to_string())?,1);
-        assert_eq!(count_lines(&master_branch_path.display().to_string())?,0);
+        assert_eq!(count_lines(&master_branch_path.display().to_string())?,1);
         Ok(())
     }
 
     #[test]
     pub fn test_02_add_a_file_in_master_then_create_and_change_branch_then_add_a_new_file_in_new_branch() -> Result<(),std::io::Error>{
         let (temp_dir, mut vcs) = set_up();
-        let path_file1 = create_file(&temp_dir, "file1.txt");
         let path_file2 = create_file(&temp_dir, "file2.txt");
 
         vcs.add(&path_file2)?;
@@ -52,6 +52,8 @@ mod tests {
         let master_branch_path = vcs_path.join(".rust_git").join("logs").join("master");
         let new_branch_path = vcs_path.join(".rust_git").join("logs").join("new_branch");
 
+        let path_file1 = create_file(&temp_dir, "file1.txt");
+        
         vcs.add(&path_file1)?;
         vcs.commit("commit in new_branch".to_string())?;
 

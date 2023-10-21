@@ -1,6 +1,6 @@
-use std::{path::Path, fs::File, io::Write};
+use std::{path::Path, fs::File, io::{Write, self}};
 
-use crate::{vcs::files::repository::{self, Repository}, utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders}};
+use crate::{vcs::files::{repository::{self, Repository}, index::Index}, utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders}};
 
 use super::{branch::Branch, cat_file::CatFile, init::Init};
 
@@ -26,6 +26,10 @@ impl Checkout{
 
     pub fn change_branch(path: &str, branch_name: &str) -> Result<(), std::io::Error>{
         let p = Path::new(path);
+        let index = Index::init(&p.to_path_buf());
+        if !index.read_index()?.is_empty(){
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't change branch if you have changes to be commited"));
+        }
         let rust_git_path = p.join(".rust_git");
         let head_path = rust_git_path.join("HEAD");
         let mut file = File::create(head_path)?;
