@@ -2,6 +2,7 @@ use std::io::{self, Write};
 use std::path::Path;
 
 use rust_git::handlers::branch::handler_branch;
+use rust_git::handlers::checkout::handler_checkout;
 use rust_git::handlers::commit::handler_commit;
 use rust_git::handlers::rm::handler_rm;
 use rust_git::vcs::version_control_system::VersionControlSystem;
@@ -27,6 +28,7 @@ fn main() -> Result<(), std::io::Error>{
             x if x.contains("git log") => {let _ = handler_log(&vcs);},
             x if x.contains("git commit") => {handler_commit(&mut vcs, x.to_string())?;},
             x if x.contains("git branch") => {handler_branch(&vcs, x.to_string())?;},
+            x if x.contains("git checkout") => {handler_checkout(&vcs, x.to_string())?;},
             _ => {}
         }
     }
