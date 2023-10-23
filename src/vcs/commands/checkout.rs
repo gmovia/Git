@@ -1,6 +1,6 @@
 use std::{path::Path, fs::File, io::{Write, self}};
 
-use crate::{vcs::files::{repository::{self, Repository}, index::Index}, utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders}};
+use crate::{vcs::files::{repository::Repository, index::Index}, utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders}};
 
 use super::{branch::Branch, cat_file::CatFile, init::Init};
 
@@ -10,7 +10,7 @@ pub struct Checkout;
 pub enum CheckoutOptions<'a>{
     ChangeBranch(&'a str),
     CreateAndChangeBranch(&'a str),
-    ReviewCommit(&'a str),
+    //ChangeCommit(&'a str),
 }
 
 impl Checkout{
@@ -19,7 +19,7 @@ impl Checkout{
         match option {
             CheckoutOptions::ChangeBranch(branch_name) => {Self::change_branch(path, branch_name)?;},
             CheckoutOptions::CreateAndChangeBranch(branch_name) => {Self::create_and_change_branch(path, branch_name)?;},
-            CheckoutOptions::ReviewCommit(hash) => {Self::review_commit(path, hash)?;},
+            //CheckoutOptions::ChangeCommit(hash) => {Self::change_commit(path, hash)?;},
         }
         Ok(())
     }
@@ -59,8 +59,8 @@ impl Checkout{
         Ok(())
     }
 
-    pub fn review_commit(path: &str,hash: &str) -> Result<(), std::io::Error>{ //ANALIZAR MEJOR
-    //     CatFile::cat_file(hash, Init::get_object_path(&path.to_string())?)?;
-         Ok(())
-    }
+    // pub fn change_commit(path: &str,hash: &str) -> Result<(), std::io::Error>{ //ANALIZAR MEJOR
+    //      CatFile::cat_file(hash, Init::get_object_path(&path.to_string())?)?;
+    //      Ok(())
+    // }
 }

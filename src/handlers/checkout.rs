@@ -14,21 +14,21 @@ pub fn handler_checkout(vcs: &VersionControlSystem, input: String) -> Result<(),
             _ => {return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid parameters"));},
         }},
         3 => {if let Ok(entries) = fs::read_dir(branchs_dir_path) {
-            let mut branch_matched = false;
+            let mut _branch_matched = false;
             for entry in entries {
                 if let Ok(entry) = entry {
                     if let Some(file_name) = entry.path().file_name() {
                         if file_name.to_string_lossy().to_string() == args[2].to_string() {
                             vcs.checkout(CheckoutOptions::ChangeBranch(&args[2].to_string()))?;
-                            branch_matched = true;
+                            _branch_matched = true;
                             break;
                         }
                     }
                 }
             }
-            if !branch_matched {
-                vcs.checkout(CheckoutOptions::ReviewCommit(args[2]))?;
-            }
+            // if !branch_matched {
+            //     vcs.checkout(CheckoutOptions::ChangeCommit(args[2]))?;
+            // }
         }
         },
         _ => {return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid parameters"));},
