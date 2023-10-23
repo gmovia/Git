@@ -1,6 +1,6 @@
-use std::io::Write;
-use std::io::{BufRead, BufReader};
+use std::io::{Write, Read};
 use std::net::TcpStream;
+use std::str::from_utf8;
 static CLIENT_ARGS: usize = 3;
 
 //comando para levantar el git daemon --> git daemon --base-path=. --export-all --reuseaddr --informative-errors --verbose --verbose
@@ -39,20 +39,46 @@ fn process_received_line(line: &str) -> Option<String> {
     let hex = format!("{:04x}", size);
     if line.starts_with(&hex) {
         let line = line.trim_start_matches(&hex);
-        let parts = line.split(' ').collect::<Vec<&str>>();
-        let hash = parts[0];
-        return Some(hash.to_string());
+        //let parts = line.split(' ').collect::<Vec<&str>>();
+        //let hash = line;
+        return Some(line.to_string());
     }
     None
 }
-fn print_socket_response(socket: &mut TcpStream) -> std::io::Result<()> {
-    let reader = BufReader::new(socket);
-    print!("Tuvo una respuesta {:?}\n", reader);
-    for line in reader.lines() {
-        if let Ok(line) = line {
-            println!("Respuesta del servidor: {:?}", line);
+
+fn read_packet(stream: &mut TcpStream, len: usize) -> String {
+    let mut packet_buf = vec![0; len - 4];
+    let _ = stream.read_exact(&mut packet_buf);
+    String::from_utf8_lossy(&packet_buf).to_string()
+}
+
+
+fn receive_pack(socket: &mut TcpStream) -> Vec<String> {
+    let mut packets = Vec::new();
+    loop {
+        let mut len_buf = [0; 4]; 
+        if socket.read_exact(&mut len_buf).is_ok() {
+            let len_str = from_utf8(&len_buf).unwrap();
+            let len = usize::from_str_radix(len_str, 16).unwrap();
+            if len == 0 {
+                break;
+            }
+            let packet = read_packet(socket, len);
+            print!("\n READING MY PACKET ------> {:?} \n", packet);
+            packets.push(packet);
         }
     }
+    packets
+}
+
+fn print_socket_response(socket: &mut TcpStream) -> std::io::Result<()> {
+    let mut buffer = Vec::new();
+        match socket.read_to_end(&mut buffer) {
+            Ok(_) => {
+                println!("Received: {:?}\n", buffer);
+            }
+            Err(e) => println!("Failed to receive data: {}\n", e),
+        } 
     Ok(())
 }
 
@@ -61,39 +87,26 @@ fn client_run(address: &str) -> std::io::Result<()> {
     let msg = "git-upload-pack /Probando\0";
     let pkt_line = to_pkt_line(msg);
     socket.write(pkt_line.as_bytes())?;
-    let reader = BufReader::new(&socket);
-    let mut list_commits: Vec<String> = Vec::new();
-    for line in reader.lines() {
-        if let Ok(line) = line {
-            println!("Recibido: {:?}\n", line);
-            if line == "0000" {
-                //servidor termino de enviar las referencias
-                break;
-            }
-            if let Some(commit_hash) = process_received_line(&line) {
-                println!("Hash del commit: {}\n", commit_hash);
-                list_commits.push(commit_hash.clone());
-            }
-        }
-    }
-    //let socket = reader.into_inner(); 
+
+    let list_commits = receive_pack(&mut socket);
+
+    print!("\nTu lista es esta -----> {:?} \n", list_commits);
      //mando la siguiente query 
      for hash in list_commits{
-        let msg_commit = format!("want {}\n", hash);                
+        let msg_commit = format!("want {}", hash);                
         let pkt_commit = to_pkt_line(&msg_commit);
         print!("El mensaje vendria a ser: {:?}\n", pkt_commit);
         
         socket.write(pkt_commit.as_bytes())?;
-        let _ = print_socket_response(&mut socket); 
     }
+
     let msg_done = "0000";
-    let pkt_done = to_pkt_line(&msg_done);
-    socket.write(pkt_done.as_bytes())?;
+    socket.write(msg_done.as_bytes())?;
 
-    let msg_done = "0009done\n";
-    let pkt_done = to_pkt_line(&msg_done);
-    socket.write(pkt_done.as_bytes())?;
+    let msg_done2 = "0009done\n";
+    socket.write(msg_done2.as_bytes())?;
 
-    socket.flush()?;
+    print_socket_response(&mut socket)?;
     Ok(())
+
 }
