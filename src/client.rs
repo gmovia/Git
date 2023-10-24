@@ -95,6 +95,9 @@ fn client_run(address: &str) -> std::io::Result<()> {
      for hash in list_commits{
         let msg_commit = format!("want {}", hash);                
         let pkt_commit = to_pkt_line(&msg_commit);
+        if hash.contains("HEAD"){
+            continue;
+        }
         print!("El mensaje vendria a ser: {:?}\n", pkt_commit);
         
         socket.write(pkt_commit.as_bytes())?;
