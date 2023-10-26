@@ -108,13 +108,20 @@ fn client_run(address: &str, path: &str) -> Result<(),std::io::Error> {
     send_done_msg(&mut socket)?;
     print_socket_response(&mut socket)?;
 
-    // Para imprimir el cat file de .rustgit
+    // Para imprimir el cat file de .rustgit (cat-file ahora esta modificado para que lea de .git)
     //let response = handler_cat_file(&vcs, "git cat-file e87bc769b6a934012b58467455cd8aee1f583a3b".to_owned());
     //println!("Respuesta final: {:?}", response);
     
     // Para imprimir el cat que nos devuelve el want. (con commit real de git)
     let response = handler_cat_file(&vcs, "git cat-file a481a3e22ed24dee0b408dc35314ca0847a520ba".to_owned());
-    println!("Respuesta final: {:?}", response);
+    println!("Respuesta final a48: {:?}", response);
+    
+    let response = handler_cat_file(&vcs, "git cat-file e87bc769b6a934012b58467455cd8aee1f583a3b".to_owned());
+    println!("Respuesta final e87: {:?}", response);
+
+    let response = handler_cat_file(&vcs, "git cat-file f87ac2a4ba1831e85cd8fceeb5131bdad5e70f0d".to_owned());
+    println!("Respuesta final f87: {:?}", response);
+
     Ok(())
 
 }
