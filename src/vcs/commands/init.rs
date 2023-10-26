@@ -37,7 +37,7 @@ impl Init {
 
     /// Esta funcion es la encargada de crear todsas las carpetas y archivos necesarios luego de ejecutar git init.
     fn create_initial_folders(&self, path: &PathBuf, branch_name: &str) -> Result<(),std::io::Error> {
-        let path = path.join(".git");
+        let path = path.join(".rust_git");
         fs::create_dir_all(&path)?;
 
         self.create_git_hooks_folder(&path)?;
@@ -140,6 +140,7 @@ impl Init {
 
     pub fn get_object_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
+        //let objects_path = p.join(".rust_git").join("objects");
         let objects_path = p.join(".git").join("objects");
         Ok(Path::new(&objects_path).to_path_buf())
     }
@@ -147,26 +148,26 @@ impl Init {
     pub fn get_commits_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
         
-        let head_path = p.join(".git").join("HEAD");
+        let head_path = p.join(".rust_git").join("HEAD");
         let mut head_file = File::open(head_path)?;
         
         let mut content = String::new();
         head_file.read_to_string(&mut content)?;
         
-        let refs_path = p.join(".git").join(content);
+        let refs_path = p.join(".rust_git").join(content);
         let mut refs_file = File::open(refs_path)?;
         
         let mut content = String::new();
         refs_file.read_to_string(&mut content)?;
         
-        let commits_path = p.join(".git").join(content);
+        let commits_path = p.join(".rust_git").join(content);
         Ok(Path::new(&commits_path).to_path_buf())
     }
 
 pub fn create_log_file(path: PathBuf, branch_name: &str) -> Result<(),std::io::Error>{
         let actual_commit_path = Self::get_commits_path(&path)?;
-        let logs_path = path.join(".git").join("logs").join(branch_name);
-        let branch_path = path.join(".git").join("refs").join("heads").join(branch_name);
+        let logs_path = path.join("rust_git").join("logs").join(branch_name);
+        let branch_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);
         let mut branch_file = File::create(&branch_path)?;
         branch_file.write_all(b"logs/")?;
         branch_file.write_all(branch_name.as_bytes())?;

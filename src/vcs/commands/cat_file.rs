@@ -13,13 +13,16 @@ impl CatFile{
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No such file or directory"));
         }
         // agregue esto
-        let data2 = fs::read(&path)?;
-        println!("data: {:?}", data2);
-        println!("data: {:?}", String::from_utf8_lossy(&data2));
+        let data = fs::read(&path)?;
+        println!("data: {:?}", data);
+        
+        //println!("data: {:?}", String::from_utf8_lossy(&data2));
+        
         // esto rompe porque no es UTF
-        let data = fs::read_to_string(&path)?;
+        //let data = fs::read_to_string(&path)?;
 
-        Ok(data)
+        Ok(String::from_utf8_lossy(&data).to_string())
+        //Ok(data)
 
     }
 

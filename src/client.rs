@@ -88,11 +88,10 @@ fn receive_pack(socket: &mut TcpStream) -> Vec<String> {
 fn client_run(address: &str, path: &str) -> Result<(),std::io::Error> {
     let init_path = Path::new("/home/amoralejo/TEST2");
     let mut vcs = VersionControlSystem::init(init_path, Vec::new());
-    println!("{:?}", init_path);
-//    handler_status(&vcs);
-//    let _ = handler_add(&mut vcs, "git add .".to_owned());
-//    handler_status(&vcs);
-//    let _ = handler_commit(&mut vcs, "git commit test_commit".to_owned());
+    //handler_status(&vcs);
+    //let _ = handler_add(&mut vcs, "git add .".to_owned());
+    handler_status(&vcs);
+    //let _ = handler_commit(&mut vcs, "git commit test_commit".to_owned());
 
     
     
@@ -101,7 +100,7 @@ fn client_run(address: &str, path: &str) -> Result<(),std::io::Error> {
     let msg = format!("git-upload-pack {}", path);
     let pkt_line = to_pkt_line(&msg);
     socket.write(pkt_line.as_bytes())?;
-
+    
     let list_commits = receive_pack(&mut socket);    
     for want in get_want_msgs(list_commits) {
         socket.write(want.as_bytes())?;
@@ -109,7 +108,11 @@ fn client_run(address: &str, path: &str) -> Result<(),std::io::Error> {
     send_done_msg(&mut socket)?;
     print_socket_response(&mut socket)?;
 
-    // Para imprimir el cat file
+    // Para imprimir el cat file de .rustgit
+    //let response = handler_cat_file(&vcs, "git cat-file e87bc769b6a934012b58467455cd8aee1f583a3b".to_owned());
+    //println!("Respuesta final: {:?}", response);
+    
+    // Para imprimir el cat que nos devuelve el want. (con commit real de git)
     let response = handler_cat_file(&vcs, "git cat-file a481a3e22ed24dee0b408dc35314ca0847a520ba".to_owned());
     println!("Respuesta final: {:?}", response);
     Ok(())

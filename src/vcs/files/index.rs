@@ -7,7 +7,7 @@ pub struct Index{
 
 impl Index{
     pub fn init(vcs_path: &PathBuf) -> Index{
-        let path = vcs_path.join(".git").join("index");
+        let path = vcs_path.join(".rust_git").join("index");
         Index{path}
     }
 
