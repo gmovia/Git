@@ -1,6 +1,5 @@
 use std::{path::{Path, PathBuf}, fs};
 
-
 pub struct CatFile;
 
 impl CatFile{
@@ -13,7 +12,11 @@ impl CatFile{
         if !path.exists(){
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No such file or directory"));
         }
-        
+        // agregue esto
+        let data2 = fs::read(&path)?;
+        println!("data: {:?}", data2);
+        println!("data: {:?}", String::from_utf8_lossy(&data2));
+        // esto rompe porque no es UTF
         let data = fs::read_to_string(&path)?;
 
         Ok(data)

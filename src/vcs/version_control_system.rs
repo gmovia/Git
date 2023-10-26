@@ -17,7 +17,8 @@ pub struct VersionControlSystem {
 impl VersionControlSystem {
     /// Inicializacion del versionControlSystem --> posee el repositorio local y la ruta de la carpeta a informar.
     pub fn init(path: &Path, args: Vec<String>) -> VersionControlSystem {
-        let _ = Init::git_init(&path.to_path_buf(), args);
+        // Si dejo esto rompe todo, estamos unsando .git en vez de .rust_git
+        //let _ = Init::git_init(&path.to_path_buf(), args);
         VersionControlSystem {
             path: path.to_path_buf(),
             repository: Repository::init(path.to_path_buf()),

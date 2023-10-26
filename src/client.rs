@@ -1,22 +1,34 @@
 use std::io::{Write, Read};
 use std::net::TcpStream;
+use std::path::Path;
 use std::str::from_utf8;
-static CLIENT_ARGS: usize = 3;
+
+use flate2::read::ZlibDecoder;
+
+use crate::handlers::add::handler_add;
+use crate::handlers::cat_file::handler_cat_file;
+use crate::handlers::commit::handler_commit;
+use crate::handlers::status::handler_status;
+use crate::vcs::commands::init::Init;
+use crate::vcs::version_control_system::VersionControlSystem;
+
+static CLIENT_ARGS: usize = 4;
 
 //comando para levantar el git daemon --> git daemon --base-path=. --export-all --reuseaddr --informative-errors --verbose --verbose
-//comando para levantar cliente--> cargo run 127.0.0.1 9418
+//comando para levantar cliente--> cargo run 127.0.0.1 9418 /TEST2
 
 //Checkear que este main te lo tome como main momentaneo
 pub fn client_(args: Vec<String>) -> Result<(), ()> {
     if args.len() != CLIENT_ARGS {
         println!("Cantidad de argumentos inválido");
-        let app_name = &args[0];
-        println!("{:?} <host> <puerto>", app_name);
+        println!("{:?} <host> <puerto>", &args[0]);
         return Err(());
     }
+    
     let address = args[1].clone() + ":" + &args[2];
-    println!("Conectándome a {:?}", address);
-    client_run(&address).unwrap();
+    if let Err(e) = client_run(&address, &args[3]) {
+        println!("Error: {}",e);
+    }
     Ok(())
 }
 
@@ -25,11 +37,13 @@ fn to_pkt_line(msg: &str) -> String {
     let hex = format!("{:04x}", len); 
     hex + msg 
 }
+
 /// Funcion que recibe el primer upload-receive-pack con este formato
 /// 003d5b287f4198d774d33b43175f21270018c6517be6 refs/heads/main
 /// 0042d143b748d2a0b186458ca5f6a13e51e6a8332cf3 refs/heads/otra_rama
 /// Los primeros digitos representan la longitud de la linea en hexadecimal
 /// Retora solo el hash del commit que tiene dentro
+/* 
 fn process_received_line(line: &str) -> Option<String> {
     print!("Estoy recibiendo {:?}\n", line);
     if line.contains("HEAD") {
@@ -45,6 +59,7 @@ fn process_received_line(line: &str) -> Option<String> {
     }
     None
 }
+*/
 
 fn read_packet(stream: &mut TcpStream, len: usize) -> String {
     let mut packet_buf = vec![0; len - 4];
@@ -64,52 +79,88 @@ fn receive_pack(socket: &mut TcpStream) -> Vec<String> {
                 break;
             }
             let packet = read_packet(socket, len);
-            print!("\n READING MY PACKET ------> {:?} \n", packet);
             packets.push(packet);
         }
     }
     packets
 }
 
+fn client_run(address: &str, path: &str) -> Result<(),std::io::Error> {
+    let init_path = Path::new("/home/amoralejo/TEST2");
+    let mut vcs = VersionControlSystem::init(init_path, Vec::new());
+    println!("{:?}", init_path);
+//    handler_status(&vcs);
+//    let _ = handler_add(&mut vcs, "git add .".to_owned());
+//    handler_status(&vcs);
+//    let _ = handler_commit(&mut vcs, "git commit test_commit".to_owned());
+
+    
+    
+    println!("Conectándome a {:?}", address);
+    let mut socket = TcpStream::connect(address)?;
+    let msg = format!("git-upload-pack {}", path);
+    let pkt_line = to_pkt_line(&msg);
+    socket.write(pkt_line.as_bytes())?;
+
+    let list_commits = receive_pack(&mut socket);    
+    for want in get_want_msgs(list_commits) {
+        socket.write(want.as_bytes())?;
+    }
+    send_done_msg(&mut socket)?;
+    print_socket_response(&mut socket)?;
+
+    // Para imprimir el cat file
+    let response = handler_cat_file(&vcs, "git cat-file a481a3e22ed24dee0b408dc35314ca0847a520ba".to_owned());
+    println!("Respuesta final: {:?}", response);
+    Ok(())
+
+}
+
+fn get_want_msgs(commits_list: Vec<String>) -> Vec<String> {
+    let mut want_msgs = Vec::new();
+
+    for commit in commits_list {
+        let msg_commit = format!("want {}", commit);                
+        let pkt_commit = to_pkt_line(&msg_commit);
+        if commit.contains("HEAD"){
+            continue;
+        }
+        want_msgs.push(pkt_commit);
+    }
+    want_msgs
+}
+
 fn print_socket_response(socket: &mut TcpStream) -> std::io::Result<()> {
     let mut buffer = Vec::new();
         match socket.read_to_end(&mut buffer) {
             Ok(_) => {
-                println!("Received: {:?}\n", buffer);
+                match decompress_data((&buffer[22..]).to_vec()) {
+                    Ok(decompressed_data) => {
+                        let text = String::from_utf8_lossy(&decompressed_data);
+                        println!("Datos descomprimidos: {}", text);
+                    },
+                    Err(e) => {
+                        eprintln!("Error al descomprimir los datos: {}", e);
+                    }
+                }
             }
             Err(e) => println!("Failed to receive data: {}\n", e),
         } 
-    Ok(())
+        Ok(())
 }
 
-fn client_run(address: &str) -> std::io::Result<()> {
-    let mut socket = TcpStream::connect(address)?;
-    let msg = "git-upload-pack /Probando\0";
-    let pkt_line = to_pkt_line(msg);
-    socket.write(pkt_line.as_bytes())?;
-
-    let list_commits = receive_pack(&mut socket);
-
-    print!("\nTu lista es esta -----> {:?} \n", list_commits);
-     //mando la siguiente query 
-     for hash in list_commits{
-        let msg_commit = format!("want {}", hash);                
-        let pkt_commit = to_pkt_line(&msg_commit);
-        if hash.contains("HEAD"){
-            continue;
-        }
-        print!("El mensaje vendria a ser: {:?}\n", pkt_commit);
-        
-        socket.write(pkt_commit.as_bytes())?;
-    }
-
+fn send_done_msg(socket: &mut TcpStream) -> Result<(), std::io::Error> {
     let msg_done = "0000";
     socket.write(msg_done.as_bytes())?;
 
     let msg_done2 = "0009done\n";
     socket.write(msg_done2.as_bytes())?;
-
-    print_socket_response(&mut socket)?;
     Ok(())
+}
 
+fn decompress_data(compressed_data: Vec<u8>) -> Result<Vec<u8>, std::io::Error> {
+    let mut decompressed_data = Vec::new();
+    let mut decoder = ZlibDecoder::new(&compressed_data[..]);
+    decoder.read_to_end(&mut decompressed_data)?;
+    Ok(decompressed_data)
 }
