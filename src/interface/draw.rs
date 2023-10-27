@@ -1,24 +1,30 @@
 use gtk::{prelude::*, Button, ComboBoxText};
+use crate::vcs::version_control_system::VersionControlSystem;
 
-/*
-pub fn draw(vcs: &VersionControlSystem, grid: &gtk::Grid, _box: &gtk::Box, combo_box: &gtk::ComboBoxText) -> Result<(), std::io::Error>{
-    let repositories = vec!["repo1".to_string(), "repo2".to_string()];
+pub fn branches(vcs: &VersionControlSystem, combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
     let branches = vcs.get_branches()?;
-    
-    let (untracked_files, changes_not_be_commited, changes_to_be_commited) = vcs.status()?;
-    let changes_a: Vec<String> = untracked_files.keys().cloned().collect();
-    let changes_b: Vec<String> = changes_not_be_commited.keys().cloned().collect();
-    
-    let changes: Vec<String> = changes_a.iter().chain(changes_b.iter()).cloned().collect();
-    let staging_area: Vec<String> = changes_to_be_commited.keys().cloned().collect();
-
-    draw_changes(&changes, grid);
-    draw_staging_area(&staging_area, _box);
-    draw_repositories(&repositories, combo_box);
     draw_branches(&branches, combo_box);
     Ok(())
 }
-*/
+
+pub fn repositories(_vcs: &VersionControlSystem, combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
+    let repositories: Vec<String> = vec!["repo_1".to_string(),"repo_2".to_string(),"repo_3".to_string()];
+    draw_repositories(&repositories, combo_box);
+    Ok(())
+}
+
+pub fn changes_and_staging_area(vcs: &VersionControlSystem, grid: &gtk::Grid, box_window: &gtk::Box) -> Result<(), std::io::Error>{
+    let (untracked_files, changes_not_be_commited, changes_to_be_commited) = vcs.status()?;
+    let untracked_files_paths: Vec<String> = untracked_files.keys().cloned().collect();
+    let changes_not_be_commited_paths: Vec<String> = changes_not_be_commited.keys().cloned().collect();
+    
+    let changes: Vec<String> = untracked_files_paths.iter().chain(changes_not_be_commited_paths.iter()).cloned().collect();
+    let staging_area: Vec<String> = changes_to_be_commited.keys().cloned().collect();
+
+    draw_changes(&changes, grid);
+    draw_staging_area(&staging_area, box_window);
+    Ok(())
+}
 
 pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid){
     for (index, path) in changes.iter().enumerate() {

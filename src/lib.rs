@@ -13,6 +13,7 @@ pub mod handlers{
 pub mod interface{
     pub mod interface;
     pub mod draw;
+    pub mod handler;
 }
 pub mod types{
     pub mod types;

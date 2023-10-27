@@ -11,7 +11,8 @@ use rust_git::interface::interface::RustInterface;
 
 
 fn main() -> Result<(), std::io::Error>{
-    let _ = RustInterface::impl_interface();
+    let interface = RustInterface::new();
+    let _ = interface.impl_interface();
     // let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
     
     // loop{

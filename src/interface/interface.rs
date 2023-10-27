@@ -1,74 +1,66 @@
+use std::thread;
+use std::time::Duration;
 use std::{path::Path, cell::RefCell, rc::Rc};
 
-use gtk::prelude::*;
+use gtk::{prelude::*, ComboBoxText, Button, Grid};
 
 use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions};
-use crate::interface::draw::{draw_repositories, draw_branches, draw_changes, draw_staging_area};
+use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 
-pub struct RustInterface;
+use super::handler::{handle_branch, handle_commit};
+
+pub struct RustInterface {
+    pub window: gtk::Window,
+    pub commit_button: gtk::Button,
+    pub grid: gtk::Grid,
+    pub select_repository: gtk::ComboBoxText,
+    pub select_branch: gtk::ComboBoxText,
+    pub box_window: gtk::Box,
+    pub new_branch_button: gtk::Button,
+    pub dialog: gtk::Dialog,
+    pub dialog_entry: gtk::Entry,
+    pub create_branch: gtk::Button,
+}
 
 impl RustInterface {
-    pub fn impl_interface() -> Result<(), std::io::Error>{
+
+    pub fn new() -> RustInterface {
         if gtk::init().is_err() {
             println!("Failed to initialize GTK.");
-            return Ok(());
         }
-    
+
         let glade_src = include_str!("interface.glade");
         let builder = gtk::Builder::from_string(glade_src);
+        
+        RustInterface {
+            window: builder.object("window").unwrap(),
+            commit_button: builder.object("commit").unwrap(),
+            grid: builder.object("grid").unwrap(),
+            select_repository: builder.object("select-repository").unwrap(),
+            select_branch: builder.object("select-branch").unwrap(),
+            box_window: builder.object("box-add").unwrap(),
+            new_branch_button: builder.object("new-branch").unwrap(),
+            dialog: builder.object("dialog").unwrap(),
+            dialog_entry: builder.object("dialog-entry").unwrap(),
+            create_branch: builder.object("create").unwrap(),
+        }
+    }
     
-        let window: gtk::Window = builder.object("window").unwrap();
-        let commit_button: gtk::Button = builder.object("commit").unwrap();
-        let grid: gtk::Grid = builder.object("grid").unwrap();
-        let select_repository: gtk::ComboBoxText = builder.object("select-repository").unwrap();
-        let select_branch: gtk::ComboBoxText = builder.object("select-branch").unwrap();
-        let box_window: gtk::Box = builder.object("box-add").unwrap();
-        let new_branch_button: gtk::Button = builder.object("new-branch").unwrap();
-        let dialog: gtk::Dialog = builder.object("dialog").unwrap();
-        let dialog_entry: gtk::Entry = builder.object("dialog-entry").unwrap();
-
-        // Lista de rutas
-        let routes: Vec<String> = vec!["/ruta/ruta1".to_string(), "/ruta/ruta2".to_string()];
-        let routes2: Vec<String> = vec!["/ruta/ruta6".to_string(), "/ruta/ruta7".to_string()];
-    
-        // Lista de repos creadas
-        let repositories: Vec<String> = vec!["repo_1".to_string(),"repo_2".to_string(),"repo_3".to_string()];
-    
-        // Lista de branches creadas
+    pub fn impl_interface(&self) -> Result<(), std::io::Error>{    
         let vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
-        let branches = vcs.get_branches()?;
-   
-        draw_changes(&routes, &grid);
-        draw_staging_area(&routes2, &box_window);
-    
-        commit_button.connect_clicked(move |_| {
-            grid.foreach(|child|{
-                grid.remove(child);
-            });
-    
-            box_window.foreach(|child|{
-                box_window.remove(child);
-            });
-        });
-    
-        draw_repositories(&repositories, &select_repository);
-        draw_branches(&branches, &select_branch);
-    
+        repositories(&vcs, &self.select_repository)?;
+        branches(&vcs, &self.select_branch)?;
+        changes_and_staging_area(&vcs, &self.grid, &self.box_window)?;
+        
+        
         let version = Rc::new(RefCell::new(vcs));
-        let create_branch: gtk::Button = builder.object("create").unwrap();
+        let rc_entry = Rc::new(RefCell::new(self.dialog_entry.clone()));
+        let rc_branch = Rc::new(RefCell::new(self.select_branch.clone()));
 
-        // Conectar el botón a la función de manejo de eventos
-        new_branch_button.connect_clicked({
-            move |_| {
-                dialog.run();
-                dialog.hide();
-            }
-        });
+        handle_commit(&self);
+        handle_branch(&self);
 
-        let rc_entry = Rc::new(RefCell::new(dialog_entry.clone()));
-        let rc_branch = Rc::new(RefCell::new(select_branch.clone()));
-
-        create_branch.connect_clicked({
+        self.create_branch.connect_clicked({
             let version = version.clone();
             let rc_entry = rc_entry.clone();
             let rc_branch = rc_branch.clone();
@@ -81,7 +73,7 @@ impl RustInterface {
                 rc_entry.set_text("Create new branch ...");
             }});
     
-        window.show_all();
+        self.window.show_all();
     
         gtk::main();
         Ok(())
