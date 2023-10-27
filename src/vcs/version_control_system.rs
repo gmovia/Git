@@ -76,7 +76,11 @@ impl VersionControlSystem {
     /// Segun la opcion, el branch permite crear una rama, borrar una ya existente o listar todas las ramas
     pub fn branch(&self,option: BranchOptions) -> Result<(), std::io::Error>{
         Branch::branch(&self.path, option)
-    }
+    } 
+
+    pub fn get_branches(&self) -> Result<Vec<String>, std::io::Error>{
+        Branch::get_branches(&self.path)
+    } 
 
     /// Recibe una opcion de checkout (cambiar rama, crear y cambiar rama, analizar commit)
     /// Segun la opcion, el checkout actua
