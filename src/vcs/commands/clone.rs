@@ -35,7 +35,7 @@ impl Clone{
                 if ref_part.starts_with("refs/") {
                     let branch_name = ref_part.trim_start_matches("refs/heads/");
                     print!("TU BRANCH NAME ES {}", branch_name);
-                    let _ = vcs.branch(BranchOptions::NewBranch(branch_name));
+                    let _ = vcs.branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
                     // Realiza aquí la acción que desees con `branch_name`.
                 }
