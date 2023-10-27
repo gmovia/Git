@@ -141,7 +141,7 @@ impl Init {
     pub fn get_object_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
         //let objects_path = p.join(".rust_git").join("objects");
-        let objects_path = p.join(".git").join("objects");
+        let objects_path = p.join(".rust_git").join("objects");
         Ok(Path::new(&objects_path).to_path_buf())
     }
 
@@ -166,7 +166,7 @@ impl Init {
 
 pub fn create_log_file(path: PathBuf, branch_name: &str) -> Result<(),std::io::Error>{
         let actual_commit_path = Self::get_commits_path(&path)?;
-        let logs_path = path.join("rust_git").join("logs").join(branch_name);
+        let logs_path = path.join(".rust_git").join("logs").join(branch_name);
         let branch_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);
         let mut branch_file = File::create(&branch_path)?;
         branch_file.write_all(b"logs/")?;
