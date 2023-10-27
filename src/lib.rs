@@ -9,6 +9,10 @@ pub mod handlers{
     pub mod log;
     pub mod commit;
 }
+
+pub mod interface{
+    pub mod interface;
+}
 pub mod types{
     pub mod types;
 }

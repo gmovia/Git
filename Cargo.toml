@@ -11,6 +11,7 @@ crypto = "0.5.1"
 rand = "0.8.5"
 sha1 = "0.10.6"
 chrono = "0.4.19"
+gtk = { git = "https://github.com/gtk-rs/gtk3-rs.git" }
 
 [dev-dependencies]
 tempdir = "0.3.7"
