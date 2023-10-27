@@ -1,6 +1,7 @@
 use std::io::{Write};
 use std::net::TcpStream;
 use crate::vcs::commands::clone;
+use crate::packfile::{decompress_data, to_pkt_line};
 
 static CLIENT_ARGS: usize = 4;
 
@@ -20,12 +21,6 @@ pub fn client_(args: Vec<String>) -> Result<(), ()> {
         println!("Error: {}",e);
     }
     Ok(())
-}
-
-fn to_pkt_line(msg: &str) -> String {
-    let len = msg.len() + 4; 
-    let hex = format!("{:04x}", len); 
-    hex + msg 
 }
 
 
