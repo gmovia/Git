@@ -26,7 +26,8 @@ impl Branch{
 
     /// creo un archivo branch_name en el path /refs/heads/
     /// luego genero el archivo en /logs/ con copia de los commits que estaban en la rama anterior
-    pub fn create_new_branch(path: PathBuf,branch_name: &str) -> Result<(),std::io::Error> { 
+    pub fn create_new_branch(path: PathBuf,branch_name: &str) -> Result<(),std::io::Error> {
+        print!("ESAAAAAA es en nombre de branch neme {}\n", branch_name);
         let branch_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);
         let _ = File::create(&branch_path)?;
         Init::create_log_file(path, branch_name)?;

@@ -5,7 +5,12 @@ use super::init::Init;
 extern crate chrono;
 use chrono::{DateTime, Local};
 
-pub struct Commit;
+pub struct Commit {
+    id: String,
+    hash: String,
+    message: String,
+    timestamp: DateTime<Local>,
+}
 
 impl Commit{
 
@@ -24,23 +29,38 @@ impl Commit{
             }
         }
 
-        let _ = Commit::write_commit(vcs, &message, &repository)?;
+        let commit = Commit::create_commit(&message, &repository, vcs)?;
+        Commit::write_commit(vcs, &commit)?;
         let _ = vcs.index.clear(); //limpio el index
         Ok(repository)
     }
     
 
-    /// leo la tupla del commit actual y la escribo en la tabla ubicada en commits_file
-    pub fn write_commit(vcs: &VersionControlSystem, message: &String, repository: &HashMap<String, String>) -> Result<(),std::io::Error>{
+    pub fn create_commit(message: &String, repository: &HashMap<String, String>, vcs: &VersionControlSystem) -> Result<Commit, std::io::Error> {
         let id = Random::random();
-        let hash = vcs.repository.write_repository(&repository)?;
-        let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&vcs.path)?)?; //abro la tabla de commits para escribir - si no existe, la creo
-
+        let hash = vcs.repository.write_repository(repository)?;
         let current_time: DateTime<Local> = Local::now();
         let _ = current_time.to_rfc2822();
 
-        let commit = format!("{}-{}-{}-{}\n", id, hash, message, current_time); 
-        commits_file.write_all(commit.as_bytes())?;
+        Ok(Commit {
+            id,
+            hash,
+            message: message.clone(),
+            timestamp: current_time,
+        })
+    }
+
+    /// leo la tupla del commit actual y la escribo en la tabla ubicada en commits_file
+    pub fn write_commit(vcs: &VersionControlSystem, commit: &Commit) -> Result<(), std::io::Error> {
+        let id = commit.id.to_string(); 
+        let hash = &commit.hash;
+        let message = &commit.message;
+        let current_time = commit.timestamp;
+
+        let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&vcs.path)?)?;
+
+        let commit_info = format!("{}-{}-{}-{}\n", id, hash, message, current_time.to_rfc2822());
+        commits_file.write_all(commit_info.as_bytes())?;
         Ok(())
     }
 }

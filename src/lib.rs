@@ -14,6 +14,7 @@ pub mod types{
 }
 
 pub mod client;
+pub mod packfile;
 
 pub mod utils {
     pub mod files {
@@ -50,6 +51,7 @@ pub mod vcs{
         pub mod commit;
         pub mod log;
         pub mod branch;
+        pub mod clone;
     }
 
     pub mod sets{
