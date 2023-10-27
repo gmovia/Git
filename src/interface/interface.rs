@@ -1,9 +1,9 @@
 use std::{path::Path, cell::RefCell, rc::Rc};
 
-use gtk::{prelude::*, Button, ComboBoxText};
+use gtk::prelude::*;
 
 use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions};
-
+use crate::interface::draw::{draw_repositories, draw_branches, draw_changes, draw_staging_area};
 
 pub struct RustInterface;
 
@@ -38,8 +38,8 @@ impl RustInterface {
         let vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
         let branches = vcs.get_branches()?;
    
-        Self::draw_changes(&routes, &grid);
-        Self::draw_staging_area(&routes2, &box_window);
+        draw_changes(&routes, &grid);
+        draw_staging_area(&routes2, &box_window);
     
         commit_button.connect_clicked(move |_| {
             grid.foreach(|child|{
@@ -51,8 +51,8 @@ impl RustInterface {
             });
         });
     
-        Self::draw_repositories(&repositories, &select_repository);
-        Self::draw_branches(&branches, &select_branch);
+        draw_repositories(&repositories, &select_repository);
+        draw_branches(&branches, &select_branch);
     
         let version = Rc::new(RefCell::new(vcs));
         let create_branch: gtk::Button = builder.object("create").unwrap();
@@ -86,56 +86,4 @@ impl RustInterface {
         gtk::main();
         Ok(())
     }
-
-    
-pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid){
-    for (index, path) in changes.iter().enumerate() {
-        let label = gtk::Label::new(Some(path));
-        label.set_visible(true);
-        label.set_xalign(2.0); // Alinea el texto a la izquierda
-        label.set_yalign(0.5); // Alinea el texto arriba
-
-        let add_button = Button::builder()
-        .margin_start(10)
-        .label("+")
-        .build();
-        add_button.set_visible(true);
-
-        let remove_button = Button::builder()
-        .margin_start(10)
-        .label("-")
-        .build();
-        add_button.set_visible(true);
-
-        grid.attach(&label, 0, index as i32, 1, 1);
-        grid.attach(&add_button, 1, index as i32, 1, 1);
-        grid.attach(&remove_button, 2, index as i32, 1, 1);
-    }
-}
-
-pub fn draw_staging_area(staging_area: &Vec<String>, _box: &gtk::Box){
-    for path in staging_area {
-        let label = gtk::Label::new(Some(path));
-        label.set_visible(true);
-        label.set_xalign(2.0);
-        label.set_yalign(0.5);
-        _box.add(&label);
-     }
-}
-
-pub fn draw_repositories(repositories: &Vec<String>, combo_box: &ComboBoxText){
-    for repository in repositories {
-        let label = gtk::Label::new(Some(repository));
-        label.set_visible(true);
-        combo_box.append_text(&label.text().to_string());
-    }
-}
-
-pub fn draw_branches(branches: &Vec<String>, combo_box: &ComboBoxText){
-    for branch in branches {
-        let label = gtk::Label::new(Some(branch));
-        label.set_visible(true);
-        combo_box.append_text(&label.text().to_string());
-    }
-}
 }
