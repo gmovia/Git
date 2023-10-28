@@ -39,7 +39,7 @@ impl Clone{
                     let _ = vcs.branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
                     // Realiza aquí la acción que desees con `branch_name`.
-                    if let Err(e) = Self::wite_commit_log_file(vcs.path.clone(), commit, branch_name) {
+                    if let Err(e) = Self::wite_commit_log_file(vcs, commit, branch_name) {
                         println!("{}",e);
                     }
                 }
@@ -47,15 +47,31 @@ impl Clone{
         }
     }
 
-    fn wite_commit_log_file(path: PathBuf, commit: &str, branch_name: &str) -> Result<(),std::io::Error>{
-        let logs_path = path.join(".rust_git").join("logs").join(branch_name); 
-        println!("path: {:?}", logs_path);
+    // Falta ver que el archivo de logs tiene varios commits, capaz sale por el lado del parent
+    fn wite_commit_log_file(vcs: &VersionControlSystem, commit: &str, branch_name: &str) -> Result<(),std::io::Error>{
+        let logs_path = vcs.path.join(".rust_git").join("logs").join(branch_name); 
         
         let current_time: DateTime<Local> = Local::now();
         let format_commit = format!("{}-{}-{}-{}", Random::random(), commit, "clone", current_time);
         
-        let mut file = OpenOptions::new().write(true).create(true) .open(logs_path).expect("No se pudo abrir el archivo");
+        // no se si deberia ir el append o no
+        let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
         file.write(format_commit.as_bytes())?;
+
+        Self::create_object_commit_folder(vcs, commit)?;
+        Ok(())
+    }
+
+    fn create_object_commit_folder(vcs: &VersionControlSystem, commit: &str) -> Result<(),std::io::Error> {
+        let object_path = vcs.path.join(".rust_git").join("objects").join(&commit[0..2]);
+        fs::create_dir_all(&object_path)?;
+        let file_name = &commit[3..];
+        let mut file = File::create(&object_path.join(file_name))?;
+        
+        // como hacemos? aca el git original guarda el texto descomprimido pero sin pasarlo a string
+        let text_commit_file = format!("{}", String::from_utf8_lossy(&Self::get_decompress_tree_hash_bytes(vcs, commit.into())?));
+        file.write(text_commit_file.as_bytes())?;
+
         Ok(())
     }
 
@@ -86,7 +102,7 @@ impl Clone{
         Self::send_done_msg(socket)?;
         let commit_hash_decompress = Self::print_socket_response(socket)?;
         println!("commit hash decode: {:?}", String::from_utf8_lossy(&commit_hash_decompress));
-        let blobs_hash = Self::get_decompress_tree_hash_bytes(vcs, commit_hash_decompress)?;
+        let blobs_hash = Self::get_decompress_tree_hash_bytes(vcs, commit_hash_decompress[5..45].to_vec())?;
         println!("tree hash decode: {}", String::from_utf8_lossy(&blobs_hash));
         //manejo el procesamiento de mi query de wants.
         Ok(()) 
@@ -95,7 +111,7 @@ impl Clone{
     /// Recibe el hash del commit
     /// Te devuelve la tira de bytes del hash del tree descomprimido
     fn get_decompress_tree_hash_bytes(vcs: &VersionControlSystem, commit_hash: Vec<u8>) -> Result<Vec<u8>,std::io::Error> {
-        let format_hash = format!("{}", String::from_utf8_lossy(&commit_hash[5..45]));
+        let format_hash = format!("{}", String::from_utf8_lossy(&commit_hash));
         let blobs_hash = vcs.cat_file_bytes(&format_hash, ".git")?;
         let dec_hash = decompress_data(&blobs_hash)?;
         Ok(dec_hash) 
