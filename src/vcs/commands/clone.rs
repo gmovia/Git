@@ -39,7 +39,7 @@ impl Clone{
                     let _ = vcs.branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
                     // Realiza aquí la acción que desees con `branch_name`.
-                    if let Err(e) = Self::wite_commit_log_file(vcs, commit, branch_name) {
+                    if let Err(e) = Self::write_commit_log_file(vcs, commit, branch_name) {
                         println!("{}",e);
                     }
                 }
@@ -47,14 +47,14 @@ impl Clone{
         }
     }
 
-    // Falta ver que el archivo de logs tiene varios commits, capaz sale por el lado del parent
-    fn wite_commit_log_file(vcs: &VersionControlSystem, commit: &str, branch_name: &str) -> Result<(),std::io::Error>{
+    // Falta ver que el archivo de logs tiene varios commits, capaz sale por el lado del parent?
+    fn write_commit_log_file(vcs: &VersionControlSystem, commit: &str, branch_name: &str) -> Result<(),std::io::Error>{
         let logs_path = vcs.path.join(".rust_git").join("logs").join(branch_name); 
         
         let current_time: DateTime<Local> = Local::now();
         let format_commit = format!("{}-{}-{}-{}", Random::random(), commit, "clone", current_time);
         
-        // no se si deberia ir el append o no
+        // no se si deberia ir el append o no. Probablemente no
         let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
         file.write(format_commit.as_bytes())?;
 
