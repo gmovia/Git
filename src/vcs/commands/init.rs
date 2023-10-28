@@ -138,10 +138,9 @@ impl Init {
         Ok(())
     }
 
-    pub fn get_object_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
+    pub fn get_object_path(path: &PathBuf, git_path: &str) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
-        //let objects_path = p.join(".rust_git").join("objects");
-        let objects_path = p.join(".rust_git").join("objects");
+        let objects_path = p.join(git_path).join("objects");
         Ok(Path::new(&objects_path).to_path_buf())
     }
 

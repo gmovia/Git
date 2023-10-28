@@ -44,15 +44,22 @@ impl VersionControlSystem {
     /// Calcula el hash object de un archivo. En el caso de que sea una carpeta, debe devolver un error.
     /// Si se añade el comando -w lo que sucede es que se guardan los datos en .git/objects (investigar bien) FALTA HACER
     pub fn hash_object(&self, path: &Path, option: WriteOption) -> Result<String, std::io::Error>{
-        let object_path = Init::get_object_path(&self.path)?;
+        let object_path = Init::get_object_path(&self.path, ".rust_git")?;
         HashObject::hash_object(path, object_path, option)
     }
  
     /// Recibe un hash
     /// Obtiene el path del hash y devuelve el contenido que hay en el archivo del path
-    pub fn cat_file(&self, hash: &str) -> Result<String, std::io::Error>{
-        let object_path = Init::get_object_path(&self.path)?;
+    pub fn cat_file(&self, hash: &str, path: &str) -> Result<String, std::io::Error>{
+        let object_path = Init::get_object_path(&self.path, path)?;
         CatFile::cat_file(hash, object_path)
+    }
+
+    /// Recibe un hash
+    /// Obtiene el path del hash y devuelve el contenido que hay en el archivo del path en bytes
+    pub fn cat_file_bytes(&self, hash: &str, path: &str) -> Result<Vec<u8>, std::io::Error>{
+        let object_path = Init::get_object_path(&self.path, path)?;
+        CatFile::cat_file_bytes(hash, object_path)
     }
 
     /// Recibe un path

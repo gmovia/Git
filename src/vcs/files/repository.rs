@@ -22,7 +22,7 @@ impl Repository{
         if let Some(last_commit) = reader.lines().filter_map(Result::ok).last(){
             let parts: Vec<&str> = last_commit.split("-").collect(); // parts[0] = id ; parts[1] = hash ; parts[2] = message
 
-            let content = CatFile::cat_file(parts[1], Init::get_object_path(&self.path)?)?;
+            let content = CatFile::cat_file(parts[1], Init::get_object_path(&self.path, ".rust_git")?)?;
             let content_lines: Vec<&str> = content.split("\n").collect();
 
             for line in content_lines{
@@ -46,7 +46,7 @@ impl Repository{
             let entry = format!("{}-{}\n", key, value);
             commit_file.write_all(entry.as_bytes())?;
         }
-        let hash = HashObject::hash_object(&path, Init::get_object_path(&self.path)?, WriteOption::Write)?;
+        let hash = HashObject::hash_object(&path, Init::get_object_path(&self.path, ".rust_git")?, WriteOption::Write)?;
         let _ = fs::remove_file(path);
         Ok(hash)
     }

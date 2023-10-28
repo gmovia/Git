@@ -12,13 +12,13 @@ mod tests {
         let path = create_file(&temp_dir, "file1.txt");  
         let hash = vcs.hash_object(&path, WriteOption::Write)?;
 
-        assert_eq!(vcs.cat_file(&hash)?,fs::read_to_string(path)?);
+        assert_eq!(vcs.cat_file(&hash, ".rust_git")?,fs::read_to_string(path)?);
         Ok(())
     }
     #[test]
     pub fn test_02_tried_to_read_content_with_cat_file_of_an_unexist_hash_object() -> Result<(), std::io::Error> {
         let (_tempdir, vcs) = set_up();
-        assert!(matches!(vcs.cat_file("asdasd"), Err(e) if e.to_string().contains("No such file or directory")));    
+        assert!(matches!(vcs.cat_file("asdasd", ".rust_git"), Err(e) if e.to_string().contains("No such file or directory")));    
         Ok(())
     }
 
