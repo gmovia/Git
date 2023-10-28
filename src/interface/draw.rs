@@ -1,5 +1,10 @@
+use core::borrow;
+use std::{cell::RefCell, rc::Rc, path::Path};
+
 use gtk::{prelude::*, Button, ComboBoxText};
-use crate::vcs::version_control_system::VersionControlSystem;
+use crate::{vcs::version_control_system::VersionControlSystem, handlers::add};
+
+use super::interface;
 
 pub fn branches(vcs: &VersionControlSystem, combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
     let branches = vcs.get_branches()?;
@@ -21,12 +26,14 @@ pub fn changes_and_staging_area(vcs: &VersionControlSystem, grid: &gtk::Grid, bo
     let changes: Vec<String> = untracked_files_paths.iter().chain(changes_not_be_commited_paths.iter()).cloned().collect();
     let staging_area: Vec<String> = changes_to_be_commited.keys().cloned().collect();
 
-    draw_changes(&changes, grid);
+    draw_changes(&changes, grid, vcs, box_window);
     draw_staging_area(&staging_area, box_window);
     Ok(())
 }
 
-pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid){
+pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid, vcs: &VersionControlSystem, box_window: &gtk::Box){
+    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+
     for (index, path) in changes.iter().enumerate() {
         let label = gtk::Label::new(Some(path));
         label.set_visible(true);
@@ -48,6 +55,16 @@ pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid){
         grid.attach(&label, 0, index as i32, 1, 1);
         grid.attach(&add_button, 1, index as i32, 1, 1);
         grid.attach(&remove_button, 2, index as i32, 1, 1);
+
+        let path_clone = path.clone(); // Clona el path
+        let box_window = box_window.clone();
+        add_button.connect_clicked({
+            let version = version.clone();
+            move |_|{
+                let mut version = version.borrow_mut();
+                let _ = version.add(Path::new(&path_clone)); // Usa la copia clonada
+                //box_window.add(&label);
+        }});
     }
 }
 

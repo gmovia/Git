@@ -1,6 +1,7 @@
 use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
 use crate::vcs::commands::{hash_object::{WriteOption, HashObject}, cat_file::CatFile, init::Init};
 
+#[derive(Debug, Clone)]
 pub struct Repository{
     path: PathBuf,
 }

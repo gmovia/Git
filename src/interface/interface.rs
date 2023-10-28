@@ -1,10 +1,9 @@
-use std::thread;
-use std::time::Duration;
-use std::{path::Path, cell::RefCell, rc::Rc};
 
-use gtk::{prelude::*, ComboBoxText, Button, Grid};
+use std::path::Path;
 
-use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions};
+use gtk::prelude::*;
+
+use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 
 use super::handler::{handle_branch, handle_commit};
@@ -52,27 +51,9 @@ impl RustInterface {
         branches(&vcs, &self.select_branch)?;
         changes_and_staging_area(&vcs, &self.grid, &self.box_window)?;
         
-        
-        let version = Rc::new(RefCell::new(vcs));
-        let rc_entry = Rc::new(RefCell::new(self.dialog_entry.clone()));
-        let rc_branch = Rc::new(RefCell::new(self.select_branch.clone()));
-
         handle_commit(&self);
-        handle_branch(&self);
+        handle_branch(&self, &vcs);
 
-        self.create_branch.connect_clicked({
-            let version = version.clone();
-            let rc_entry = rc_entry.clone();
-            let rc_branch = rc_branch.clone();
-            move |_|{
-                let version = version.borrow_mut();
-                let rc_entry = rc_entry.borrow_mut();
-                let rc_branch = rc_branch.borrow_mut();
-                let _ = version.branch(BranchOptions::NewBranch(&rc_entry.text()));
-                rc_branch.append_text(&rc_entry.text());
-                rc_entry.set_text("Create new branch ...");
-            }});
-    
         self.window.show_all();
     
         gtk::main();

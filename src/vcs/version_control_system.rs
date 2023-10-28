@@ -8,6 +8,7 @@ use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit:
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
+#[derive(Debug, Clone)]
 pub struct VersionControlSystem {
     pub path: PathBuf,
     pub repository: Repository,
