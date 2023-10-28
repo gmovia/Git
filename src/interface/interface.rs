@@ -16,10 +16,13 @@ pub struct RustInterface {
     pub select_branch: gtk::ComboBoxText,
     pub box_window: gtk::Box,
     pub new_branch_button: gtk::Button,
-    pub dialog: gtk::Dialog,
+    pub branch_dialog: gtk::Dialog,
     pub dialog_entry: gtk::Entry,
     pub create_branch: gtk::Button,
     pub status: gtk::Button,
+    pub commit_dialog: gtk::Dialog,
+    pub message: gtk::Entry,
+    pub message_ok: gtk::Button,
 }
 
 impl RustInterface {
@@ -40,10 +43,13 @@ impl RustInterface {
             select_branch: builder.object("select-branch").unwrap(),
             box_window: builder.object("box-add").unwrap(),
             new_branch_button: builder.object("new-branch").unwrap(),
-            dialog: builder.object("dialog").unwrap(),
+            branch_dialog: builder.object("branch-dialog").unwrap(),
             dialog_entry: builder.object("dialog-entry").unwrap(),
             create_branch: builder.object("create").unwrap(),
             status: builder.object("status").unwrap(),
+            commit_dialog: builder.object("commit-dialog").unwrap(),
+            message: builder.object("message-entry").unwrap(),
+            message_ok: builder.object("message-ok").unwrap(),
         }
     }
     
@@ -54,11 +60,9 @@ impl RustInterface {
         repositories(&vcs, &self.select_repository)?;
         branches(&vcs, &self.select_branch)?;
         handle_branch(&self, &vcs);
-        handle_commit(&self);
+        handle_commit(&self, &vcs);
         handle_status(&self, &vcs);
         
-        
-
         self.window.show_all();   
         gtk::main();  // esto corta el ciclo de ejecucion
 

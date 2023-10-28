@@ -5,20 +5,34 @@ use crate::vcs::{commands::branch::BranchOptions, version_control_system::Versio
 use super::{interface::RustInterface, draw::changes_and_staging_area};
 use gtk::prelude::*;
 
-pub fn handle_commit(interface: &RustInterface){
+pub fn handle_commit(interface: &RustInterface, vcs: &VersionControlSystem){
     let box_window = interface.box_window.clone();
-
-    interface.commit_button.connect_clicked(move |_| {        
+    let dialog = interface.commit_dialog.clone();
+    let version = Rc::new(RefCell::new(vcs.clone()));
+    let rc_entry = Rc::new(RefCell::new(interface.message.clone()));
+    interface.commit_button.connect_clicked({
+        move |_| {        
+        dialog.run();
         box_window.foreach(|child|{
             box_window.remove(child);
         });
+        dialog.hide();
+    }});
 
-        //vcs.commit
+    interface.message_ok.connect_clicked({
+        let rc_entry = rc_entry.clone();
+        let version = version.clone();
+        move |_| {
+            let mut version = version.borrow_mut();
+            let rc_entry = rc_entry.borrow_mut();
+            let _ = version.commit(rc_entry.text().to_string());
+        }
     });
+    
 }
 
 pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
-    let dialog = interface.dialog.clone();
+    let dialog = interface.branch_dialog.clone();
 
     let version = Rc::new(RefCell::new(vcs.clone()));
     let rc_entry = Rc::new(RefCell::new(interface.dialog_entry.clone()));
@@ -41,7 +55,6 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
             let rc_branch = rc_branch.borrow_mut();
             let _ = version.branch(BranchOptions::NewBranch(&rc_entry.text()));
             rc_branch.append_text(&rc_entry.text());
-            rc_entry.set_text("Create new branch ...");
     }});
 }
 
