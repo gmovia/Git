@@ -1,10 +1,8 @@
-use core::borrow;
+
 use std::{cell::RefCell, rc::Rc, path::Path};
 
 use gtk::{prelude::*, Button, ComboBoxText};
-use crate::{vcs::version_control_system::VersionControlSystem, handlers::add};
-
-use super::interface;
+use crate::vcs::version_control_system::VersionControlSystem;
 
 pub fn branches(vcs: &VersionControlSystem, combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
     let branches = vcs.get_branches()?;
@@ -19,6 +17,14 @@ pub fn repositories(_vcs: &VersionControlSystem, combo_box: &ComboBoxText) -> Re
 }
 
 pub fn changes_and_staging_area(vcs: &VersionControlSystem, grid: &gtk::Grid, box_window: &gtk::Box) -> Result<(), std::io::Error>{
+    grid.foreach(|child|{
+        grid.remove(child);
+    });
+    
+    box_window.foreach(|child|{
+        box_window.remove(child);
+    });
+    
     let (untracked_files, changes_not_be_commited, changes_to_be_commited) = vcs.status()?;
     let untracked_files_paths: Vec<String> = untracked_files.keys().cloned().collect();
     let changes_not_be_commited_paths: Vec<String> = changes_not_be_commited.keys().cloned().collect();
@@ -26,12 +32,14 @@ pub fn changes_and_staging_area(vcs: &VersionControlSystem, grid: &gtk::Grid, bo
     let changes: Vec<String> = untracked_files_paths.iter().chain(changes_not_be_commited_paths.iter()).cloned().collect();
     let staging_area: Vec<String> = changes_to_be_commited.keys().cloned().collect();
 
-    draw_changes(&changes, grid, vcs, box_window);
     draw_staging_area(&staging_area, box_window);
+    draw_changes(&changes, grid, vcs, box_window);
     Ok(())
 }
 
 pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid, vcs: &VersionControlSystem, box_window: &gtk::Box){
+    println!("{:?}",changes);
+
     let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
 
     for (index, path) in changes.iter().enumerate() {
@@ -46,29 +54,27 @@ pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid, vcs: &VersionContro
         .build();
         add_button.set_visible(true);
 
-        let remove_button = Button::builder()
-        .margin_start(10)
-        .label("-")
-        .build();
-        add_button.set_visible(true);
-
         grid.attach(&label, 0, index as i32, 1, 1);
         grid.attach(&add_button, 1, index as i32, 1, 1);
-        grid.attach(&remove_button, 2, index as i32, 1, 1);
 
         let path_clone = path.clone(); // Clona el path
-        let box_window = box_window.clone();
         add_button.connect_clicked({
             let version = version.clone();
-            move |_|{
+            let rc_grid = grid.clone();
+            let rc_add = box_window.clone();
+            move |widget|{ 
                 let mut version = version.borrow_mut();
                 let _ = version.add(Path::new(&path_clone)); // Usa la copia clonada
-                //box_window.add(&label);
+                rc_grid.remove(widget);
+                rc_grid.remove(&label);
+                rc_add.add(&label);
         }});
     }
 }
 
 pub fn draw_staging_area(staging_area: &Vec<String>, _box: &gtk::Box){
+    println!("{:?}",staging_area);
+
     for path in staging_area {
         let label = gtk::Label::new(Some(path));
         label.set_visible(true);

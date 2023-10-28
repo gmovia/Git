@@ -6,7 +6,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 
-use super::handler::{handle_branch, handle_commit};
+use super::handler::{handle_branch, handle_commit, handle_status};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -19,6 +19,7 @@ pub struct RustInterface {
     pub dialog: gtk::Dialog,
     pub dialog_entry: gtk::Entry,
     pub create_branch: gtk::Button,
+    pub status: gtk::Button,
 }
 
 impl RustInterface {
@@ -42,21 +43,35 @@ impl RustInterface {
             dialog: builder.object("dialog").unwrap(),
             dialog_entry: builder.object("dialog-entry").unwrap(),
             create_branch: builder.object("create").unwrap(),
+            status: builder.object("status").unwrap(),
         }
     }
     
     pub fn impl_interface(&self) -> Result<(), std::io::Error>{    
         let vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
+
+        let _ = changes_and_staging_area(&vcs, &self.grid, &self.box_window);
         repositories(&vcs, &self.select_repository)?;
         branches(&vcs, &self.select_branch)?;
-        changes_and_staging_area(&vcs, &self.grid, &self.box_window)?;
-        
-        handle_commit(&self);
         handle_branch(&self, &vcs);
+        handle_commit(&self);
+        handle_status(&self, &vcs);
+        
+        
 
-        self.window.show_all();
-    
-        gtk::main();
+        self.window.show_all();   
+        gtk::main();  // esto corta el ciclo de ejecucion
+
         Ok(())
     }
 }
+
+
+
+        //let has: HashMap<String, String> = HashMap::new();
+        //let g = Arc::new(Mutex::new(has));
+        //let shared_g = g.clone();
+
+        //let handle2 = thread::spawn(move || {
+        //    let mut locked_vector = shared_g.lock().unwrap();
+        //});
