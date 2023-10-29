@@ -50,22 +50,23 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
     let dialog = interface.branch_dialog.clone();
 
     let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
-    let rc_entry = Rc::new(RefCell::new(interface.dialog_entry.clone()));
     let rc_branch = Rc::new(RefCell::new(interface.select_branch.clone()));
-    let rc_create = Rc::new(RefCell::new(interface.create_branch.clone()));
+    let rc_entry = Rc::new(RefCell::new(interface.dialog_entry.clone()));
+    let rc_create = interface.create_branch.clone();
+    //let rc_entry = interface.dialog_entry.clone();
+    //let rc_branch = interface.select_branch.clone();
+    let rc_delete = interface.delete_branch.clone();
 
     interface.create_branch.set_sensitive(false);
+    interface.delete_branch.set_sensitive(false);
 
     interface.dialog_entry.connect_changed({  
-        let rc_create = rc_create.clone();
         move |e| {
-        let rc_create = rc_create.borrow_mut();
         rc_create.set_sensitive(!e.text().is_empty());
+        rc_delete.set_sensitive(!e.text().is_empty());
     }});
 
-    
-
-    interface.new_branch_button.connect_clicked(
+    interface.branch_button.connect_clicked(
         move |_| {
             dialog.run();
             dialog.hide();
@@ -74,13 +75,12 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
 
     interface.create_branch.connect_clicked({
         let version = version.clone();
-        let rc_entry = rc_entry.clone();
         let rc_branch = rc_branch.clone();
+        let rc_entry = rc_entry.clone();
         move |button|{
             let version = version.borrow_mut();
-            let rc_entry = rc_entry.borrow_mut();
             let rc_branch = rc_branch.borrow_mut();
-
+            let rc_entry = rc_entry.borrow_mut();
             let _ = version.branch(BranchOptions::NewBranch(&rc_entry.text()));
 
             rc_branch.append_text(&rc_entry.text());
@@ -88,6 +88,23 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
             rc_entry.set_text("");
             button.set_sensitive(false);
     }});
+
+    interface.delete_branch.connect_clicked({
+        let version = version.clone();
+        let rc_entry = rc_entry.clone();
+        move |button| {
+            let version = version.borrow_mut();
+            let rc_entry = rc_entry.borrow_mut();
+            
+            // ELIMINAR DEL SELECT BRANCH TAMBIEN
+
+            let _ = version.branch(BranchOptions::DeleteBranch(&rc_entry.text()));
+
+            rc_entry.set_text("");
+            button.set_sensitive(false);
+        }
+    });
+
 
     interface.select_branch.connect_changed({
         let version = version.clone();

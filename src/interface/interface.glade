@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.40.0 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkDialog" id="branch-dialog">
@@ -14,6 +14,19 @@
           <object class="GtkButtonBox" id="buttons-dialog">
             <property name="can-focus">False</property>
             <property name="layout-style">spread</property>
+            <child>
+              <object class="GtkButton" id="delete">
+                <property name="label" translatable="yes">Delete</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
             <child>
               <object class="GtkButton" id="create">
                 <property name="label" translatable="yes">Create</property>
@@ -179,6 +192,7 @@
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="halign">baseline</property>
             <child>
               <object class="GtkButton" id="status">
                 <property name="label">gtk-refresh</property>
@@ -244,8 +258,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="new-branch">
-                <property name="label" translatable="yes">New Branch</property>
+              <object class="GtkButton" id="branch">
+                <property name="label" translatable="yes">Branch</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
