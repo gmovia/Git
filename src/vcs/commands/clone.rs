@@ -10,7 +10,7 @@ pub struct Clone;
 
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
-        let init_path = Path::new("/home/amoralejo/TEST3");
+        let init_path = Path::new("/Users/luz.diazc/Desktop/TEST");
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
         Ok(())
@@ -39,7 +39,7 @@ impl Clone{
                     let _ = vcs.branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
                     // Realiza aquí la acción que desees con `branch_name`.
-                    if let Err(e) = Self::write_commit_log_file(vcs, commit, branch_name) {
+                    if let Err(e) = Self::write_commit_log_file(vcs, commit, branch_name.trim_end_matches('\n')) {
                         println!("{}",e);
                     }
                 }
@@ -141,7 +141,7 @@ impl Clone{
     /// Recibe el hash del commit
     /// Te devuelve la tira de bytes del hash descomprimido
     fn get_decompress_hash_bytes(commit_hash: Vec<u8>) -> Result<Vec<u8>,std::io::Error> {
-        let clone_path = Path::new("/home/amoralejo/TEST2");
+        let clone_path = Path::new("/Users/luz.diazc/Desktop/TEST");
         let vcs_clone = VersionControlSystem::init(clone_path, Vec::new());
         let format_hash = format!("{}", String::from_utf8_lossy(&commit_hash));
         let blobs_hash = vcs_clone.cat_file_bytes(&format_hash, ".git")?;
