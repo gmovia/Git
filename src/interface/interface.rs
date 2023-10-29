@@ -5,7 +5,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -14,6 +14,11 @@ pub struct RustInterface {
     pub commit_button: gtk::Button,
     pub grid: gtk::Grid,
     pub select_repository: gtk::ComboBoxText,
+    pub repository_button: gtk::Button,
+    pub repository_dialog: gtk::Dialog,
+    pub repository_entry: gtk::Entry,
+    pub delete_repository: gtk::Button,
+    pub create_repository: gtk::Button,
     pub select_branch: gtk::ComboBoxText,
     pub box_window: gtk::Box,
     pub branch_button: gtk::Button,
@@ -52,6 +57,11 @@ impl RustInterface {
             commit_button: builder.object("commit").unwrap(),
             grid: builder.object("grid").unwrap(),
             select_repository: builder.object("select-repository").unwrap(),
+            repository_button: builder.object("repository").unwrap(),
+            repository_dialog: builder.object("repository-dialog").unwrap(),
+            repository_entry: builder.object("dialog-entry-repo").unwrap(),
+            delete_repository: builder.object("delete-repo").unwrap(),
+            create_repository: builder.object("create-repo").unwrap(),
             select_branch: builder.object("select-branch").unwrap(),
             box_window: builder.object("box-add").unwrap(),
             branch_button: builder.object("branch").unwrap(),
@@ -84,7 +94,8 @@ impl RustInterface {
         handle_commit(&self, &vcs);
         handle_status(&self, &vcs);
         handle_log(&self, &vcs);
-        
+        handle_repository(&self, &vcs);
+
         self.window.show_all();   
         gtk::main();  // esto corta el ciclo de ejecucion
 
@@ -92,12 +103,3 @@ impl RustInterface {
     }
 }
 
-
-
-        //let has: HashMap<String, String> = HashMap::new();
-        //let g = Arc::new(Mutex::new(has));
-        //let shared_g = g.clone();
-
-        //let handle2 = thread::spawn(move || {
-        //    let mut locked_vector = shared_g.lock().unwrap();
-        //});

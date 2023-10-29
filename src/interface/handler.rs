@@ -53,8 +53,6 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
     let rc_branch = Rc::new(RefCell::new(interface.select_branch.clone()));
     let rc_entry = Rc::new(RefCell::new(interface.dialog_entry.clone()));
     let rc_create = interface.create_branch.clone();
-    //let rc_entry = interface.dialog_entry.clone();
-    //let rc_branch = interface.select_branch.clone();
     let rc_delete = interface.delete_branch.clone();
 
     interface.create_branch.set_sensitive(false);
@@ -168,4 +166,71 @@ pub fn handle_log(interface: &RustInterface, vcs: &VersionControlSystem) {
 
 }
 
+
+pub fn handle_repository(interface: &RustInterface, vcs: &VersionControlSystem) {
+    let dialog = interface.repository_dialog.clone();
+
+    let rc_repo = Rc::new(RefCell::new(interface.select_repository.clone()));
+    let rc_entry = Rc::new(RefCell::new(interface.repository_entry.clone()));
+    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+    let rc_create = interface.create_repository.clone();
+    let rc_delete = interface.delete_repository.clone();
+
+    interface.create_repository.set_sensitive(false);
+    interface.delete_repository.set_sensitive(false);
+
+    interface.repository_entry.connect_changed({  
+        move |e| {
+        rc_create.set_sensitive(!e.text().is_empty());
+        rc_delete.set_sensitive(!e.text().is_empty());
+    }});
+
+    interface.repository_button.connect_clicked(
+        move |_| {
+            dialog.run();
+            dialog.hide();
+        }
+    );
+
+    interface.create_repository.connect_clicked({
+        let version = version.clone();
+        let rc_repo = rc_repo.clone();
+        let rc_entry = rc_entry.clone();
+        move |button|{
+            let _version = version.borrow_mut();
+            let rc_repo = rc_repo.borrow_mut();
+            let rc_entry = rc_entry.borrow_mut();
+
+            // CREAR REPOSITORY CON EL VCS
+            rc_repo.append_text(&rc_entry.text());
+
+            rc_entry.set_text("");
+            button.set_sensitive(false);
+    }});
+
+    interface.delete_repository.connect_clicked({
+        let version = version.clone();
+        let rc_entry = rc_entry.clone();
+        move |button| {
+            let _version = version.borrow_mut();
+            let rc_entry = rc_entry.borrow_mut();
+
+            // ELIMINAR REPOSITORY CON EL VCS
+
+            // ELIMINAR rc_entry.text() DEL SELECT BRANCH TAMBIEN
+
+            rc_entry.set_text("");
+            button.set_sensitive(false);
+        }
+    });
+
+
+    interface.select_repository.connect_changed({
+        let version = version.clone();
+        move |_|{
+            let _version = version.borrow_mut();
+            // DEBE ELEGIR EL REPO SELECCIONADO DEL SELECT_REPOSITORY
+    }});
+
+}
 
