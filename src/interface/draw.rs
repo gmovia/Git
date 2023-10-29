@@ -1,5 +1,5 @@
 
-use std::{cell::RefCell, rc::Rc, path::Path};
+use std::{cell::RefCell, rc::Rc, path::Path, collections::HashMap};
 
 use gtk::{prelude::*, Button, ComboBoxText};
 use crate::vcs::version_control_system::VersionControlSystem;
@@ -26,26 +26,43 @@ pub fn changes_and_staging_area(vcs: &VersionControlSystem, grid: &gtk::Grid, bo
     });
     
     let (untracked_files, changes_not_be_commited, changes_to_be_commited) = vcs.status()?;
-    let untracked_files_paths: Vec<String> = untracked_files.keys().cloned().collect();
-    let changes_not_be_commited_paths: Vec<String> = changes_not_be_commited.keys().cloned().collect();
-    
-    let changes: Vec<String> = untracked_files_paths.iter().chain(changes_not_be_commited_paths.iter()).cloned().collect();
     let staging_area: Vec<String> = changes_to_be_commited.keys().cloned().collect();
+
+    let mut changes = untracked_files.clone();
+    changes.extend(changes_not_be_commited);
 
     draw_staging_area(&staging_area, box_window);
     draw_changes(&changes, grid, vcs, box_window);
     Ok(())
 }
 
-pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid, vcs: &VersionControlSystem, box_window: &gtk::Box){
+pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, vcs: &VersionControlSystem, box_window: &gtk::Box){
 
     let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
 
-    for (index, path) in changes.iter().enumerate() {
-        let label = gtk::Label::new(Some(path));
-        label.set_visible(true);
-        label.set_xalign(2.0); // Alinea el texto a la izquierda
-        label.set_yalign(0.5); // Alinea el texto arriba
+    let mut index = 0;
+    for (path, state) in changes {
+        let path_label = gtk::Label::new(Some(path));
+        path_label.set_visible(true);
+        path_label.set_xalign(2.0); // Alinea el texto a la izquierda
+        path_label.set_yalign(0.5); // Alinea el texto arriba
+
+        let state_label = gtk::Label::new(Some(state));
+        state_label.set_visible(true);
+        state_label.set_xalign(2.0); // Alinea el texto a la izquierda
+        state_label.set_yalign(0.5); // Alinea el texto arriba
+
+        path_label.style_context().add_class("custom-add-label");
+
+        if state == "CREATED"{
+            state_label.style_context().add_class("custom-changes-label-created");
+        }
+        if state == "MODIFIED"{
+            state_label.style_context().add_class("custom-changes-label-modified");
+        }
+        if state == "DELETED"{
+            state_label.style_context().add_class("custom-changes-label-deleted");
+        }
 
         let add_button = Button::builder()
         .margin_start(10)
@@ -53,8 +70,12 @@ pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid, vcs: &VersionContro
         .build();
         add_button.set_visible(true);
 
-        grid.attach(&label, 0, index as i32, 1, 1);
-        grid.attach(&add_button, 1, index as i32, 1, 1);
+        add_button.style_context().add_class("custom-add-button");
+
+        grid.attach(&path_label, 0, index as i32, 1, 1);
+        grid.attach(&state_label, 1, index as i32, 1, 1);
+        grid.attach(&add_button, 2, index as i32, 1, 1);
+        index += 1;
 
         let path_clone = path.clone(); // Clona el path
         add_button.connect_clicked({
@@ -65,8 +86,9 @@ pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid, vcs: &VersionContro
                 let mut version = version.borrow_mut();
                 let _ = version.add(Path::new(&path_clone)); // Usa la copia clonada
                 rc_grid.remove(widget);
-                rc_grid.remove(&label);
-                rc_add.add(&label);
+                rc_grid.remove(&path_label);
+                rc_grid.remove(&state_label);
+                rc_add.add(&path_label);
         }});
     }
 }

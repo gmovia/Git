@@ -131,7 +131,6 @@ pub fn handle_log(interface: &RustInterface, vcs: &VersionControlSystem) {
                 log_box.remove(child);
             });
             if let Ok(log) = version.log() {
-                println!("{:?}",log);
                 let label = gtk::Label::new(Some(&log));
                 label.set_visible(true);
                 label.set_xalign(2.5);
