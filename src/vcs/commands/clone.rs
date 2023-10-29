@@ -10,7 +10,7 @@ pub struct Clone;
 
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
-        let init_path = Path::new("/Users/luz.diazc/Desktop/TEST");
+        let init_path = Path::new("/home/amoralejo/TEST3");
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
         Ok(())
@@ -141,12 +141,12 @@ impl Clone{
     /// Recibe el hash del commit
     /// Te devuelve la tira de bytes del hash descomprimido
     fn get_decompress_hash_bytes(commit_hash: Vec<u8>) -> Result<Vec<u8>,std::io::Error> {
-        let clone_path = Path::new("/Users/luz.diazc/Desktop/TEST");
+        let clone_path = Path::new("/home/amoralejo/TEST3");
         let vcs_clone = VersionControlSystem::init(clone_path, Vec::new());
         let format_hash = format!("{}", String::from_utf8_lossy(&commit_hash));
         let blobs_hash = vcs_clone.cat_file_bytes(&format_hash, ".git")?;
         let dec_hash = decompress_data(&blobs_hash)?;
-        Ok(dec_hash) 
+        Ok(dec_hash.0) 
     }
 
 
@@ -154,13 +154,13 @@ impl Clone{
         let mut buffer = Vec::new();
             match socket.read_to_end(&mut buffer) {
                 Ok(_) => {
+                    Self::manage_pack(&buffer[8..]);
+                          
                     match decompress_data(&buffer[22..]) {
                         Ok(decompressed_data) => {
-                            
-                            Self::manage_pack(&buffer[8..]);
-                            let text = String::from_utf8_lossy(&decompressed_data);
+                            let text = String::from_utf8_lossy(&decompressed_data.0);
                             //println!("Datos descomprimidos: {}", text);
-                            return Ok(decompressed_data);
+                            return Ok(decompressed_data.0);
                         },
                         Err(e) => {
                             eprintln!("Error al descomprimir los datos: {}", e);
@@ -221,13 +221,42 @@ impl Clone{
     }
 
     fn manage_pack(pack: &[u8])  -> Result<(),std::io::Error> {
+        /* 
+        match decompress_data(&pack) {
+            Ok(decompressed_data) => {
+                let text = String::from_utf8_lossy(&decompressed_data);
+            },
+            Err(e) => {
+                eprintln!("Error al descomprimir los datos: {}", e);
+                return Err(e)
+            }
+        }
+        */
+        
         let signature_pack_msg = &pack[0..4];
         println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
         let version = &pack[4..8];
         println!("VERSION: {:?} - {:?}", version, Self::parse_number(version).unwrap());
-        let objetos = &pack[8..12];
-        println!("CANTIDAD DE OBJETOS: {:?} - {:?}", objetos, Self::parse_number(objetos).unwrap());
+        let object_number = Self::parse_number(&pack[8..12])?;
+        println!("CANTIDAD DE OBJETOS: {}", object_number);
         
+        let mut position: u64 = 12;
+
+        for object in 0..object_number {
+            let position_usize: usize = position as usize;  // Convierte a usize
+            if let Ok(data) = decompress_data(&pack[(position_usize+2)..]) {
+                position = position_usize as u64 + (data.1 / 8) as u64;
+                let objet_type = Self::get_object_type(pack[position_usize]);
+                println!("TIPO OBJETO {}: {:?}, TAMAÑO PRIMER OBJETO: {:?}", object+1, objet_type, data.1);
+    
+                println!("DATAAAA {}: {} --- bits: {}", object, String::from_utf8_lossy(&data.0), data.1);    
+                println!("next position: {}", position);
+            }
+            else {
+                println!("------------- ACA FALLA")
+            }
+        } 
+        println!("SALE");
         // HASTA ACA ESTAMOS BIEN. EL TIPO DE OBJETO ES UN COMMIT POR LO QUE ENTIENDO DEBE ESTAR BIEN 
         // EL TAMAÑO SE COMPLICO :(
         let start_byte = 12;
@@ -242,13 +271,6 @@ impl Clone{
         let data_first_object = &pack[13..26]; 
         println!("Resultado: {:?}", decompress_data(data_first_object));
     
-        let second_object_byte = &pack[26] >> 5;
-        println!("second_objet_type: {:?}, {:?}", second_object_byte, String::from_utf8_lossy(&second_object_byte.to_be_bytes()));
-        let n = 26; // es esto n?
-        let second_object_len = (n-1)*7+4;
-        println!("second_objet_len: {:?}-bits", second_object_len);
-        let data_second_object = &pack[13..26]; 
-        println!("Resultado 2: {:?}", decompress_data(data_second_object));
         Ok(())
     }
 
