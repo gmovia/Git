@@ -66,15 +66,44 @@ impl Clone{
         fs::create_dir_all(&object_path)?;
         let file_name = &commit[3..];
         let mut file = File::create(&object_path.join(file_name))?;
-        
         // como hacemos? aca el git original guarda el texto descomprimido pero sin pasarlo a string
         // Podemos parsear para que quede como lo tenemos en nuestro TP
-        let text_commit_file = format!("{}", String::from_utf8_lossy(&Self::get_decompress_hash_bytes(vcs, commit.into())?));
-        println!("esto imprime: {}", text_commit_file);
-        file.write(text_commit_file.as_bytes())?;
-
+        let commit_hash_only = format!("{}", &String::from_utf8_lossy(&Self::get_decompress_hash_bytes(vcs, commit.into())?)[16..56]);
+        let format = format!("commit-{}", commit_hash_only); 
+        println!("esto imprime: {}", format);
+        file.write(format.as_bytes())?;
+        Self::create_tree_folder(vcs, &commit_hash_only)?;
         Ok(())
     }
+
+    fn create_tree_folder(vcs: &VersionControlSystem, tree_hash: &str) -> Result<(),std::io::Error> {
+        let object_path = vcs.path.join(".rust_git").join("objects").join(&tree_hash[0..2]);
+        fs::create_dir_all(&object_path)?;
+        let mut file = File::create(&object_path.join(&tree_hash[3..]))?;
+        let text_hash_file = format!("{}", &String::from_utf8_lossy(&Self::get_decompress_hash_bytes(vcs, tree_hash.into())?));
+        let files_names = Self::get_file_names(&text_hash_file)?;
+        for file_name in files_names {
+            let format = format!("{}/{}-{}", vcs.path.display(),file_name.0,file_name.1);
+            file.write(format.as_bytes())?;
+            file.write("\n".as_bytes())?;
+        }     
+        Ok(())
+    }
+
+    fn get_file_names(hash: &str) -> Result<Vec<(String,&str)>,std::io::Error> {
+        let mut files_hash = Vec::new();
+        let files: Vec<&str> = hash.split_whitespace().collect();
+
+        for file in files {
+            if !file.contains("txt") {
+                continue;
+            }
+            let file_name: Vec<&str> = file.split("txt").collect();
+            files_hash.push((file_name[0].to_owned()+"txt",file_name[1]));
+        }
+        Ok(files_hash)
+    }
+
 
     pub fn receive_pack(socket: &mut TcpStream, vcs: &VersionControlSystem)-> Result<(), std::io::Error> {
         let mut packets = Vec::new();
