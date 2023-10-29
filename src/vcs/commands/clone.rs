@@ -54,7 +54,6 @@ impl Clone{
         let current_time: DateTime<Local> = Local::now();
         let format_commit = format!("{}-{}-{}-{}", Random::random(), commit, "clone", current_time);
         
-        // no se si deberia ir el append o no. Probablemente no
         let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
         file.write(format_commit.as_bytes())?;
 
@@ -71,6 +70,7 @@ impl Clone{
         // como hacemos? aca el git original guarda el texto descomprimido pero sin pasarlo a string
         // Podemos parsear para que quede como lo tenemos en nuestro TP
         let text_commit_file = format!("{}", String::from_utf8_lossy(&Self::get_decompress_hash_bytes(vcs, commit.into())?));
+        println!("esto imprime: {}", text_commit_file);
         file.write(text_commit_file.as_bytes())?;
 
         Ok(())
@@ -124,6 +124,7 @@ impl Clone{
                 Ok(_) => {
                     match decompress_data(&buffer[22..]) {
                         Ok(decompressed_data) => {
+                            
                             Self::manage_pack(&buffer[8..]);
                             let text = String::from_utf8_lossy(&decompressed_data);
                             //println!("Datos descomprimidos: {}", text);
@@ -142,19 +143,29 @@ impl Clone{
             } 
     }
 
-    fn parse_number(bytes: &[u8]) -> Result<u8, String> {
+    fn parse_number(bytes: &[u8]) -> Result<u8, std::io::Error> {
         let texto: String = bytes.iter().map(|&b| b.to_string()).collect();
         match texto.parse() {
             Ok(numero) => return Ok(numero),
-            Err(e) => return Err(e.to_string()),
+            Err(_) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Can not parse number")),
         }
     }
 
-    fn get_object_type(bytes: u8) -> Result<u8, String> {
-        let mascara: u8 = 0b00000111;
-        let resultado = bytes & &mascara;
-        Ok(resultado)
+    fn get_object_type(bytes: u8) -> u8 {
+        let mut bits = Vec::new();
+        for i in (0..8).rev() {
+            if i == 4 || i == 5 || i == 6 {
+                let bit = (bytes >> i) & 1;
+                bits.push(bit);
+            } 
+        }
+        let mut numero = 0;
+        for bit in &bits {
+            numero = (numero << 1) | bit;
+        }
+        numero
     }
+
 
     // ESTA FUNCION ME PARA QUE ESTA PARA ATRAS - LA DEJO POR LAS DUDAS PERO SEGURO HAY QUE SACARLA/MODIFICARLA
     fn calculate_length(bytes: &[u8]) -> u32 {
@@ -188,16 +199,14 @@ impl Clone{
         // HASTA ACA ESTAMOS BIEN. EL TIPO DE OBJETO ES UN COMMIT POR LO QUE ENTIENDO DEBE ESTAR BIEN 
         // EL TAMAÑO SE COMPLICO :(
         let start_byte = 12;
-        let first_objet_byte = Self::get_object_type(pack[start_byte]).unwrap();
-        let bytes_necesarios = (((first_objet_byte-1)*7+4+3)+8-1)/8;
-        println!("necesarios: {} bytes",bytes_necesarios);
-        let lenght = Self::calculate_length(&pack[12..(start_byte+bytes_necesarios as usize)]);
-        println!("TIPO PRIMER OBJETO: {:?}, TAMAÑO PRIMER OBJETO: {:?}", first_objet_byte, lenght / 8);
+        let first_objet_type = Self::get_object_type(pack[start_byte]);
         
-        let n = 13; // es esto n?
-        let first_object_len = (n-1)*7+4;
-        // es {b} y esto es 98, tendra que ver con el 88?
-        println!("fist_objet_len: {:?}-bits", first_object_len);
+        //let lenght = Self::calculate_length(&pack[12..(start_byte+bytes_necesarios as usize)]);
+        println!("TIPO PRIMER OBJETO: {:?}, TAMAÑO PRIMER OBJETO: {:?}", first_objet_type, 0);
+        
+        let bits_to_calc_len = (first_objet_type-1)*7+4;
+        println!("bits to calc len: {:?}-bits", bits_to_calc_len);
+
         let data_first_object = &pack[13..26]; 
         println!("Resultado: {:?}", decompress_data(data_first_object));
     

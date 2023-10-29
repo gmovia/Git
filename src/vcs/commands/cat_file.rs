@@ -16,7 +16,6 @@ impl CatFile{
         }
         let data = fs::read(&path)?;
         Ok(String::from_utf8_lossy(&data).to_string())
-
     }
 
     pub fn cat_file_bytes(hash: &str, object_path: PathBuf) -> Result<Vec<u8>, std::io::Error> {
@@ -28,7 +27,6 @@ impl CatFile{
         }
         let data = fs::read(&path)?;
         Ok(data)
-
     }
 
     pub fn get_hash_path(hash: &str, object_path: PathBuf) -> Result<String, std::io::Error>{
