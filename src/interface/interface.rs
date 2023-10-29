@@ -6,7 +6,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 
-use super::handler::{handle_branch, handle_commit, handle_status};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -23,6 +23,10 @@ pub struct RustInterface {
     pub commit_dialog: gtk::Dialog,
     pub message: gtk::Entry,
     pub message_ok: gtk::Button,
+    pub log: gtk::Button,
+    pub log_dialog: gtk::Dialog,
+    pub log_box: gtk::Box,
+    pub close_log: gtk::Button,
 }
 
 impl RustInterface {
@@ -50,6 +54,10 @@ impl RustInterface {
             commit_dialog: builder.object("commit-dialog").unwrap(),
             message: builder.object("message-entry").unwrap(),
             message_ok: builder.object("message-ok").unwrap(),
+            log: builder.object("log").unwrap(),
+            log_dialog: builder.object("log-dialog").unwrap(),
+            log_box: builder.object("log-box").unwrap(),
+            close_log: builder.object("close-log").unwrap(),
         }
     }
     
@@ -62,6 +70,7 @@ impl RustInterface {
         handle_branch(&self, &vcs);
         handle_commit(&self, &vcs);
         handle_status(&self, &vcs);
+        handle_log(&self, &vcs);
         
         self.window.show_all();   
         gtk::main();  // esto corta el ciclo de ejecucion

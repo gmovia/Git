@@ -38,7 +38,6 @@ pub fn changes_and_staging_area(vcs: &VersionControlSystem, grid: &gtk::Grid, bo
 }
 
 pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid, vcs: &VersionControlSystem, box_window: &gtk::Box){
-    println!("{:?}",changes);
 
     let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
 
@@ -73,7 +72,6 @@ pub fn draw_changes(changes: &Vec<String>, grid: &gtk::Grid, vcs: &VersionContro
 }
 
 pub fn draw_staging_area(staging_area: &Vec<String>, _box: &gtk::Box){
-    println!("{:?}",staging_area);
 
     for path in staging_area {
         let label = gtk::Label::new(Some(path));

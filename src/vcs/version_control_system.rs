@@ -69,7 +69,7 @@ impl VersionControlSystem {
     }
 
     ///Muestra el historial de commits
-    pub fn log(&self) -> Result<(), std::io::Error> {
+    pub fn log(&self) -> Result<String, std::io::Error> {
         Log::log(self)
     }
     

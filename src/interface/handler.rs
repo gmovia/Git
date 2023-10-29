@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::vcs::{commands::branch::BranchOptions, version_control_system::VersionControlSystem};
+use crate::vcs::{commands::{branch::BranchOptions, checkout::CheckoutOptions}, version_control_system::VersionControlSystem};
 
 use super::{interface::RustInterface, draw::changes_and_staging_area};
 use gtk::prelude::*;
@@ -49,7 +49,7 @@ pub fn handle_commit(interface: &RustInterface, vcs: &VersionControlSystem){
 pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
     let dialog = interface.branch_dialog.clone();
 
-    let version = Rc::new(RefCell::new(vcs.clone()));
+    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
     let rc_entry = Rc::new(RefCell::new(interface.dialog_entry.clone()));
     let rc_branch = Rc::new(RefCell::new(interface.select_branch.clone()));
     let rc_create = Rc::new(RefCell::new(interface.create_branch.clone()));
@@ -62,6 +62,8 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
         let rc_create = rc_create.borrow_mut();
         rc_create.set_sensitive(!e.text().is_empty());
     }});
+
+    
 
     interface.new_branch_button.connect_clicked(
         move |_| {
@@ -86,7 +88,18 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
             rc_entry.set_text("");
             button.set_sensitive(false);
     }});
+
+    interface.select_branch.connect_changed({
+        let version = version.clone();
+        move |combo_box|{
+            let version = version.borrow_mut();
+            if let Some(branch) = combo_box.active_text(){
+                let _ = version.checkout(CheckoutOptions::ChangeBranch(&branch.to_string()));
+            }
+        }
+    });
 }
+
 
 pub fn handle_status(interface: &RustInterface, vcs: &VersionControlSystem) {
     let version = Rc::new(RefCell::new(vcs.clone()));
@@ -100,6 +113,43 @@ pub fn handle_status(interface: &RustInterface, vcs: &VersionControlSystem) {
                 let _ = changes_and_staging_area(&version.borrow_mut(), &rc_grid.borrow_mut(), &rc_add.borrow_mut());
             }
         });
+}
+
+pub fn handle_log(interface: &RustInterface, vcs: &VersionControlSystem) {
+
+    let version = Rc::new(RefCell::new(vcs.clone()));
+
+    interface.log_dialog.set_title("Log information");
+    let dialog = interface.log_dialog.clone();
+    let log_box = interface.log_box.clone();
+    interface.log.connect_clicked({
+        let version = version.clone();
+        move |_| {
+            let version = version.borrow_mut();
+
+            log_box.foreach(|child| {
+                log_box.remove(child);
+            });
+            if let Ok(log) = version.log() {
+                println!("{:?}",log);
+                let label = gtk::Label::new(Some(&log));
+                label.set_visible(true);
+                label.set_xalign(2.5);
+                label.set_yalign(2.5);
+                log_box.add(&label);
+            }
+            dialog.run();
+            dialog.hide();
+        }
+        
+    });
+
+    interface.close_log.connect_clicked({
+        let dialog_2 = interface.log_dialog.clone();
+        move |_| {
+            dialog_2.hide();
+    }});
+
 }
 
 
