@@ -95,10 +95,10 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
         move |button| {
             let version = version.borrow_mut();
             let rc_entry = rc_entry.borrow_mut();
-            
-            // ELIMINAR DEL SELECT BRANCH TAMBIEN
 
             let _ = version.branch(BranchOptions::DeleteBranch(&rc_entry.text()));
+
+            // ELIMINAR rc_entry.text() DEL SELECT BRANCH TAMBIEN
 
             rc_entry.set_text("");
             button.set_sensitive(false);
