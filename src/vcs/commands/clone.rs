@@ -69,7 +69,8 @@ impl Clone{
         let mut file = File::create(&object_path.join(file_name))?;
         
         // como hacemos? aca el git original guarda el texto descomprimido pero sin pasarlo a string
-        let text_commit_file = format!("{}", String::from_utf8_lossy(&Self::get_decompress_tree_hash_bytes(vcs, commit.into())?));
+        // Podemos parsear para que quede como lo tenemos en nuestro TP
+        let text_commit_file = format!("{}", String::from_utf8_lossy(&Self::get_decompress_hash_bytes(vcs, commit.into())?));
         file.write(text_commit_file.as_bytes())?;
 
         Ok(())
@@ -102,15 +103,15 @@ impl Clone{
         Self::send_done_msg(socket)?;
         let commit_hash_decompress = Self::print_socket_response(socket)?;
         println!("commit hash decode: {:?}", String::from_utf8_lossy(&commit_hash_decompress));
-        let blobs_hash = Self::get_decompress_tree_hash_bytes(vcs, commit_hash_decompress[5..45].to_vec())?;
+        let blobs_hash = Self::get_decompress_hash_bytes(vcs, commit_hash_decompress[5..45].to_vec())?;
         println!("tree hash decode: {}", String::from_utf8_lossy(&blobs_hash));
         //manejo el procesamiento de mi query de wants.
         Ok(()) 
     }
     
     /// Recibe el hash del commit
-    /// Te devuelve la tira de bytes del hash del tree descomprimido
-    fn get_decompress_tree_hash_bytes(vcs: &VersionControlSystem, commit_hash: Vec<u8>) -> Result<Vec<u8>,std::io::Error> {
+    /// Te devuelve la tira de bytes del hash descomprimido
+    fn get_decompress_hash_bytes(vcs: &VersionControlSystem, commit_hash: Vec<u8>) -> Result<Vec<u8>,std::io::Error> {
         let format_hash = format!("{}", String::from_utf8_lossy(&commit_hash));
         let blobs_hash = vcs.cat_file_bytes(&format_hash, ".git")?;
         let dec_hash = decompress_data(&blobs_hash)?;
@@ -123,6 +124,7 @@ impl Clone{
                 Ok(_) => {
                     match decompress_data(&buffer[22..]) {
                         Ok(decompressed_data) => {
+                            Self::manage_pack(&buffer[8..]);
                             let text = String::from_utf8_lossy(&decompressed_data);
                             //println!("Datos descomprimidos: {}", text);
                             return Ok(decompressed_data);
@@ -139,6 +141,76 @@ impl Clone{
                 }
             } 
     }
+
+    fn parse_number(bytes: &[u8]) -> Result<u8, String> {
+        let texto: String = bytes.iter().map(|&b| b.to_string()).collect();
+        match texto.parse() {
+            Ok(numero) => return Ok(numero),
+            Err(e) => return Err(e.to_string()),
+        }
+    }
+
+    fn get_object_type(bytes: u8) -> Result<u8, String> {
+        let mascara: u8 = 0b00000111;
+        let resultado = bytes & &mascara;
+        Ok(resultado)
+    }
+
+    // ESTA FUNCION ME PARA QUE ESTA PARA ATRAS - LA DEJO POR LAS DUDAS PERO SEGURO HAY QUE SACARLA/MODIFICARLA
+    fn calculate_length(bytes: &[u8]) -> u32 {
+        let mut length = 0;
+        let mut shift = 0;
+    
+        for (i, &byte) in bytes.iter().enumerate() {
+            if i == 0 {
+                shift = 3;
+            }
+    
+            length |= ((byte & 0b01111111) as u32) << shift;
+            shift += 7;
+    
+            if (byte & 0b10000000) == 0 {
+                break;
+            }
+        }
+    
+        length
+    }
+
+    fn manage_pack(pack: &[u8])  -> Result<(),std::io::Error> {
+        let signature_pack_msg = &pack[0..4];
+        println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
+        let version = &pack[4..8];
+        println!("VERSION: {:?} - {:?}", version, Self::parse_number(version).unwrap());
+        let objetos = &pack[8..12];
+        println!("CANTIDAD DE OBJETOS: {:?} - {:?}", objetos, Self::parse_number(objetos).unwrap());
+        
+        // HASTA ACA ESTAMOS BIEN. EL TIPO DE OBJETO ES UN COMMIT POR LO QUE ENTIENDO DEBE ESTAR BIEN 
+        // EL TAMAÑO SE COMPLICO :(
+        let start_byte = 12;
+        let first_objet_byte = Self::get_object_type(pack[start_byte]).unwrap();
+        let bytes_necesarios = (((first_objet_byte-1)*7+4+3)+8-1)/8;
+        println!("necesarios: {} bytes",bytes_necesarios);
+        let lenght = Self::calculate_length(&pack[12..(start_byte+bytes_necesarios as usize)]);
+        println!("TIPO PRIMER OBJETO: {:?}, TAMAÑO PRIMER OBJETO: {:?}", first_objet_byte, lenght / 8);
+        
+        let n = 13; // es esto n?
+        let first_object_len = (n-1)*7+4;
+        // es {b} y esto es 98, tendra que ver con el 88?
+        println!("fist_objet_len: {:?}-bits", first_object_len);
+        let data_first_object = &pack[13..26]; 
+        println!("Resultado: {:?}", decompress_data(data_first_object));
+    
+        let second_object_byte = &pack[26] >> 5;
+        println!("second_objet_type: {:?}, {:?}", second_object_byte, String::from_utf8_lossy(&second_object_byte.to_be_bytes()));
+        let n = 26; // es esto n?
+        let second_object_len = (n-1)*7+4;
+        println!("second_objet_len: {:?}-bits", second_object_len);
+        let data_second_object = &pack[13..26]; 
+        println!("Resultado 2: {:?}", decompress_data(data_second_object));
+        Ok(())
+    }
+
 
     fn get_want_msgs(commits_list: Vec<String>) -> Vec<String> {
         let mut want_msgs = Vec::new();
