@@ -1,4 +1,5 @@
 pub mod handlers{
+    pub mod commands;
     pub mod status;
     pub mod hash_object;
     pub mod add;
