@@ -10,7 +10,7 @@ pub struct Clone;
 
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
-        let init_path = Path::new("/home/amoralejo/TEST2");
+        let init_path = Path::new("/home/amoralejo/TEST3");
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
         Ok(())
@@ -66,9 +66,9 @@ impl Clone{
         fs::create_dir_all(&object_path)?;
         let file_name = &commit[3..];
         let mut file = File::create(&object_path.join(file_name))?;
-        // como hacemos? aca el git original guarda el texto descomprimido pero sin pasarlo a string
-        // Podemos parsear para que quede como lo tenemos en nuestro TP
-        let commit_hash_only = format!("{}", &String::from_utf8_lossy(&Self::get_decompress_hash_bytes(vcs, commit.into())?)[16..56]);
+        println!("SI");
+        let commit_hash_only = format!("{}", &String::from_utf8_lossy(&Self::get_decompress_hash_bytes(commit.into())?)[16..56]);
+        println!("ACAAAA PASASAA");
         let format = format!("commit-{}", commit_hash_only); 
         println!("esto imprime: {}", format);
         file.write(format.as_bytes())?;
@@ -80,10 +80,10 @@ impl Clone{
         let object_path = vcs.path.join(".rust_git").join("objects").join(&tree_hash[0..2]);
         fs::create_dir_all(&object_path)?;
         let mut file = File::create(&object_path.join(&tree_hash[3..]))?;
-        let text_hash_file = format!("{}", &String::from_utf8_lossy(&Self::get_decompress_hash_bytes(vcs, tree_hash.into())?));
+        let text_hash_file = format!("{}", &String::from_utf8_lossy(&Self::get_decompress_hash_bytes(tree_hash.into())?));
         let files_names = Self::get_file_names(&text_hash_file)?;
         for file_name in files_names {
-            let format = format!("{}/{}-{}", vcs.path.display(),file_name.0,file_name.1);
+            let format = format!("/{}-{}", file_name.0,file_name.1);
             file.write(format.as_bytes())?;
             file.write("\n".as_bytes())?;
         }     
@@ -132,7 +132,7 @@ impl Clone{
         Self::send_done_msg(socket)?;
         let commit_hash_decompress = Self::print_socket_response(socket)?;
         println!("commit hash decode: {:?}", String::from_utf8_lossy(&commit_hash_decompress));
-        let blobs_hash = Self::get_decompress_hash_bytes(vcs, commit_hash_decompress[5..45].to_vec())?;
+        let blobs_hash = Self::get_decompress_hash_bytes(commit_hash_decompress[5..45].to_vec())?;
         println!("tree hash decode: {}", String::from_utf8_lossy(&blobs_hash));
         //manejo el procesamiento de mi query de wants.
         Ok(()) 
@@ -140,12 +140,15 @@ impl Clone{
     
     /// Recibe el hash del commit
     /// Te devuelve la tira de bytes del hash descomprimido
-    fn get_decompress_hash_bytes(vcs: &VersionControlSystem, commit_hash: Vec<u8>) -> Result<Vec<u8>,std::io::Error> {
+    fn get_decompress_hash_bytes(commit_hash: Vec<u8>) -> Result<Vec<u8>,std::io::Error> {
+        let clone_path = Path::new("/home/amoralejo/TEST2");
+        let vcs_clone = VersionControlSystem::init(clone_path, Vec::new());
         let format_hash = format!("{}", String::from_utf8_lossy(&commit_hash));
-        let blobs_hash = vcs.cat_file_bytes(&format_hash, ".git")?;
+        let blobs_hash = vcs_clone.cat_file_bytes(&format_hash, ".git")?;
         let dec_hash = decompress_data(&blobs_hash)?;
         Ok(dec_hash) 
     }
+
 
     fn print_socket_response(socket: &mut TcpStream) -> Result<Vec<u8>,std::io::Error> {
         let mut buffer = Vec::new();
