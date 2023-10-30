@@ -144,7 +144,7 @@ pub fn handle_repository(interface: &RustInterface, vcs: &VersionControlSystem) 
 
 pub fn handle_command(interface: &RustInterface, vcs: &VersionControlSystem) {
     let dialog = interface.command_dialog.clone();
-
+    let terminal_dialog = interface.terminal_dialog.clone();
     let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
     let rc_box = interface.command_box.clone();
     let rc_enter = interface.enter.clone();
@@ -157,6 +157,13 @@ pub fn handle_command(interface: &RustInterface, vcs: &VersionControlSystem) {
         
     }});
 
+    interface.terminal.connect_clicked({
+        move |_| {
+            terminal_dialog.run();
+            terminal_dialog.hide();
+        }
+    });
+
     interface.enter.connect_clicked({
         let version = version.clone();
         let rc_entry = rc_entry.clone();
@@ -166,6 +173,7 @@ pub fn handle_command(interface: &RustInterface, vcs: &VersionControlSystem) {
             rc_box.foreach(|child| {
                 rc_box.remove(child);
             });
+
             let result = handler_command(&mut version, &rc_entry.text());
             let label = gtk::Label::new(Some(&result));
             label.set_visible(true);

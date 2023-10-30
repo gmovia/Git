@@ -27,13 +27,10 @@ pub fn handle_buttons_branch(interface: &RustInterface, button_branch: &gtk::But
                     _ => {},
                 }
             }
-            rc_branch.foreach(|child| {
-                if let Some(child_label) = child.downcast_ref::<gtk::Entry>() {
-                    if child_label.text().to_string() != rc_entry.text().to_string() {
-                        let _ = branches(&version, &rc_branch);
-                    }
-                }
-            });
+
+            rc_branch.remove_all();
+            let _ = branches(&version, &rc_branch);
+
             rc_entry.set_text("");
             button.set_sensitive(false);
             
