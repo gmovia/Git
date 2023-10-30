@@ -3,16 +3,17 @@ use crate::vcs::version_control_system::VersionControlSystem;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-pub fn handler_log(vcs: &VersionControlSystem) -> Result<(), std::io::Error> {
-    let commits_file = File::open(Init::get_commits_path(&vcs.path)?)?;
-    let reader = BufReader::new(commits_file);
-
-    let has_commits = reader.lines().count() > 0;
-
-    if has_commits {
-        vcs.log()?;
-    } else {
-        println!("No commits exist");
+pub fn handler_log(vcs: &VersionControlSystem) -> String {
+    if let Ok(path) = Init::get_commits_path(&vcs.path) {
+        if let Ok(commits_file) = File::open(path){
+            let reader = BufReader::new(commits_file);
+            let has_commits = reader.lines().count() > 0;
+            if has_commits {
+                if let Ok(result) = vcs.log(){
+                    return result;
+                }
+            }
+        }
     }
-    Ok(())
+    "No commits exist.".to_string()
 }

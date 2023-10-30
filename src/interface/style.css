@@ -51,26 +51,19 @@ button:hover{
     color: rgb(211, 211, 211);
     font-weight: bold;
     font-size: 12px;
-    margin: 5px;
 }
 
 .custom-changes-label-created{
     color: rgba(17, 107, 77, 0.668);
     font-weight: bold;
-    font-size: 12px;
-    margin-right: 5px;
 }
     
 .custom-changes-label-modified{
     color: rgba(178, 204, 32, 0.776);
     font-weight: bold;
-    font-size: 12px;
-    margin-right: 5px;
 }    
 
 .custom-changes-label-deleted{
     color: rgba(182, 18, 18, 0.697);
     font-weight: bold;
-    font-size: 12px;
-    margin-right: 5px;
-}    
+}

@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::vcs::version_control_system::VersionControlSystem;
 
-pub fn handler_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), std::io::Error>{
+pub fn handler_add(vcs: &mut VersionControlSystem, input: String) -> String{
     let mut paths: Vec<String> = Vec::new();
     let files: Vec<&str> = input.split_whitespace().collect();
 
@@ -16,15 +16,14 @@ pub fn handler_add(vcs: &mut VersionControlSystem, input: String) -> Result<(), 
                     let _ = vcs.add(Path::new(&key));
                 }
             }
-            return Ok(());
+            return "Added successfully.".to_string();
         }
         paths.push(path_string.to_string());
     }
 
     for path_string in &paths{
         let path = vcs.path.join(path_string);
-       
         let _ = vcs.add(&path);
     }
-    Ok(())
+    "Added successfully.".to_string()
 }

@@ -9,21 +9,20 @@ use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
 use crate::vcs::version_control_system::VersionControlSystem;
 
-pub fn handler_command(vcs: &mut VersionControlSystem, input: &str) -> Result<(), std::io::Error>{
+pub fn handler_command<'a>(vcs: &mut VersionControlSystem, input: &str) -> String{
     let input = input.trim(); 
     let _: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
 
     match input {
         "git status" => handler_status(vcs),
-        x if x.contains("git hash-object") => {println!("{:?}",handler_hash_object(vcs, x.to_string())?);} ,
-        x if x.contains("git add") => {handler_add(vcs, x.to_string())?;},
-        x if x.contains("git cat-file") => {println!("{:?}",handler_cat_file(vcs, x.to_string())?);},
-        x if x.contains("git rm") => {handler_rm(vcs, x.to_string())?;},
-        x if x.contains("git log") => {let _ = handler_log(vcs);},
-        x if x.contains("git commit") => {handler_commit(vcs, x.to_string())?;},
-        x if x.contains("git branch") => {handler_branch(vcs, x.to_string())?;},
-        x if x.contains("git checkout") => {handler_checkout(vcs, x.to_string())?;},
-         _ => {}
+        x if x.contains("git hash-object") => handler_hash_object(vcs, x.to_string()),
+        x if x.contains("git add") => handler_add(vcs, x.to_string()),
+        x if x.contains("git cat-file") => handler_cat_file(vcs, x.to_string()),
+        x if x.contains("git rm") => handler_rm(vcs, x.to_string()),
+        x if x.contains("git log") => handler_log(vcs),
+        x if x.contains("git commit") => handler_commit(vcs, x.to_string()),
+        x if x.contains("git branch") => handler_branch(vcs, x.to_string()),
+        x if x.contains("git checkout") => handler_checkout(vcs, x.to_string()),
+         _ => "Failed or Panicked.".to_string()
      }
-     Ok(())
 }

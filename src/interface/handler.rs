@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::vcs::{commands::{branch::BranchOptions, checkout::CheckoutOptions}, version_control_system::VersionControlSystem};
+use crate::{vcs::{commands::{branch::BranchOptions, checkout::CheckoutOptions}, version_control_system::VersionControlSystem}, handlers::commands::handler_command};
 
 use super::{interface::RustInterface, draw::changes_and_staging_area};
 use gtk::prelude::*;
@@ -217,7 +217,7 @@ pub fn handle_repository(interface: &RustInterface, vcs: &VersionControlSystem) 
 
             // ELIMINAR REPOSITORY CON EL VCS
 
-            // ELIMINAR rc_entry.text() DEL SELECT BRANCH TAMBIEN
+            // ELIMINAR rc_entry.text() DEL SELECT REPOSITORY TAMBIEN
 
             rc_entry.set_text("");
             button.set_sensitive(false);
@@ -234,3 +234,50 @@ pub fn handle_repository(interface: &RustInterface, vcs: &VersionControlSystem) 
 
 }
 
+
+pub fn handle_command(interface: &RustInterface, vcs: &VersionControlSystem) {
+    let dialog = interface.command_dialog.clone();
+
+    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+    let rc_box = interface.command_box.clone();
+    let rc_enter = interface.enter.clone();
+    let rc_entry = Rc::new(RefCell::new(interface.command_entry.clone()));
+    interface.enter.set_sensitive(false);
+
+    interface.command_entry.connect_changed({  
+        move |e| {
+        rc_enter.set_sensitive(!e.text().is_empty());
+        
+    }});
+
+    interface.enter.connect_clicked({
+        let version = version.clone();
+        let rc_entry = rc_entry.clone();
+        move |button| {
+            let mut version = version.borrow_mut();
+            let rc_entry = rc_entry.borrow_mut();
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            let result = handler_command(&mut version, &rc_entry.text());
+            let label = gtk::Label::new(Some(&result));
+            label.set_visible(true);
+            label.set_xalign(2.5);
+            label.set_yalign(2.5);
+            rc_box.add(&label);
+
+            rc_entry.set_text("");
+            button.set_sensitive(false);
+            
+            dialog.run();
+            dialog.hide();
+        }
+    });
+
+    interface.command_close.connect_clicked({
+        let dialog_2 = interface.command_dialog.clone();
+        move |_| {
+            dialog_2.hide();
+    }});
+
+}

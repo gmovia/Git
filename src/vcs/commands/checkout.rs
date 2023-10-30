@@ -7,6 +7,7 @@ use super::{branch::Branch, cat_file::CatFile, init::Init};
 
 pub struct Checkout;
 
+#[derive(Clone)]
 pub enum CheckoutOptions<'a>{
     ChangeBranch(&'a str),
     CreateAndChangeBranch(&'a str),

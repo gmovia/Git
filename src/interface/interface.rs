@@ -1,3 +1,4 @@
+
 use std::path::Path;
 
 use gtk::prelude::*;
@@ -5,7 +6,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -36,6 +37,11 @@ pub struct RustInterface {
     pub close_log: gtk::Button,
     pub title_changes: gtk::Label,
     pub title_sa: gtk::Label,
+    pub command_dialog: gtk::Dialog,
+    pub command_entry: gtk::Entry,
+    pub command_box: gtk::Box,
+    pub command_close: gtk::Button,
+    pub enter: gtk::Button,
 }
 
 impl RustInterface {
@@ -79,6 +85,11 @@ impl RustInterface {
             close_log: builder.object("close-log").unwrap(),
             title_changes: builder.object("title-changes").unwrap(),
             title_sa: builder.object("title-sa").unwrap(),
+            command_dialog: builder.object("command-dialog").unwrap(),
+            command_box: builder.object("command-box").unwrap(),
+            command_entry: builder.object("command-entry").unwrap(),
+            command_close: builder.object("close-command").unwrap(),
+            enter: builder.object("enter").unwrap(),
         }
     }
     
@@ -95,7 +106,7 @@ impl RustInterface {
         handle_status(&self, &vcs);
         handle_log(&self, &vcs);
         handle_repository(&self, &vcs);
-
+        handle_command(&self, &vcs);
         self.window.show_all();   
         gtk::main();  // esto corta el ciclo de ejecucion
 

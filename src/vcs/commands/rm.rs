@@ -5,6 +5,7 @@ use crate::{
 };
 pub struct Rm;
 
+#[derive(Debug,Clone)]
 pub enum RemoveOption {
     Directory,
     NoDirectory,
