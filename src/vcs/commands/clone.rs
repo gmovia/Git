@@ -222,18 +222,6 @@ impl Clone{
 
 
     fn manage_pack(pack: &[u8])  -> Result<(),std::io::Error> {
-        /* 
-        match decompress_data(&pack) {
-            Ok(decompressed_data) => {
-                let text = String::from_utf8_lossy(&decompressed_data);
-            },
-            Err(e) => {
-                eprintln!("Error al descomprimir los datos: {}", e);
-                return Err(e)
-            }
-        }
-        */
-        println!("{}", pack.len());
         let signature_pack_msg = &pack[0..4];
         println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
         let version = &pack[4..8];
@@ -244,44 +232,23 @@ impl Clone{
         let mut position: u64 = 12;
 
         for object in 0..object_number {
-            let position_usize: usize = position as usize;
-            println!("first postition: {}", position_usize);
-            if let Ok(data) = decompress_data(&pack[(position_usize+2 as usize)..]) {
-                println!("position searched: {}", position_usize+2 as usize);
-                let objet_type = Self::get_object_type(pack[position_usize]);
-                println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
-
-                position = position_usize as u64 + data.1 as u64 + 1 as u64;
-                println!("posit pre: {}", position);
-                if Self::is_bit_set(pack[position_usize]) {
-                    println!("entra al condicional");
-                    position = position + 1 as u64;
-                } 
-                println!("posit post: {}", position);
-                
-                println!("DATAAAA {}: {} --- bits: {}", object, String::from_utf8_lossy(&data.0), data.1);    
-                println!("next position: {}", position);
+            let mut position_usize: usize = position as usize;
+            let objet_type = Self::get_object_type(pack[position_usize]);
+            if Self::is_bit_set(pack[position_usize]) {
+                position = position + 2 as u64;
+                position_usize = position as usize;
             }
             else {
-                println!("------------- ACA FALLA")
+                position = position + 1 as u64;
+                position_usize = position as usize;
+                
+            }
+            if let Ok(data) = decompress_data(&pack[position_usize..]) {
+                println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
+                println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                position = position + data.1 as u64;    
             }
         } 
-        println!("SALE");
-        //println!("BOCAAAA: {}",);
-        // HASTA ACA ESTAMOS BIEN. EL TIPO DE OBJETO ES UN COMMIT POR LO QUE ENTIENDO DEBE ESTAR BIEN 
-        // EL TAMAÑO SE COMPLICO :(
-        let start_byte = 12;
-        let first_objet_type = Self::get_object_type(pack[start_byte]);
-        
-        //let lenght = Self::calculate_length(&pack[12..(start_byte+bytes_necesarios as usize)]);
-        println!("TIPO PRIMER OBJETO: {:?}, TAMAÑO PRIMER OBJETO: {:?}", first_objet_type, 0);
-        
-        let bits_to_calc_len = (first_objet_type-1)*7+4;
-        println!("bits to calc len: {:?}-bits", bits_to_calc_len);
-
-        let data_first_object = &pack[13..26]; 
-        println!("Resultado: {:?}", decompress_data(data_first_object));
-    
         Ok(())
     }
 
