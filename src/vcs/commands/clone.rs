@@ -220,6 +220,7 @@ impl Clone{
         length
     }
 
+
     fn manage_pack(pack: &[u8])  -> Result<(),std::io::Error> {
         /* 
         match decompress_data(&pack) {
@@ -245,7 +246,12 @@ impl Clone{
         for object in 0..object_number {
             let position_usize: usize = position as usize;  // Convierte a usize
             if let Ok(data) = decompress_data(&pack[(position_usize+2)..]) {
-                position = position_usize as u64 + (data.1 / 8) as u64;
+
+                position = position_usize as u64 + (data.1) as u64 + 1;
+                if Self::is_bit_set(pack[(position_usize)]) {
+                    position = position + 1
+                } 
+                
                 let objet_type = Self::get_object_type(pack[position_usize]);
                 println!("TIPO OBJETO {}: {:?}, TAMAÑO PRIMER OBJETO: {:?}", object+1, objet_type, data.1);
     
@@ -274,6 +280,11 @@ impl Clone{
         Ok(())
     }
 
+
+    fn is_bit_set(byte: u8) -> bool {
+       let mask = 0b10000000;
+       (byte & mask) == mask
+    }
 
     fn get_want_msgs(commits_list: Vec<String>) -> Vec<String> {
         let mut want_msgs = Vec::new();
