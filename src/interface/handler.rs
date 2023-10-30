@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command};
 
-use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button, handle_status_button}};
+use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button, handle_status_button, handle_buttons_repository, handle_select_repository}};
 use gtk::prelude::*;
 
 pub fn handle_commit(interface: &RustInterface, vcs: &VersionControlSystem){
@@ -104,9 +104,7 @@ pub fn handle_log(interface: &RustInterface, vcs: &VersionControlSystem) {
 pub fn handle_repository(interface: &RustInterface, vcs: &VersionControlSystem) {
     let dialog = interface.repository_dialog.clone();
 
-    let rc_repo = Rc::new(RefCell::new(interface.select_repository.clone()));
-    let rc_entry = Rc::new(RefCell::new(interface.repository_entry.clone()));
-    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+    
     let rc_create = interface.create_repository.clone();
     let rc_delete = interface.delete_repository.clone();
 
@@ -126,45 +124,10 @@ pub fn handle_repository(interface: &RustInterface, vcs: &VersionControlSystem) 
         }
     );
 
-    interface.create_repository.connect_clicked({
-        let version = version.clone();
-        let rc_repo = rc_repo.clone();
-        let rc_entry = rc_entry.clone();
-        move |button|{
-            let _version = version.borrow_mut();
-            let rc_repo = rc_repo.borrow_mut();
-            let rc_entry = rc_entry.borrow_mut();
-
-            // CREAR REPOSITORY CON EL VCS
-            rc_repo.append_text(&rc_entry.text());
-
-            rc_entry.set_text("");
-            button.set_sensitive(false);
-    }});
-
-    interface.delete_repository.connect_clicked({
-        let version = version.clone();
-        let rc_entry = rc_entry.clone();
-        move |button| {
-            let _version = version.borrow_mut();
-            let rc_entry = rc_entry.borrow_mut();
-
-            // ELIMINAR REPOSITORY CON EL VCS
-
-            // ELIMINAR rc_entry.text() DEL SELECT REPOSITORY TAMBIEN
-
-            rc_entry.set_text("");
-            button.set_sensitive(false);
-        }
-    });
-
-
-    interface.select_repository.connect_changed({
-        let version = version.clone();
-        move |_|{
-            let _version = version.borrow_mut();
-            // DEBE ELEGIR EL REPO SELECCIONADO DEL SELECT_REPOSITORY
-    }});
+    handle_buttons_repository(interface, &interface.create_repository, vcs);
+    handle_buttons_repository(interface, &interface.delete_repository, vcs);
+    handle_select_repository(interface,vcs);
+    
 
 }
 

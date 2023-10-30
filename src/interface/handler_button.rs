@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}};
 
-use super::{interface::RustInterface, draw::{branches, changes_and_staging_area}};
+use super::{interface::RustInterface, draw::{branches, changes_and_staging_area, repositories}};
 
 use gtk::prelude::*;
 
@@ -85,4 +85,48 @@ pub fn handle_status_button(interface: &RustInterface, vcs: &VersionControlSyste
             let _ = changes_and_staging_area(&version.borrow_mut(), &rc_grid.borrow_mut(), &rc_add.borrow_mut());
         }
     });
+}
+
+pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::Button, vcs: &VersionControlSystem) {
+    let rc_repo = Rc::new(RefCell::new(interface.select_repository.clone()));
+    let rc_entry = Rc::new(RefCell::new(interface.repository_entry.clone()));
+    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+
+    button_repo.connect_clicked({
+        let version = version.clone();
+        let rc_repo = rc_repo.clone();
+        let rc_entry = rc_entry.clone();
+        move |button|{
+            let version = version.borrow_mut();
+            let rc_repo = rc_repo.borrow_mut();
+            let rc_entry = rc_entry.borrow_mut();
+            if let Some(label) = button.label() {
+                match label.as_str() {
+                    "Create" => {/* CREAR REPOSITORY CON EL VCS */},
+                    "Delete" => {/* ELIMINAR REPOSITORY CON EL VCS. ELIMINAR rc_entry.text() DEL SELECT REPOSITORY TAMBIEN */},
+                    _ => {},
+                }
+                
+            }
+            rc_repo.foreach(|child| {
+                if let Some(child_label) = child.downcast_ref::<gtk::Entry>() {
+                    if child_label.text().to_string() != rc_entry.text().to_string() {
+                        let _ = repositories(&version, &rc_repo); // TODAVIA NO HACE NADA, ESTA HARDCODEADO
+                    }
+                }
+            });
+            rc_entry.set_text("");
+            button.set_sensitive(false);
+        }
+    });
+}
+
+pub fn handle_select_repository(interface: &RustInterface, vcs: &VersionControlSystem) {
+    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+    interface.select_repository.connect_changed({
+        let version = version.clone();
+        move |_|{
+            let _version = version.borrow_mut();
+            // DEBE ELEGIR EL REPO SELECCIONADO DEL SELECT_REPOSITORY
+    }});
 }
