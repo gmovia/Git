@@ -22,7 +22,7 @@ impl Clone{
         String::from_utf8_lossy(&packet_buf).to_string()
     }
 
-    pub fn request_branch(list_refs: &Vec<String>, vcs: &VersionControlSystem) {
+    pub fn request_branch(list_refs: &Vec<String>, vcs: &VersionControlSystem, objects: Vec<(u8,Vec<u8>)>) -> Result<(),std::io::Error> {
         for item in list_refs {
             if item.contains("HEAD") {
                 continue;
@@ -39,12 +39,28 @@ impl Clone{
                     let _ = vcs.branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
                     // Realiza aquí la acción que desees con `branch_name`.
-                    if let Err(e) = Self::write_commit_log_file(vcs, commit, branch_name.trim_end_matches('\n')) {
-                        println!("{}",e);
+                    
+                    let mut tree_hash = String::new();
+                    let mut files = Vec::new();
+                    for object in &objects {
+                        println!("for de object: {:?}-{:?}",object.0,String::from_utf8_lossy(&object.1));
+                        match object.0 {
+                            1 => {
+                                Self::write_commit_log_file(vcs, commit, branch_name)?;
+                                tree_hash = Self::create_commit_folder(vcs, &object.1, commit)?
+                                },
+                            2 => files = Self::create_tree_folder(vcs, object.1.to_owned(), &tree_hash)?,
+                            3 => {
+                                let file_name = files.remove(0);
+                                Self::create_blob_folder(vcs, object.1.to_owned(), file_name)?
+                                },
+                            _ => Err(io::Error::new(io::ErrorKind::NotFound, "Objeto desconocido"))?,
+                        };
                     }
                 }
             }
         }
+        Ok(())
     }
 
     // Falta ver que el archivo de logs tiene varios commits, capaz sale por el lado del parent?
@@ -57,89 +73,65 @@ impl Clone{
         let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
         file.write(format_commit.as_bytes())?;
 
-        Self::create_object_commit_folder(vcs, commit)?;
         Ok(())
     }
 
-    fn create_object_commit_folder(vcs: &VersionControlSystem, commit: &str) -> Result<(),std::io::Error> {
-        /* 
-        let object_path = vcs.path.join(".rust_git").join("objects").join(&commit[0..2]);
+    fn create_commit_folder(vcs: &VersionControlSystem, commit: &Vec<u8>, commit_folder: &str) -> Result<String,std::io::Error> {
+        println!("{}",commit_folder);
+        let object_path = vcs.path.join(".rust_git").join("objects").join(&commit_folder[0..2]);
         fs::create_dir_all(&object_path)?;
-        let file_name = &commit[3..];
+        let file_name = &commit_folder[3..];
         let mut file = File::create(&object_path.join(file_name))?;
-        println!("SI");
-        let commit_hash_only = format!("{}", &String::from_utf8_lossy(&Self::get_decompress_hash_bytes(commit.into())?)[16..56]);
-        println!("ACAAAA PASASAA");
-        let format = format!("commit-{}", commit_hash_only); 
-        println!("esto imprime: {}", format);
-        file.write(format.as_bytes())?;
-        Self::create_tree_folder(vcs, &commit_hash_only)?;
-        */
-        Ok(())
+        file.write(commit)?;
+        Ok(String::from_utf8_lossy(&commit[5..45]).to_string())       
     }
 
-    fn create_tree_folder(vcs: &VersionControlSystem, tree_hash: Vec<u8>) -> Result<(),std::io::Error> {
-        println!("VER ACAAA: {}", String::from_utf8_lossy(&tree_hash));
-        let folder_name = &tree_hash[7..9];
-        let object_path = vcs.path.join(".rust_git").join("objects").join(String::from_utf8_lossy(folder_name).into_owned());
+    fn create_tree_folder(vcs: &VersionControlSystem, tree_hash: Vec<u8>, tree_hash_folder: &str) -> Result<Vec<(String,String)>,std::io::Error> {
+        println!("tree hash folder: {}", tree_hash_folder);
+        let object_path = vcs.path.join(".rust_git").join("objects").join(&tree_hash_folder[0..2]);
         fs::create_dir_all(&object_path)?;
-        let file_name = &tree_hash[3..];
-        let mut file = File::create(&object_path.join(String::from_utf8_lossy(file_name).into_owned()))?;
-        
+        let mut file = File::create(&object_path.join(&tree_hash_folder[3..]))?;
         let files_names = Self::get_file_names(&tree_hash)?;
-        for file_name in files_names {
+        for file_name in &files_names {
             let format = format!("/{}-{}", file_name.0,file_name.1);
             file.write(format.as_bytes())?;
             file.write("\n".as_bytes())?;
-        }
-
-        /* 
-        let object_path = vcs.path.join(".rust_git").join("objects").join(&tree_hash[0..2]);
-        fs::create_dir_all(&object_path)?;
-        let mut file = File::create(&object_path.join(&tree_hash[3..]))?;
-        let text_hash_file = format!("{}", &String::from_utf8_lossy(&Self::get_decompress_hash_bytes(tree_hash.into())?));
-        let files_names = Self::get_file_names(&text_hash_file)?;
-        for file_name in files_names {
-            let format = format!("/{}-{}", file_name.0,file_name.1);
-            file.write(format.as_bytes())?;
-            file.write("\n".as_bytes())?;
-        }  
-        */   
-        Ok(())
+        }             
+        Ok(files_names)
     }
 
     fn get_file_names(hash: &[u8]) -> Result<Vec<(String,String)>,std::io::Error> {
         let mut files_hash = Vec::new();
         let files: Vec<String> = String::from_utf8_lossy(hash).split_whitespace().map(|s| s.to_owned()).collect();
-
+        println!("{:?}", files);
         for file in files {
-            if !file.contains("txt") {
+            if !file.contains("\0") {
                 continue;
             }
-            let file_name: Vec<&str> = file.split("txt").collect();
-            files_hash.push((file_name[0].to_owned()+"txt",file_name[1].to_owned()));
+            let file_name: Vec<&str> = file.split("\0").collect();
+            files_hash.push((file_name[0].to_owned(),file_name[1].to_owned()));
         }
         Ok(files_hash)
     }
 
-    fn create_commit_folder(vcs: &VersionControlSystem, commit: Vec<u8>) -> Result<(),std::io::Error> {
-        let folder_name = &commit[5..7];
-        let object_path = vcs.path.join(".rust_git").join("objects").join(String::from_utf8_lossy(folder_name).into_owned());
-        fs::create_dir_all(&object_path)?;
-        let file_name = &commit[7..];
-        let mut file = File::create(&object_path.join(String::from_utf8_lossy(file_name).into_owned()))?;
-        
-        let format = format!("commit-{}", String::from_utf8_lossy(&commit[5..45])); 
-        file.write(format.as_bytes())?;
-        
+
+    fn create_blob_folder(vcs: &VersionControlSystem, commit: Vec<u8>,  files: (String,String)) -> Result<(),std::io::Error> {
+        // con files.1 (es el hash del blob) deberia poder obtener el nombre de las carpetas para guardar el contenido de los archivos
+        println!("blob folder: {:?}",files.0);
+        println!("blob folder: {:?}",String::from_utf8_lossy(&commit));            
+        Self::create_file(vcs, files.0, &commit)?;
         Ok(())
     }
 
-    fn create_blob_folder(vcs: &VersionControlSystem, commit: Vec<u8>) -> Result<(),std::io::Error> {
+    fn create_file(vcs: &VersionControlSystem, file_name: String, file_content: &Vec<u8>) -> Result<(), std::io::Error> {
+        let file_path = vcs.path.join(file_name);
+        fs::create_dir_all(&vcs.path)?;
+        let mut file = File::create(file_path)?;
+        file.write(String::from_utf8_lossy(&file_content).as_bytes())?;
         Ok(())
     }
 
-    pub fn receive_pack(socket: &mut TcpStream, vcs: &VersionControlSystem)-> Result<(), std::io::Error> {
+    pub fn receive_pack(socket: &mut TcpStream, vcs: &VersionControlSystem) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
         loop {
             let mut len_buf = [0; 4]; 
@@ -157,42 +149,16 @@ impl Clone{
         for packet in &packets {
             println!("Paquete: {:?}", packet);
         }
-        Self::request_branch(&packets, vcs);
-
-        for want in Self::get_want_msgs(packets) {
+        for want in Self::get_want_msgs(&packets) {
             socket.write(want.as_bytes())?;
         }
         
         Self::send_done_msg(socket)?;
         let objects = Self::get_socket_response(socket)?;
         
-        for object in objects {
-            match object.0 {
-                1 => Self::create_commit_folder(vcs, object.1),
-                2 => Self::create_tree_folder(vcs, object.1),
-                3 => Self::create_blob_folder(vcs, object.1),
-                _ => Err(io::Error::new(io::ErrorKind::NotFound, "Objeto desconocido")),
-            }?;
-        }
-
-        //println!("commit hash decode: {:?}", String::from_utf8_lossy(&objects[0].1));
-        //let blobs_hash = Self::get_decompress_hash_bytes(&objects[1].1)?;
-        //println!("tree hash decode: {}", String::from_utf8_lossy(&blobs_hash));
-        //manejo el procesamiento de mi query de wants.
+        Self::request_branch(&packets, vcs, objects)?;
         Ok(()) 
     }
-    
-    /// Recibe el hash del commit
-    /// Te devuelve la tira de bytes del hash descomprimido
-    fn get_decompress_hash_bytes(commit_hash: Vec<u8>) -> Result<Vec<u8>,std::io::Error> {
-        let clone_path = Path::new("/home/amoralejo/TEST3");
-        let vcs_clone = VersionControlSystem::init(clone_path, Vec::new());
-        let format_hash = format!("{}", String::from_utf8_lossy(&commit_hash));
-        let blobs_hash = vcs_clone.cat_file_bytes(&format_hash, ".git")?;
-        let dec_hash = decompress_data(&blobs_hash)?;
-        Ok(dec_hash.0) 
-    }
-
 
     fn get_socket_response(socket: &mut TcpStream) -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
         let mut buffer = Vec::new();
@@ -269,7 +235,7 @@ impl Clone{
        (byte & mask) == mask
     }
 
-    fn get_want_msgs(commits_list: Vec<String>) -> Vec<String> {
+    fn get_want_msgs(commits_list: &Vec<String>) -> Vec<String> {
         let mut want_msgs = Vec::new();
     
         for commit in commits_list {
