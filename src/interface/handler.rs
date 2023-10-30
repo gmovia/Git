@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command};
 
-use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button, handle_status_button, handle_buttons_repository, handle_select_repository}};
+use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_select_repository}, draw::changes_and_staging_area};
 use gtk::prelude::*;
 
 pub fn handle_commit(interface: &RustInterface, vcs: &VersionControlSystem){
@@ -61,7 +61,17 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
 
 
 pub fn handle_status(interface: &RustInterface, vcs: &VersionControlSystem) {
-    handle_status_button(interface, vcs);
+    let version = Rc::new(RefCell::new(vcs.clone()));
+    let rc_grid = Rc::new(RefCell::new(interface.grid.clone()));
+    let rc_add = Rc::new(RefCell::new(interface.box_window.clone()));
+    interface.status.connect_clicked({
+        let version = version.clone();
+        let rc_grid = rc_grid.clone();
+        let rc_add = rc_add.clone();
+        move |_| {
+            let _ = changes_and_staging_area(&version.borrow_mut(), &rc_grid.borrow_mut(), &rc_add.borrow_mut());
+        }
+    });
 }
 
 pub fn handle_log(interface: &RustInterface, vcs: &VersionControlSystem) {

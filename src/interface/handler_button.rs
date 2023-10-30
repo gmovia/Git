@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}};
 
-use super::{interface::RustInterface, draw::{branches, changes_and_staging_area, repositories}};
+use super::{interface::RustInterface, draw::{branches, repositories}};
 
 use gtk::prelude::*;
 
@@ -69,20 +69,6 @@ pub fn handle_commit_button(interface: &RustInterface, vcs: &VersionControlSyste
 
             rc_entry.set_text("");
             button.set_sensitive(false);
-        }
-    });
-}
-
-pub fn handle_status_button(interface: &RustInterface, vcs: &VersionControlSystem) {
-    let version = Rc::new(RefCell::new(vcs.clone()));
-    let rc_grid = Rc::new(RefCell::new(interface.grid.clone()));
-    let rc_add = Rc::new(RefCell::new(interface.box_window.clone()));
-    interface.status.connect_clicked({
-        let version = version.clone();
-        let rc_grid = rc_grid.clone();
-        let rc_add = rc_add.clone();
-        move |_| {
-            let _ = changes_and_staging_area(&version.borrow_mut(), &rc_grid.borrow_mut(), &rc_add.borrow_mut());
         }
     });
 }

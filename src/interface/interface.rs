@@ -107,6 +107,7 @@ impl RustInterface {
         handle_log(&self, &vcs);
         handle_repository(&self, &vcs);
         handle_command(&self, &vcs);
+        
         self.window.show_all();   
         gtk::main();  // esto corta el ciclo de ejecucion
 
