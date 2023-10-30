@@ -3,14 +3,14 @@ use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, collecti
 use chrono::{DateTime, Local};
 
 use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, handlers::{cat_file::handler_cat_file, branch::handler_branch}};
-use super::{init::Init, branch::BranchOptions};
+use super::{init::Init, branch::BranchOptions, hash_object::WriteOption};
 use crate::packfile::{decompress_data, to_pkt_line};
 
 pub struct Clone;
 
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
-        let init_path = Path::new("/home/amoralejo/TEST3");
+        let init_path = Path::new("/home/amoralejo/TEST4");
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
         Ok(())
@@ -42,6 +42,7 @@ impl Clone{
                     
                     let mut tree_hash = String::new();
                     let mut files = Vec::new();
+                    let mut file_hashes: Vec<(String,String)> = Vec::new();
                     for object in &objects {
                         println!("for de object: {:?}-{:?}",object.0,String::from_utf8_lossy(&object.1));
                         match object.0 {
@@ -52,7 +53,8 @@ impl Clone{
                             2 => files = Self::create_tree_folder(vcs, object.1.to_owned(), &tree_hash)?,
                             3 => {
                                 let file_name = files.remove(0);
-                                Self::create_blob_folder(vcs, object.1.to_owned(), file_name)?
+                                let file_name_hash = Self::create_blob_folder(vcs, object.1.to_owned(), file_name)?;
+                                Self::add_hash_to_tree(vcs, file_name_hash, &tree_hash)?
                                 },
                             _ => Err(io::Error::new(io::ErrorKind::NotFound, "Objeto desconocido"))?,
                         };
@@ -76,8 +78,17 @@ impl Clone{
         Ok(())
     }
 
+    fn add_hash_to_tree(vcs: &VersionControlSystem, file_hash: (String,String), tree_hash: &str) -> Result<(),std::io::Error> {
+        println!("treee hash: {}", tree_hash);
+        let path = vcs.path.join(".rust_git").join("objects").join(&tree_hash[0..2]).join(&tree_hash[3..]);
+        let mut file = OpenOptions::new().write(true).create(true).append(true).open(path).expect("No se pudo abrir el archivo");
+        let format = format!("{}-{}", file_hash.0, file_hash.1);
+        file.write(format.as_bytes())?;
+        file.write("\n".as_bytes())?;
+        Ok(())
+    }
+
     fn create_commit_folder(vcs: &VersionControlSystem, commit: &Vec<u8>, commit_folder: &str) -> Result<String,std::io::Error> {
-        println!("{}",commit_folder);
         let object_path = vcs.path.join(".rust_git").join("objects").join(&commit_folder[0..2]);
         fs::create_dir_all(&object_path)?;
         let file_name = &commit_folder[3..];
@@ -87,16 +98,10 @@ impl Clone{
     }
 
     fn create_tree_folder(vcs: &VersionControlSystem, tree_hash: Vec<u8>, tree_hash_folder: &str) -> Result<Vec<(String,String)>,std::io::Error> {
-        println!("tree hash folder: {}", tree_hash_folder);
         let object_path = vcs.path.join(".rust_git").join("objects").join(&tree_hash_folder[0..2]);
         fs::create_dir_all(&object_path)?;
-        let mut file = File::create(&object_path.join(&tree_hash_folder[3..]))?;
+        File::create(&object_path.join(&tree_hash_folder[3..]))?;
         let files_names = Self::get_file_names(&tree_hash)?;
-        for file_name in &files_names {
-            let format = format!("/{}-{}", file_name.0,file_name.1);
-            file.write(format.as_bytes())?;
-            file.write("\n".as_bytes())?;
-        }             
         Ok(files_names)
     }
 
@@ -115,20 +120,27 @@ impl Clone{
     }
 
 
-    fn create_blob_folder(vcs: &VersionControlSystem, commit: Vec<u8>,  files: (String,String)) -> Result<(),std::io::Error> {
+    fn create_blob_folder(vcs: &VersionControlSystem, commit: Vec<u8>,  files: (String,String)) -> Result<(String,String),std::io::Error> {
         // con files.1 (es el hash del blob) deberia poder obtener el nombre de las carpetas para guardar el contenido de los archivos
         println!("blob folder: {:?}",files.0);
-        println!("blob folder: {:?}",String::from_utf8_lossy(&commit));            
-        Self::create_file(vcs, files.0, &commit)?;
-        Ok(())
+        println!("blob folder: {:?}",String::from_utf8_lossy(&commit));
+        let file_hash = Self::create_file(vcs, files.0, &commit)?;       
+        
+        let object_path = vcs.path.join(".rust_git").join("objects").join(&file_hash.1[0..2]);
+        fs::create_dir_all(&object_path)?;
+        let mut file = File::create(&object_path.join(&file_hash.1[3..]))?;
+        file.write(String::from_utf8_lossy(&commit).as_bytes())?;        
+        
+        Ok(file_hash)
     }
 
-    fn create_file(vcs: &VersionControlSystem, file_name: String, file_content: &Vec<u8>) -> Result<(), std::io::Error> {
-        let file_path = vcs.path.join(file_name);
+    fn create_file(vcs: &VersionControlSystem, file_name: String, file_content: &Vec<u8>) -> Result<(String,String), std::io::Error> {
+        let file_path = vcs.path.join(&file_name);
         fs::create_dir_all(&vcs.path)?;
         let mut file = File::create(file_path)?;
         file.write(String::from_utf8_lossy(&file_content).as_bytes())?;
-        Ok(())
+        let hash = vcs.hash_object(vcs.path.join(&file_name).as_path(), WriteOption::NoWrite)?;
+        Ok((file_name,hash))
     }
 
     pub fn receive_pack(socket: &mut TcpStream, vcs: &VersionControlSystem) -> Result<(), std::io::Error> {
