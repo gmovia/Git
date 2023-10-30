@@ -1,5 +1,5 @@
 use flate2::read::ZlibDecoder;
-use std::io::{Write, Read};
+use std::io::Read;
 
 
 pub fn decompress_data(compressed_data: &[u8]) -> Result<(Vec<u8>,u64), std::io::Error> {

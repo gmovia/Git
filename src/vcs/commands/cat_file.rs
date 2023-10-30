@@ -1,7 +1,5 @@
 use std::{path::{Path, PathBuf}, fs};
 
-use crate::packfile::decompress_data;
-
 pub struct CatFile;
 
 impl CatFile{

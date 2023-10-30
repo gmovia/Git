@@ -1,9 +1,9 @@
 
-use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, collections::HashMap, net::TcpStream, str::from_utf8, path::{Path, PathBuf}};
+use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::Path};
 use chrono::{DateTime, Local};
 
-use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, handlers::{cat_file::handler_cat_file, branch::handler_branch}};
-use super::{init::Init, branch::BranchOptions, hash_object::WriteOption};
+use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
+use super::{branch::BranchOptions, hash_object::WriteOption};
 use crate::packfile::{decompress_data, to_pkt_line};
 
 pub struct Clone;
@@ -42,7 +42,6 @@ impl Clone{
                     
                     let mut tree_hash = String::new();
                     let mut files = Vec::new();
-                    let mut file_hashes: Vec<(String,String)> = Vec::new();
                     for object in &objects {
                         println!("for de object: {:?}-{:?}",object.0,String::from_utf8_lossy(&object.1));
                         match object.0 {
@@ -213,7 +212,7 @@ impl Clone{
         let signature_pack_msg = &pack[0..4];
         println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
         let version = &pack[4..8];
-        println!("VERSION: {:?} - {:?}", version, Self::parse_number(version).unwrap());
+        println!("VERSION: {:?} - {:?}", version, Self::parse_number(version)?);
         let object_number = Self::parse_number(&pack[8..12])?;
         println!("CANTIDAD DE OBJETOS: {}", object_number);
         
