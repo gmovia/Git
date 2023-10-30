@@ -62,6 +62,7 @@ impl Clone{
     }
 
     fn create_object_commit_folder(vcs: &VersionControlSystem, commit: &str) -> Result<(),std::io::Error> {
+        /* 
         let object_path = vcs.path.join(".rust_git").join("objects").join(&commit[0..2]);
         fs::create_dir_all(&object_path)?;
         let file_name = &commit[3..];
@@ -73,10 +74,26 @@ impl Clone{
         println!("esto imprime: {}", format);
         file.write(format.as_bytes())?;
         Self::create_tree_folder(vcs, &commit_hash_only)?;
+        */
         Ok(())
     }
 
-    fn create_tree_folder(vcs: &VersionControlSystem, tree_hash: &str) -> Result<(),std::io::Error> {
+    fn create_tree_folder(vcs: &VersionControlSystem, tree_hash: Vec<u8>) -> Result<(),std::io::Error> {
+        println!("VER ACAAA: {}", String::from_utf8_lossy(&tree_hash));
+        let folder_name = &tree_hash[7..9];
+        let object_path = vcs.path.join(".rust_git").join("objects").join(String::from_utf8_lossy(folder_name).into_owned());
+        fs::create_dir_all(&object_path)?;
+        let file_name = &tree_hash[3..];
+        let mut file = File::create(&object_path.join(String::from_utf8_lossy(file_name).into_owned()))?;
+        
+        let files_names = Self::get_file_names(&tree_hash)?;
+        for file_name in files_names {
+            let format = format!("/{}-{}", file_name.0,file_name.1);
+            file.write(format.as_bytes())?;
+            file.write("\n".as_bytes())?;
+        }
+
+        /* 
         let object_path = vcs.path.join(".rust_git").join("objects").join(&tree_hash[0..2]);
         fs::create_dir_all(&object_path)?;
         let mut file = File::create(&object_path.join(&tree_hash[3..]))?;
@@ -86,24 +103,41 @@ impl Clone{
             let format = format!("/{}-{}", file_name.0,file_name.1);
             file.write(format.as_bytes())?;
             file.write("\n".as_bytes())?;
-        }     
+        }  
+        */   
         Ok(())
     }
 
-    fn get_file_names(hash: &str) -> Result<Vec<(String,&str)>,std::io::Error> {
+    fn get_file_names(hash: &[u8]) -> Result<Vec<(String,String)>,std::io::Error> {
         let mut files_hash = Vec::new();
-        let files: Vec<&str> = hash.split_whitespace().collect();
+        let files: Vec<String> = String::from_utf8_lossy(hash).split_whitespace().map(|s| s.to_owned()).collect();
 
         for file in files {
             if !file.contains("txt") {
                 continue;
             }
             let file_name: Vec<&str> = file.split("txt").collect();
-            files_hash.push((file_name[0].to_owned()+"txt",file_name[1]));
+            files_hash.push((file_name[0].to_owned()+"txt",file_name[1].to_owned()));
         }
         Ok(files_hash)
     }
 
+    fn create_commit_folder(vcs: &VersionControlSystem, commit: Vec<u8>) -> Result<(),std::io::Error> {
+        let folder_name = &commit[5..7];
+        let object_path = vcs.path.join(".rust_git").join("objects").join(String::from_utf8_lossy(folder_name).into_owned());
+        fs::create_dir_all(&object_path)?;
+        let file_name = &commit[7..];
+        let mut file = File::create(&object_path.join(String::from_utf8_lossy(file_name).into_owned()))?;
+        
+        let format = format!("commit-{}", String::from_utf8_lossy(&commit[5..45])); 
+        file.write(format.as_bytes())?;
+        
+        Ok(())
+    }
+
+    fn create_blob_folder(vcs: &VersionControlSystem, commit: Vec<u8>) -> Result<(),std::io::Error> {
+        Ok(())
+    }
 
     pub fn receive_pack(socket: &mut TcpStream, vcs: &VersionControlSystem)-> Result<(), std::io::Error> {
         let mut packets = Vec::new();
@@ -130,10 +164,20 @@ impl Clone{
         }
         
         Self::send_done_msg(socket)?;
-        let commit_hash_decompress = Self::print_socket_response(socket)?;
-        println!("commit hash decode: {:?}", String::from_utf8_lossy(&commit_hash_decompress));
-        let blobs_hash = Self::get_decompress_hash_bytes(commit_hash_decompress[5..45].to_vec())?;
-        println!("tree hash decode: {}", String::from_utf8_lossy(&blobs_hash));
+        let objects = Self::get_socket_response(socket)?;
+        
+        for object in objects {
+            match object.0 {
+                1 => Self::create_commit_folder(vcs, object.1),
+                2 => Self::create_tree_folder(vcs, object.1),
+                3 => Self::create_blob_folder(vcs, object.1),
+                _ => Err(io::Error::new(io::ErrorKind::NotFound, "Objeto desconocido")),
+            }?;
+        }
+
+        //println!("commit hash decode: {:?}", String::from_utf8_lossy(&objects[0].1));
+        //let blobs_hash = Self::get_decompress_hash_bytes(&objects[1].1)?;
+        //println!("tree hash decode: {}", String::from_utf8_lossy(&blobs_hash));
         //manejo el procesamiento de mi query de wants.
         Ok(()) 
     }
@@ -150,23 +194,11 @@ impl Clone{
     }
 
 
-    fn print_socket_response(socket: &mut TcpStream) -> Result<Vec<u8>,std::io::Error> {
+    fn get_socket_response(socket: &mut TcpStream) -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
         let mut buffer = Vec::new();
             match socket.read_to_end(&mut buffer) {
                 Ok(_) => {
-                    Self::manage_pack(&buffer[8..]);
-                          
-                    match decompress_data(&buffer[22..]) {
-                        Ok(decompressed_data) => {
-                            let text = String::from_utf8_lossy(&decompressed_data.0);
-                            //println!("Datos descomprimidos: {}", text);
-                            return Ok(decompressed_data.0);
-                        },
-                        Err(e) => {
-                            eprintln!("Error al descomprimir los datos: {}", e);
-                            return Err(e)
-                        }
-                    }
+                    return Self::manage_pack(&buffer[8..]);
                 }
                 Err(e) => {
                     println!("Failed to receive data: {}\n", e);
@@ -199,29 +231,7 @@ impl Clone{
     }
 
 
-    // ESTA FUNCION ME PARA QUE ESTA PARA ATRAS - LA DEJO POR LAS DUDAS PERO SEGURO HAY QUE SACARLA/MODIFICARLA
-    fn calculate_length(bytes: &[u8]) -> u32 {
-        let mut length = 0;
-        let mut shift = 0;
-    
-        for (i, &byte) in bytes.iter().enumerate() {
-            if i == 0 {
-                shift = 3;
-            }
-    
-            length |= ((byte & 0b01111111) as u32) << shift;
-            shift += 7;
-    
-            if (byte & 0b10000000) == 0 {
-                break;
-            }
-        }
-    
-        length
-    }
-
-
-    fn manage_pack(pack: &[u8])  -> Result<(),std::io::Error> {
+    fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
         let signature_pack_msg = &pack[0..4];
         println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
         let version = &pack[4..8];
@@ -230,7 +240,7 @@ impl Clone{
         println!("CANTIDAD DE OBJETOS: {}", object_number);
         
         let mut position: u64 = 12;
-
+        let mut objects = Vec::new();
         for object in 0..object_number {
             let mut position_usize: usize = position as usize;
             let objet_type = Self::get_object_type(pack[position_usize]);
@@ -246,10 +256,11 @@ impl Clone{
             if let Ok(data) = decompress_data(&pack[position_usize..]) {
                 println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
                 println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                position = position + data.1 as u64;    
+                position = position + data.1 as u64; 
+                objects.push((objet_type, data.0))   
             }
         } 
-        Ok(())
+        Ok(objects)
     }
 
 
