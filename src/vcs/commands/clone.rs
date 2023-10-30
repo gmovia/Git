@@ -233,7 +233,7 @@ impl Clone{
             }
         }
         */
-        
+        println!("{}", pack.len());
         let signature_pack_msg = &pack[0..4];
         println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
         let version = &pack[4..8];
@@ -244,17 +244,21 @@ impl Clone{
         let mut position: u64 = 12;
 
         for object in 0..object_number {
-            let position_usize: usize = position as usize;  // Convierte a usize
-            if let Ok(data) = decompress_data(&pack[(position_usize+2)..]) {
-
-                position = position_usize as u64 + (data.1) as u64 + 1;
-                if Self::is_bit_set(pack[(position_usize)]) {
-                    position = position + 1
-                } 
-                
+            let position_usize: usize = position as usize;
+            println!("first postition: {}", position_usize);
+            if let Ok(data) = decompress_data(&pack[(position_usize+2 as usize)..]) {
+                println!("position searched: {}", position_usize+2 as usize);
                 let objet_type = Self::get_object_type(pack[position_usize]);
-                println!("TIPO OBJETO {}: {:?}, TAMAÑO PRIMER OBJETO: {:?}", object+1, objet_type, data.1);
-    
+                println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
+
+                position = position_usize as u64 + data.1 as u64 + 1 as u64;
+                println!("posit pre: {}", position);
+                if Self::is_bit_set(pack[position_usize]) {
+                    println!("entra al condicional");
+                    position = position + 1 as u64;
+                } 
+                println!("posit post: {}", position);
+                
                 println!("DATAAAA {}: {} --- bits: {}", object, String::from_utf8_lossy(&data.0), data.1);    
                 println!("next position: {}", position);
             }
@@ -263,6 +267,7 @@ impl Clone{
             }
         } 
         println!("SALE");
+        //println!("BOCAAAA: {}",);
         // HASTA ACA ESTAMOS BIEN. EL TIPO DE OBJETO ES UN COMMIT POR LO QUE ENTIENDO DEBE ESTAR BIEN 
         // EL TAMAÑO SE COMPLICO :(
         let start_byte = 12;
