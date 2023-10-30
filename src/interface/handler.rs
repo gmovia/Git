@@ -80,9 +80,23 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
             let rc_branch = rc_branch.borrow_mut();
             let rc_entry = rc_entry.borrow_mut();
             let _ = version.branch(BranchOptions::NewBranch(&rc_entry.text()));
-
-            rc_branch.append_text(&rc_entry.text());
-
+            if let Ok(branches) = version.get_branches() {
+                for branch in branches {
+                    rc_branch.foreach(|child| {
+                        if let Some(child_label) = child.downcast_ref::<gtk::Label>() {
+                            println!("{:?}",child_label.text().to_string());
+                            if child_label.text().to_string() != branch {
+                                let label = gtk::Label::new(Some(&branch));
+                                label.set_visible(true);
+                                label.set_xalign(2.5);
+                                label.set_yalign(2.5);
+                                rc_branch.append_text(&label.text());
+                            }
+                        }
+                    });
+                    
+                }
+            }
             rc_entry.set_text("");
             button.set_sensitive(false);
     }});
@@ -90,13 +104,30 @@ pub fn handle_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
     interface.delete_branch.connect_clicked({
         let version = version.clone();
         let rc_entry = rc_entry.clone();
+        let rc_branch = rc_branch.clone();
         move |button| {
             let version = version.borrow_mut();
             let rc_entry = rc_entry.borrow_mut();
-
+            let rc_branch = rc_branch.borrow_mut();
             let _ = version.branch(BranchOptions::DeleteBranch(&rc_entry.text()));
 
-            // ELIMINAR rc_entry.text() DEL SELECT BRANCH TAMBIEN
+            if let Ok(branches) = version.get_branches() {
+                for branch in branches {
+                    rc_branch.foreach(|child| {
+                        if let Some(child_label) = child.downcast_ref::<gtk::Label>() {
+                            println!("{:?}",child_label.text().to_string());
+                            if child_label.text().to_string() != branch {
+                                let label = gtk::Label::new(Some(&branch));
+                                label.set_visible(true);
+                                label.set_xalign(2.5);
+                                label.set_yalign(2.5);
+                                rc_branch.append_text(&label.text());
+                            }
+                        }
+                    });
+                    
+                }
+            }
 
             rc_entry.set_text("");
             button.set_sensitive(false);
