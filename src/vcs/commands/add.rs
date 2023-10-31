@@ -12,7 +12,7 @@ impl Add{
     /// Recibe el sistema de control de versiones y un path
     /// Inserta los archivos correspondientes al area de staging, junto con sus respectivos estados.
     /// Devuelve el area de staging.
-    pub fn add(vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+    pub fn add(vcs: &VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         let (untracked_files, changes_not_staged_for_commit, _) = vcs.status()?;
         let mut staging_area = vcs.index.read_index()?;
 

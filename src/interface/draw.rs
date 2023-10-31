@@ -83,7 +83,7 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, vcs: &V
             let rc_grid = grid.clone();
             let rc_add = box_window.clone();
             move |widget|{ 
-                let mut version = version.borrow_mut();
+                let version = version.borrow_mut();
                 let _ = version.add(Path::new(&path_clone)); // Usa la copia clonada
                 rc_grid.remove(widget);
                 rc_grid.remove(&path_label);

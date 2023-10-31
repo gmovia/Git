@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::vcs::version_control_system::VersionControlSystem;
 
-pub fn handler_add(vcs: &mut VersionControlSystem, input: String) -> String{
+pub fn handler_add(vcs: & VersionControlSystem, input: String) -> String{
     let mut paths: Vec<String> = Vec::new();
     let files: Vec<&str> = input.split_whitespace().collect();
 

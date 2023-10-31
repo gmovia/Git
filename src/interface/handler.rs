@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command};
+use crate::{vcs::version_control_system::VersionControlSystem, handlers::{commands::handler_command, rm::handler_rm}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_select_repository}, draw::changes_and_staging_area};
 use gtk::prelude::*;
@@ -169,13 +169,13 @@ pub fn handle_command(interface: &RustInterface, vcs: &VersionControlSystem) {
         let version = version.clone();
         let rc_entry = rc_entry.clone();
         move |button| {
-            let mut version = version.borrow_mut();
+            let version = version.borrow_mut();
             let rc_entry = rc_entry.borrow_mut();
             rc_box.foreach(|child| {
                 rc_box.remove(child);
             });
             
-            let result = handler_command(&mut version, &rc_entry.text());
+            let result = handler_command(&version, &rc_entry.text());
             let label = gtk::Label::new(Some(&result));
             label.set_visible(true);
             label.set_xalign(2.5);
@@ -188,5 +188,48 @@ pub fn handle_command(interface: &RustInterface, vcs: &VersionControlSystem) {
             
         }
     });
-    
 }
+
+    pub fn handle_rm(interface: &RustInterface, vcs: &VersionControlSystem) {
+        let rm_dialog = interface.rm_dialog.clone();
+        let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+        let rm_enter = interface.rm_enter.clone();
+        let rm_entry = Rc::new(RefCell::new(interface.rm_entry.clone()));
+
+        interface.rm_enter.set_sensitive(false);
+
+        interface.rm_entry.connect_changed({  
+            move |e| {
+            rm_enter.set_sensitive(!e.text().is_empty());
+        }});
+    
+        interface.rm.connect_clicked({
+            move |_| {
+                rm_dialog.run();
+                rm_dialog.hide();
+            }
+        });
+  
+        interface.rm_enter.connect_clicked({
+            let rm_entry1 = rm_entry.clone();
+            let version1 = version.clone();
+            move |button| {
+                let rm_entry1 = rm_entry1.borrow_mut();
+                let version1 = version1.borrow_mut();
+                
+                
+                let binding = rm_entry1.text();
+
+                if binding.ends_with("/"){
+                    let _ = handler_rm(&version1, format!("git rm -r {}",rm_entry1.text()));
+                }
+                else{
+                    let _ = handler_rm(&version1, format!("git rm {}",rm_entry1.text()));
+                }
+                
+                rm_entry1.set_text("");
+                button.set_sensitive(false);
+            }
+        });
+
+    }

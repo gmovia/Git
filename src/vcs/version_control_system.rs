@@ -37,7 +37,7 @@ impl VersionControlSystem {
     /// Recibe un path
     /// Agrega los archivos que se encuentran dentro del path al area de staging
     /// Devuelve el area de staging
-    pub fn add(&mut self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+    pub fn add(&self, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Add::add(self, path)        
     }
 
@@ -58,13 +58,13 @@ impl VersionControlSystem {
     /// Recibe un path
     /// Elimina los archivos del workspace y repositorio local dado el path
     /// Si el comando tiene un -r se eliminan los archivos de un directorio entero
-    pub fn rm(&mut self, path: &Path, option: RemoveOption) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+    pub fn rm(&self, path: &Path, option: RemoveOption) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Rm::rm(self, path, option)
     }
 
     /// Recibe un mensaje
     /// Crea una entrada en la tabla de commits con su correspondiente id, hash del repositorio y mensaje.
-    pub fn commit(&mut self, message: String) -> Result<HashMap<String, String>, std::io::Error>{
+    pub fn commit(&self, message: String) -> Result<HashMap<String, String>, std::io::Error>{
         Commit::commit(self, message)
     }
 

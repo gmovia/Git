@@ -59,7 +59,7 @@ pub fn handle_commit_button(interface: &RustInterface, vcs: &VersionControlSyste
         let rc_entry = rc_entry.clone();
         let version = version.clone();
         move |button| {
-            let mut version = version.borrow_mut();
+            let version = version.borrow_mut();
             let rc_entry = rc_entry.borrow_mut();
 
             let _ = version.commit(rc_entry.text().to_string());

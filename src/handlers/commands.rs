@@ -9,7 +9,7 @@ use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
 use crate::vcs::version_control_system::VersionControlSystem;
 
-pub fn handler_command<'a>(vcs: &mut VersionControlSystem, input: &str) -> String{
+pub fn handler_command<'a>(vcs: & VersionControlSystem, input: &str) -> String{
     let input = input.trim(); 
     let _: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
 
