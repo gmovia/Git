@@ -45,6 +45,7 @@ pub mod vcs{
         pub mod vcs_file;
         pub mod index;
         pub mod repository;
+        pub mod commits_table;
     }
 
     pub mod commands{
@@ -58,6 +59,7 @@ pub mod vcs{
         pub mod log;
         pub mod branch;
         pub mod checkout;
+        pub mod merge;
     }
 
     pub mod sets{

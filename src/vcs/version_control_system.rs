@@ -4,7 +4,7 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}}, files::repository::Repository};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge}, files::repository::Repository};
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
@@ -75,7 +75,7 @@ impl VersionControlSystem {
     
     /// Recibe una opcion de branch (crear, borrar, listar)
     /// Segun la opcion, el branch permite crear una rama, borrar una ya existente o listar todas las ramas
-    pub fn branch(&self,option: BranchOptions) -> Result<(), std::io::Error>{
+    pub fn branch(&self,option: BranchOptions) -> Result<Vec<String>, std::io::Error>{
         Branch::branch(&self.path, option)
     } 
 
@@ -85,7 +85,11 @@ impl VersionControlSystem {
 
     /// Recibe una opcion de checkout (cambiar rama, crear y cambiar rama, analizar commit)
     /// Segun la opcion, el checkout actua
-    pub fn checkout(&self,option: CheckoutOptions) -> Result<(), std::io::Error>{
-        Checkout::checkout(&self.path.display().to_string(), option)
+    pub fn checkout(&self, option: CheckoutOptions) -> Result<(), std::io::Error>{
+        Checkout::checkout(&self.path, option)
+    }
+
+    pub fn merge(&self, branch: &str) -> Result<String,std::io::Error> {
+        Merge::merge(&self.repository, branch)
     }
 }

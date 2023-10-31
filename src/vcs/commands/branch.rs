@@ -9,42 +9,47 @@ pub enum BranchOptions<'a>{
     NewBranch(&'a str),
     DeleteBranch(&'a str),
     GetBranches,
+    GetCurrentBranch,
 }
 
 impl Branch{
 
     /// Matcheo la opcion
-    pub fn branch(path: &PathBuf, option: BranchOptions) -> Result<(), std::io::Error>{
+    pub fn branch(path: &PathBuf, option: BranchOptions) -> Result<Vec<String>, std::io::Error>{
         match option{
-            BranchOptions::NewBranch(branch_name) => {Self::create_new_branch(path.to_path_buf(), branch_name)?;},
-            BranchOptions::DeleteBranch(branch_name) => {Self::delete_branch(&path, branch_name)?;},
-            BranchOptions::GetBranches => {Self::get_branches(&path)?;},
+            BranchOptions::NewBranch(branch_name) => {Ok(Self::create_new_branch(path, branch_name)?)},
+            BranchOptions::DeleteBranch(branch_name) => {Ok(Self::delete_branch(path, branch_name)?)},
+            BranchOptions::GetBranches => {Ok(Self::get_branches(path)?)},
+            BranchOptions::GetCurrentBranch => {Ok(vec![Self::get_current_branch(path)?])}
         }
-        Ok(())
     }
 
+    // Obtiene la rama actual
+    pub fn get_current_branch(path: &PathBuf) -> Result<String, std::io::Error> {
+        Init::get_current_branch(path)
+    }
 
     /// creo un archivo branch_name en el path /refs/heads/
     /// luego genero el archivo en /logs/ con copia de los commits que estaban en la rama anterior
-    pub fn create_new_branch(path: PathBuf,branch_name: &str) -> Result<(),std::io::Error> { 
+    pub fn create_new_branch(path: &PathBuf, branch_name: &str) -> Result<Vec<String>,std::io::Error> { 
         let branch_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);
         let _ = File::create(&branch_path)?;
-        Init::create_log_file(path, branch_name)?;
-        Ok(())
+        Init::create_log_file(path.to_path_buf(), branch_name)?;
+        Ok(Self::get_branches(path)?)
     }
 
     /// matcheo el archivo branch_name en /refs/heads/ y en /logs/
     /// si no estoy parada en esa rama, entonces lo elimino de los dos directorios
-    pub fn delete_branch(path: &PathBuf, branch_name: &str) -> Result<(),std::io::Error>{
+    pub fn delete_branch(path: &PathBuf, branch_name: &str) -> Result<Vec<String>,std::io::Error>{
         let p = Path::new(path);
         let branch_path = p.join(".rust_git").join("refs").join("heads").join(branch_name);
         let logs_path = p.join(".rust_git").join("logs").join(branch_name);
-        if logs_path == Init::get_commits_path(&path)?{
+        if logs_path == Init::get_commits_path(path)?{
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't remove the actual branch"));
         }
         fs::remove_file(branch_path)?;
         fs::remove_file(logs_path)?;
-        Ok(())
+        Ok(Self::get_branches(path)?)
     }
 
     /// obtengo todas las entradas del directorio /refs/heads/ que serian todas las ramas que tenemos
@@ -63,5 +68,5 @@ impl Branch{
             }
         }
         Ok(branches)
-    }
+    }        
 }

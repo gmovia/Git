@@ -15,6 +15,12 @@ pub fn handler_command<'a>(vcs: &mut VersionControlSystem, input: &str) -> Strin
 
     match input {
         "git status" => handler_status(vcs),
+        x if x.contains("git merge") => {
+            if let Ok(result) = vcs.merge("new_branch"){
+                return result;
+            }
+            return "Err".to_string();
+        },
         x if x.contains("git hash-object") => handler_hash_object(vcs, x.to_string()),
         x if x.contains("git add") => handler_add(vcs, x.to_string()),
         x if x.contains("git cat-file") => handler_cat_file(vcs, x.to_string()),

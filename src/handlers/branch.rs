@@ -12,9 +12,23 @@ pub fn handler_branch(vcs: &VersionControlSystem, input: String) -> String{
             _ => {"Invalid parameters.".to_string()},
         }},
         3 => {
-            let _ = vcs.branch(BranchOptions::NewBranch(args[2]));
-            "Created successfully.".to_string()
-        },
+            match args[2]{
+            "-a" => {
+                if let Ok(result) = vcs.branch(BranchOptions::GetCurrentBranch){
+                    let mut content = String::new();
+                    for r in &result{
+                        content.push_str(&format!("{}\n",r));
+                        println!("{:?}",r);
+                    }
+                    println!("{:?}",content);
+                    return content;
+                }else{
+                    "Invalid parameters".to_string()
+                }
+            }
+            _ => {let _ = vcs.branch(BranchOptions::NewBranch(args[2]));
+            "Created successfully.".to_string()}
+        }},
         2 => {
             if let Ok(branches) = vcs.get_branches(){
                 branches.join("\n").to_string()
