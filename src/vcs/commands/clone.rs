@@ -10,7 +10,7 @@ pub struct Clone;
 
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
-        let init_path = Path::new("/Users/luz.diazc/Desktop/cloneCOMPLE");
+        let init_path = Path::new("/home/amoralejo/TEST");
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
         Ok(())
@@ -216,30 +216,25 @@ impl Clone{
         let object_number = Self::parse_number(&pack[8..12])?;
         println!("CANTIDAD DE OBJETOS: {}", object_number);
         
-        let mut position: u64 = 12;
+        let mut position: usize = 12;
         let mut objects = Vec::new();
         for object in 0..object_number {
-            let mut position_usize: usize = position as usize;
-            let objet_type = Self::get_object_type(pack[position_usize]);
-            if Self::is_bit_set(pack[position_usize]) {
-                position = position + 2 as u64;
-                position_usize = position as usize;
+            let objet_type = Self::get_object_type(pack[position]);
+            if Self::is_bit_set(pack[position]) {
+                position = position + 2;
             }
             else {
-                position = position + 1 as u64;
-                position_usize = position as usize;
-                
+                position = position + 1;
             }
-            if let Ok(data) = decompress_data(&pack[position_usize..]) {
+            if let Ok(data) = decompress_data(&pack[position..]) {
                 println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
                 println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                position = position + data.1 as u64; 
+                position = position + data.1 as usize; 
                 objects.push((objet_type, data.0))   
             }
         } 
         Ok(objects)
     }
-
 
     fn is_bit_set(byte: u8) -> bool {
        let mask = 0b10000000;
