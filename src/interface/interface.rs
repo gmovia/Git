@@ -39,10 +39,8 @@ pub struct RustInterface {
     pub title_sa: gtk::Label,
     pub terminal_dialog: gtk::Dialog,
     pub terminal: gtk::Button,
-    pub command_dialog: gtk::Dialog,
     pub command_entry: gtk::Entry,
     pub command_box: gtk::Box,
-    pub command_close: gtk::Button,
     pub enter: gtk::Button,
 }
 
@@ -89,10 +87,8 @@ impl RustInterface {
             title_sa: builder.object("title-sa").unwrap(),
             terminal_dialog: builder.object("terminal-dialog").unwrap(),
             terminal: builder.object("terminal").unwrap(),
-            command_dialog: builder.object("command-dialog").unwrap(),
             command_box: builder.object("command-box").unwrap(),
             command_entry: builder.object("command-entry").unwrap(),
-            command_close: builder.object("close-command").unwrap(),
             enter: builder.object("enter").unwrap(),
         }
     }
