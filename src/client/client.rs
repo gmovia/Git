@@ -1,7 +1,7 @@
 use std::io::Write;
 use std::net::TcpStream;
 use crate::vcs::commands::clone;
-use crate::packfile::to_pkt_line;
+use crate::packfile::packfile::to_pkt_line;
 
 static CLIENT_ARGS: usize = 4;
 

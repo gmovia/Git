@@ -7,7 +7,7 @@ use std::io::{self, Write};
  use rust_git::vcs::version_control_system::VersionControlSystem;
  use rust_git::handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, log::handler_log};
  */
-use rust_git::client::Client;
+use rust_git::client::client::Client;
 
  
 fn main() -> Result<(), std::io::Error> {

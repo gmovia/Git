@@ -4,13 +4,13 @@ use chrono::{DateTime, Local};
 
 use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
 use super::{branch::BranchOptions, hash_object::WriteOption};
-use crate::packfile::{decompress_data, to_pkt_line};
+use crate::packfile::packfile::{decompress_data, to_pkt_line};
 
 pub struct Clone;
 
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
-        let init_path = Path::new("/home/amoralejo/TEST4");
+        let init_path = Path::new("/Users/luz.diazc/Desktop/cloneCOMPLE");
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
         Ok(())

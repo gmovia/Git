@@ -13,8 +13,17 @@ pub mod types{
     pub mod types;
 }
 
-pub mod client;
-pub mod packfile;
+pub mod client{
+    pub mod client;
+}
+
+pub mod server{
+    pub mod server;
+}
+
+pub mod packfile{
+    pub mod packfile;
+}
 
 pub mod utils {
     pub mod files {
