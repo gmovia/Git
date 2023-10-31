@@ -15,7 +15,7 @@ fn main() -> Result<(), std::io::Error> {
     
     if argv.contains(&"server".to_string()) {
         match Server::init_server() {
-            Ok(_) => println!("La función client se ejecutó correctamente"),
+            Ok(_) => println!("La función server se ejecutó correctamente"),
             Err(_) => println!("Hubo un error al ejecutar la función client....."),
         }
     }

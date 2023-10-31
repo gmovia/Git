@@ -4,6 +4,7 @@ use rand::Error;
 
 use crate::{vcs::version_control_system::VersionControlSystem, handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, rm::handler_rm, log::handler_log, commit::handler_commit, branch::handler_branch}};
 
+use crate::packfile::packfile::process_line;
 
 
 pub struct Server {
@@ -14,7 +15,7 @@ pub struct Server {
 impl Server {
 
     pub fn init_server() -> Result<Server,std::io::Error> {
-        let server = Server { path: Path::new("/home/amoralejo/FOLDER_TO_CLONE").to_path_buf() };
+        let server = Server { path: Path::new(r"C:\Users\luzmi\OneDrive\Escritorio\RepoServe").to_path_buf() };
         Self::handle_connections(&server)?;
         Ok(server)
     }
@@ -25,11 +26,12 @@ impl Server {
 
         for stream in listener.incoming() {
             match stream {
-                Ok(mut client) => {
+                Ok(client) => {
                     let read_client = client.try_clone()?;
                     let write_client = client.try_clone()?;
     
                     thread::spawn(move || {
+                        print!("Parada en el server\n");
                         match Self::handle_client(read_client, write_client) {
                             Ok(_) => Ok(()),
                             Err(e) => Err(e)
@@ -44,7 +46,7 @@ impl Server {
         Ok(())
     }
 
-
+/* 
     fn handle_client(mut reader: TcpStream, mut writer: TcpStream) -> Result<(),std::io::Error> {
         let mut buffer = [0; 1024];
         let mut message = String::new();
@@ -74,14 +76,33 @@ impl Server {
         };
 
         Ok(())
+    } */
+
+    fn handle_client(mut reader: TcpStream, mut writer: TcpStream) -> Result<(),std::io::Error> {
+        loop {
+            match process_line(&mut reader) {
+                Ok(message) => {
+                    println!("Received message from client: {}", &message);
+                    let response = Self::parse_response( &message.to_string())?;
+                    writer.write(response.as_bytes())?;
+                    writer.flush()?;
+                }
+                Err(e) => {
+                    eprintln!("Error reading from client: {}", e);
+                    break;
+                }
+            }
+        }
+    
+        Ok(())
     }
 
-
-
-    fn parse_respose(message: &String) -> Result<String,std::io::Error> {                            
-        let response = match &message as &str {
-            "hola" => "Hola".to_string(),
-            "chau" => "Chau".to_string(),
+    fn parse_response(message: &String) -> Result<String, std::io::Error> {
+        let response = match message.as_str() {
+            s if s.contains("hola") => "Hola".to_string(),
+            s if s.contains("chau") => "Chau".to_string(),
+            s if s.contains("git-upload-pack") => "Entrando a responder la clonacion...".to_string(),
+            //"git clone" => receive_query_clone(response, socket),
             _ => "No entiendo tu mensaje".to_string(),
         };
         Ok(response)

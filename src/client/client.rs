@@ -34,6 +34,16 @@ impl Client {
         Ok(())
     }
 
+    fn handler_input(input: &str) -> String {
+        match input {
+            _ if input.contains("git clone") => {
+                let rest_of_input = input.trim_start_matches("git clone");
+                format!("git-upload-pack{}", rest_of_input)
+            }
+            _ => input.to_string(),
+        }
+    }
+
     pub fn connect_rust_server(address: &str, path: &str) -> Result<(),std::io::Error> {
         println!("rust_client");
         let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
@@ -49,7 +59,11 @@ impl Client {
         let mut input = String::new();
         loop {
             io::stdin().read_line(&mut input)?;
-            stream.write(input.as_bytes())?;
+            let query_to_send = Self::handler_input(&input);
+            let pkt_line = to_pkt_line(&query_to_send);
+            print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
+            stream.write(pkt_line.as_bytes())?;
+            Self::handler_query(&query_to_send, &mut stream); //rompe algo si mandó asi?
             input.clear();
         }
     }
@@ -75,13 +89,14 @@ impl Client {
         }
     }
 
-
-    fn handler_query(query: &str,socket: &mut TcpStream ) {    
+/* 
+    fn handler_query(query: &str,socket: &mut TcpStream ) {
         match query {
             "git-upload-pack" => {
-                if let Err(e) = clone::Clone::clone(socket) {
+                print!("Handleando desde el cliente la clone\n");
+/*                 if let Err(e) = clone::Clone::clone(socket) {
                     println!("Error: {}", e);
-                }            
+                }      */       
                 println!("Handling git-upload-pack request");
             }
             "git-send-pack" => {
@@ -91,17 +106,33 @@ impl Client {
                 println!("Unknown request: {}", query);
             }
         }
+    } */
+    fn handler_query(query: &str, socket: &mut TcpStream) {
+        match (query.contains("git-upload-pack"), query.contains("git-send-pack")) {
+            (true, _) => {
+/*                 if let Err(e) = clone::Clone::clone(socket) {
+                    println!("Error: {}", e);
+                }      */     
+                println!("Handling git-upload-pack request");
+            }
+            (_, true) => {
+                println!("Handling git-send-pack request");
+            }
+            _ => {
+                println!("Unknown request: {}", query);
+            }
+        }
     }
-
+    
     fn client_run(address: &str, path: &str) -> Result<(),std::io::Error> {
 
         println!("Conectándome a {:?}", address);
         let mut socket = TcpStream::connect(address)?;
-        let msg = format!("git-upload-pack {}", path);
+/*         let msg = format!("git-upload-pack {}", path);
         let pkt_line = to_pkt_line(&msg);
         socket.write(pkt_line.as_bytes())?;
         
-        Self::handler_query("git-upload-pack",&mut socket );
+        Self::handler_query("git-upload-pack",&mut socket ); */
 
         Ok(())
 

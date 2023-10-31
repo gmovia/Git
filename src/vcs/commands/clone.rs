@@ -4,7 +4,7 @@ use chrono::{DateTime, Local};
 
 use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
 use super::{branch::BranchOptions, hash_object::WriteOption};
-use crate::packfile::packfile::{decompress_data, to_pkt_line};
+use crate::packfile::packfile::{decompress_data, to_pkt_line, read_packet};
 
 pub struct Clone;
 
@@ -14,12 +14,6 @@ impl Clone{
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
         Ok(())
-    }
-
-    fn read_packet(stream: &mut TcpStream, len: usize) -> String {
-        let mut packet_buf = vec![0; len - 4];
-        let _ = stream.read_exact(&mut packet_buf);
-        String::from_utf8_lossy(&packet_buf).to_string()
     }
 
     pub fn request_branch(list_refs: &Vec<String>, vcs: &VersionControlSystem, objects: Vec<(u8,Vec<u8>)>) -> Result<(),std::io::Error> {
@@ -152,7 +146,7 @@ impl Clone{
                 if len == 0 {
                     break;
                 }
-                let packet = Self::read_packet(socket, len);
+                let packet = read_packet(socket, len);
                 packets.push(packet);
             }
         }

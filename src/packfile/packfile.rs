@@ -1,5 +1,5 @@
 use flate2::read::ZlibDecoder;
-use std::io::Read;
+use std::{io::Read, net::TcpStream, str::from_utf8};
 
 
 pub fn decompress_data(compressed_data: &[u8]) -> Result<(Vec<u8>,u64), std::io::Error> {
@@ -9,9 +9,28 @@ pub fn decompress_data(compressed_data: &[u8]) -> Result<(Vec<u8>,u64), std::io:
     Ok((decompressed_data, decoder.total_in()))
 }
 
-
 pub fn to_pkt_line(msg: &str) -> String {
     let len = msg.len() + 4; 
     let hex = format!("{:04x}", len); 
     hex + msg 
 }
+
+pub fn read_packet(stream: &mut TcpStream, len: usize) -> String {
+    let mut packet_buf = vec![0; len - 4];
+    let _ = stream.read_exact(&mut packet_buf);
+    String::from_utf8_lossy(&packet_buf).to_string()
+}
+
+pub fn process_line(stream: &mut TcpStream) -> Result<String, std::io::Error> {
+    let mut result = String::new();
+        let mut len_buf = [0; 4];
+        if stream.read_exact(&mut len_buf).is_ok() {
+            let len_str = from_utf8(&len_buf).unwrap();
+            let len = usize::from_str_radix(len_str, 16).unwrap();
+            let packet = read_packet(stream, len);
+            result = packet;
+        }
+    
+    Ok(result)
+}
+
