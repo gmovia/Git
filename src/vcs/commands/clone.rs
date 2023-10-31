@@ -220,12 +220,18 @@ impl Clone{
         let mut objects = Vec::new();
         for object in 0..object_number {
             let objet_type = Self::get_object_type(pack[position]);
+            while Self::is_bit_set(pack[position]) {
+                position = position + 1;
+            }
+            position = position + 1;
+            /* 
             if Self::is_bit_set(pack[position]) {
                 position = position + 2;
             }
             else {
                 position = position + 1;
             }
+            */
             if let Ok(data) = decompress_data(&pack[position..]) {
                 println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
                 println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
