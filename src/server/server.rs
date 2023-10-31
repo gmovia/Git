@@ -17,7 +17,7 @@ pub struct Server {
 impl Server {
 
     pub fn init_server() -> Result<Server,std::io::Error> {
-        let server = Server { path: Path::new("/home/amoralejo/FOLDER_TO_CLONE").to_path_buf() };
+        let server = Server { path: Path::new("/home/amoralejo/TEST").to_path_buf() };
         let path = Path::new("/home/amoralejo/TEST").to_path_buf();
         let encoder = Encoder::init_encoder(path);
         Self::handle_connections(&server)?;
