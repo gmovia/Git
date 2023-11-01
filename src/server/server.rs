@@ -18,8 +18,9 @@ pub struct Server {
 impl Server {
 
     pub fn init_server() -> Result<Server, std::io::Error> {
-        let path = Path::new(r"C:\Users\luzmi\OneDrive\Escritorio\Folter_to_clone").to_path_buf();
-        let server = Server { path };
+        let path = Path::new("/home/amoralejo/TEST");
+        let server = Server { path: path.to_path_buf() };
+        let encoder = Encoder::init_encoder((&path).to_path_buf());
         server.handle_connections()?;
         Ok(server)
     }
