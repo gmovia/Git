@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}}, handlers::{rm::handler_rm, commands::handler_command}};
 
 use super::{interface::RustInterface, draw::{branches, repositories}};
 
@@ -112,4 +112,63 @@ pub fn handle_select_repository(interface: &RustInterface, vcs: &VersionControlS
             let _version = version.borrow_mut();
             // DEBE ELEGIR EL REPO SELECCIONADO DEL SELECT_REPOSITORY
     }});
+}
+
+pub fn handle_terminal(interface: &RustInterface, vcs: &VersionControlSystem) {
+    
+    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+    let rc_entry = Rc::new(RefCell::new(interface.command_entry.clone()));
+    let rc_box = interface.command_box.clone();
+    
+    interface.enter.connect_clicked({
+        let version = version.clone();
+        let rc_entry = rc_entry.clone();
+        move |button| {
+            let version = version.borrow_mut();
+            let rc_entry = rc_entry.borrow_mut();
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            
+            let result = handler_command(&version, &rc_entry.text());
+            let label = gtk::Label::new(Some(&result));
+            label.set_visible(true);
+            label.set_xalign(2.5);
+            label.set_yalign(2.5);
+            rc_box.add(&label);
+            rc_box.set_visible(true);
+
+            rc_entry.set_text("");
+            button.set_sensitive(false);
+            
+        }
+    });
+}
+
+pub fn handle_rm_button(interface: &RustInterface, vcs: &VersionControlSystem) {
+
+    let rm_entry = Rc::new(RefCell::new(interface.rm_entry.clone()));
+    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+    
+    interface.rm_enter.connect_clicked({
+        let rm_entry1 = rm_entry.clone();
+        let version1 = version.clone();
+        move |button| {
+            let rm_entry1 = rm_entry1.borrow_mut();
+            let version1 = version1.borrow_mut();
+            
+            
+            let binding = rm_entry1.text();
+
+            if binding.ends_with("/"){
+                let _ = handler_rm(&version1, format!("git rm -r {}",rm_entry1.text()));
+            }
+            else{
+                let _ = handler_rm(&version1, format!("git rm {}",rm_entry1.text()));
+            }
+            
+            rm_entry1.set_text("");
+            button.set_sensitive(false);
+        }
+    });
 }

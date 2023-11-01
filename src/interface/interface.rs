@@ -6,7 +6,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -46,6 +46,13 @@ pub struct RustInterface {
     pub rm_dialog: gtk::Dialog,
     pub rm_entry: gtk::Entry,
     pub rm_enter: gtk::Button,
+    pub merge: gtk::Button,
+    pub merge_entry: gtk::Entry,
+    pub merge_dialog: gtk::Dialog,
+    pub merge_changes: gtk::Box,
+    pub both: gtk::Button,
+    pub current: gtk::Button,
+    pub incoming: gtk::Button,
 }
 
 impl RustInterface {
@@ -98,6 +105,13 @@ impl RustInterface {
             rm_dialog: builder.object("rm-dialog").unwrap(),
             rm_entry: builder.object("rm-entry").unwrap(),
             rm_enter: builder.object("rm-enter").unwrap(),
+            merge: builder.object("merge").unwrap(),
+            merge_dialog: builder.object("merge-dialog").unwrap(),
+            merge_entry: builder.object("merge-entry").unwrap(),
+            merge_changes: builder.object("merge-changes").unwrap(),
+            both: builder.object("both").unwrap(),
+            current: builder.object("current").unwrap(),
+            incoming: builder.object("incoming").unwrap(),
         }
     }
     
@@ -116,6 +130,7 @@ impl RustInterface {
         handle_repository(&self, &vcs);
         handle_command(&self, &vcs);
         handle_rm(&self,&vcs);
+        handle_merge(&self, &vcs);
 
         self.window.show_all();   
         gtk::main();  // esto corta el ciclo de ejecucion

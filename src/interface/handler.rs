@@ -1,8 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{vcs::version_control_system::VersionControlSystem, handlers::{commands::handler_command, rm::handler_rm}};
+use crate::vcs::version_control_system::VersionControlSystem;
 
-use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_select_repository}, draw::changes_and_staging_area};
+use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_select_repository, handle_rm_button, handle_terminal}, draw::changes_and_staging_area};
 use gtk::prelude::*;
 
 pub fn handle_commit(interface: &RustInterface, vcs: &VersionControlSystem){
@@ -145,10 +145,7 @@ pub fn handle_repository(interface: &RustInterface, vcs: &VersionControlSystem) 
 pub fn handle_command(interface: &RustInterface, vcs: &VersionControlSystem) {
 
     let terminal_dialog = interface.terminal_dialog.clone();
-    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
-    let rc_box = interface.command_box.clone();
     let rc_enter = interface.enter.clone();
-    let rc_entry = Rc::new(RefCell::new(interface.command_entry.clone()));
 
     interface.enter.set_sensitive(false);
 
@@ -165,71 +162,115 @@ pub fn handle_command(interface: &RustInterface, vcs: &VersionControlSystem) {
         }
     });
 
-    interface.enter.connect_clicked({
-        let version = version.clone();
-        let rc_entry = rc_entry.clone();
-        move |button| {
-            let version = version.borrow_mut();
-            let rc_entry = rc_entry.borrow_mut();
-            rc_box.foreach(|child| {
-                rc_box.remove(child);
-            });
-            
-            let result = handler_command(&version, &rc_entry.text());
-            let label = gtk::Label::new(Some(&result));
-            label.set_visible(true);
-            label.set_xalign(2.5);
-            label.set_yalign(2.5);
-            rc_box.add(&label);
-            rc_box.set_visible(true);
-
-            rc_entry.set_text("");
-            button.set_sensitive(false);
-            
-        }
-    });
+    handle_terminal(interface, vcs);
 }
 
-    pub fn handle_rm(interface: &RustInterface, vcs: &VersionControlSystem) {
-        let rm_dialog = interface.rm_dialog.clone();
-        let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
-        let rm_enter = interface.rm_enter.clone();
-        let rm_entry = Rc::new(RefCell::new(interface.rm_entry.clone()));
+pub fn handle_rm(interface: &RustInterface, vcs: &VersionControlSystem) {
+    let rm_dialog = interface.rm_dialog.clone();
 
-        interface.rm_enter.set_sensitive(false);
+    let rm_enter = interface.rm_enter.clone();
 
-        interface.rm_entry.connect_changed({  
-            move |e| {
-            rm_enter.set_sensitive(!e.text().is_empty());
-        }});
-    
-        interface.rm.connect_clicked({
-            move |_| {
-                rm_dialog.run();
-                rm_dialog.hide();
-            }
-        });
-  
-        interface.rm_enter.connect_clicked({
-            let rm_entry1 = rm_entry.clone();
-            let version1 = version.clone();
-            move |button| {
-                let rm_entry1 = rm_entry1.borrow_mut();
-                let version1 = version1.borrow_mut();
-                
-                
-                let binding = rm_entry1.text();
+    interface.rm_enter.set_sensitive(false);
 
-                if binding.ends_with("/"){
-                    let _ = handler_rm(&version1, format!("git rm -r {}",rm_entry1.text()));
+    interface.rm_entry.connect_changed({  
+        move |e| {
+        rm_enter.set_sensitive(!e.text().is_empty());
+    }});
+
+    interface.rm.connect_clicked({
+        move |_| {
+            rm_dialog.run();
+            rm_dialog.hide();
+        }
+    });
+
+    handle_rm_button(interface, vcs);
+
+}
+
+pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //FALTA VER SI EL FOR ANDA PORQUE TODAVIA NO ESTA IMPLEMENTADO LO DE CONFLICTOS
+
+    let merge_dialog = interface.merge_dialog.clone();
+    let button_merge = interface.merge.clone();
+    let button_both = interface.both.clone();
+    let button_current = interface.current.clone();
+    let button_incoming = interface.incoming.clone();
+    let version = Rc::new(RefCell::new(vcs.clone()));
+    let m_entry = interface.merge_entry.clone();
+    let m_changes = interface.merge_changes.clone();
+
+    interface.merge.set_sensitive(false);
+    interface.both.set_sensitive(false);
+    interface.current.set_sensitive(false);
+    interface.incoming.set_sensitive(false);
+
+    interface.merge_entry.connect_changed({
+        move |e| {
+            button_merge.set_sensitive(!e.text().is_empty());
+        }
+    });
+
+    interface.merge.connect_clicked({  //TRATAR DE DIVIDIRLO EN FUNCIONES
+        let version = version.clone();
+        let m_changes = m_changes.clone();
+        move |_| {
+            let version = version.borrow_mut();
+            if let Ok(conflicts) = version.merge(&m_entry.text()){
+                if conflicts.len() == 0 {
+                    let label = gtk::Label::new(Some(&"Merge successfully"));
+                    label.set_visible(true);
+                    label.set_xalign(0.5);
+                    label.set_yalign(0.5);
+                    let blank = gtk::Label::new(Some(&""));
+                    blank.set_visible(true);
+                    blank.set_xalign(0.5);
+                    blank.set_yalign(0.5);
+                    m_changes.add(&blank);
+                    m_changes.add(&label);
+                    m_changes.add(&blank);
                 }
-                else{
-                    let _ = handler_rm(&version1, format!("git rm {}",rm_entry1.text()));
+                for (key, value) in conflicts{
+                    if let (Ok(cat_current), Ok(cat_incoming)) = (version.cat_file(&value.change_current.hash),version.cat_file(&value.change_branch.hash)) {
+                        let set_label_current = format!("{}\n             {}",key,cat_current);
+                        let label_current = gtk::Label::new(Some(&set_label_current));
+                        label_current.set_visible(true);
+                        label_current.set_xalign(0.5);
+                        label_current.set_yalign(0.5);
+                        let set_label_incoming = format!("{}\n            {}",key,cat_incoming);
+                        let label_incoming = gtk::Label::new(Some(&set_label_incoming));
+                        label_incoming.set_visible(true);
+                        label_incoming.set_xalign(0.5);
+                        label_incoming.set_yalign(0.5);
+                        let blank = gtk::Label::new(Some(&""));
+                        blank.set_visible(true);
+                        blank.set_xalign(0.5);
+                        blank.set_yalign(0.5);
+                        // A PARTIR DE ACA SE DEBE ACTUALIZAR LA VENTANA MERGE DIALOG POR CADA CONFLICTO (SUPUESTAMENTE HACE ESO, HAY QUE PROBARLO)
+                        let conflict_dialog = gtk::Dialog::new();  // Crea una nueva caja de diálogo por conflicto
+                        conflict_dialog.set_title("Conflict Details");
+                        conflict_dialog.add_button("Close", gtk::ResponseType::Close);
+                        let content_area = conflict_dialog.content_area();
+                        content_area.add(&blank);
+                        content_area.add(&label_current);
+                        content_area.add(&blank);
+                        content_area.add(&label_incoming);
+                        // m_changes.add(&blank);
+                        // m_changes.add(&label_current);
+                        // m_changes.add(&blank);
+                        // m_changes.add(&label_incoming);
+                        button_both.set_sensitive(true);
+                        button_current.set_sensitive(true);
+                        button_incoming.set_sensitive(true);
+                        conflict_dialog.run();
+                        conflict_dialog.hide();
+                    }
+                    
                 }
-                
-                rm_entry1.set_text("");
-                button.set_sensitive(false);
             }
-        });
+            merge_dialog.run();
+            merge_dialog.hide();
 
-    }
+        }
+    });
+
+}

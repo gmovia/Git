@@ -77,6 +77,7 @@ impl Merge {
             }
         }
         Checkout::update_cd(&vcs.path)?;
+        println!("CONFLICTS {:?}",conflicts);
         Ok(conflicts)
     }
     
