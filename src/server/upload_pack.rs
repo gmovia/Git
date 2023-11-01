@@ -10,10 +10,8 @@ pub fn handler_upload_pack(message: String, reader: &mut TcpStream, path: &PathB
     if logs_path.is_dir() {
         let log_entries = get_log_entries(&logs_path)?;
 
-        // Now 'log_entries' contains the entries in the desired format
         println!("{}", log_entries);
 
-        // Here you should send 'log_entries' through the 'reader' of TcpStream
     }
 
     Ok("listo".to_string())
@@ -40,7 +38,6 @@ fn get_log_entries(logs_path: &Path) -> io::Result<String> {
 }
 
 fn parse_log_line(line: &str) -> Option<String> {
-    // Parse the line and extract the hash if it's valid
     let parts: Vec<&str> = line.split_whitespace().collect();
     if parts.len() >= 1 {
         let hash_parts: Vec<&str> = parts[0].split('-').collect();
