@@ -192,17 +192,17 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
 
     let merge_dialog = interface.merge_dialog.clone();
     let button_merge = interface.merge.clone();
-    let button_both = interface.both.clone();
-    let button_current = interface.current.clone();
-    let button_incoming = interface.incoming.clone();
     let version = Rc::new(RefCell::new(vcs.clone()));
     let m_entry = interface.merge_entry.clone();
     let m_changes = interface.merge_changes.clone();
-
+    //let mut conflicts = HashMap::new();
+    let button_resolve = interface.resolve.clone();
+    // conflicts.insert("file1.txt", "holahola");
+    // conflicts.insert("file2.txt", "holis");
+    // conflicts.insert("file3.txt", "hello");
+    // conflicts.insert("file4.txt", "buenas");
+    // let conflicts_clone = Rc::new(RefCell::new(conflicts.clone()));
     interface.merge.set_sensitive(false);
-    interface.both.set_sensitive(false);
-    interface.current.set_sensitive(false);
-    interface.incoming.set_sensitive(false);
 
     interface.merge_entry.connect_changed({
         move |e| {
@@ -224,52 +224,90 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                     label.set_visible(true);
                     label.set_xalign(0.5);
                     label.set_yalign(0.5);
-                    let blank = gtk::Label::new(Some(&""));
-                    blank.set_visible(true);
-                    blank.set_xalign(0.5);
-                    blank.set_yalign(0.5);
-                    m_changes.add(&blank);
                     m_changes.add(&label);
-                    m_changes.add(&blank);
+                }else{
+                    let label = gtk::Label::new(Some(&"Conflicts need to be resolve"));
+                    label.set_visible(true);
+                    label.set_xalign(0.5);
+                    label.set_yalign(0.5);
+                    m_changes.add(&label);
+                    button_resolve.connect_clicked({
+                        let conflicts_clone = conflicts.clone();
+                       move |_| {
+                        for (key, value) in &conflicts_clone{
+                            let set_label_current = format!("{}\n             {:?}",key,value);
+                            let label_current = gtk::Label::new(Some(&set_label_current));
+                            label_current.set_visible(true);
+                            label_current.set_xalign(0.5);
+                            label_current.set_yalign(0.5);
+                            let set_label_incoming = format!("{}\n            {:?}",key,value);
+                            let label_incoming = gtk::Label::new(Some(&set_label_incoming));
+                            label_incoming.set_visible(true);
+                            label_incoming.set_xalign(0.5);
+                            label_incoming.set_yalign(0.5);
+                            let blank = gtk::Label::new(Some(&""));
+                            blank.set_visible(true);
+                            blank.set_xalign(0.5);
+                            blank.set_yalign(0.5);
+                            let conflict_dialog = gtk::Dialog::new();  // Crea una nueva caja de diálogo por conflicto
+                            conflict_dialog.set_title("Conflict Details");
+                            conflict_dialog.add_button("Accept both", gtk::ResponseType::Accept);
+                            conflict_dialog.add_button("Accept current", gtk::ResponseType::Accept);
+                            conflict_dialog.add_button("Accept incoming", gtk::ResponseType::Accept);
+                            let content_area = conflict_dialog.content_area();
+                            content_area.add(&blank);
+                            content_area.add(&label_current);
+                            content_area.add(&blank);
+                            content_area.add(&label_incoming);
+                            
+                            conflict_dialog.run();
+                            conflict_dialog.hide();
+                        }
+                            // if let (Ok(cat_current), Ok(cat_incoming)) = (version.cat_file(&value.change_current.hash),version.cat_file(&value.change_branch.hash)) {
+                            //     let set_label_current = format!("{}\n             {}",key,cat_current);
+                            //     let label_current = gtk::Label::new(Some(&set_label_current));
+                            //     label_current.set_visible(true);
+                            //     label_current.set_xalign(0.5);
+                            //     label_current.set_yalign(0.5);
+                            //     let set_label_incoming = format!("{}\n            {}",key,cat_incoming);
+                            //     let label_incoming = gtk::Label::new(Some(&set_label_incoming));
+                            //     label_incoming.set_visible(true);
+                            //     label_incoming.set_xalign(0.5);
+                            //     label_incoming.set_yalign(0.5);
+                            //     let blank = gtk::Label::new(Some(&""));
+                            //     blank.set_visible(true);
+                            //     blank.set_xalign(0.5);
+                            //     blank.set_yalign(0.5);
+                            //     // A PARTIR DE ACA SE DEBE ACTUALIZAR LA VENTANA MERGE DIALOG POR CADA CONFLICTO (SUPUESTAMENTE HACE ESO, HAY QUE PROBARLO)
+                            //     let conflict_dialog = gtk::Dialog::new();  // Crea una nueva caja de diálogo por conflicto
+                            //     conflict_dialog.set_title("Conflict Details");
+                            //     conflict_dialog.add_button("Accept both", gtk::ResponseType::Accept);
+                            //     conflict_dialog.add_button("Accept current", gtk::ResponseType::Accept);
+                            //     conflict_dialog.add_button("Accept incoming", gtk::ResponseType::Accept);
+                            //     let content_area = conflict_dialog.content_area();
+                            //     content_area.add(&blank);
+                            //     content_area.add(&label_current);
+                            //     content_area.add(&blank);
+                            //     content_area.add(&label_incoming);
+                            //     // m_changes.add(&blank);
+                            //     // m_changes.add(&label_current);
+                            //     // m_changes.add(&blank);
+                            //     // m_changes.add(&label_incoming);
+                            //     button_both.set_sensitive(true);
+                            //     button_current.set_sensitive(true);
+                            //     button_incoming.set_sensitive(true);
+                            //     conflict_dialog.run();
+                            //     conflict_dialog.hide();
+                            // }
+                            
+                        //}
+                    //}
+                       } 
+                    });
                 }
-                for (key, value) in conflicts{
-                    if let (Ok(cat_current), Ok(cat_incoming)) = (version.cat_file(&value.change_current.hash),version.cat_file(&value.change_branch.hash)) {
-                        let set_label_current = format!("{}\n             {}",key,cat_current);
-                        let label_current = gtk::Label::new(Some(&set_label_current));
-                        label_current.set_visible(true);
-                        label_current.set_xalign(0.5);
-                        label_current.set_yalign(0.5);
-                        let set_label_incoming = format!("{}\n            {}",key,cat_incoming);
-                        let label_incoming = gtk::Label::new(Some(&set_label_incoming));
-                        label_incoming.set_visible(true);
-                        label_incoming.set_xalign(0.5);
-                        label_incoming.set_yalign(0.5);
-                        let blank = gtk::Label::new(Some(&""));
-                        blank.set_visible(true);
-                        blank.set_xalign(0.5);
-                        blank.set_yalign(0.5);
-                        // A PARTIR DE ACA SE DEBE ACTUALIZAR LA VENTANA MERGE DIALOG POR CADA CONFLICTO (SUPUESTAMENTE HACE ESO, HAY QUE PROBARLO)
-                        let conflict_dialog = gtk::Dialog::new();  // Crea una nueva caja de diálogo por conflicto
-                        conflict_dialog.set_title("Conflict Details");
-                        conflict_dialog.add_button("Close", gtk::ResponseType::Close);
-                        let content_area = conflict_dialog.content_area();
-                        content_area.add(&blank);
-                        content_area.add(&label_current);
-                        content_area.add(&blank);
-                        content_area.add(&label_incoming);
-                        // m_changes.add(&blank);
-                        // m_changes.add(&label_current);
-                        // m_changes.add(&blank);
-                        // m_changes.add(&label_incoming);
-                        button_both.set_sensitive(true);
-                        button_current.set_sensitive(true);
-                        button_incoming.set_sensitive(true);
-                        conflict_dialog.run();
-                        conflict_dialog.hide();
-                    }
-                    
-                }
-            }
+                
+            }    
+                
             merge_dialog.run();
             merge_dialog.hide();
 
@@ -277,5 +315,7 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
             button.set_sensitive(false);
         }
     });
+
+    
 
 }
