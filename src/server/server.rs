@@ -18,9 +18,9 @@ pub struct Server {
 impl Server {
 
     pub fn init_server() -> Result<Server, std::io::Error> {
-        let path = Path::new("/home/amoralejo/TEST");
+        let path = Path::new(r"C:\Users\luzmi\OneDrive\Escritorio\Probanding");
         let server = Server { path: path.to_path_buf() };
-        let encoder = Encoder::init_encoder((&path).to_path_buf());
+        //let encoder = Encoder::init_encoder((&path).to_path_buf());
         server.handle_connections()?;
         Ok(server)
     }
@@ -80,6 +80,8 @@ impl Server {
         let response = match message.as_str() {
             s if s.contains("hola") => "Hola".to_string(),
             s if s.contains("chau") => "Chau".to_string(),
+            //s if s.contains("git-upload-pack") => "UPLOADDDD".to_string(),
+
             s if s.contains("git-upload-pack") => handler_upload_pack(message.clone(), reader, path)?,
             _ => "No entiendo tu mensaje".to_string(),
         };

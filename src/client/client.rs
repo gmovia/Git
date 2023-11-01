@@ -46,7 +46,7 @@ impl Client {
 
     pub fn connect_rust_server(address: &str, path: &str) -> Result<(),std::io::Error> {
         println!("rust_client");
-        let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
+       // let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
         
         let mut stream = TcpStream::connect("127.0.0.1:8080")?;
 
