@@ -1,10 +1,11 @@
 use std::fs::File;
+use std::path::Path;
 use std::{path::PathBuf, io, fs};
 
 extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
-use std::io::Write;
+use std::io::{Write, Read};
 
 pub struct Encoder {
     pub path: PathBuf
@@ -41,29 +42,52 @@ impl Encoder {
 
     fn create_packfile(path: &PathBuf) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile: Vec<u8> = Vec::new();
-        let objects_number = Self::create_header(&mut packfile, path)?;
+        Self::create_header(&mut packfile, path)?;
         
-        let object_type = Self::set_bits(3);
-        packfile.push(object_type);
-        println!("{:?}", format!("{:08b}", packfile.clone().pop().unwrap()));
+        // TENEMOS EL PATH, EL TIPO Y EL TAMAÑO
+        let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
+        Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
         
-        // ACA ESTOY AHORA - HAY QUE DECODIFICAR LOS FILES PARA SABER EL TAMAÑO Y GUARDARLO EN LOS BITS COMO EN EL PROTOCOLO
-        for object in 0..objects_number {
-            //let file_compresed = Self::compress_object(path)?;
-            //println!("file {} compresed: {:?}", object, file_compresed);
-            //println!("{}", object);
-        } 
-        //Self::compress();
+        for objects in objects_data.iter().rev() {
+            let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
+            //let object_type = Self::my_function(objects.1 as u8, objects.2);
+            for object in object_type {
+                packfile.push(object);
+                println!("{:?}", format!("{:08b}", packfile.clone().pop().unwrap()));
+            }
+            
+        
+            
+            println!("object data: {:?}",objects);
+            let path = Path::new(&objects.0);
+            let compress_data = Self::compress_object((&path).to_path_buf())?;
+            //for byte in compress_data {
+            //    packfile.push(byte);    
+            //}
+        }
         Ok(packfile)
     }
-
-    fn set_bits(object_type: u8) -> u8 {
+    
+    
+    fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
         if object_type > 7 {
-            panic!("El número debe estar en el rango de 0 a 7");
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid object type"));
         }
+    
         let resultado = object_type << 4;
         let mascara = 0b01110000;
-        resultado & mascara
+    
+        let mut bytes = Vec::new();
+    
+        if object_len > 255 {
+            // Si object_len es mayor que 255, necesitamos múltiples bytes para representarlo.
+            bytes.push(0b10000000 | ((object_len >> 8) as u8));
+            bytes.push((object_len & 0xFF) as u8);
+        } else {
+            bytes.push(0b00000000 | (object_len as u8));
+        }
+    
+        Ok(vec![resultado & mascara].into_iter().chain(bytes.into_iter()).collect())
     }
 
     fn create_header(mut packfile: &mut Vec<u8>, path: &PathBuf) -> Result<usize,std::io::Error>{
@@ -91,24 +115,45 @@ impl Encoder {
     }
 
 
-    fn compress_object(archivo_entrada: &PathBuf) -> Result<Vec<u8>, std::io::Error> {
+    fn process_file(file_path: &PathBuf) -> Result<(String,usize,usize),std::io::Error> {
+        let metadata = fs::metadata(file_path)?;
+        let mut content = String::new();
+        let mut file = fs::File::open(file_path)?;
+        
+        file.read_to_string(&mut content)?;
+    
+        if content.contains("tree") {
+            return Ok((file_path.to_string_lossy().to_string(),1 as usize,metadata.len() as usize))
+        } else if content.contains(".txt-"){
+            return Ok((file_path.to_string_lossy().to_string(),2 as usize,metadata.len() as usize))
+        }
+        else {
+            return Ok((file_path.to_string_lossy().to_string(),3 as usize,metadata.len() as usize))
+        }
+    }
+    
+    fn process_directory(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+        for entrada in fs::read_dir(path)? {
+            let entrada = entrada?;
+            let entry_path = entrada.path();
+            if entry_path.is_file() {
+                let data = Self::process_file(&entry_path)?;
+                objects_data.push(data);
+            }
+            else {
+                Self::process_directory(&entry_path, objects_data)?;
+            }
+        }
+        Ok(objects_data.to_vec())
+    }
+
+    fn compress_object(archivo_entrada: PathBuf) -> Result<Vec<u8>, std::io::Error> {
         let mut entrada = File::open(archivo_entrada)?;
         let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
         io::copy(&mut entrada, &mut encoder)?;
         let datos_comprimidos = encoder.finish()?;
         
         Ok(datos_comprimidos)
-    }
-
-
-
-    fn compress() {
-        let data = b"Esto es un ejemplo de datos que deseas comprimir.";
-        let mut comprimido = Vec::new();
-        let mut encoder = ZlibEncoder::new(comprimido, Compression::default());
-        encoder.write_all(data).unwrap();
-        let comprimido = encoder.finish().unwrap();
-        println!("Datos comprimidos: {:?}", comprimido);
     }
 
 }
