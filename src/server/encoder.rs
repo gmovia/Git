@@ -49,9 +49,13 @@ impl Encoder {
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
         
         for objects in objects_data.iter().rev() {
-            let object_type = Self::set_bits(objects.1 as u8, objects.2 as u8)?;
-            packfile.push(object_type);
-            println!("{:?}", format!("{:08b}", packfile.clone().pop().unwrap()));
+            let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
+            //let object_type = Self::my_function(objects.1 as u8, objects.2);
+            for object in object_type {
+                packfile.push(object);
+                println!("{:?}", format!("{:08b}", packfile.clone().pop().unwrap()));
+            }
+            
         
             
             println!("object data: {:?}",objects);
@@ -63,16 +67,27 @@ impl Encoder {
         }
         Ok(packfile)
     }
-
-    fn set_bits(object_type: u8, object_len: u8) -> Result<u8,std::io::Error> {
+    
+    
+    fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
         if object_type > 7 {
-            std::io::Error::new(io::ErrorKind::InvalidData, "Invalid object type");
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid object type"));
         }
+    
         let resultado = object_type << 4;
         let mascara = 0b01110000;
-        let primer_bit = if object_len > 15 { 0b10000000 } else { 0b00000000 };
-        let len_bits = object_len >> 4;
-        Ok((resultado & mascara) | primer_bit | len_bits)
+    
+        let mut bytes = Vec::new();
+    
+        if object_len > 255 {
+            // Si object_len es mayor que 255, necesitamos múltiples bytes para representarlo.
+            bytes.push(0b10000000 | ((object_len >> 8) as u8));
+            bytes.push((object_len & 0xFF) as u8);
+        } else {
+            bytes.push(0b00000000 | (object_len as u8));
+        }
+    
+        Ok(vec![resultado & mascara].into_iter().chain(bytes.into_iter()).collect())
     }
 
     fn create_header(mut packfile: &mut Vec<u8>, path: &PathBuf) -> Result<usize,std::io::Error>{
