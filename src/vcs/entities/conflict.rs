@@ -28,7 +28,7 @@ pub fn resolve_conflicts(conflicts: &HashMap<String, Conflict>, current_changes:
         match conflict.resolved{
             CURRENT => {incoming_change.remove(file);},
             INCOMING => {current_changes.remove(file);},
-            BOTH => {todo!()},
+            BOTH => {todo!()}, // MERGEAR EL ARCHIVO Y GUARDAR!
             _ => {}
         }
     }

@@ -12,7 +12,6 @@ use super::diff::Diff;
 pub struct Merge;
 
 impl Merge {
-
     pub fn merge(vcs: &VersionControlSystem, branch: &str, potential_conflicts: HashMap<String, Conflict>) -> Result<HashMap<String, Conflict>,std::io::Error> {
         let mut repository = vcs.repository.read_repository()?;
 
