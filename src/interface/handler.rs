@@ -213,8 +213,11 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
     interface.merge.connect_clicked({  //TRATAR DE DIVIDIRLO EN FUNCIONES
         let version = version.clone();
         let m_changes = m_changes.clone();
-        move |_| {
+        move |button| {
             let version = version.borrow_mut();
+            m_changes.foreach(|child| {
+                m_changes.remove(child);
+            });
             if let Ok(conflicts) = version.merge(&m_entry.text()){
                 if conflicts.len() == 0 {
                     let label = gtk::Label::new(Some(&"Merge successfully"));
@@ -270,6 +273,8 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
             merge_dialog.run();
             merge_dialog.hide();
 
+            m_entry.set_text("");
+            button.set_sensitive(false);
         }
     });
 
