@@ -1,7 +1,7 @@
 use std::{path::Path, fs, collections::HashMap};
 use crate::{
     vcs::{files::vcs_file::VCSFile, version_control_system::VersionControlSystem},
-    utils::files::files::read,
+    utils::files::files::read, constants::constants::{STATE_DELETED, NULL},
 };
 pub struct Rm;
 
@@ -12,7 +12,6 @@ pub enum RemoveOption {
 }
 
 impl Rm{
-
     /// Recibe un path 
     /// Se elimina al path correspondiente segun sea archivo o directorio
     pub fn remove_from_workspace(path: &str) -> std::io::Result<()> {
@@ -35,7 +34,6 @@ impl Rm{
         }
     }
     
-    
     /// Recibe el sistema control de versiones y un path
     /// Setea estado eliminado a los archivos correspondiente en el area de staging
     /// Devuelve el area de staging
@@ -51,7 +49,7 @@ impl Rm{
             for key in files.keys(){
                 if vcs.repository.read_repository()?.contains_key(key){
                     Rm::remove_from_workspace(&key)?;
-                    let file = VCSFile::new(key.clone(), "NULL".to_string(), "DELETED".to_string());
+                    let file = VCSFile::new(key.clone(), NULL.to_string(), STATE_DELETED.to_string());
                     staging_area.insert(key.to_owned(), file);
                     let _ = vcs.index.write_index(&staging_area);
                     return Ok(staging_area.clone());

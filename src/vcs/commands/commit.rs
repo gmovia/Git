@@ -1,5 +1,5 @@
 use std::{fs::OpenOptions, self, io::{Write, self}, collections::HashMap};
-use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
+use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED}};
 use super::init::Init;
 
 extern crate chrono;
@@ -17,9 +17,9 @@ impl Commit{
         }
         for (key, value) in &staging_area{
             match value.clone().state.as_str(){
-                "CREATED" => {repository.insert(key.to_string(), value.clone().content);},
-                "MODIFIED" => {repository.insert(key.to_string(), value.clone().content);},
-                "DELETED" => {repository.remove(key);},
+                STATE_CREATED => {repository.insert(key.to_string(), value.clone().content);},
+                STATE_MODIFIED => {repository.insert(key.to_string(), value.clone().content);},
+                STATE_DELETED => {repository.remove(key);},
                 _ => {}
             }
         }

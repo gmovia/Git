@@ -4,8 +4,8 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::{Merge, Conflict}}, files::repository::Repository};
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::{Merge}}, files::repository::Repository, entities::conflict::Conflict};
+use std::{collections::HashMap, path::{Path, PathBuf}, hash::Hash};
 use super::files::index::Index;
 
 #[derive(Debug, Clone)]
@@ -90,6 +90,6 @@ impl VersionControlSystem {
     }
 
     pub fn merge(&self, branch: &str) -> Result<HashMap<String, Conflict>,std::io::Error> {
-        Merge::merge(&self, branch)
+        Merge::merge(&self, branch, HashMap::new())
     }
 }

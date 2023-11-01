@@ -1,6 +1,6 @@
 use std::{ path::Path, fs};
 
-use crate::vcs::{version_control_system::VersionControlSystem, commands::checkout::CheckoutOptions};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::checkout::CheckoutOptions}, constants::constants::ERR_INVALID_PARAMETERS};
 
 pub fn handler_checkout(vcs: &VersionControlSystem, input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();
@@ -11,7 +11,7 @@ pub fn handler_checkout(vcs: &VersionControlSystem, input: String) -> String{
             "-b" => {let _ = vcs.checkout(CheckoutOptions::CreateAndChangeBranch(args[3]));
                     return format!("Create and Change at {}",args[3]).to_string();
                 },
-            _ => "Invalid parameters".to_string(),
+            _ => ERR_INVALID_PARAMETERS.to_string(),
         }},
         3 => {if let Ok(entries) = fs::read_dir(branchs_dir_path) {
             let mut _branch_matched = false;
@@ -29,6 +29,6 @@ pub fn handler_checkout(vcs: &VersionControlSystem, input: String) -> String{
         }
         format!("Changed successfully at {}",args[2]).to_string()
         },
-        _ => "Invalid parameters".to_string(),
+        _ => ERR_INVALID_PARAMETERS.to_string(),
     }
 }

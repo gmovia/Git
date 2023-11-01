@@ -1,3 +1,7 @@
+pub mod constants{
+    pub mod constants;
+}
+
 pub mod handlers{
     pub mod commands;
     pub mod status;
@@ -60,10 +64,17 @@ pub mod vcs{
         pub mod branch;
         pub mod checkout;
         pub mod merge;
+        pub mod diff;
     }
 
     pub mod sets{
         pub mod sets;
+    }
+
+    pub mod entities{
+        pub mod commit_entry;
+        pub mod change;
+        pub mod conflict;
     }
   
     pub mod version_control_system;

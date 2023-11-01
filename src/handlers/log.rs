@@ -1,3 +1,4 @@
+use crate::constants::constants::ERR_COMMIT_IS_NOT_EXIST;
 use crate::vcs::commands::init::Init;
 use crate::vcs::version_control_system::VersionControlSystem;
 use std::fs::File;
@@ -15,5 +16,5 @@ pub fn handler_log(vcs: &VersionControlSystem) -> String {
             }
         }
     }
-    "No commits exist.".to_string()
+    ERR_COMMIT_IS_NOT_EXIST.to_string()
 }

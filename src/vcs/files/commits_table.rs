@@ -1,17 +1,8 @@
 use std::{path::{PathBuf, Path}, io::{self, BufRead, Write}, fs::OpenOptions, collections::HashMap};
-
-use crate::vcs::commands::{cat_file::CatFile, init::Init};
+use crate::vcs::{commands::{cat_file::CatFile, init::Init}, entities::commit_entry::CommitEntry};
 
 #[derive(Debug, Clone)]
 pub struct CommitsTable;
-
-#[derive(Debug, Clone)]
-pub struct CommitEntry{
-    pub id: String,
-    pub hash: String,
-    pub message: String,
-    pub date: String,
-}
 
 impl CommitsTable{
 
@@ -58,4 +49,18 @@ impl CommitsTable{
         }
         Ok(())
     } 
+
+    pub fn get_parent_commit(current_commits: &Vec<CommitEntry>, branch_commits: &Vec<CommitEntry>) ->  Option<CommitEntry>{
+        let size = if current_commits.len() >= branch_commits.len() { branch_commits.len() } else { current_commits.len() };
+        for index in 0..size{
+            if current_commits[index].id == branch_commits[index].id{
+                if index == size - 1{
+                    return Some(current_commits[index].clone())
+                }
+                continue;
+            }
+            return Some(current_commits[index-1].clone());
+        }
+        None
+    }
 }

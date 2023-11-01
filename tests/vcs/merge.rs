@@ -139,4 +139,68 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    pub fn test_06_merge() -> Result<(), std::io::Error> {
+        let (temp_dir, vcs) = set_up();
+        let file_1 = create_file(&temp_dir, "file1.txt");
+        vcs.add(&file_1)?;
+        vcs.commit("first commit".to_string())?;
+        
+        vcs.checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
+
+        let file_2 = create_file(&temp_dir, "file2.txt");
+        vcs.add(&file_2)?;
+        vcs.commit("second commit".to_string())?;
+        
+        vcs.checkout(CheckoutOptions::ChangeBranch("master"))?;
+    
+
+        let _ = vcs.merge("new_branch")?;
+        
+        let repository = vcs.repository.read_repository()?;
+        assert_eq!(repository.len(), 2);        
+        Ok(())
+    }    
+
+    #[test]
+    pub fn test_07_merge() -> Result<(), std::io::Error> {
+        let (temp_dir, vcs) = set_up();
+        let file_1 = create_file(&temp_dir, "file1.txt");
+        vcs.add(&file_1)?;
+        vcs.commit("first commit".to_string())?;
+        
+        vcs.checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
+
+        let file_2 = create_file(&temp_dir, "file2.txt");
+        vcs.add(&file_2)?;
+        vcs.commit("second commit".to_string())?;
+            
+        let _ = vcs.merge("master")?;
+        
+        let repository = vcs.repository.read_repository()?;
+        assert_eq!(repository.len(), 2);        
+        Ok(())
+    } 
+
+    #[test]
+    pub fn test_08_merge() -> Result<(), std::io::Error> {
+        let (temp_dir, vcs) = set_up();
+        let file_1 = create_file(&temp_dir, "file1.txt");
+        vcs.add(&file_1)?;
+        vcs.commit("first commit".to_string())?;
+        
+        vcs.checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
+
+        let file_2 = create_file(&temp_dir, "file2.txt");
+        vcs.add(&file_2)?;
+        vcs.commit("second commit".to_string())?;
+            
+        let _ = vcs.merge("master")?;
+        
+        vcs.checkout(CheckoutOptions::ChangeBranch("master"))?;
+
+        let repository = vcs.repository.read_repository()?;
+        assert_eq!(repository.len(), 1);        
+        Ok(())
+    } 
 }
