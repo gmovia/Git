@@ -44,29 +44,35 @@ impl Encoder {
         let mut packfile: Vec<u8> = Vec::new();
         Self::create_header(&mut packfile, path)?;
         
-        let object_type = Self::set_bits(3)?;
-        packfile.push(object_type);
-        println!("{:?}", format!("{:08b}", packfile.clone().pop().unwrap()));
-        
         // TENEMOS EL PATH, EL TIPO Y EL TAMAÑO
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
         
-        for objects in objects_data {
+        for objects in objects_data.iter().rev() {
+            let object_type = Self::set_bits(objects.1 as u8, objects.2 as u8)?;
+            packfile.push(object_type);
+            println!("{:?}", format!("{:08b}", packfile.clone().pop().unwrap()));
+        
+            
             println!("object data: {:?}",objects);
             let path = Path::new(&objects.0);
             let compress_data = Self::compress_object((&path).to_path_buf())?;
+            //for byte in compress_data {
+            //    packfile.push(byte);    
+            //}
         }
         Ok(packfile)
     }
 
-    fn set_bits(object_type: u8) -> Result<u8,std::io::Error> {
+    fn set_bits(object_type: u8, object_len: u8) -> Result<u8,std::io::Error> {
         if object_type > 7 {
             std::io::Error::new(io::ErrorKind::InvalidData, "Invalid object type");
         }
         let resultado = object_type << 4;
         let mascara = 0b01110000;
-        Ok(resultado & mascara)
+        let primer_bit = if object_len > 15 { 0b10000000 } else { 0b00000000 };
+        let len_bits = object_len >> 4;
+        Ok((resultado & mascara) | primer_bit | len_bits)
     }
 
     fn create_header(mut packfile: &mut Vec<u8>, path: &PathBuf) -> Result<usize,std::io::Error>{
