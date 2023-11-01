@@ -126,8 +126,8 @@ impl Client {
     
     fn client_run(address: &str, path: &str) -> Result<(),std::io::Error> {
 
-        println!("Conectándome a {:?}", address);
-        let mut socket = TcpStream::connect(address)?;
+        //println!("Conectándome a {:?}", address);
+        //let mut socket = TcpStream::connect(address)?;
 /*         let msg = format!("git-upload-pack {}", path);
         let pkt_line = to_pkt_line(&msg);
         socket.write(pkt_line.as_bytes())?;
