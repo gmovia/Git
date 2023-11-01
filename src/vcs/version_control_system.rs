@@ -4,7 +4,7 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
 };
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge}, files::repository::Repository};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::{Merge, Conflict}}, files::repository::Repository};
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
@@ -89,7 +89,7 @@ impl VersionControlSystem {
         Checkout::checkout(&self.path, option)
     }
 
-    pub fn merge(&self, branch: &str) -> Result<String,std::io::Error> {
-        Merge::merge(&self.repository, branch)
+    pub fn merge(&self, branch: &str) -> Result<HashMap<String, Conflict>,std::io::Error> {
+        Merge::merge(&self, branch)
     }
 }

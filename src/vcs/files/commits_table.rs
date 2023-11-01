@@ -5,6 +5,7 @@ use crate::vcs::commands::{cat_file::CatFile, init::Init};
 #[derive(Debug, Clone)]
 pub struct CommitsTable;
 
+#[derive(Debug, Clone)]
 pub struct CommitEntry{
     pub id: String,
     pub hash: String,

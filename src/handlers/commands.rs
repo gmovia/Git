@@ -16,8 +16,9 @@ pub fn handler_command<'a>(vcs: & VersionControlSystem, input: &str) -> String{
     match input {
         "git status" => handler_status(vcs),
         x if x.contains("git merge") => {
-            if let Ok(result) = vcs.merge("new_branch"){
-                return result;
+            if let Ok(_) = vcs.merge("new_branch"){
+                println!("hola");
+                return "Ok".to_string();
             }
             return "Err".to_string();
         },

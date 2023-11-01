@@ -1,68 +1,123 @@
-// (1) B esta incluido totalmente en A => no hace nada
-// Rama master      => [1, 2, 3]
-// Rama new_branch  => [1, 2]
+use std::collections::HashMap;
+use crate::vcs::files::commits_table::{CommitsTable, CommitEntry};
+use crate::vcs::commands::branch::Branch;
+use crate::vcs::version_control_system::VersionControlSystem;
 
-// master
-// primer commit
-// segundo commit
-// checkout -b new_branch
-// checkout master
-// tercer commit
-
-// (2) A esta incluido totalmente en B => FUSION AUTOMATICA => no hay conflictos
-// Rama master      => [1, 2, 3]     
-// Rama new_branch  => [1, 2, 3, 4]
-
-// master
-// primer commit
-// segundo commit
-// tercer commit
-// checkout -b new_branch
-// cuarto commmit
-
-// (3) ni A contiene a B totalmente ni B contiene totalmente a A => puede haber FUSION AUTOMATICA o CONFLICTOS
-// Rama master => [1, 2, 3, 4]
-// Rama new_branch => [1, 2, 3, 5]
-
-use crate::vcs::files::repository::Repository;
-
-//
-// si un archivo de repBase se modifico en repA y en repB => conflicto => el ultimo caso a analizar
+use super::checkout::Checkout;
+use super::commit::Commit;
 #[derive(Debug, Clone)]
 pub struct Merge;
 
+#[derive(Debug, Clone)]
+pub struct Change{
+    pub file: String,
+    pub hash: String,
+    pub state: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct Conflict{
+    pub file: String,
+    pub change_current: Change,
+    pub change_branch: Change
+}
+
 impl Merge {
-    pub fn merge(repository: &Repository, branch: &str) -> Result<String,std::io::Error> {
-        //let actual_commit_table = repository.read_commits_hashes(&Init::get_current_branch(&repository.path)?)?;// get commits path => te trae e
-        //let branch_commit_table = repository.read_commits_hashes(branch)?;// get commits path => te trae e
+    pub fn merge(vcs: &VersionControlSystem, branch: &str) -> Result<HashMap<String, Conflict>,std::io::Error> {
+        let mut repository = vcs.repository.read_repository()?;
 
-        // (1) Si B esta contenida totalmente en A => si actual_commit_table es mas largo que branch_commit_table ==> no hago nada
-        //if actual_commit_table.iter().any(|cadena1| branch_commit_table.iter().all(|cadena2| cadena1 == cadena2)) {
-        //    return Ok("The branch is already up to date".to_string());
-       // }
+        let current_branch = Branch::get_current_branch(&vcs.path)?;
 
-        // (2) Si A esta contenido totalmente en B => me traigo todo lo de B
-        //if branch_commit_table.iter().any(|cadena1| actual_commit_table.iter().all(|cadena2| cadena1 == cadena2)) {
-            // nos traemos el commit hash ultimo que tienen en comun, en este caso, commit2hash
-            // leemos la tabla de commits de branch_commit_table y nos traemos las filas a partir de commit2hash
-                // en este caso, commit3hash y commit4has
-                // y escribimos esto en la tabla de actual_commit_table
-        
-        //}
-        Ok("Ok".to_string())
+        // Obtenemos las tablas de commits
+        let current_commits_table = CommitsTable::read(vcs.path.clone().to_path_buf(), &current_branch)?;
+        let branch_commits_table = CommitsTable::read(vcs.path.clone().to_path_buf(), branch)?;
+
+        let mut conflicts: HashMap<String, Conflict> = HashMap::new();
+
+        if let (Some(last_commit_of_current_commits_table), Some(last_commit_of_branch_commits_table), Some(parent_commit)) = (current_commits_table.last(), branch_commits_table.last(), Self::get_parent_commit(&current_commits_table, &branch_commits_table)){
+            let current_repository = CommitsTable::read_repository_of_commit(vcs.path.clone(), &current_branch, &last_commit_of_current_commits_table.hash)?;
+            let branch_repository = CommitsTable::read_repository_of_commit(vcs.path.clone(), branch, &last_commit_of_branch_commits_table.hash)?;
+            let parent_repository = CommitsTable::read_repository_of_commit(vcs.path.clone(), &current_branch, &parent_commit.hash)?;
+
+            // Juntamos las diferencias y vemos si no hay conflicto (por ahora, no analizar los conflictos)
+            let changes_current_repository = Self::diff(&parent_repository, &current_repository);
+            let changes_branch_repository = Self::diff(&parent_repository, &branch_repository);
+
+            // HAY CONFLICTO CUANDO LA RAMA ACTUAL Y LA RAMA A MERGEAR REALIZAN CAMBIOS SOBRE UN MISMO ARCHIVO.
+            // TMB PUEDE HABER CONFLICTO POR CAMBIOS DE ESTADO EN UN MISMO ARCHIVO ENTRE ESAS DOS RAMAS.
+            
+            for change_current in &changes_current_repository {
+                for change_branch in &changes_branch_repository {
+                    if change_branch.file == change_current.file && (change_branch.hash != change_current.hash || change_branch.state != change_current.state) {
+                        let conflict = Conflict{file: change_branch.file.clone(), change_current: change_current.clone(), change_branch: change_branch.clone()};
+                        conflicts.insert(change_branch.file.clone(), conflict);
+                    }
+                }
+            }
+
+            if conflicts.len() == 0 { // FUSION AUTOMATICA
+                
+                for change in changes_current_repository{
+                    match change.state.as_str() {
+                        "CREATED" | "MODIFIED" => {repository.insert(change.file, change.hash);},
+                        "DELETED" => {repository.remove(&change.file);},
+                        _ => {},
+                    } 
+                }
+
+                for change in changes_branch_repository{
+                    match change.state.as_str() {
+                        "CREATED" | "MODIFIED" => {repository.insert(change.file, change.hash);},
+                        "DELETED" => {repository.remove(&change.file);},
+                        _ => {},
+                    } 
+                }
+                // RESOLVER CONFLICTOS => VEMO DEPUE QUE HACEMO
+                Commit::write_commit(vcs, &"merge".to_string(), &repository)?;
+            }
+        }
+        Checkout::update_cd(&vcs.path)?;
+        Ok(conflicts)
+    }
+    
+    pub fn get_parent_commit(current_commits: &Vec<CommitEntry>, branch_commits: &Vec<CommitEntry>) ->  Option<CommitEntry>{ // PRESTAR ATENCION
+        let size = if current_commits.len() >= branch_commits.len() { branch_commits.len() } else { current_commits.len() };
+        for index in 0..size{
+            if current_commits[index].id == branch_commits[index].id{
+                if index == size - 1{
+                    return Some(current_commits[index].clone())
+                }
+                continue;
+            }
+            return Some(current_commits[index-1].clone());
+        }
+        None
     }
 
-
-    pub fn get_parent_commit(commits_a: Vec<String>, commits_b: Vec<String>) -> Option<String>{
-        for (i, commit_a) in commits_a.iter().rev().enumerate() {
-            if let Some(commit_b) = commits_b.iter().rev().nth(i) {
-                if commit_a == commit_b {
-                    return Some(commit_a.clone());
-                } else {
-                    break;
+    pub fn diff(parent: &HashMap<String, String>, current: &HashMap<String, String>) -> Vec<Change>{
+        let mut diff: Vec<Change> = Vec::new();
+        for (path, hash) in current{
+            if !parent.contains_key(path){
+                let change = Change {file: path.to_string(), state: "CREATED".to_string(), hash: hash.to_string()};
+                diff.push(change);
+            }
+            else{
+                if let Some(hash_parent) = parent.get(path){
+                    if hash != hash_parent{
+                        let change = Change {file: path.to_string(), state: "MODIFIED".to_string(), hash: hash.to_string()};
+                        diff.push(change);
+                    }
                 }
             }
         }
-        None
+
+        for (path, hash) in parent{
+            if !current.contains_key(path){
+                let change = Change {file: path.to_string(), state: "DELETED".to_string(), hash: hash.to_string()};
+                diff.push(change);
+            }
+        }
+
+        diff        
     }
 }
