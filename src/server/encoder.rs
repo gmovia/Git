@@ -64,38 +64,30 @@ impl Encoder {
         if object_type > 7 {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid object type"));
         }
+    
         let mut bytes = Vec::new();
         let resultado = object_type << 4;
         let mascara = 0b01110000;
         let res = resultado & mascara;
         let less_significative_len_bits = Self::get_4_bits_less_significatives(object_len);
+    
         let mut first_byte = res + less_significative_len_bits;
-        
         if (less_significative_len_bits as usize) < object_len {
             first_byte = 128 + first_byte;
         }
         bytes.push(first_byte);
-        
-        let mut second_byte = (object_len >> 4) & 0b0111111;
-        
-        if ((second_byte<<4)+less_significative_len_bits as usize) < object_len && second_byte > 0 {
-            second_byte = second_byte + 128;
+    
+        let mut remaining_len = object_len >> 4;
+    
+        while remaining_len > 0 {
+            let mut next_byte = (remaining_len & 0b01111111) as u8;
+            if remaining_len > 0b01111111 {
+                next_byte |= 0b10000000;
+            }
+            bytes.push(next_byte);
+            remaining_len >>= 7;
         }
-
-        if second_byte > 0 {
-            bytes.push(second_byte as u8);
-        }
-
-        let mut third_byte = (object_len >> 8) & 0b01111111;
-
-        if (third_byte<<8+second_byte<<4+less_significative_len_bits as usize) < object_len && second_byte > 0 && third_byte > 0 {
-            third_byte = third_byte + 128;
-        }
-
-        if third_byte > 0 {
-            bytes.push(third_byte as u8);
-        }
-
+    
         Ok(bytes)
     }
 
