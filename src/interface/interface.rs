@@ -6,7 +6,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_clone};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -51,6 +51,12 @@ pub struct RustInterface {
     pub merge_dialog: gtk::Dialog,
     pub merge_changes: gtk::Box,
     pub resolve: gtk::Button,
+    pub merge_grid: gtk::Grid,
+    pub apply_merge: gtk::Button,
+    pub clone: gtk::Button,
+    pub clone_entry: gtk::Entry,
+    pub info_clone: gtk::Box,
+    pub fix: gtk::Fixed,
 }
 
 impl RustInterface {
@@ -108,6 +114,12 @@ impl RustInterface {
             merge_entry: builder.object("merge-entry").unwrap(),
             merge_changes: builder.object("merge-changes").unwrap(),
             resolve: builder.object("resolve").unwrap(),
+            merge_grid: builder.object("merge-grid").unwrap(),
+            apply_merge: builder.object("apply-merge").unwrap(),
+            clone: builder.object("clone").unwrap(),
+            clone_entry: builder.object("clone-entry").unwrap(),
+            info_clone: builder.object("info-clone").unwrap(),
+            fix: builder.object("fix").unwrap(),
         }
     }
     
@@ -127,6 +139,7 @@ impl RustInterface {
         handle_command(&self, &vcs);
         handle_rm(&self,&vcs);
         handle_merge(&self, &vcs);
+        handle_clone(&self, &vcs);
 
         self.window.show_all();   
         gtk::main();  // esto corta el ciclo de ejecucion
