@@ -1,12 +1,69 @@
-use std::fs;
+use std::{fs, io};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::net::TcpStream;
 
-use crate::packfile::packfile::to_pkt_line;
+use crate::packfile;
+use crate::packfile::packfile::{to_pkt_line, process_line};
+use crate::server::encoder::Encoder;
 
 
-pub fn handler_upload_pack(message: String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
+// reader and writer del mismo socket? por mientras asigno socket para no confiones 
+pub fn start_handler_upload(message: String, stream: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
+    let first_response = handler_upload_pack(path)?;
+
+    send_response(&first_response, stream)?;
+
+    //cliente mandado los wants message
+
+    //puede haber un reader y un writer sin problemas? 
+    //porque en esta parte seria llamado reader para responder la solicitud
+
+    //let pack_to_send = receive_wants_and_have_message(stream)?;
+
+/*     println!("SALI DEL receive wants \n");
+
+    for commit in &pack_to_send {   
+        println!("Tengo este commit para buscar entre mis objects y mandar {:?}", commit);
+    }
+ */
+    let packfile_result = Encoder::init_encoder((&path).to_path_buf());
+    println!("PACKFILE COMPLETO : {:?}", packfile_result);
+
+    //Si el cliente recibe mensaje  0000 y done, envia paquete directamente!
+    match packfile_result {
+        Ok(mut packfile) => {
+            //let extra_bytes = vec![48,48,48,56,78,65,75,10];
+            //packfile.splice(0..0, extra_bytes);
+            println!("PACKFILE COMPLETO : {:?}", packfile);
+            stream.write(&packfile)?;
+        },
+        Err(e) => {
+            println!("Error al inicializar el packfile: {:?}", e);
+        }
+    }
+    //envio paquete como respuesta
+    //send done and 0000 mssge
+    //salgo de aca para entrar al bucle, de espera de otras consultas
+    Ok("0000".to_string())
+}
+
+
+pub fn receive_wants_and_have_message(reader: &mut TcpStream) -> Result<Vec<String>, io::Error> {
+    let mut query = vec![];
+    loop {
+        let msg_received = process_line(reader)?;
+        println!("Mensaje recibido ------> {:?}", msg_received);
+        query.push(msg_received.clone());
+        if msg_received == "0000" {
+            break;
+        }
+    }
+    Ok(query)
+}
+
+
+pub fn handler_upload_pack(path: &PathBuf) -> Result<String, std::io::Error> {
     let logs_path = path.join(".rust_git").join("logs");
     let log_entries = get_log_entries(&logs_path)?;
     Ok(log_entries)
@@ -73,9 +130,4 @@ fn send_response(response: &String, writer: &mut TcpStream) -> Result<(), std::i
     writer.write("0000".as_bytes())?;
     //writer.flush()?;
     Ok(())
-}
-
-
-fn receive_query_wnts(){
-    
 }

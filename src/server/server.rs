@@ -3,7 +3,7 @@ use std::{net::{TcpListener, TcpStream}, io::{Read, Write, self}, thread, path::
 use crate::{vcs::{version_control_system::VersionControlSystem, files::repository}, handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, rm::handler_rm, log::handler_log, commit::handler_commit, branch::handler_branch}, packfile::packfile::to_pkt_line};
 
 use crate::packfile::packfile::process_line;
-use crate::server::upload_pack::handler_upload_pack;
+use crate::server::upload_pack::start_handler_upload;
 
 use super::encoder::Encoder;
 
@@ -78,7 +78,7 @@ impl Server {
                 Ok(message) => {
                     println!("Received message from client: {}", &message);
                     let response = Server::parse_response( &message.to_string(), &mut reader, path)?;
-
+                    //la ultima rpta podria ser donde o 000 donde terminno elmsnje pero digo que se puede quedar aca ese unico envio.....
                     Server::send_response(&response, &mut writer)?;
                     writer.flush()?;
                 }
@@ -98,7 +98,7 @@ impl Server {
             s if s.contains("chau") => "Chau".to_string(),
             //s if s.contains("git-upload-pack") => "UPLOADDDD".to_string(),
 
-            s if s.contains("git-upload-pack") => handler_upload_pack(message.clone(), reader, path)?,
+            s if s.contains("git-upload-pack") => start_handler_upload(message.clone(), reader, path)?,
             _ => "No entiendo tu mensaje".to_string(),
         };
         Ok(response)

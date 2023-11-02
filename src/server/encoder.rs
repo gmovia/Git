@@ -13,13 +13,14 @@ pub struct Encoder {
 
 impl Encoder {
     
-    pub fn init_encoder(path: PathBuf) -> Result<Encoder,std::io::Error> {
+    pub fn init_encoder(path: PathBuf) -> Result<Vec<u8>,std::io::Error> {
         let encoder = Encoder { path: path };
         let packfile = Self::create_packfile(&encoder.path)?;
-        println!("PACKFILE BYTES: {:?}", packfile);
-        println!("PACKFILE STRING: {:?}", String::from_utf8_lossy(&packfile));
-        Ok(encoder)
+        //println!("PACKFILE BYTES: {:?}", packfile);
+        //println!("PACKFILE STRING: {:?}", String::from_utf8_lossy(&packfile));
+        Ok(packfile)
     }
+    
 
 
     fn get_objects_number(path: &PathBuf) -> Result<usize, std::io::Error> {
