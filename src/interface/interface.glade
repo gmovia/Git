@@ -216,6 +216,9 @@
           <object class="GtkBox" id="merge-changes">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="border-width">10</property>
             <property name="orientation">vertical</property>
             <child>
               <placeholder/>

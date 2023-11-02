@@ -1,9 +1,9 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, collections::HashMap};
 
 use crate::vcs::version_control_system::VersionControlSystem;
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_select_repository, handle_rm_button, handle_terminal}, draw::changes_and_staging_area};
-use gtk::prelude::*;
+use gtk::{prelude::*, Button};
 
 pub fn handle_commit(interface: &RustInterface, vcs: &VersionControlSystem){
     let box_window = interface.box_window.clone();
@@ -195,13 +195,14 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
     let version = Rc::new(RefCell::new(vcs.clone()));
     let m_entry = interface.merge_entry.clone();
     let m_changes = interface.merge_changes.clone();
-    //let mut conflicts = HashMap::new();
+    //let mut conflicts:HashMap<&str, &str> = HashMap::new();
     let button_resolve = interface.resolve.clone();
     // conflicts.insert("file1.txt", "holahola");
     // conflicts.insert("file2.txt", "holis");
     // conflicts.insert("file3.txt", "hello");
     // conflicts.insert("file4.txt", "buenas");
-    // let conflicts_clone = Rc::new(RefCell::new(conflicts.clone()));
+    //let conflicts_clone = Rc::new(RefCell::new(conflicts.clone()));
+    
     interface.merge.set_sensitive(false);
 
     interface.merge_entry.connect_changed({
@@ -225,12 +226,13 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                     label.set_xalign(0.5);
                     label.set_yalign(0.5);
                     m_changes.add(&label);
+                    button_resolve.set_sensitive(false);
                 }else{
                     let label = gtk::Label::new(Some(&"Conflicts need to be resolve"));
                     label.set_visible(true);
                     label.set_xalign(0.5);
                     label.set_yalign(0.5);
-                    m_changes.add(&label);
+                    m_changes.add(&label);}
                     button_resolve.connect_clicked({
                         let conflicts_clone = conflicts.clone();
                        move |_| {
@@ -251,9 +253,27 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                             blank.set_yalign(0.5);
                             let conflict_dialog = gtk::Dialog::new();  // Crea una nueva caja de diálogo por conflicto
                             conflict_dialog.set_title("Conflict Details");
-                            conflict_dialog.add_button("Accept both", gtk::ResponseType::Accept);
-                            conflict_dialog.add_button("Accept current", gtk::ResponseType::Accept);
-                            conflict_dialog.add_button("Accept incoming", gtk::ResponseType::Accept);
+                            let both = Button::builder()
+                            .margin_start(10)
+                            .label("Accept both")
+                            .build();
+                            let current =Button::builder()
+                            .margin_start(10)
+                            .label("Accept current")
+                            .build();
+                            let incoming = Button::builder()
+                            .margin_start(10)
+                            .label("Accept incoming")
+                            .build();
+                            both.set_visible(true);
+                            current.set_visible(true);
+                            incoming.set_visible(true);
+                            if let (Some(both_label), Some(current_label), Some(incoming_label)) = (&both.label(), &current.label(), &incoming.label()) {
+                                conflict_dialog.add_button(both_label.as_str(), gtk::ResponseType::Accept);
+                                conflict_dialog.add_button(current_label.as_str(), gtk::ResponseType::Accept);
+                                conflict_dialog.add_button(incoming_label.as_str(), gtk::ResponseType::Accept);
+                            } 
+                            
                             let content_area = conflict_dialog.content_area();
                             content_area.add(&blank);
                             content_area.add(&label_current);
@@ -278,7 +298,7 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                             //     blank.set_visible(true);
                             //     blank.set_xalign(0.5);
                             //     blank.set_yalign(0.5);
-                            //     // A PARTIR DE ACA SE DEBE ACTUALIZAR LA VENTANA MERGE DIALOG POR CADA CONFLICTO (SUPUESTAMENTE HACE ESO, HAY QUE PROBARLO)
+                            //     // SE ACTUALIZA LA VENTANA MERGE DIALOG POR CADA CONFLICTO
                             //     let conflict_dialog = gtk::Dialog::new();  // Crea una nueva caja de diálogo por conflicto
                             //     conflict_dialog.set_title("Conflict Details");
                             //     conflict_dialog.add_button("Accept both", gtk::ResponseType::Accept);
@@ -289,10 +309,6 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                             //     content_area.add(&label_current);
                             //     content_area.add(&blank);
                             //     content_area.add(&label_incoming);
-                            //     // m_changes.add(&blank);
-                            //     // m_changes.add(&label_current);
-                            //     // m_changes.add(&blank);
-                            //     // m_changes.add(&label_incoming);
                             //     button_both.set_sensitive(true);
                             //     button_current.set_sensitive(true);
                             //     button_incoming.set_sensitive(true);
@@ -300,13 +316,13 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                             //     conflict_dialog.hide();
                             // }
                             
-                        //}
+                        }
                     //}
-                       } 
+                       //} 
                     });
                 }
                 
-            }    
+            //}    
                 
             merge_dialog.run();
             merge_dialog.hide();
@@ -315,6 +331,8 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
             button.set_sensitive(false);
         }
     });
+
+
 
     
 
