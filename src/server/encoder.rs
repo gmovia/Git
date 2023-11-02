@@ -98,7 +98,9 @@ impl Encoder {
     }
 
     fn create_header(mut packfile: &mut Vec<u8>, path: &PathBuf) -> Result<usize,std::io::Error>{
-        for &byte in b"PACK" {
+        
+        
+        for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
         }
         Self::add_number_to_packfile(2, &mut packfile);
