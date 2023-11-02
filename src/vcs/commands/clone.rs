@@ -10,7 +10,14 @@ pub struct Clone;
 
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
-        let init_path = Path::new("/home/amoralejo/TEST");
+
+        print!("Entro al comando clone.rs1111111111\n");
+
+        let init_path = Path::new(r"C:\\Users\\luzmi\\OneDrive\\Escritorio\\carpetaClonada");
+
+
+        print!("Entro al comando clone.rs22222222222222\n");
+
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
         Ok(())
@@ -138,6 +145,7 @@ impl Clone{
 
     pub fn receive_pack(socket: &mut TcpStream, vcs: &VersionControlSystem) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
+        print!("Entro a receive packs ---------------\n");
         loop {
             let mut len_buf = [0; 4]; 
             if socket.read_exact(&mut len_buf).is_ok() {
@@ -146,7 +154,10 @@ impl Clone{
                 if len == 0 {
                     break;
                 }
+                print!("PACKETTT ---> {:?} \n", len);
+
                 let packet = read_packet(socket, len);
+                print!("PACKETTT ---> {:?} \n", packet);
                 packets.push(packet);
             }
         }

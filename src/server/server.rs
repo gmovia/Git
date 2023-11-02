@@ -1,13 +1,11 @@
 use std::{net::{TcpListener, TcpStream}, io::{Read, Write, self}, thread, path::{Path, PathBuf}};
 
-use rand::Error;
-
-use crate::{vcs::{version_control_system::VersionControlSystem, files::repository}, handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, rm::handler_rm, log::handler_log, commit::handler_commit, branch::handler_branch}};
+use crate::{vcs::{version_control_system::VersionControlSystem, files::repository}, handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, rm::handler_rm, log::handler_log, commit::handler_commit, branch::handler_branch}, packfile::packfile::to_pkt_line};
 
 use crate::packfile::packfile::process_line;
 use crate::server::upload_pack::handler_upload_pack;
 
-use super::encoder::{self, Encoder};
+use super::encoder::Encoder;
 
 
 pub struct Server {
@@ -57,13 +55,31 @@ impl Server {
         Ok(())
     }
 
+    fn send_response(response: &String, writer: &mut TcpStream) -> Result<(), std::io::Error> {
+        print!("MI RESPONSE ES {}", response);
+        if response.contains("\n"){
+            for line in response.lines(){
+                let line_without_newline = line.trim_end().trim_end();
+                let msg_response = format!("{}\n", line_without_newline);                
+                let pkt_response = to_pkt_line(&msg_response);
+                writer.write(pkt_response.as_bytes())?;
+            }
+        } else {
+            //writer.write(to_pkt_line(response.as_str()).as_bytes())?;
+        }
+        writer.write("0000".as_bytes())?;
+        //writer.flush()?;
+        Ok(())
+    }
+
     fn handle_client(mut reader: TcpStream, mut writer: TcpStream, path: &PathBuf) -> Result<(),std::io::Error> {
         loop {
             match process_line(&mut reader) {
                 Ok(message) => {
                     println!("Received message from client: {}", &message);
                     let response = Server::parse_response( &message.to_string(), &mut reader, path)?;
-                    writer.write(response.as_bytes())?;
+
+                    Server::send_response(&response, &mut writer)?;
                     writer.flush()?;
                 }
                 Err(e) => {

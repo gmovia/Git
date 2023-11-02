@@ -47,28 +47,23 @@ impl Client {
     pub fn connect_rust_server(address: &str, path: &str) -> Result<(),std::io::Error> {
         println!("rust_client");
        // let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
-        
-        let mut stream = TcpStream::connect("127.0.0.1:8080")?;
+       let mut stream = TcpStream::connect("127.0.0.1:8080")?;
 
-        let reader = stream.try_clone()?;
+       let reader = stream.try_clone()?;
 
-        std::thread::spawn(move || {
-            Self::handle_server_response(reader);
-        });
+       let mut input = String::new();
+       loop {
+           io::stdin().read_line(&mut input)?;
+           let query_to_send = Self::handler_input(&input);
+           let pkt_line = to_pkt_line(&query_to_send);
+           print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
+           stream.write(pkt_line.as_bytes())?;
+           Self::handler_query(&query_to_send, &mut stream); //rompe algo si mandó asi?
+           input.clear();
+       }
+   }
 
-        let mut input = String::new();
-        loop {
-            io::stdin().read_line(&mut input)?;
-            let query_to_send = Self::handler_input(&input);
-            let pkt_line = to_pkt_line(&query_to_send);
-            print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
-            stream.write(pkt_line.as_bytes())?;
-            Self::handler_query(&query_to_send, &mut stream); //rompe algo si mandó asi?
-            input.clear();
-        }
-    }
-
-
+ 
     fn handle_server_response(mut reader: TcpStream) {
         let mut buffer = [0; 1024];
         loop {
@@ -89,30 +84,13 @@ impl Client {
         }
     }
 
-/* 
-    fn handler_query(query: &str,socket: &mut TcpStream ) {
-        match query {
-            "git-upload-pack" => {
-                print!("Handleando desde el cliente la clone\n");
-/*                 if let Err(e) = clone::Clone::clone(socket) {
-                    println!("Error: {}", e);
-                }      */       
-                println!("Handling git-upload-pack request");
-            }
-            "git-send-pack" => {
-                println!("Handling git-send-pack request");
-            }
-            _ => {
-                println!("Unknown request: {}", query);
-            }
-        }
-    } */
+
     fn handler_query(query: &str, socket: &mut TcpStream) {
         match (query.contains("git-upload-pack"), query.contains("git-send-pack")) {
             (true, _) => {
-/*                 if let Err(e) = clone::Clone::clone(socket) {
+                 if let Err(e) = clone::Clone::clone(socket) {
                     println!("Error: {}", e);
-                }      */     
+                }           
                 println!("Handling git-upload-pack request");
             }
             (_, true) => {

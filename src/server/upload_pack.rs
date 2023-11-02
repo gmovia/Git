@@ -1,7 +1,11 @@
 use std::fs;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::net::TcpStream;
+
+use crate::packfile::packfile::to_pkt_line;
+
+
 pub fn handler_upload_pack(message: String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
     let logs_path = path.join(".rust_git").join("logs");
     let log_entries = get_log_entries(&logs_path)?;
@@ -54,3 +58,24 @@ fn parse_log_line(line: &str) -> Option<String> {
 }
 
 
+fn send_response(response: &String, writer: &mut TcpStream) -> Result<(), std::io::Error> {
+    print!("MI RESPONSE ES {}", response);
+    if response.contains("\n"){
+        for line in response.lines(){
+            let line_without_newline = line.trim_end().trim_end();
+            let msg_response = format!("{}\n", line_without_newline);                
+            let pkt_response = to_pkt_line(&msg_response);
+            writer.write(pkt_response.as_bytes())?;
+        }
+    } else {
+        //writer.write(to_pkt_line(response.as_str()).as_bytes())?;
+    }
+    writer.write("0000".as_bytes())?;
+    //writer.flush()?;
+    Ok(())
+}
+
+
+fn receive_query_wnts(){
+    
+}
