@@ -46,7 +46,6 @@ impl Encoder {
         
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
-            //let object_type = Self::my_function(objects.1 as u8, objects.2);
             for object in object_type {
                 packfile.push(object);
             }

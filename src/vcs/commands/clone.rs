@@ -1,5 +1,5 @@
 
-use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::Path, os::windows::process};
+use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::Path};
 use chrono::{DateTime, Local};
 
 use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, packfile::packfile::process_line};
@@ -11,7 +11,7 @@ pub struct Clone;
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
         
-        let init_path = Path::new(r"C:\\Users\\luzmi\\OneDrive\\Escritorio\\carpetaClonada");
+        let init_path = Path::new("/home/amoralejo/TEST_CLONE");
 
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
@@ -19,12 +19,15 @@ impl Clone{
     }
 
     pub fn request_branch(list_refs: &Vec<String>, vcs: &VersionControlSystem, objects: Vec<(u8,Vec<u8>)>) -> Result<(),std::io::Error> {
+        println!("PASA 1");
         for item in list_refs {
+            println!("PASA 2");
             if item.contains("HEAD") {
                 continue;
             }
 
             let parts: Vec<&str> = item.splitn(2, ' ').collect(); // Divide el elemento en dos partes.
+            println!("{:?}", parts);
             if parts.len() == 2 {
                 let commit = parts[0];
                 let ref_part = parts[1];
@@ -35,14 +38,15 @@ impl Clone{
                     let _ = vcs.branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
                     // Realiza aquí la acción que desees con `branch_name`.
-                    
+                    Self::write_commit_log_file(vcs, commit, branch_name)?;
+                                
+
                     let mut tree_hash = String::new();
                     let mut files = Vec::new();
                     for object in &objects {
                         println!("for de object: {:?}-{:?}",object.0,String::from_utf8_lossy(&object.1));
                         match object.0 {
                             1 => {
-                                Self::write_commit_log_file(vcs, commit, branch_name)?;
                                 tree_hash = Self::create_commit_folder(vcs, &object.1, commit)?
                                 },
                             2 => files = Self::create_tree_folder(vcs, object.1.to_owned(), &tree_hash)?,
@@ -76,7 +80,7 @@ impl Clone{
 
     fn add_hash_to_tree(vcs: &VersionControlSystem, file_hash: (String,String), tree_hash: &str) -> Result<(),std::io::Error> {
         println!("treee hash: {}", tree_hash);
-        let path = vcs.path.join(".rust_git").join("objects").join(&tree_hash[0..2]).join(&tree_hash[3..]);
+        let path = vcs.path.join(".rust_git").join("objects").join(&tree_hash[0..2]).join(&tree_hash[2..]);
         let mut file = OpenOptions::new().write(true).create(true).append(true).open(path).expect("No se pudo abrir el archivo");
         let format = format!("{}-{}", file_hash.0, file_hash.1);
         file.write(format.as_bytes())?;
@@ -87,7 +91,7 @@ impl Clone{
     fn create_commit_folder(vcs: &VersionControlSystem, commit: &Vec<u8>, commit_folder: &str) -> Result<String,std::io::Error> {
         let object_path = vcs.path.join(".rust_git").join("objects").join(&commit_folder[0..2]);
         fs::create_dir_all(&object_path)?;
-        let file_name = &commit_folder[3..];
+        let file_name = &commit_folder[2..];
         let mut file = File::create(&object_path.join(file_name))?;
         file.write(commit)?;
         Ok(String::from_utf8_lossy(&commit[5..45]).to_string())       
@@ -96,8 +100,10 @@ impl Clone{
     fn create_tree_folder(vcs: &VersionControlSystem, tree_hash: Vec<u8>, tree_hash_folder: &str) -> Result<Vec<(String,String)>,std::io::Error> {
         let object_path = vcs.path.join(".rust_git").join("objects").join(&tree_hash_folder[0..2]);
         fs::create_dir_all(&object_path)?;
-        File::create(&object_path.join(&tree_hash_folder[3..]))?;
+        let file = File::create(&object_path.join(&tree_hash_folder[2..]))?;
+        println!("ARCHIVO: {:?}",file);
         let files_names = Self::get_file_names(&tree_hash)?;
+        println!("NO SAEL DE ACA");
         Ok(files_names)
     }
 
@@ -106,10 +112,12 @@ impl Clone{
         let files: Vec<String> = String::from_utf8_lossy(hash).split_whitespace().map(|s| s.to_owned()).collect();
         println!("{:?}", files);
         for file in files {
-            if !file.contains("\0") {
-                continue;
-            }
-            let file_name: Vec<&str> = file.split("\0").collect();
+            // EN DAEMON TIENE QUE TENER EL \0 PARA DIFERENCIAR
+            //if !file.contains("\0") {
+            //    continue;
+            //}
+            //let file_name: Vec<&str> = file.split("\0").collect();
+            let file_name: Vec<&str> = file.split("-").collect();
             files_hash.push((file_name[0].to_owned(),file_name[1].to_owned()));
         }
         Ok(files_hash)
@@ -124,7 +132,7 @@ impl Clone{
         
         let object_path = vcs.path.join(".rust_git").join("objects").join(&file_hash.1[0..2]);
         fs::create_dir_all(&object_path)?;
-        let mut file = File::create(&object_path.join(&file_hash.1[3..]))?;
+        let mut file = File::create(&object_path.join(&file_hash.1[2..]))?;
         file.write(String::from_utf8_lossy(&commit).as_bytes())?;        
         
         Ok(file_hash)
@@ -157,7 +165,10 @@ impl Clone{
                 packets.push(packet);
             }
         }
+        packets.push("7cf2e660ac528b620de3f5bd9f86ff5cd6cb1387 refs/heads/master".to_owned());
+    
 
+        println!("PAQUETE: {:?}",packets);
         for packet in &packets {
             println!("Paquete: {:?}", packet);
         }
@@ -222,6 +233,7 @@ impl Clone{
         
         let mut position: usize = 12;
         let mut objects = Vec::new();
+        println!("PACKKKK: {:?}", &pack[position..]);
         for object in 0..object_number {
             let objet_type = Self::get_object_type(pack[position]);
             while Self::is_bit_set(pack[position]) {
@@ -243,6 +255,11 @@ impl Clone{
                 objects.push((objet_type, data.0))   
             }
         } 
+        objects.sort_by(|a, b| a.0.cmp(&b.0));
+        for (number, inner_vec) in &objects {
+            println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
+        }
+        
         Ok(objects)
     }
 
