@@ -1,4 +1,3 @@
-use std::{cell::RefCell, rc::Rc};
 
 use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}}, handlers::{rm::handler_rm, commands::handler_command}};
 
@@ -8,18 +7,14 @@ use gtk::prelude::*;
 
 
 pub fn handle_buttons_branch(interface: &RustInterface, button_branch: &gtk::Button, vcs: &VersionControlSystem) {
-    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
-    let rc_branch = Rc::new(RefCell::new(interface.select_branch.clone()));
-    let rc_entry = Rc::new(RefCell::new(interface.dialog_entry.clone()));
-
+    let version = vcs.clone();
+    let rc_branch = interface.select_branch.clone();
+    let rc_entry = interface.dialog_entry.clone();
     button_branch.connect_clicked({
         let version = version.clone();
         let rc_branch = rc_branch.clone();
         let rc_entry = rc_entry.clone();
         move |button| {
-            let version = version.borrow_mut();
-            let rc_branch = rc_branch.borrow_mut();
-            let rc_entry = rc_entry.borrow_mut();
             if let Some(label) = button.label() {
                 match label.as_str() {
                     "Create" => {let _ = version.branch(BranchOptions::NewBranch(&rc_entry.text()));},
@@ -39,11 +34,10 @@ pub fn handle_buttons_branch(interface: &RustInterface, button_branch: &gtk::But
 }
 
 pub fn handle_button_select_branch(interface: &RustInterface, vcs: &VersionControlSystem) {
-    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+    let version = vcs.clone();
     interface.select_branch.connect_changed({
         let version = version.clone();
         move |combo_box|{
-            let version = version.borrow_mut();
             if let Some(branch) = combo_box.active_text(){
                 let _ = version.checkout(CheckoutOptions::ChangeBranch(&branch.to_string()));
             }
@@ -52,16 +46,12 @@ pub fn handle_button_select_branch(interface: &RustInterface, vcs: &VersionContr
 }
 
 pub fn handle_commit_button(interface: &RustInterface, vcs: &VersionControlSystem) {
-    let version = Rc::new(RefCell::new(vcs.clone()));
-    let rc_entry = Rc::new(RefCell::new(interface.message.clone()));
-
+    let version = vcs.clone();
+    let rc_entry = interface.message.clone();
     interface.message_ok.connect_clicked({
         let rc_entry = rc_entry.clone();
         let version = version.clone();
         move |button| {
-            let version = version.borrow_mut();
-            let rc_entry = rc_entry.borrow_mut();
-
             let _ = version.commit(rc_entry.text().to_string());
 
             rc_entry.set_text("");
@@ -71,18 +61,14 @@ pub fn handle_commit_button(interface: &RustInterface, vcs: &VersionControlSyste
 }
 
 pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::Button, vcs: &VersionControlSystem) {
-    let rc_repo = Rc::new(RefCell::new(interface.select_repository.clone()));
-    let rc_entry = Rc::new(RefCell::new(interface.repository_entry.clone()));
-    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
-
+    let version = vcs.clone();
+    let rc_repo = interface.select_repository.clone();
+    let rc_entry = interface.repository_entry.clone();
     button_repo.connect_clicked({
         let version = version.clone();
         let rc_repo = rc_repo.clone();
         let rc_entry = rc_entry.clone();
         move |button|{
-            let version = version.borrow_mut();
-            let rc_repo = rc_repo.borrow_mut();
-            let rc_entry = rc_entry.borrow_mut();
             if let Some(label) = button.label() {
                 match label.as_str() {
                     "Create" => {/* CREAR REPOSITORY CON EL VCS */},
@@ -105,27 +91,23 @@ pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::B
 }
 
 pub fn handle_select_repository(interface: &RustInterface, vcs: &VersionControlSystem) {
-    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+    let version = vcs.clone();
     interface.select_repository.connect_changed({
-        let version = version.clone();
+        let _version = version.clone();
         move |_|{
-            let _version = version.borrow_mut();
             // DEBE ELEGIR EL REPO SELECCIONADO DEL SELECT_REPOSITORY
     }});
 }
 
 pub fn handle_terminal(interface: &RustInterface, vcs: &VersionControlSystem) {
-    
-    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
-    let rc_entry = Rc::new(RefCell::new(interface.command_entry.clone()));
+    let version = vcs.clone();
+    let rc_entry = interface.command_entry.clone();
     let rc_box = interface.command_box.clone();
     
     interface.enter.connect_clicked({
         let version = version.clone();
         let rc_entry = rc_entry.clone();
         move |button| {
-            let version = version.borrow_mut();
-            let rc_entry = rc_entry.borrow_mut();
             rc_box.foreach(|child| {
                 rc_box.remove(child);
             });
@@ -146,17 +128,12 @@ pub fn handle_terminal(interface: &RustInterface, vcs: &VersionControlSystem) {
 }
 
 pub fn handle_rm_button(interface: &RustInterface, vcs: &VersionControlSystem) {
-
-    let rm_entry = Rc::new(RefCell::new(interface.rm_entry.clone()));
-    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
-    
+    let rm_entry = interface.rm_entry.clone();
+    let version = vcs.clone();
     interface.rm_enter.connect_clicked({
         let rm_entry1 = rm_entry.clone();
         let version1 = version.clone();
         move |button| {
-            let rm_entry1 = rm_entry1.borrow_mut();
-            let version1 = version1.borrow_mut();
-            
             
             let binding = rm_entry1.text();
 

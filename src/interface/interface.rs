@@ -51,6 +51,8 @@ pub struct RustInterface {
     pub merge_dialog: gtk::Dialog,
     pub merge_changes: gtk::Box,
     pub resolve: gtk::Button,
+    pub merge_grid: gtk::Grid,
+    pub apply_merge: gtk::Button,
 }
 
 impl RustInterface {
@@ -108,6 +110,8 @@ impl RustInterface {
             merge_entry: builder.object("merge-entry").unwrap(),
             merge_changes: builder.object("merge-changes").unwrap(),
             resolve: builder.object("resolve").unwrap(),
+            merge_grid: builder.object("merge-grid").unwrap(),
+            apply_merge: builder.object("apply-merge").unwrap(),
         }
     }
     
