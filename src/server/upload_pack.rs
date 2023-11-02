@@ -1,7 +1,7 @@
 use std::{fs, io};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
-use std::net::TcpStream;
+use std::net::{TcpStream, Shutdown};
 
 use crate::packfile;
 use crate::packfile::packfile::{to_pkt_line, process_line};
@@ -9,44 +9,26 @@ use crate::server::encoder::Encoder;
 
 
 // reader and writer del mismo socket? por mientras asigno socket para no confiones 
-pub fn start_handler_upload(message: String, stream: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
+pub fn start_handler_upload(stream: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
     let first_response = handler_upload_pack(path)?;
 
     send_response(&first_response, stream)?;
-
-    //cliente mandado los wants message
-
-    //puede haber un reader y un writer sin problemas? 
-    //porque en esta parte seria llamado reader para responder la solicitud
-
-    //let pack_to_send = receive_wants_and_have_message(stream)?;
-
-/*     println!("SALI DEL receive wants \n");
-
-    for commit in &pack_to_send {   
-        println!("Tengo este commit para buscar entre mis objects y mandar {:?}", commit);
-    }
- */
+    
+    let query = receive_wants_and_have_message(stream);
     let packfile_result = Encoder::init_encoder((&path).to_path_buf());
-    println!("PACKFILE COMPLETO : {:?}", packfile_result);
 
-    //Si el cliente recibe mensaje  0000 y done, envia paquete directamente!
     match packfile_result {
-        Ok(mut packfile) => {
-            //let extra_bytes = vec![48,48,48,56,78,65,75,10];
-            //packfile.splice(0..0, extra_bytes);
-            println!("PACKFILE COMPLETO : {:?}", packfile);
+        Ok( packfile) => {
             stream.write(&packfile)?;
+            println!("--------------------------------ENVIADO\n");
         },
         Err(e) => {
             println!("Error al inicializar el packfile: {:?}", e);
         }
-    }
-    //envio paquete como respuesta
-    //send done and 0000 mssge
-    //salgo de aca para entrar al bucle, de espera de otras consultas
+    } 
     Ok("0000".to_string())
 }
+
 
 
 pub fn receive_wants_and_have_message(reader: &mut TcpStream) -> Result<Vec<String>, io::Error> {
@@ -54,10 +36,10 @@ pub fn receive_wants_and_have_message(reader: &mut TcpStream) -> Result<Vec<Stri
     loop {
         let msg_received = process_line(reader)?;
         println!("Mensaje recibido ------> {:?}", msg_received);
-        query.push(msg_received.clone());
-        if msg_received == "0000" {
+        if msg_received == "done\n" {
             break;
         }
+        query.push(msg_received.clone());
     }
     Ok(query)
 }

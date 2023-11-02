@@ -1,8 +1,8 @@
 
-use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::Path};
+use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::Path, os::windows::process};
 use chrono::{DateTime, Local};
 
-use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
+use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, packfile::packfile::process_line};
 use super::{branch::BranchOptions, hash_object::WriteOption};
 use crate::packfile::packfile::{decompress_data, to_pkt_line, read_packet};
 
@@ -10,13 +10,8 @@ pub struct Clone;
 
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
-
-        print!("Entro al comando clone.rs1111111111\n");
-
+        
         let init_path = Path::new(r"C:\\Users\\luzmi\\OneDrive\\Escritorio\\carpetaClonada");
-
-
-        print!("Entro al comando clone.rs22222222222222\n");
 
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
@@ -52,11 +47,12 @@ impl Clone{
                                 },
                             2 => files = Self::create_tree_folder(vcs, object.1.to_owned(), &tree_hash)?,
                             3 => {
+                                println!("FILES ---> : {:?}", files);
                                 let file_name = files.remove(0);
                                 let file_name_hash = Self::create_blob_folder(vcs, object.1.to_owned(), file_name)?;
                                 Self::add_hash_to_tree(vcs, file_name_hash, &tree_hash)?
                                 },
-                            _ => Err(io::Error::new(io::ErrorKind::NotFound, "Objeto desconocido"))?,
+                            _ => Err(io::Error::new(io::ErrorKind::NotFound, "Unknow object"))?,
                         };
                     }
                 }
@@ -170,8 +166,9 @@ impl Clone{
         }
         
         Self::send_done_msg(socket)?;
+        print!("LEN MANDE LOS DONES\n");
         let objects = Self::get_socket_response(socket)?;
-        
+
         Self::request_branch(&packets, vcs, objects)?;
         Ok(()) 
     }
@@ -180,6 +177,7 @@ impl Clone{
         let mut buffer = Vec::new();
             match socket.read_to_end(&mut buffer) {
                 Ok(_) => {
+                    print!("READ TO END?????\n");
                     return Self::manage_pack(&buffer[8..]);
                 }
                 Err(e) => {
@@ -214,6 +212,7 @@ impl Clone{
 
 
     fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
+        print!("EL PAQUETE QUE ME LLEGO ES {:?}\n", pack);
         let signature_pack_msg = &pack[0..4];
         println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
         let version = &pack[4..8];

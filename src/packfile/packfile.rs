@@ -26,6 +26,7 @@ pub fn read_packet(stream: &mut TcpStream, len: usize) -> String {
 }
 
 pub fn process_line(stream: &mut TcpStream) -> Result<String, std::io::Error> {
+
     let mut result = String::new();
         let mut len_buf = [0; 4];
         if stream.read_exact(&mut len_buf).is_ok() {
