@@ -25,7 +25,6 @@ impl Clone{
             }
 
             let parts: Vec<&str> = item.splitn(2, ' ').collect(); // Divide el elemento en dos partes.
-            println!("{:?}", parts);
             if parts.len() == 2 {
                 let commit = parts[0];
                 let ref_part = parts[1];
@@ -75,7 +74,6 @@ impl Clone{
     }
 
     fn add_hash_to_tree(vcs: &VersionControlSystem, file_hash: (String,String), tree_hash: &str) -> Result<(),std::io::Error> {
-        println!("treee hash: {}", tree_hash);
         let path = vcs.path.join(".rust_git").join("objects").join(&tree_hash[0..2]).join(&tree_hash[2..]);
         let mut file = OpenOptions::new().write(true).create(true).append(true).open(path).expect("No se pudo abrir el archivo");
         let format = format!("{}-{}", file_hash.0, file_hash.1);
@@ -97,16 +95,13 @@ impl Clone{
         let object_path = vcs.path.join(".rust_git").join("objects").join(&tree_hash_folder[0..2]);
         fs::create_dir_all(&object_path)?;
         let file = File::create(&object_path.join(&tree_hash_folder[2..]))?;
-        println!("ARCHIVO: {:?}",file);
         let files_names = Self::get_file_names(&tree_hash)?;
-        println!("NO SAEL DE ACA");
         Ok(files_names)
     }
 
     fn get_file_names(hash: &[u8]) -> Result<Vec<(String,String)>,std::io::Error> {
         let mut files_hash = Vec::new();
         let files: Vec<String> = String::from_utf8_lossy(hash).split_whitespace().map(|s| s.to_owned()).collect();
-        println!("{:?}", files);
         for file in files {
             // EN DAEMON TIENE QUE TENER EL \0 PARA DIFERENCIAR
             //if !file.contains("\0") {
@@ -162,8 +157,6 @@ impl Clone{
                 packets.push(packet);
             }
         }
-        //packets.push("7777e660ac528b620de3f5bd9f86ff5cd6cb1387 refs/heads/master".to_owned());
-    
 
         for packet in &packets {
             println!("Paquete: {:?}", packet);
@@ -183,7 +176,6 @@ impl Clone{
         let mut buffer = Vec::new();
             match socket.read_to_end(&mut buffer) {
                 Ok(_) => {
-                    print!("READ TO END?????\n");
                     return Self::manage_pack(&buffer[8..]);
                 }
                 Err(e) => {
@@ -218,7 +210,6 @@ impl Clone{
 
 
     fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
-        print!("EL PAQUETE QUE ME LLEGO ES {:?}\n", pack);
         let signature_pack_msg = &pack[0..4];
         println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
         let version = &pack[4..8];
@@ -228,7 +219,6 @@ impl Clone{
         
         let mut position: usize = 12;
         let mut objects = Vec::new();
-        println!("PACKKKK: {:?}", &pack[position..]);
         for object in 0..object_number {
             let objet_type = Self::get_object_type(pack[position]);
             while Self::is_bit_set(pack[position]) {
