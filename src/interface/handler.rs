@@ -1,5 +1,5 @@
 
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 
 use crate::{vcs::{version_control_system::VersionControlSystem, entities::conflict::Conflict}, constants::constants::{CURRENT, BOTH, INCOMING}};
 
@@ -237,16 +237,20 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                     add_message(&m_changes, &"Conflicts need to be resolve".to_string());
                     button_resolve.set_sensitive(true);
                 }
+
                 button_resolve.connect_clicked({
                     let version1 = version1.clone();
                     let m_box = m_changes.clone();
                     let m_grid = merge_grid_clone.clone();
                     let apply_c = apply_c.clone();
+
                     move |button| {
                         m_box.foreach(|child| {
                             m_box.remove(child);
                         });
                         let mut index = 0;
+                        
+                        let mut list: HashMap<String, Conflict> = HashMap::new();
                         for (key, value) in &conflicts {
                             if let (Ok(cat_current), Ok(cat_incoming)) = (version1.cat_file(&value.change_current.hash),version1.cat_file(&value.change_branch.hash)) {
                                 let set_label_current = format!("{}\n             {}\n",key,cat_current);
@@ -276,9 +280,10 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                                 m_grid.attach(&current, 2, index as i32, 1, 1);
                                 m_grid.attach(&incoming, 3, index as i32, 1, 1);
                                 index += 1;
-                                applied_changes(&both,&value,&key);
-                                applied_changes(&current,&value,&key);
-                                applied_changes(&incoming,&value,&key);
+                                add_current(&current, &mut list, &value);
+                                //applied_changes(&both,&value,&key);
+                                //applied_changes(&current,&value,&key);
+                                //applied_changes(&incoming,&value,&key);
                             } 
                             m_box.add(&m_grid);
                         }
@@ -319,26 +324,69 @@ fn add_message(m_changes: &gtk::Box, message: &String) {
     m_changes.add(&label);
 }
 
-pub fn applied_changes(button: &gtk::Button,conflict: &Conflict, _path: &String){
-    let conflict_c = conflict.clone();
-    button.connect_clicked({ 
+use std::cell::RefCell;
+use std::rc::Rc;
+
+pub fn add_current(button: &gtk::Button, list: &mut HashMap<String, Conflict>, conflict: &Conflict) {
+    let conflict_c = Rc::new(RefCell::new(conflict.clone()));
+    let list_c = Rc::new(RefCell::new(list.clone()));
+    button.connect_clicked({
         let conflict_c = conflict_c.clone();
+        let list_c = list_c.clone();
         move |b| {
-            match b.label().unwrap().as_str() {
-                "Accept both" => {
-                    let _ = Conflict { file: conflict_c.file.clone(), change_current: conflict_c.change_current.clone(), change_branch: conflict_c.change_branch.clone(), resolved: BOTH};
-                },
-                "Accept current" => {
-                    let _ = Conflict { file: conflict_c.file.clone(), change_current: conflict_c.change_current.clone(), change_branch: conflict_c.change_branch.clone(), resolved: CURRENT};
-                },
-                "Accept incoming" => {
-                    let _ = Conflict { file: conflict_c.file.clone(), change_current: conflict_c.change_current.clone(), change_branch: conflict_c.change_branch.clone(), resolved: INCOMING};
-                },
-                _ => todo!(),
-            }
+            let conflict = conflict_c.borrow_mut();
+            let mut list = list_c.borrow_mut();
+            let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: CURRENT };
+            list.insert(conflict.file.clone(), conflict.clone());
+    }});
+}
+
+pub fn applied_changes(button: &gtk::Button, conflict: &Conflict, _path: &String) -> Conflict {
+    let conflict_c = Rc::new(RefCell::new(conflict.clone()));
+    let resolved_value = Rc::new(RefCell::new(None));
+
+    let conflict_c_clone = conflict_c.clone();
+    let resolved_value_clone = resolved_value.clone();
+
+    button.connect_clicked(move |b| {
+        let conflict_c = conflict_c_clone.clone();
+        let resolved_value = resolved_value_clone.clone();
+
+        let conflict = conflict_c.borrow();
+        match b.label().unwrap().as_str() {
+            "Accept both" => {
+                *resolved_value.borrow_mut() = Some(Conflict {
+                    file: conflict.file.clone(),
+                    change_current: conflict.change_current.clone(),
+                    change_branch: conflict.change_branch.clone(),
+                    resolved: BOTH,
+                });
+            },
+            "Accept current" => {
+                *resolved_value.borrow_mut() = Some(Conflict {
+                    file: conflict.file.clone(),
+                    change_current: conflict.change_current.clone(),
+                    change_branch: conflict.change_branch.clone(),
+                    resolved: CURRENT,
+                });
+            },
+            "Accept incoming" => {
+                *resolved_value.borrow_mut() = Some(Conflict {
+                    file: conflict.file.clone(),
+                    change_current: conflict.change_current.clone(),
+                    change_branch: conflict.change_branch.clone(),
+                    resolved: INCOMING,
+                });
+            },
+            _ => todo!(),
         }
     });
+
+    let x = resolved_value.borrow().as_ref().unwrap().clone(); x
 }
+
+
+
 
 pub fn handle_clone(interface: &RustInterface, vcs: &VersionControlSystem) {
     let version = vcs.clone();
