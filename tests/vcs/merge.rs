@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
 
-    use std::{fs, io::Write};
+    use std::{fs, io::{Write, Read}};
 
-    use rust_git::vcs::commands::{checkout::CheckoutOptions, rm::RemoveOption};
+    use rust_git::vcs::{commands::{checkout::CheckoutOptions, rm::RemoveOption}, entities::conflict};
 
     use crate::tests_functions::{create_file, set_up};
 
@@ -21,7 +21,8 @@ mod tests {
         vcs.checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
         vcs.checkout(CheckoutOptions::ChangeBranch("master"))?;
 
-        let _ = vcs.merge("new_branch")?;
+        let conflicts = vcs.merge("new_branch")?;
+        assert_eq!(conflicts.len(), 0);
 
         let repository = vcs.repository.read_repository()?;
         assert_eq!(repository.len(), 3);
@@ -46,7 +47,8 @@ mod tests {
         vcs.add(&file_4)?;
         vcs.commit("second commit".to_string())?;
 
-        let _ = vcs.merge("new_branch")?;
+        let conflicts = vcs.merge("new_branch")?;
+        assert_eq!(conflicts.len(), 0);
 
         let repository = vcs.repository.read_repository()?;
         println!("{:?}", repository);
@@ -74,7 +76,8 @@ mod tests {
         vcs.add(&file_5)?;
         vcs.commit("third commit".to_string())?;
         
-        let _ = vcs.merge("new_branch")?;
+        let conflicts = vcs.merge("new_branch")?;
+        assert_eq!(conflicts.len(), 0);
 
         let repository = vcs.repository.read_repository()?;
         assert_eq!(repository.len(), 4);        
@@ -100,7 +103,8 @@ mod tests {
         vcs.rm(&file_1, RemoveOption::NoDirectory)?;
         vcs.commit("third commit".to_string())?;
         
-        let _ = vcs.merge("new_branch")?;
+        let conflicts = vcs.merge("new_branch")?;
+        assert_eq!(conflicts.len(), 0);
 
         let repository = vcs.repository.read_repository()?;
         assert_eq!(repository.len(), 2);        
@@ -132,8 +136,9 @@ mod tests {
         vcs.add(&file_1)?;
         vcs.commit("third commit".to_string())?;
         
-        let _ = vcs.merge("new_branch")?;
-        
+        let conflicts = vcs.merge("new_branch")?;
+        assert_eq!(conflicts.len(), 0);
+
         let repository = vcs.repository.read_repository()?;
         assert_eq!(repository.len(), 2);        
         Ok(())
@@ -155,8 +160,9 @@ mod tests {
         vcs.checkout(CheckoutOptions::ChangeBranch("master"))?;
     
 
-        let _ = vcs.merge("new_branch")?;
-        
+        let conflicts = vcs.merge("new_branch")?;
+        assert_eq!(conflicts.len(), 0);
+    
         let repository = vcs.repository.read_repository()?;
         assert_eq!(repository.len(), 2);        
         Ok(())
@@ -175,8 +181,9 @@ mod tests {
         vcs.add(&file_2)?;
         vcs.commit("second commit".to_string())?;
             
-        let _ = vcs.merge("master")?;
-        
+        let conflicts = vcs.merge("master")?;
+        assert_eq!(conflicts.len(), 0);
+
         let repository = vcs.repository.read_repository()?;
         assert_eq!(repository.len(), 2);        
         Ok(())
@@ -195,12 +202,66 @@ mod tests {
         vcs.add(&file_2)?;
         vcs.commit("second commit".to_string())?;
             
-        let _ = vcs.merge("master")?;
+        let conflicts = vcs.merge("master")?;
+        assert_eq!(conflicts.len(), 0);
+
+        let repository = vcs.repository.read_repository()?;
+        assert_eq!(repository.len(), 2);        
+        Ok(())
+    } 
+
+    #[test]
+    pub fn test_09_conflict() -> Result<(), std::io::Error> {
+        let (temp_dir, vcs) = set_up();
+        let file_1 = create_file(&temp_dir, "file1.txt");
+
+        vcs.add(&file_1)?;
+        vcs.commit("first commit".to_string())?;
+        
+        vcs.checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
+
+        let mut file1 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_1)?;
+        let _ = file1.write_all(b"content");
+        vcs.add(&file_1)?;
+        vcs.commit("second commit".to_string())?;
         
         vcs.checkout(CheckoutOptions::ChangeBranch("master"))?;
 
-        let repository = vcs.repository.read_repository()?;
-        assert_eq!(repository.len(), 1);        
+        let mut file1 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_1)?;
+        let _ = file1.write_all(b"other content");
+        vcs.add(&file_1)?;
+        vcs.commit("third commit".to_string())?;
+
+        let conflicts = vcs.merge("new_branch")?;
+        assert_eq!(conflicts.len(), 1);
+
         Ok(())
-    } 
+    }
+
+    #[test]
+    pub fn test_10_resolve_conflict() -> Result<(), std::io::Error> {
+        let (temp_dir, vcs) = set_up();
+        let file_1 = create_file(&temp_dir, "file1.txt");
+
+        vcs.add(&file_1)?;
+        vcs.commit("first commit".to_string())?;
+        
+        vcs.checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
+
+        let mut file1 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_1)?;
+        let _ = file1.write_all(b"content");
+        vcs.add(&file_1)?;
+        vcs.commit("second commit".to_string())?;
+        
+        vcs.checkout(CheckoutOptions::ChangeBranch("master"))?;
+
+        let mut file1 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_1)?;
+        let _ = file1.write_all(b"other content");
+        vcs.add(&file_1)?;
+        vcs.commit("third commit".to_string())?;
+
+        let conflicts = vcs.merge("new_branch")?;
+        assert_eq!(conflicts.len(), 1);
+        Ok(())
+    }
 }
