@@ -1,10 +1,11 @@
 use std::io::{Write, Read, self};
 use std::net::TcpStream;
 use std::path::Path;
+use crate::metadata;
 use crate::vcs::commands::clone;
 use crate::packfile::packfile::to_pkt_line;
 use crate::vcs::version_control_system::VersionControlSystem;
-
+use metadata::{PUERTO, HOST}; 
 static CLIENT_ARGS: usize = 4;
 
 //comando para levantar el git daemon --> git daemon --base-path=. --export-all --reuseaddr --informative-errors --verbose --verbose
@@ -15,9 +16,9 @@ pub struct Client;
 impl Client {
 
     //Checkear que este main te lo tome como main momentaneo
-    pub fn client_(command: String, puerto: String, host: String, server_repo: String) -> Result<(), ()> {
+    pub fn client_(command: String,server_repo: String) -> Result<(), ()> {
         
-        let address = format!("{}:{}", puerto, host);
+        let address = format!("{}:{}", HOST, PUERTO);
 
         if let Err(e) = Self::connect_rust_server(&address, &server_repo, &command) {
             println!("Error: {}",e);
@@ -51,7 +52,7 @@ impl Client {
     pub fn connect_rust_server(address: &str, path: &str, command: &String) -> Result<(),std::io::Error> {
         println!("rust_client");
        // let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
-       let mut stream = TcpStream::connect("127.0.0.1:8080")?;
+       let stream = TcpStream::connect(address)?;
 
        let reader = stream.try_clone()?;
 

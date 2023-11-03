@@ -12,7 +12,8 @@ use rust_git::server::{server::Server, self};
 
 fn main() -> Result<(), std::io::Error> {
     
-    let mut vcs = VersionControlSystem::init(Path::new("/home/amoralejo/hola"), Vec::new());
+    println!("MAIN");
+    let mut vcs = VersionControlSystem::init(Path::new("init_folder"), Vec::new());
 
     loop{
         let mut input = String::new();

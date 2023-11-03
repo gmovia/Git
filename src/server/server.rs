@@ -1,6 +1,6 @@
 use std::{net::{TcpListener, TcpStream, Shutdown}, io::{Read, Write, self, Error}, thread, path::{Path, PathBuf}};
 
-use crate::{vcs::{version_control_system::VersionControlSystem, files::repository}, handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, rm::handler_rm, log::handler_log, commit::handler_commit, branch::handler_branch}, packfile::packfile::to_pkt_line, utils::files::files::read};
+use crate::{vcs::{version_control_system::VersionControlSystem, files::repository}, handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, rm::handler_rm, log::handler_log, commit::handler_commit, branch::handler_branch}, packfile::packfile::to_pkt_line, utils::files::files::read, metadata::{PUERTO,HOST}};
 
 use crate::packfile::packfile::process_line;
 use crate::server::upload_pack::start_handler_upload;
@@ -16,7 +16,7 @@ pub struct Server {
 impl Server {
 
     pub fn init_server(path: String) -> Result<Server, std::io::Error> {
-        print!("INIT SERVER");
+        println!("INIT SERVER--------->");
         let path = Path::new(&path);
         let server = Server { path: path.to_path_buf() };
         //let encoder = Encoder::init_encoder((&path).to_path_buf());
@@ -31,7 +31,8 @@ impl Server {
 
 
     fn handle_connections(&self) -> Result<(),std::io::Error> {
-        let listener = TcpListener::bind("127.0.0.1:8080").expect("Failed to bind to address");
+        let adress = format!("{}:{}",HOST,PUERTO);
+        let listener = TcpListener::bind(&adress).expect("Failed to bind to address");
     
         for stream in listener.incoming() {
             match stream {

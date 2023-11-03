@@ -80,8 +80,8 @@ impl VersionControlSystem {
     }
 
 
-    pub fn clone(&self, puerto:String, host: String, server_repo: String) -> Result<(), std::io::Error> {
-        let _ = Client::client_("git clone".to_string(), puerto,host,server_repo);
+    pub fn clone(&self, server_repo: String) -> Result<(), std::io::Error> {
+        let _ = Client::client_("git clone".to_string(),server_repo);
         Ok(())
     }
     
