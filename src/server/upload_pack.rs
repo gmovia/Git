@@ -12,7 +12,7 @@ use crate::server::encoder::Encoder;
 pub fn start_handler_upload(stream: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
     let first_response = handler_upload_pack(path)?;
 
-    send_response(&first_response, stream)?;
+    send_response(first_response, stream)?;
     
     let query = receive_wants_and_have_message(stream);
     let packfile_result = Encoder::init_encoder((&path).to_path_buf());
@@ -45,15 +45,15 @@ pub fn receive_wants_and_have_message(reader: &mut TcpStream) -> Result<Vec<Stri
 }
 
 
-pub fn handler_upload_pack(path: &PathBuf) -> Result<String, std::io::Error> {
+pub fn handler_upload_pack(path: &PathBuf) -> Result<Vec<String>, std::io::Error> {
     let logs_path = path.join(".rust_git").join("logs");
     let log_entries = get_log_entries(&logs_path)?;
     Ok(log_entries)
 }
 
-fn get_log_entries(logs_path: &Path) -> Result<String, std::io::Error>{
-    let mut log_entries = String::new();
-
+fn get_log_entries(logs_path: &Path) -> Result<Vec<String>, std::io::Error>{
+    let mut log_entries = Vec::new();
+    
     let entries = fs::read_dir(logs_path)?;
     for entry in entries {
         let log_file = entry?;
@@ -64,12 +64,17 @@ fn get_log_entries(logs_path: &Path) -> Result<String, std::io::Error>{
 
         for line in reader.by_ref().lines() {
             if let Ok(line) = line {
-                last_line = line;
+                last_line = line.clone(); // Clonamos la línea si la necesitas posteriormente
+                let last_commit = line[2..42].to_string(); // Clonamos la porción de la línea
+                let log_file_name = log_file.file_name().to_string_lossy().to_string();
+                let format = format!("{} refs/head/{}", last_commit, log_file_name);
+                log_entries.push(format);
+                //println!("last line: {}", format);
             }
         }
         if let Some(hash) = parse_log_line(&last_line) {
             let filename = log_file.file_name().to_string_lossy().to_string();
-            log_entries.push_str(&format!("{} refs/heads/{}\n", hash, filename));
+            log_entries.push(format!("{} refs/heads/{}\n", hash, filename));
         }
     }
 
@@ -97,18 +102,22 @@ fn parse_log_line(line: &str) -> Option<String> {
 }
 
 
-fn send_response(response: &String, writer: &mut TcpStream) -> Result<(), std::io::Error> {
-    print!("MI RESPONSE ES {}", response);
-    if response.contains("\n"){
-        for line in response.lines(){
-            let line_without_newline = line.trim_end().trim_end();
-            let msg_response = format!("{}\n", line_without_newline);                
-            let pkt_response = to_pkt_line(&msg_response);
-            writer.write(pkt_response.as_bytes())?;
+fn send_response(response: Vec<String>, writer: &mut TcpStream) -> Result<(), std::io::Error> {
+    print!("MI RESPONSE ES {:?}", response);
+    for resp in response {
+        if resp.contains("\n"){
+            for line in resp.lines(){
+                let line_without_newline = line.trim_end().trim_end();
+                let msg_response = format!("{}\n", line_without_newline);                
+                let pkt_response = to_pkt_line(&msg_response);
+                writer.write(pkt_response.as_bytes())?;
+            }
+        } else {
+                writer.write(to_pkt_line(resp.as_str()).as_bytes())?;
+            
         }
-    } else {
-        //writer.write(to_pkt_line(response.as_str()).as_bytes())?;
     }
+        
     writer.write("0000".as_bytes())?;
     //writer.flush()?;
     Ok(())

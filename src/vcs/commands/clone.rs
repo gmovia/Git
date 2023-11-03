@@ -2,7 +2,7 @@
 use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::Path};
 use chrono::{DateTime, Local};
 
-use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, packfile::packfile::process_line};
+use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, packfile::packfile::process_line, handlers::branch};
 use super::{branch::BranchOptions, hash_object::WriteOption};
 use crate::packfile::packfile::{decompress_data, to_pkt_line, read_packet};
 
@@ -19,9 +19,7 @@ impl Clone{
     }
 
     pub fn request_branch(list_refs: &Vec<String>, vcs: &VersionControlSystem, objects: Vec<(u8,Vec<u8>)>) -> Result<(),std::io::Error> {
-        println!("PASA 1: {:?}", vcs.path);
         for item in list_refs {
-            println!("PASA 2");
             if item.contains("HEAD") {
                 continue;
             }
@@ -64,14 +62,15 @@ impl Clone{
 
     // Falta ver que el archivo de logs tiene varios commits, capaz sale por el lado del parent?
     fn write_commit_log_file(vcs: &VersionControlSystem, commit: &str, branch_name: &str) -> Result<(),std::io::Error>{
-        let logs_path = vcs.path.join(".rust_git").join("logs").join(branch_name); 
-        
-        let current_time: DateTime<Local> = Local::now();
-        let format_commit = format!("{}-{}-{}-{}", Random::random(), commit, "clone", current_time);
-        
-        let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
-        file.write(format_commit.as_bytes())?;
+        if let Some(branch) = branch_name.strip_prefix("refs/head/") {
+            let logs_path = vcs.path.join(".rust_git").join("logs").join(branch); 
+            let current_time: DateTime<Local> = Local::now();
+            let format_commit = format!("{}-{}-{}-{}", Random::random(), commit, "clone", current_time);
+            let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
+            file.write(format_commit.as_bytes())?;
 
+        }
+        
         Ok(())
     }
 
@@ -163,7 +162,7 @@ impl Clone{
                 packets.push(packet);
             }
         }
-        packets.push("7cf2e660ac528b620de3f5bd9f86ff5cd6cb1387 refs/heads/master".to_owned());
+        //packets.push("7777e660ac528b620de3f5bd9f86ff5cd6cb1387 refs/heads/master".to_owned());
     
 
         for packet in &packets {
