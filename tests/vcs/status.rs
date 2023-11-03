@@ -27,7 +27,8 @@ mod tests {
         vcs.add(&path)?;
         vcs.commit("first_commit".to_string())?;
 
-        assert!(matches!(vcs.status(), Ok((untracked_files, _, _)) if untracked_files.len() == 0));
+        let (untracked_files, _, _ ) = vcs.status()?;
+        assert_eq!(untracked_files.len(), 0);
         Ok(())
     }
 

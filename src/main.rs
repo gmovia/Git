@@ -1,4 +1,4 @@
-/*  
+  
 use std::io::{self, Write};
  use std::path::Path;
  use rust_git::handlers::branch::handler_branch;
@@ -6,11 +6,10 @@ use std::io::{self, Write};
  use rust_git::handlers::rm::handler_rm;
  use rust_git::vcs::version_control_system::VersionControlSystem;
  use rust_git::handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, log::handler_log};
- */
 use rust_git::client::{client::Client, self};
 use rust_git::server::{server::Server, self};
 
-
+/* 
 fn main() -> Result<(), std::io::Error> {
     let argv = std::env::args().collect::<Vec<String>>();    
     
@@ -34,10 +33,11 @@ fn main() -> Result<(), std::io::Error> {
     }
     Ok(())
 }
- /* 
-fn main() -> Result<(), std::io::Error> {
+*/
 
-    let mut vcs = VersionControlSystem::init(Path::new("/home/amoralejo/test_clone_rust_folder"), Vec::new());
+fn main() -> Result<(), std::io::Error> {
+    
+    let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
     
     loop{
         let mut input = String::new();
@@ -59,4 +59,3 @@ fn main() -> Result<(), std::io::Error> {
         }
     } 
 }
-*/

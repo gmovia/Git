@@ -32,7 +32,6 @@ impl Repository{
                 }
             }
         }
-        
         Ok(local_repository)
     }
 
