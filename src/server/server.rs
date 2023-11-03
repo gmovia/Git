@@ -15,8 +15,9 @@ pub struct Server {
 
 impl Server {
 
-    pub fn init_server() -> Result<Server, std::io::Error> {
-        let path = Path::new("test_folder");
+    pub fn init_server(path: String) -> Result<Server, std::io::Error> {
+        print!("INIT SERVER");
+        let path = Path::new(&path);
         let server = Server { path: path.to_path_buf() };
         //let encoder = Encoder::init_encoder((&path).to_path_buf());
         server.handle_connections()?;

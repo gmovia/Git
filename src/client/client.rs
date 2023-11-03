@@ -15,20 +15,15 @@ pub struct Client;
 impl Client {
 
     //Checkear que este main te lo tome como main momentaneo
-    pub fn client_(args: Vec<String>) -> Result<(), ()> {
-        if args.len() < CLIENT_ARGS {
-            println!("Cantidad de argumentos inválido");
-            println!("{:?} <host> <puerto>", &args[0]);
-            return Err(());
-        }
+    pub fn client_(command: String, puerto: String, host: String, server_repo: String) -> Result<(), ()> {
         
-        let address = args[1].clone() + ":" + &args[2];
+        let address = format!("{}:{}", puerto, host);
 
-        if let Err(e) = Self::connect_rust_server(&address, &args[3]) {
+        if let Err(e) = Self::connect_rust_server(&address, &server_repo, &command) {
             println!("Error: {}",e);
         }
         
-        if let Err(e) = Self::client_run(&address, &args[3]) {
+        if let Err(e) = Self::client_run(&address, &server_repo) {
             println!("Error: {}",e);
         }
         Ok(())
@@ -44,7 +39,16 @@ impl Client {
         }
     }
 
-    pub fn connect_rust_server(address: &str, path: &str) -> Result<(),std::io::Error> {
+    pub fn handler_clone(mut stream: TcpStream, command: &String) -> Result<(),std::io::Error>{
+        let query_to_send = Self::handler_input(&command);
+        let pkt_line = to_pkt_line(&query_to_send);
+        print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
+        stream.write(pkt_line.as_bytes())?;
+        Self::handler_query(&query_to_send, &mut stream); //rompe algo si mandó asi?
+        Ok(())
+    }
+
+    pub fn connect_rust_server(address: &str, path: &str, command: &String) -> Result<(),std::io::Error> {
         println!("rust_client");
        // let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
        let mut stream = TcpStream::connect("127.0.0.1:8080")?;
@@ -52,15 +56,11 @@ impl Client {
        let reader = stream.try_clone()?;
 
        let mut input = String::new();
-       loop {
-           io::stdin().read_line(&mut input)?;
-           let query_to_send = Self::handler_input(&input);
-           let pkt_line = to_pkt_line(&query_to_send);
-           print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
-           stream.write(pkt_line.as_bytes())?;
-           Self::handler_query(&query_to_send, &mut stream); //rompe algo si mandó asi?
-           input.clear();
-       }
+       match command.as_str() {
+        "git clone" => Self::handler_clone(stream, command),
+        _ => Ok({}),
+    };
+       Ok(())
    }
 
  

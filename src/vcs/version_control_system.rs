@@ -2,7 +2,7 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile},
+    vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile, clone::Clone}, client::client::Client, server::server::Server,
 };
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}}, files::repository::Repository};
 use std::{collections::HashMap, path::{Path, PathBuf}};
@@ -77,6 +77,12 @@ impl VersionControlSystem {
     ///Muestra el historial de commits
     pub fn log(&self) -> Result<(), std::io::Error> {
         Log::log(self)
+    }
+
+
+    pub fn clone(&self, puerto:String, host: String, server_repo: String) -> Result<(), std::io::Error> {
+        let _ = Client::client_("git clone".to_string(), puerto,host,server_repo);
+        Ok(())
     }
     
     /// Recibe una opcion de branch (crear, borrar, listar)

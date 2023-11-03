@@ -5,6 +5,7 @@ pub mod handlers{
     pub mod rm;
     pub mod cat_file;
     pub mod branch;
+    pub mod clone;
     
     pub mod log;
     pub mod commit;
