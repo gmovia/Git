@@ -4,6 +4,7 @@ use super::{init::Init, hash_object::{HashObject, WriteOption}};
 
 extern crate chrono;
 use chrono::{DateTime, Local};
+use rand::Rng;
 
 pub struct Commit {
     id: String,
@@ -36,13 +37,14 @@ impl Commit{
     
 
     pub fn create_commit(message: &String, repository: &HashMap<String, String>, vcs: &VersionControlSystem) -> Result<Commit, std::io::Error> {
-        let id = Random::random();
+        let mut rng = rand::thread_rng();
+        let id = rng.gen_range(1..9);
         let hash = vcs.repository.write_repository(repository)?;
         let current_time: DateTime<Local> = Local::now();
         let _ = current_time.to_rfc2822();
 
         Ok(Commit {
-            id,
+            id: id.to_string(),
             hash,
             message: message.clone(),
             timestamp: current_time,
