@@ -1,7 +1,6 @@
 
-use std::{collections::HashMap, hash::Hash};
-
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::conflict::Conflict}, constants::constants::{CURRENT, BOTH, INCOMING}};
+use std::collections::HashMap;
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes}}}, constants::constants::{CURRENT, INCOMING}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_select_repository, handle_rm_button, handle_terminal}, draw::changes_and_staging_area};
 use gtk::{prelude::*, Button, Scrollbar, Adjustment};
@@ -201,14 +200,11 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
     let button_merge = interface.merge.clone();
     let version = vcs.clone();
     let version1 = vcs.clone();
-    let version2 = vcs.clone();
     let m_entry = interface.merge_entry.clone();
-    let m_entry1 = interface.merge_entry.clone();
     let m_changes = interface.merge_changes.clone();
     let button_resolve = interface.resolve.clone();
     let merge_grid_clone = interface.merge_grid.clone();
     let apply_clone = interface.apply_merge.clone();
-
     interface.merge.set_sensitive(false);
     interface.apply_merge.set_visible(false);
     interface.apply_merge.set_sensitive(true);
@@ -232,80 +228,80 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                 if conflicts.len() == 0 {
                     add_message(&m_changes, &"Merged successfully".to_string());
                     button_resolve.set_sensitive(false);
+                    //button_resolve.set_visible(false);
                 }
                 else{
                     add_message(&m_changes, &"Conflicts need to be resolve".to_string());
                     button_resolve.set_sensitive(true);
-                }
+                    button_resolve.connect_clicked({
+                        let version1 = version1.clone();
+                        let m_box = m_changes.clone();
+                        let m_grid = merge_grid_clone.clone();
+                        let apply_c = apply_c.clone();
+                        move |button| {
+                            m_box.foreach(|child| {
+                                m_box.remove(child);
+                            });
+                            let mut index = 0;
+                            for (key, value) in &conflicts {
+                                if let (Ok(cat_current), Ok(cat_incoming)) = (version1.cat_file(&value.change_current.hash),version1.cat_file(&value.change_branch.hash)) {
+                                    let set_label_current = format!("{}\n             {}\n",key,cat_current);
+                                    let set_label_incoming = format!("\n{}\n            {}\n",key,cat_incoming);
+                                    let set_format = set_label_current + &set_label_incoming;
+                                    let labels = gtk::Label::new(Some(&set_format));
+                                    labels.set_visible(true);
+                                    labels.set_xalign(2.0);
+                                    labels.set_yalign(2.0);
+                                    let both = Button::builder()
+                                    .margin_start(10)
+                                    .label("Accept both")
+                                    .build();
+                                    let current =Button::builder()
+                                    .margin_start(10)
+                                    .label("Accept current")
+                                    .build();
+                                    let incoming = Button::builder()
+                                    .margin_start(10)
+                                    .label("Accept incoming")
+                                    .build();
+                                    both.set_visible(true);
+                                    current.set_visible(true);
+                                    incoming.set_visible(true);
+                                    m_grid.attach(&labels, 0, index as i32, 1, 1);
+                                    m_grid.attach(&both, 1, index as i32, 1, 1);
+                                    m_grid.attach(&current, 2, index as i32, 1, 1);
+                                    m_grid.attach(&incoming, 3, index as i32, 1, 1);
+                                    index += 1;
+                                    add_current(&version1,&current, &value);
+                                    add_incoming(&version1,&incoming, &value);
+                                } 
+                                m_box.add(&m_grid);
+                            }
+                            button.set_sensitive(false);
+                            button.set_visible(false);
+                            apply_c.set_visible(true);
+                            apply_c.set_sensitive(true);
 
-                button_resolve.connect_clicked({
-                    let version1 = version1.clone();
-                    let m_box = m_changes.clone();
-                    let m_grid = merge_grid_clone.clone();
-                    let apply_c = apply_c.clone();
-
-                    move |button| {
-                        m_box.foreach(|child| {
-                            m_box.remove(child);
-                        });
-                        let mut index = 0;
-                        
-                        let mut list: HashMap<String, Conflict> = HashMap::new();
-                        for (key, value) in &conflicts {
-                            if let (Ok(cat_current), Ok(cat_incoming)) = (version1.cat_file(&value.change_current.hash),version1.cat_file(&value.change_branch.hash)) {
-                                let set_label_current = format!("{}\n             {}\n",key,cat_current);
-                                let set_label_incoming = format!("\n{}\n            {}\n",key,cat_incoming);
-                                let set_format = set_label_current + &set_label_incoming;
-                                let labels = gtk::Label::new(Some(&set_format));
-                                labels.set_visible(true);
-                                labels.set_xalign(2.0);
-                                labels.set_yalign(2.0);
-                                let both = Button::builder()
-                                .margin_start(10)
-                                .label("Accept both")
-                                .build();
-                                let current =Button::builder()
-                                .margin_start(10)
-                                .label("Accept current")
-                                .build();
-                                let incoming = Button::builder()
-                                .margin_start(10)
-                                .label("Accept incoming")
-                                .build();
-                                both.set_visible(true);
-                                current.set_visible(true);
-                                incoming.set_visible(true);
-                                m_grid.attach(&labels, 0, index as i32, 1, 1);
-                                m_grid.attach(&both, 1, index as i32, 1, 1);
-                                m_grid.attach(&current, 2, index as i32, 1, 1);
-                                m_grid.attach(&incoming, 3, index as i32, 1, 1);
-                                index += 1;
-                                add_current(&current, &mut list, &value);
-                                //applied_changes(&both,&value,&key);
-                                //applied_changes(&current,&value,&key);
-                                //applied_changes(&incoming,&value,&key);
-                            } 
-                            m_box.add(&m_grid);
                         }
-                        button.set_sensitive(false);
-                        button.set_visible(false);
-                        apply_c.set_visible(true);
-                        apply_c.set_sensitive(true);
-                    }
-                });
-                apply_c.connect_clicked({
-                    let version2 = version2.clone();
-                    let m_entry1 = m_entry1.clone();
-                    let m_box = m_changes.clone();
-                    move |_|{
-                        let _ = version2.resolve_conflicts(&m_entry1.text(), HashMap::new()); //En hashmap va conflicts de los applied_changes
-                        m_box.foreach(|child| {
-                            m_box.remove(child);
-                        });
-                        add_message(&m_box, &"Merged successfully".to_string());
-                    }
-                });
-            }    
+                    });
+                    apply_c.connect_clicked({
+                        let version2 = version1.clone();
+                        let m_entry1 = m_entry.clone();
+                        let m_box = m_changes.clone();
+                        move |button|{
+                            if let Ok(list_conflicts) = read_changes(&version2){
+                                let _ = version2.resolve_conflicts(&m_entry1.text(), list_conflicts);
+                            }
+                            m_box.foreach(|child| {
+                                m_box.remove(child);
+                            });
+                            add_message(&m_box, &"Merged successfully".to_string());
+                            button.set_sensitive(false);
+                            //button.set_visible(false);
+                        }
+                    });   
+                }
+            }
             merge_dialog.run();
             merge_dialog.hide();
 
@@ -324,68 +320,33 @@ fn add_message(m_changes: &gtk::Box, message: &String) {
     m_changes.add(&label);
 }
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
-pub fn add_current(button: &gtk::Button, list: &mut HashMap<String, Conflict>, conflict: &Conflict) {
-    let conflict_c = Rc::new(RefCell::new(conflict.clone()));
-    let list_c = Rc::new(RefCell::new(list.clone()));
+pub fn add_current(vcs: &VersionControlSystem, button: &gtk::Button, conflict: &Conflict) {
+    let conflict_c = conflict.clone();
+    let version = vcs.clone();
     button.connect_clicked({
-        let conflict_c = conflict_c.clone();
-        let list_c = list_c.clone();
-        move |b| {
-            let conflict = conflict_c.borrow_mut();
-            let mut list = list_c.borrow_mut();
-            let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: CURRENT };
-            list.insert(conflict.file.clone(), conflict.clone());
+        let conflict = conflict_c.clone();
+        let version = version.clone();
+        move |_| {
+            let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: CURRENT.to_string() };
+            let _ = write_changes(&version, &conflict);
+
     }});
+    
 }
 
-pub fn applied_changes(button: &gtk::Button, conflict: &Conflict, _path: &String) -> Conflict {
-    let conflict_c = Rc::new(RefCell::new(conflict.clone()));
-    let resolved_value = Rc::new(RefCell::new(None));
+pub fn add_incoming(vcs: &VersionControlSystem, button: &gtk::Button, conflict: &Conflict) {
+    let conflict_c = conflict.clone();
+    let version = vcs.clone();
+    button.connect_clicked({
+        let conflict = conflict_c.clone();
+        let version = version.clone();
+        move |_| {
+            let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: INCOMING.to_string() };
+            let _ = write_changes(&version,&conflict);
 
-    let conflict_c_clone = conflict_c.clone();
-    let resolved_value_clone = resolved_value.clone();
-
-    button.connect_clicked(move |b| {
-        let conflict_c = conflict_c_clone.clone();
-        let resolved_value = resolved_value_clone.clone();
-
-        let conflict = conflict_c.borrow();
-        match b.label().unwrap().as_str() {
-            "Accept both" => {
-                *resolved_value.borrow_mut() = Some(Conflict {
-                    file: conflict.file.clone(),
-                    change_current: conflict.change_current.clone(),
-                    change_branch: conflict.change_branch.clone(),
-                    resolved: BOTH,
-                });
-            },
-            "Accept current" => {
-                *resolved_value.borrow_mut() = Some(Conflict {
-                    file: conflict.file.clone(),
-                    change_current: conflict.change_current.clone(),
-                    change_branch: conflict.change_branch.clone(),
-                    resolved: CURRENT,
-                });
-            },
-            "Accept incoming" => {
-                *resolved_value.borrow_mut() = Some(Conflict {
-                    file: conflict.file.clone(),
-                    change_current: conflict.change_current.clone(),
-                    change_branch: conflict.change_branch.clone(),
-                    resolved: INCOMING,
-                });
-            },
-            _ => todo!(),
-        }
-    });
-
-    let x = resolved_value.borrow().as_ref().unwrap().clone(); x
+    }});
+    
 }
-
-
 
 
 pub fn handle_clone(interface: &RustInterface, vcs: &VersionControlSystem) {
@@ -406,7 +367,7 @@ pub fn handle_clone(interface: &RustInterface, vcs: &VersionControlSystem) {
     });
 
     interface.clone.connect_clicked({
-        let version = version.clone();
+        let _version = version.clone();
         let info = info.clone();
         let c_entry = c_entry.clone();
         let fix_clone = fix_clone.clone();
