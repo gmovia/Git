@@ -11,7 +11,7 @@ pub struct Clone;
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
         
-        let init_path = Path::new("/home/amoralejo/TEST_CLONE");
+        let init_path = Path::new("/home/amoralejo/chau");
 
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
@@ -19,7 +19,7 @@ impl Clone{
     }
 
     pub fn request_branch(list_refs: &Vec<String>, vcs: &VersionControlSystem, objects: Vec<(u8,Vec<u8>)>) -> Result<(),std::io::Error> {
-        println!("PASA 1");
+        println!("PASA 1: {:?}", vcs.path);
         for item in list_refs {
             println!("PASA 2");
             if item.contains("HEAD") {
@@ -37,21 +37,18 @@ impl Clone{
                     let branch_name = ref_part.trim_start_matches("refs/heads/");
                     let _ = vcs.branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
-                    // Realiza aquí la acción que desees con `branch_name`.
-                    Self::write_commit_log_file(vcs, commit, branch_name)?;
-                                
+                    
+                    Self::write_commit_log_file(vcs, commit, branch_name)?;            
 
                     let mut tree_hash = String::new();
                     let mut files = Vec::new();
                     for object in &objects {
-                        println!("for de object: {:?}-{:?}",object.0,String::from_utf8_lossy(&object.1));
                         match object.0 {
                             1 => {
                                 tree_hash = Self::create_commit_folder(vcs, &object.1, commit)?
                                 },
                             2 => files = Self::create_tree_folder(vcs, object.1.to_owned(), &tree_hash)?,
                             3 => {
-                                println!("FILES ---> : {:?}", files);
                                 let file_name = files.remove(0);
                                 let file_name_hash = Self::create_blob_folder(vcs, object.1.to_owned(), file_name)?;
                                 Self::add_hash_to_tree(vcs, file_name_hash, &tree_hash)?
@@ -125,25 +122,26 @@ impl Clone{
 
 
     fn create_blob_folder(vcs: &VersionControlSystem, commit: Vec<u8>,  files: (String,String)) -> Result<(String,String),std::io::Error> {
-        // con files.1 (es el hash del blob) deberia poder obtener el nombre de las carpetas para guardar el contenido de los archivos
-        println!("blob folder: {:?}",files.0);
-        println!("blob folder: {:?}",String::from_utf8_lossy(&commit));
         let file_hash = Self::create_file(vcs, files.0, &commit)?;       
         
         let object_path = vcs.path.join(".rust_git").join("objects").join(&file_hash.1[0..2]);
         fs::create_dir_all(&object_path)?;
         let mut file = File::create(&object_path.join(&file_hash.1[2..]))?;
         file.write(String::from_utf8_lossy(&commit).as_bytes())?;        
-        
         Ok(file_hash)
     }
 
     fn create_file(vcs: &VersionControlSystem, file_name: String, file_content: &Vec<u8>) -> Result<(String,String), std::io::Error> {
-        let file_path = vcs.path.join(&file_name);
         fs::create_dir_all(&vcs.path)?;
-        let mut file = File::create(file_path)?;
-        file.write(String::from_utf8_lossy(&file_content).as_bytes())?;
-        let hash = vcs.hash_object(vcs.path.join(&file_name).as_path(), WriteOption::NoWrite)?;
+        let mut hash = String::new();
+        let file_path = Path::new(&file_name);
+        if let Some(file_name) = file_path.file_name() {
+            let mut file = File::create(vcs.path.join(&file_name))?;
+            file.write(String::from_utf8_lossy(&file_content).as_bytes())?;
+            hash = vcs.hash_object(vcs.path.join(&file_name).as_path(), WriteOption::NoWrite)?;    
+        } else {
+            std::io::Error::new(io::ErrorKind::InvalidData, "Can not create the file.");
+        }
         Ok((file_name,hash))
     }
 
@@ -168,16 +166,14 @@ impl Clone{
         packets.push("7cf2e660ac528b620de3f5bd9f86ff5cd6cb1387 refs/heads/master".to_owned());
     
 
-        println!("PAQUETE: {:?}",packets);
         for packet in &packets {
             println!("Paquete: {:?}", packet);
         }
         for want in Self::get_want_msgs(&packets) {
             socket.write(want.as_bytes())?;
         }
-        
+
         Self::send_done_msg(socket)?;
-        print!("LEN MANDE LOS DONES\n");
         let objects = Self::get_socket_response(socket)?;
 
         Self::request_branch(&packets, vcs, objects)?;
