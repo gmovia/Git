@@ -2,10 +2,10 @@ pub const NULL: &str = "NULL";
 
 // MERGE
 pub const MERGE: &str = "merge";
-pub const NONE: char = 'N';
-pub const CURRENT: char = 'C';
-pub const INCOMING: char = 'I';
-pub const BOTH: char = 'B';
+pub const NONE: &str = "N";
+pub const CURRENT: &str = "C";
+pub const INCOMING: &str = "I";
+pub const BOTH: &str = "B";
 
 // STATES
 pub const STATE_CREATED: &str = "CREATED";
