@@ -30,18 +30,23 @@ impl Fetch {
         for packet in &packets {
             println!("Paquete: {:?}", packet);
         }
-
         let branch_commits_received = Self::format_packet(&packets)?;
-        println!("PASA ----> {:?}", branch_commits_received);
         let message_to_send =Self::packet_manager(branch_commits_received, vcs)?;
-        println!("MENSAJESS: {:?}, {:?}", message_to_send.0, message_to_send.1);
         
-        
-        for want in Self::get_want_msgs(&packets) {
+        println!("{:?}", message_to_send);
+        for want in &message_to_send.0 {
+            println!("WANT ENVIADO: {}", want);
             socket.write(want.as_bytes())?;
         }
 
+        if !&message_to_send.0.is_empty() {
+            for have in message_to_send.1 {
+                println!("HAVE ENVIADO: {}", have);
+                socket.write(have.as_bytes())?;
+            }
+        }
         send_done_msg(socket)?;
+        
         let objects = Self::get_socket_response(socket)?;
 
         Ok(()) 
@@ -70,30 +75,31 @@ impl Fetch {
     fn packet_manager(last_branch_commit_recieve: Vec<(String,String)>, vcs: &VersionControlSystem) -> Result<(Vec<String>,Vec<String>), std::io::Error>{
         let mut want_list: Vec<String> = Vec::new();
         let mut have_list: Vec<String> = Vec::new();
-        for packet in last_branch_commit_recieve {
-            let file = File::open(&vcs.path.join(".rust_git").join("logs").join(packet.0))?;
+        for packet in &last_branch_commit_recieve {
+            let file = File::open(&vcs.path.join(".rust_git").join("logs").join(packet.0.to_string()))?;
             let reader = io::BufReader::new(file);
 
             let mut last_line = String::new();
             for line in reader.lines() {
                 last_line = line?;
             }
-            println!("last line: {}", last_line);
+            println!("last line: {} -- {}", last_line, &packet.1);
             if &last_line[2..42] == packet.1 {
-                //have_list.push(format!("have {} refs/head/{}", packet.1, &packet.0));
+                have_list.push(to_pkt_line(&format!("have {} refs/head/{}", packet.1, packet.0)));
             }
             else {
-                //want_list.push(format!("want {} refs/head/{}", packet.1, &packet.0));
+                want_list.push(to_pkt_line(&format!("want {} refs/head/{}", packet.1, &packet.0)));
             }
         }
         Ok((want_list,have_list))
     }
 
-    fn get_socket_response(socket: &mut TcpStream) -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
+    fn get_socket_response(socket: &mut TcpStream) -> Result<(),std::io::Error> {
         let mut buffer = Vec::new();
             match socket.read_to_end(&mut buffer) {
                 Ok(_) => {
-                    todo!()
+                    println!("{:?}",String::from_utf8_lossy(&buffer));
+                    Ok(())
                     //return Self::manage_pack(&buffer[8..]);
                 }
                 Err(e) => {
@@ -102,20 +108,5 @@ impl Fetch {
                 }
             } 
     }
-
-    fn get_want_msgs(commits_list: &Vec<String>) -> Vec<String> {
-        let mut want_msgs = Vec::new();
-    
-        for commit in commits_list {
-            let msg_commit = format!("want {}", commit);                
-            let pkt_commit = to_pkt_line(&msg_commit);
-            if commit.contains("HEAD"){
-                continue;
-            }
-            want_msgs.push(pkt_commit);
-        }
-        want_msgs
-    }
-
 
 }
