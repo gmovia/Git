@@ -80,8 +80,9 @@ impl VersionControlSystem {
         Log::log(self)
     }
 
-    pub fn clone(&self, input: String) -> Result<(), std::io::Error> {
+    pub fn git_clone(&self, input: String) -> Result<(), std::io::Error> {
         let _ = Client::client_(self,input);
+        Ok(())
     }
 
     pub fn fetch(&self, server_repo: String) -> Result<(), std::io::Error> {
