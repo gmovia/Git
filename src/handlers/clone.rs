@@ -6,7 +6,7 @@ pub fn handler_clone(vcs: &mut VersionControlSystem, input: String) -> Result<()
     let args: Vec<&str> = input.split(" ").collect();
     let server_repo = args[0];
 
-    vcs.clone(server_repo.to_string())?;
+    vcs.git_clone(server_repo.to_string())?;
     
     Ok(())
 }

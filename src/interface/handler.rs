@@ -253,7 +253,7 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                             });
                             let mut index = 0;
                             for (key, value) in &conflicts {
-                                if let (Ok(cat_current), Ok(cat_incoming)) = (version1.cat_file(&value.change_current.hash),version1.cat_file(&value.change_branch.hash)) {
+                                if let (Ok(cat_current), Ok(cat_incoming)) = (version1.cat_file(&value.change_current.hash, ".rust_git"),version1.cat_file(&value.change_branch.hash,".rust_git")) {
                                     let set_label_current = format!("{}\n             {}\n",key,cat_current);
                                     let set_label_incoming = format!("\n{}\n            {}\n",key,cat_incoming);
                                     let set_format = set_label_current + &set_label_incoming;
@@ -432,7 +432,7 @@ pub fn handle_clone(interface: &RustInterface, vcs: &VersionControlSystem) {
         let fix_clone = fix_clone.clone();
         move |button| {
             
-            //if let Ok(content) = version.clone(&c_entry.text()) {
+            if let Ok(content) = version.git_clone((&c_entry.text()).to_string()) {
                 let label = gtk::Label::new(Some(&c_entry.text()));
                 label.set_visible(true);
                 label.set_xalign(0.5);
@@ -453,7 +453,7 @@ pub fn handle_clone(interface: &RustInterface, vcs: &VersionControlSystem) {
                         }});
                     }
                 });
-            //}
+            }
             c_entry.set_text("");
             button.set_sensitive(false);
         }

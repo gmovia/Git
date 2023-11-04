@@ -134,7 +134,7 @@ impl RustInterface {
     pub fn impl_interface(&self) -> Result<(), std::io::Error>{    
         set_styles_css(self);
         
-        let vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
+        let vcs = VersionControlSystem::init(Path::new("clone_here"), Vec::new());
 
         let _ = changes_and_staging_area(&vcs, &self.grid, &self.box_window);
         repositories(&vcs, &self.select_repository)?;

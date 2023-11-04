@@ -12,7 +12,7 @@ impl CommitsTable{
 
         for commit in commits_table {
             if commit.hash == commit_hash {
-                let content = CatFile::cat_file(commit_hash, Init::get_object_path(&repo_path)?)?;
+                let content = CatFile::cat_file(commit_hash, Init::get_object_path(&repo_path, ".rust_git")?)?;
                 let content_lines: Vec<&str> = content.split("\n").collect();
                 for line in content_lines{
                     if line != ""{

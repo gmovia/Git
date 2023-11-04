@@ -44,7 +44,7 @@ impl Checkout{
         delete_all_files_and_folders(path)?;
 
         for (key, value) in repository_hashmap{
-            let content = CatFile::cat_file(&value, Init::get_object_path(path)?)?;
+            let content = CatFile::cat_file(&value, Init::get_object_path(path, ".rust_git")?)?;
             create_file_and_their_folders(Path::new(&key), &content)?
         }
         Ok(())

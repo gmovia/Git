@@ -24,7 +24,7 @@ pub fn handler_command<'a>(vcs: & VersionControlSystem, input: &str) -> String{
         },
         x if x.contains("git hash-object") => handler_hash_object(vcs, x.to_string()),
         x if x.contains("git add") => handler_add(vcs, x.to_string()),
-        x if x.contains("git cat-file") => handler_cat_file(vcs, x.to_string()),
+        x if x.contains("git cat-file") => handler_cat_file(vcs, x.to_string(), ".rust_git".to_string()),
         x if x.contains("git rm") => handler_rm(vcs, x.to_string()),
         x if x.contains("git log") => handler_log(vcs),
         x if x.contains("git commit") => handler_commit(vcs, x.to_string()),
