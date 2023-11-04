@@ -25,7 +25,7 @@ fn main() -> Result<(), std::io::Error> {
             "git status" => handler_status(&vcs),
             x if x.contains("git hash-object") => {println!("{:?}",handler_hash_object(&vcs, x.to_string())?);} ,
             x if x.contains("git add") => {handler_add(&mut vcs, x.to_string())?;},
-            x if x.contains("git cat-file") => {println!("{:?}",handler_cat_file(&vcs, x.to_string(), ".rust_git")?);},
+            x if x.contains("git cat-file") => {println!("{:?}",handler_cat_file(&vcs, x.to_string(), ".rust_git".to_string())?);},
             x if x.contains("git rm") => {handler_rm(&mut vcs, x.to_string())?;},
             x if x.contains("git log") => {let _ = handler_log(&vcs);},
             x if x.contains("git commit") => {handler_commit(&mut vcs, x.to_string())?;},
