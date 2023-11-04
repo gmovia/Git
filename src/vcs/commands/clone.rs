@@ -1,5 +1,5 @@
 
-use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::Path};
+use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::{Path, PathBuf}};
 use chrono::{DateTime, Local};
 
 use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, packfile::packfile::process_line, handlers::branch};
@@ -9,11 +9,7 @@ use crate::packfile::packfile::{decompress_data, to_pkt_line, read_packet};
 pub struct Clone;
 
 impl Clone{
-    pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
-        
-        let init_path = Path::new("clone_here");
-
-        let mut vcs = VersionControlSystem::init(init_path, Vec::new());
+    pub fn clone(stream: &mut TcpStream, mut vcs: &VersionControlSystem) -> Result<(), std::io::Error> {
         Self::receive_pack(stream, &mut vcs)?;
         Ok(())
     }
@@ -23,7 +19,6 @@ impl Clone{
             if item.contains("HEAD") {
                 continue;
             }
-
             let parts: Vec<&str> = item.splitn(2, ' ').collect(); // Divide el elemento en dos partes.
             if parts.len() == 2 {
                 let commit = parts[0];
@@ -64,7 +59,7 @@ impl Clone{
         if let Some(branch) = branch_name.strip_prefix("refs/head/") {
             let logs_path = vcs.path.join(".rust_git").join("logs").join(branch); 
             let current_time: DateTime<Local> = Local::now();
-            let format_commit = format!("{}-{}-{}-{}", Random::random(), commit, "clone", current_time);
+            let format_commit = format!("{}-{}-{}-{}\n", Random::random(), commit, "clone", current_time);
             let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
             file.write(format_commit.as_bytes())?;
 
@@ -76,10 +71,16 @@ impl Clone{
     fn add_hash_to_tree(vcs: &VersionControlSystem, file_hash: (String,String), tree_hash: &str) -> Result<(),std::io::Error> {
         let path = vcs.path.join(".rust_git").join("objects").join(&tree_hash[0..2]).join(&tree_hash[2..]);
         let mut file = OpenOptions::new().write(true).create(true).append(true).open(path).expect("No se pudo abrir el archivo");
-        let format = format!("{}-{}", file_hash.0, file_hash.1);
-        file.write(format.as_bytes())?;
-        file.write("\n".as_bytes())?;
-        Ok(())
+        if let Some(file_name) = Path::new(&file_hash.0).file_name() {
+            let format = format!("{}-{}", vcs.path.to_string_lossy().to_string()+"/"+&file_name.to_string_lossy().to_string(), file_hash.1);
+            file.write(format.as_bytes())?;
+            file.write("\n".as_bytes())?;
+            Ok(())
+        }
+        else {
+            Err(std::io::Error::new(io::ErrorKind::InvalidData, "Can not add hash treee"))
+        }
+        
     }
 
     fn create_commit_folder(vcs: &VersionControlSystem, commit: &Vec<u8>, commit_folder: &str) -> Result<String,std::io::Error> {
@@ -225,14 +226,7 @@ impl Clone{
                 position = position + 1;
             }
             position = position + 1;
-            /* 
-            if Self::is_bit_set(pack[position]) {
-                position = position + 2;
-            }
-            else {
-                position = position + 1;
-            }
-            */
+
             if let Ok(data) = decompress_data(&pack[position..]) {
                 println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
                 println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));

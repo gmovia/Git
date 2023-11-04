@@ -105,7 +105,7 @@ impl Client {
             (true, _) => {
                 match command {
                     "clone" => {
-                        if let Err(e) = clone::Clone::clone(socket) {
+                        if let Err(e) = clone::Clone::clone(socket, vcs) {
                             println!("Error: {}", e);
                         }                   
                     }
