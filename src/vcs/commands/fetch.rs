@@ -71,25 +71,33 @@ impl Fetch {
         last_commits.reverse();
         Ok(last_commits)
     }
-    
+
     fn packet_manager(last_branch_commit_recieve: Vec<(String,String)>, vcs: &VersionControlSystem) -> Result<(Vec<String>,Vec<String>), std::io::Error>{
         let mut want_list: Vec<String> = Vec::new();
         let mut have_list: Vec<String> = Vec::new();
         for packet in &last_branch_commit_recieve {
-            let file = File::open(&vcs.path.join(".rust_git").join("logs").join(packet.0.to_string()))?;
-            let reader = io::BufReader::new(file);
-
-            let mut last_line = String::new();
-            for line in reader.lines() {
-                last_line = line?;
+            match File::open(&vcs.path.join(".rust_git").join("logs").join(packet.0.to_string())) {
+                Ok(file) => {
+                    let file = File::open(&vcs.path.join(".rust_git").join("logs").join(packet.0.to_string()))?;
+                    let reader = io::BufReader::new(file);
+        
+                    let mut last_line = String::new();
+                    for line in reader.lines() {
+                        last_line = line?;
+                    }
+                    println!("last line: {} -- {}", last_line, &packet.1);
+                    if &last_line[2..42] == packet.1 {
+                        have_list.push(to_pkt_line(&format!("have {} refs/head/{}", packet.1, packet.0)));
+                    }
+                    else {
+                        want_list.push(to_pkt_line(&format!("want {} refs/head/{}", packet.1, &packet.0)));
+                    }
+                }
+                Err(_) => {
+                    want_list.push(to_pkt_line(&format!("want {} refs/head/{}", packet.1, &packet.0)));    
+                }
             }
-            println!("last line: {} -- {}", last_line, &packet.1);
-            if &last_line[2..42] == packet.1 {
-                have_list.push(to_pkt_line(&format!("have {} refs/head/{}", packet.1, packet.0)));
-            }
-            else {
-                want_list.push(to_pkt_line(&format!("want {} refs/head/{}", packet.1, &packet.0)));
-            }
+            
         }
         Ok((want_list,have_list))
     }
