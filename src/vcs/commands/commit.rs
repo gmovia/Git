@@ -1,6 +1,6 @@
-use std::{fs::OpenOptions, self, io::{Write, self}, collections::HashMap};
-use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
-use super::init::Init;
+use std::{fs::{OpenOptions, self}, self, io::{Write, self}, collections::HashMap, path::{PathBuf, Path}};
+use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED}};
+use super::{init::Init, hash_object::{HashObject, WriteOption}};
 
 extern crate chrono;
 use chrono::{DateTime, Local};
@@ -17,9 +17,9 @@ impl Commit{
         }
         for (key, value) in &staging_area{
             match value.clone().state.as_str(){
-                "CREATED" => {repository.insert(key.to_string(), value.clone().content);},
-                "MODIFIED" => {repository.insert(key.to_string(), value.clone().content);},
-                "DELETED" => {repository.remove(key);},
+                STATE_CREATED => {repository.insert(key.to_string(), value.clone().content);},
+                STATE_MODIFIED => {repository.insert(key.to_string(), value.clone().content);},
+                STATE_DELETED => {repository.remove(key);},
                 _ => {}
             }
         }
@@ -39,8 +39,23 @@ impl Commit{
         let current_time: DateTime<Local> = Local::now();
         let _ = current_time.to_rfc2822();
 
-        let commit = format!("{}-{}-{}-{}\n", id, hash, message, current_time); 
+        let tree_hash = Self::create_tree(&vcs.path, &hash)?;
+
+
+        let commit = format!("{}-{}-{}-{}-{}\n", id, hash, message, current_time, tree_hash); 
         commits_file.write_all(commit.as_bytes())?;
         Ok(())
+    }
+
+    pub fn create_tree(path: &PathBuf, hash: &String) -> Result<String, std::io::Error>{
+        let temp_path = Path::new(&path).join("temp");
+        let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&temp_path)?; 
+    
+        let entry = format!("tree-{}\n", hash);
+        tree_file.write_all(entry.as_bytes())?;
+
+        let hash = HashObject::hash_object(&temp_path, Init::get_object_path(&path, ".rust_git")?, WriteOption::Write)?;
+        let _ = fs::remove_file(temp_path);
+        Ok(hash)
     }
 }

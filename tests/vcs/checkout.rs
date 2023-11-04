@@ -19,7 +19,7 @@ mod tests {
 
     #[test]
     pub fn test_01_create_a_branch_then_change_to_it_and_add_a_file_in_branch_changed() -> Result<(),std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");
 
         vcs.add(&path)?;
@@ -40,7 +40,7 @@ mod tests {
 
     #[test]
     pub fn test_02_add_a_file_in_master_then_create_and_change_branch_then_add_a_new_file_in_new_branch() -> Result<(),std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path_file2 = create_file(&temp_dir, "file2.txt");
 
         vcs.add(&path_file2)?;

@@ -18,7 +18,6 @@ mod tests {
                 }
             }
         }
-        println!("{:?}",file_count);
         Ok(file_count)
     }
 

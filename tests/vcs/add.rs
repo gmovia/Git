@@ -6,7 +6,7 @@ mod tests {
 
     #[test]
     pub fn test_01_add_file_1_to_staging_area() -> Result<(), std::io::Error>{ // git add file1.txt
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");        
 
         let staging_area = vcs.add(&path)?;
@@ -16,7 +16,7 @@ mod tests {
 
     #[test]
     pub fn test_02_add_file_1_and_file_2_to_staging_area() -> Result<(), std::io::Error>{ // git add file1.txt y despues git add file2.txt
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let file1_path = create_file(&temp_dir, "file1.txt");   
         let file2_path = create_file(&temp_dir, "file2.txt");        
      
@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     pub fn test_03_add_file_1_the_status_is_created() -> Result<(), std::io::Error>{ // git add file1.txt
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
         let staging_area = vcs.add(&path)?;
@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     pub fn test_04_add_file_1_the_status_is_modified() -> Result<(), std::io::Error>{ // git add file1.txt
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
         let _ = vcs.add(&path)?;
@@ -56,7 +56,7 @@ mod tests {
 
     #[test]
     pub fn test_05_if_file_1_is_in_staging_area_and_add_file_1_updated_staging_area() -> Result<(), std::io::Error>{ // git add file1.txt y despues git add file1.txt
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
         vcs.repository.read_repository()?.insert(path.display().to_string(), "content".to_string());  
@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     pub fn test_06_if_file_1_is_in_staging_area_and_add_file_1_updated_staging_area() -> Result<(), std::io::Error>{ // git add file1.txt
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
         let _ = vcs.add(&path);
@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     pub fn test_07_add_all_files_to_staging_area() -> Result<(), std::io::Error>{ // git add .
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let _ = create_file(&temp_dir, "file1.txt");
         let _ = create_file(&temp_dir, "file2.txt");        
         let _ = create_file(&temp_dir, "file3.txt");     
@@ -94,7 +94,7 @@ mod tests {
 
      #[test] 
     pub fn test_08_read_index_and_write_it_to_staging_area() -> Result<(),std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let _ = create_file(&temp_dir, "file1.txt");
         let _ = create_file(&temp_dir, "file2.txt");   
 
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     pub fn test_09_trying_to_commit_a_file_before_adding_it() -> Result<(),std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let _ = create_file(&temp_dir, "file1.txt");
 
         let result = vcs.commit("first_commit".to_string());

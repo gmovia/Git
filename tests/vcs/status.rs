@@ -22,18 +22,19 @@ mod tests {
     
     #[test]
     pub fn test_03_untracked_files_not_contains_files() -> Result<(), std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");
         vcs.add(&path)?;
         vcs.commit("first_commit".to_string())?;
 
-        assert!(matches!(vcs.status(), Ok((untracked_files, _, _)) if untracked_files.len() == 0));
+        let (untracked_files, _, _ ) = vcs.status()?;
+        assert_eq!(untracked_files.len(), 0);
         Ok(())
     }
 
     #[test]
     pub fn test_04_changes_not_staged_for_commit_contains_one_file() -> Result<(), std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");
         
         vcs.add(&path)?;
@@ -49,7 +50,7 @@ mod tests {
 
     #[test]
     pub fn test_05_changes_not_staged_for_commit_contains_one_file()  -> Result<(), std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let file = create_file(&temp_dir, "file.txt");
 
         vcs.add(&file)?;
@@ -65,7 +66,7 @@ mod tests {
     
     #[test]
     pub fn test_06_untracked_file_contain_file_1_and_changes_not_staged_for_commit_contain_file_3() -> Result<(), std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         
         let file_1 = create_file(&temp_dir, "file1.txt");
         let file_3 = create_file(&temp_dir, "file3.txt"); 
@@ -83,7 +84,7 @@ mod tests {
     
     #[test]
     pub fn test_07_untracked_file_contain_file_1_and_changes_not_staged_for_commit_contain_file_2_and_file_3() -> Result<(), std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         
         let file_1 = create_file(&temp_dir, "file1.txt");
         let file_2 = create_file(&temp_dir, "file2.txt");
@@ -109,7 +110,7 @@ mod tests {
 
     #[test]
     pub fn test_08_staging_area_contain_file_1() {
-        let (temp_dir, mut vsc) = set_up();
+        let (temp_dir, vsc) = set_up();
         let path = create_file(&temp_dir, "file1.txt");    
 
         let _ = vsc.add(&path);
@@ -120,7 +121,7 @@ mod tests {
 
     #[test]
     pub fn test_09_staging_area_contain_file_1_and_changes_not_staged_for_commit_contain_file1() -> Result<(), std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");    
         let mut file = fs::OpenOptions::new().write(true).create(true).append(true).open(&path)?;
 
@@ -142,7 +143,7 @@ mod tests {
     
     #[test]
     pub fn test_10_changes_not_staged_for_commit_contain_file_1() -> Result<(), std::io::Error> {
-        let (temp_dir, mut vcs) = set_up(); // SI SACAS TEMP_DIR ROMPE!
+        let (temp_dir, vcs) = set_up(); // SI SACAS TEMP_DIR ROMPE!
         let path = create_file(&temp_dir, "file1.txt");   
         
         vcs.add(&path)?;
@@ -160,7 +161,7 @@ mod tests {
     
     #[test]
     pub fn test_11_changes_to_be_commited_contain_file_1() -> Result<(), std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt"); 
         
         vcs.add(&path)?;
@@ -179,7 +180,7 @@ mod tests {
 
     #[test]
     pub fn test_12_three_sets_are_empty() -> Result<(), std::io::Error>{
-        let (temp_dir, mut vcs) = set_up();
+        let (temp_dir, vcs) = set_up();
         let path = create_file(&temp_dir, "file1.txt");    
         vcs.repository.read_repository()?.insert(path.display().to_string(), "".to_string());
 

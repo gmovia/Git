@@ -1,17 +1,17 @@
 use std::{path::Path, fs, collections::HashMap};
 use crate::{
     vcs::{files::vcs_file::VCSFile, version_control_system::VersionControlSystem},
-    utils::files::files::read,
+    utils::files::files::read, constants::constants::{STATE_DELETED, NULL},
 };
 pub struct Rm;
 
+#[derive(Debug,Clone)]
 pub enum RemoveOption {
     Directory,
     NoDirectory,
 }
 
 impl Rm{
-
     /// Recibe un path 
     /// Se elimina al path correspondiente segun sea archivo o directorio
     pub fn remove_from_workspace(path: &str) -> std::io::Result<()> {
@@ -27,18 +27,17 @@ impl Rm{
         Ok(())
     }
 
-    pub fn rm(vcs: &mut VersionControlSystem, path: &Path, option: RemoveOption) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+    pub fn rm(vcs: &VersionControlSystem, path: &Path, option: RemoveOption) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         match option {
             RemoveOption::NoDirectory => Rm::rm_(vcs, path),
             RemoveOption::Directory => Rm:: rm_r(vcs, path)
         }
     }
     
-    
     /// Recibe el sistema control de versiones y un path
     /// Setea estado eliminado a los archivos correspondiente en el area de staging
     /// Devuelve el area de staging
-    pub fn rm_(vcs: &mut VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {   
+    pub fn rm_(vcs: &VersionControlSystem, path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {   
 
         if path.is_dir(){
             return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: not removing '{:?}' recursively without -r", path)));
@@ -50,7 +49,7 @@ impl Rm{
             for key in files.keys(){
                 if vcs.repository.read_repository()?.contains_key(key){
                     Rm::remove_from_workspace(&key)?;
-                    let file = VCSFile::new(key.clone(), "NULL".to_string(), "DELETED".to_string());
+                    let file = VCSFile::new(key.clone(), NULL.to_string(), STATE_DELETED.to_string());
                     staging_area.insert(key.to_owned(), file);
                     let _ = vcs.index.write_index(&staging_area);
                     return Ok(staging_area.clone());
@@ -66,7 +65,7 @@ impl Rm{
     /// Recibe el sistema control de versiones y un path correspondiente a un directorio
     /// Recorre el path del directorio y a rm manda el archivo leido para ser seteado con el estado correspondiente
     /// Devuelve el area de staging
-    pub fn rm_r(vcs: &mut VersionControlSystem, dir_path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
+    pub fn rm_r(vcs: &VersionControlSystem, dir_path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         let mut result = HashMap::new();
         if let Ok(files) = read(dir_path) {
             for (key, _) in &files {

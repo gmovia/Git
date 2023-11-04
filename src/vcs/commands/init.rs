@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, fs::{self, File}, io::{Write, Read}};
+use std::{path::{Path, PathBuf}, fs::{self, File}, io::{Write, Read, self}};
 
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
@@ -138,9 +138,9 @@ impl Init {
         Ok(())
     }
 
-    pub fn get_object_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
+    pub fn get_object_path(path: &PathBuf, git_path: &str) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
-        let objects_path = p.join(".rust_git").join("objects");
+        let objects_path = p.join(git_path).join("objects");
         Ok(Path::new(&objects_path).to_path_buf())
     }
 
@@ -161,6 +161,20 @@ impl Init {
         
         let commits_path = p.join(".rust_git").join(content);
         Ok(Path::new(&commits_path).to_path_buf())
+    }
+
+    pub fn get_current_branch(path: &PathBuf) -> Result<String, std::io::Error>{
+        let p = Path::new(path);
+
+        let head_path = p.join(".rust_git").join("HEAD");
+        let mut head_file = File::open(head_path)?;
+        
+        let mut content = String::new();
+        head_file.read_to_string(&mut content)?;
+        if let Some(actual_branch) = content.clone().split("/").last(){
+            return Ok(actual_branch.to_string());
+        }
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't find the branch"));
     }
 
 pub fn create_log_file(path: PathBuf, branch_name: &str) -> Result<(),std::io::Error>{

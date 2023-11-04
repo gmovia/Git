@@ -1,6 +1,5 @@
 use std::{path::{Path, PathBuf}, fs};
 
-
 pub struct CatFile;
 
 impl CatFile{
@@ -13,11 +12,19 @@ impl CatFile{
         if !path.exists(){
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No such file or directory"));
         }
+        let data = fs::read(&path)?;
+        Ok(String::from_utf8_lossy(&data).to_string())
+    }
+
+    pub fn cat_file_bytes(hash: &str, object_path: PathBuf) -> Result<Vec<u8>, std::io::Error> {
         
-        let data = fs::read_to_string(&path)?;
-
+        let string_path = CatFile::get_hash_path(hash, object_path)?;
+        let path = Path::new(&string_path);
+        if !path.exists(){
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No such file or directory"));
+        }
+        let data = fs::read(&path)?;
         Ok(data)
-
     }
 
     pub fn get_hash_path(hash: &str, object_path: PathBuf) -> Result<String, std::io::Error>{
