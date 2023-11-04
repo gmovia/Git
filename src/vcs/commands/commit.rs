@@ -1,17 +1,11 @@
 use std::{fs::{OpenOptions, self}, self, io::{Write, self}, collections::HashMap, path::{PathBuf, Path}};
-use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
+use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED}};
 use super::{init::Init, hash_object::{HashObject, WriteOption}};
 
 extern crate chrono;
 use chrono::{DateTime, Local};
-use rand::Rng;
 
-pub struct Commit {
-    id: String,
-    hash: String,
-    message: String,
-    timestamp: DateTime<Local>,
-}
+pub struct Commit;
 
 impl Commit{
 
@@ -23,46 +17,33 @@ impl Commit{
         }
         for (key, value) in &staging_area{
             match value.clone().state.as_str(){
-                "CREATED" => {repository.insert(key.to_string(), value.clone().content);},
-                "MODIFIED" => {repository.insert(key.to_string(), value.clone().content);},
-                "DELETED" => {repository.remove(key);},
+                STATE_CREATED => {repository.insert(key.to_string(), value.clone().content);},
+                STATE_MODIFIED => {repository.insert(key.to_string(), value.clone().content);},
+                STATE_DELETED => {repository.remove(key);},
                 _ => {}
             }
         }
-        let commit = Commit::create_commit(&message, &repository, vcs)?;
-        Commit::write_commit(vcs, &commit)?;
+
+        let _ = Commit::write_commit(vcs, &message, &repository)?;
         let _ = vcs.index.clear(); //limpio el index
         Ok(repository)
     }
     
 
-    pub fn create_commit(message: &String, repository: &HashMap<String, String>, vcs: &VersionControlSystem) -> Result<Commit, std::io::Error> {
-        let mut rng = rand::thread_rng();
-        let id = rng.gen_range(1..9);
-        let hash = vcs.repository.write_repository(repository)?;
+    /// leo la tupla del commit actual y la escribo en la tabla ubicada en commits_file
+    pub fn write_commit(vcs: &VersionControlSystem, message: &String, repository: &HashMap<String, String>) -> Result<(),std::io::Error>{
+        let id = Random::random();
+        let hash = vcs.repository.write_repository(&repository)?;
+        let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&vcs.path)?)?; //abro la tabla de commits para escribir - si no existe, la creo
+
         let current_time: DateTime<Local> = Local::now();
         let _ = current_time.to_rfc2822();
 
-        Ok(Commit {
-            id: id.to_string(),
-            hash,
-            message: message.clone(),
-            timestamp: current_time,
-        })
-    }
+        let tree_hash = Self::create_tree(&vcs.path, &hash)?;
 
-    /// leo la tupla del commit actual y la escribo en la tabla ubicada en commits_file
-    pub fn write_commit(vcs: &VersionControlSystem, commit: &Commit) -> Result<(), std::io::Error> {
-        let id = commit.id.to_string(); 
-        let repository_hash = &commit.hash;
-        let message = &commit.message;
-        let current_time = commit.timestamp;
-        
-        let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&vcs.path)?)?;
-        let tree_hash = Self::create_tree(&vcs.path, repository_hash)?;
 
-        let commit_info = format!("{}-{}-{}-{}-{}\n", id, repository_hash, message, current_time.to_rfc2822(), tree_hash);
-        commits_file.write_all(commit_info.as_bytes())?;
+        let commit = format!("{}-{}-{}-{}-{}\n", id, hash, message, current_time, tree_hash); 
+        commits_file.write_all(commit.as_bytes())?;
         Ok(())
     }
 
@@ -78,5 +59,3 @@ impl Commit{
         Ok(hash)
     }
 }
-
-

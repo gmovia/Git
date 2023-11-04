@@ -1,4 +1,9 @@
+pub mod constants{
+    pub mod constants;
+}
+
 pub mod handlers{
+    pub mod commands;
     pub mod status;
     pub mod hash_object;
     pub mod add;
@@ -7,8 +12,17 @@ pub mod handlers{
     pub mod branch;
     pub mod clone;
     pub mod  fetch;
+    pub mod checkout;
     pub mod log;
     pub mod commit;
+}
+
+pub mod interface{
+    pub mod interface;
+    pub mod draw;
+    pub mod handler;
+    pub mod css;
+    pub mod handler_button;
 }
 pub mod types{
     pub mod types;
@@ -52,6 +66,7 @@ pub mod vcs{
         pub mod vcs_file;
         pub mod index;
         pub mod repository;
+        pub mod commits_table;
     }
 
     pub mod commands{
@@ -66,10 +81,19 @@ pub mod vcs{
         pub mod branch;
         pub mod clone;
         pub mod fetch;
+        pub mod checkout;
+        pub mod merge;
+        pub mod diff;
     }
 
     pub mod sets{
         pub mod sets;
+    }
+
+    pub mod entities{
+        pub mod commit_entry;
+        pub mod change;
+        pub mod conflict;
     }
   
     pub mod version_control_system;

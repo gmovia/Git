@@ -1,9 +1,13 @@
 use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
-use crate::vcs::commands::{hash_object::{WriteOption, HashObject}, cat_file::CatFile, init::Init};
+use crate::vcs::commands::{hash_object::{WriteOption, HashObject},  init::Init};
 
+use super::commits_table::CommitsTable;
+
+#[derive(Debug, Clone)]
 pub struct Repository{
-    path: PathBuf,
+    pub path: PathBuf,
 }
+
 
 impl Repository{
 
@@ -20,17 +24,9 @@ impl Repository{
         let reader = io::BufReader::new(commits_file);
         
         if let Some(last_commit) = reader.lines().filter_map(Result::ok).last(){
-            let parts: Vec<&str> = last_commit.split("-").collect(); // parts[0] = id ; parts[1] = hash ; parts[2] = message
 
-            let content = CatFile::cat_file(parts[1], Init::get_object_path(&self.path, ".rust_git")?)?;
-            let content_lines: Vec<&str> = content.split("\n").collect();
-
-            for line in content_lines{
-                if line != ""{
-                    let line_parts: Vec<&str> = line.split("-").collect(); // line_parts[0] = path ; line_parts[1] = content
-                    local_repository.insert(line_parts[0].to_string(), line_parts[1].to_string());
-                }
-            }
+            let parts: Vec<&str> = last_commit.split("-").collect(); // parts[0] = id ; parts[1] = hash ; parts[2] = message ; parts[3] = date
+            local_repository.extend(CommitsTable::read_repository_of_commit(self.path.clone(), &Init::get_current_branch(&self.path)?, parts[1])?);
         }
         Ok(local_repository)
     }
@@ -50,4 +46,3 @@ impl Repository{
         Ok(hash)
     }
 }
-
