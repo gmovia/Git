@@ -80,13 +80,13 @@ impl VersionControlSystem {
     }
 
 
-    pub fn clone(&self, server_repo: String) -> Result<(), std::io::Error> {
-        let _ = Client::client_(self,"git clone".to_string(),server_repo);
+    pub fn clone(&self, input: String) -> Result<(), std::io::Error> {
+        let _ = Client::client_(self,input);
         Ok(())
     }
 
     pub fn fetch(&self, server_repo: String) -> Result<(), std::io::Error> {
-        let _ = Client::client_(self, "git fetch".to_string(),server_repo);
+        let _ = Client::client_(self, "git fetch".to_string());
         Ok(())
     }
     

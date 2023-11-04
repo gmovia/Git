@@ -12,7 +12,7 @@ use rust_git::server::{server::Server, self};
 
 fn main() -> Result<(), std::io::Error> { 
     println!("MAIN");
-    let mut vcs = VersionControlSystem::init(Path::new("clone_here"), Vec::new());
+    let mut vcs = VersionControlSystem::init(Path::new("clone"), Vec::new());
 
     loop{
         let mut input = String::new();
