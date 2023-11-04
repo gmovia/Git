@@ -11,7 +11,7 @@ pub struct Clone;
 impl Clone{
     pub fn clone(stream: &mut TcpStream) -> Result<(), std::io::Error> {
         
-        let init_path = Path::new("output");
+        let init_path = Path::new("clone_here");
 
         let mut vcs = VersionControlSystem::init(init_path, Vec::new());
         Self::receive_pack(stream, &mut vcs)?;
