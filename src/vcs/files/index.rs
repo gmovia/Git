@@ -1,6 +1,7 @@
 use crate::vcs::files::vcs_file::VCSFile;
 use std::{path::PathBuf, fs::{OpenOptions, File}, io::{Write, self, BufRead}, collections::HashMap};
 
+#[derive(Debug, Clone)]
 pub struct Index{
     path: PathBuf
 }
