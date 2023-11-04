@@ -1,6 +1,6 @@
 
 use std::collections::HashMap;
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes}}}, constants::constants::{CURRENT, INCOMING}};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes}}}, constants::constants::{CURRENT, INCOMING, BOTH}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_select_repository, handle_rm_button, handle_terminal}, draw::changes_and_staging_area};
 use gtk::{prelude::*, Button, Scrollbar, Adjustment};
@@ -205,6 +205,11 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
     let button_resolve = interface.resolve.clone();
     let merge_grid_clone = interface.merge_grid.clone();
     let apply_clone = interface.apply_merge.clone();
+    let b_dialog = interface.both_dialog.clone();
+    let ok = interface.both_ok.clone();
+    let b_box = interface.both_box.clone();
+    let b_text = interface.both_text.clone();
+
     interface.merge.set_sensitive(false);
     interface.apply_merge.set_visible(false);
     interface.apply_merge.set_sensitive(true);
@@ -238,6 +243,10 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                         let m_box = m_changes.clone();
                         let m_grid = merge_grid_clone.clone();
                         let apply_c = apply_c.clone();
+                        let b_dialog = b_dialog.clone();
+                        let ok = ok.clone();
+                        let b_box = b_box.clone();
+                        let b_text = b_text.clone();
                         move |button| {
                             m_box.foreach(|child| {
                                 m_box.remove(child);
@@ -274,6 +283,7 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                                     index += 1;
                                     add_current(&version1,&current, &value);
                                     add_incoming(&version1,&incoming, &value);
+                                    add_both(&version1, &both, &value,&labels,&b_dialog,&b_box,&b_text,&ok);
                                 } 
                                 m_box.add(&m_grid);
                             }
@@ -348,6 +358,37 @@ pub fn add_incoming(vcs: &VersionControlSystem, button: &gtk::Button, conflict: 
     
 }
 
+pub fn add_both(vcs: &VersionControlSystem, button: &gtk::Button, conflict: &Conflict,labels: &gtk::Label, dialog: &gtk::Dialog, both_box: &gtk::Box, both_text: &gtk::TextView, both_ok: &gtk::Button) {
+    let conflict_c = conflict.clone();
+    let version = vcs.clone();
+    let dialog = dialog.clone();
+    let labels = labels.clone();
+    let both_box = both_box.clone();
+    let both_text = both_text.clone();
+    let both_ok = both_ok.clone();
+    button.connect_clicked({
+        let conflict = conflict_c.clone();
+        let version = version.clone();
+        let dialog = dialog.clone();
+        let labels = labels.clone();
+        let both_box = both_box.clone();
+        let both_ok = both_ok.clone();
+        move |_| {
+            //let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: BOTH.to_string() };
+            //let _ = write_changes(&version,&conflict);
+            both_box.add(&labels);
+            both_ok.connect_clicked({
+                let both_text = both_text.clone();
+                move |_| {
+                    println!("{:?}",both_text);
+                }
+            });
+            dialog.run();
+            dialog.hide();
+    }});
+    
+}
+
 
 pub fn handle_clone(interface: &RustInterface, vcs: &VersionControlSystem) {
     let version = vcs.clone();
@@ -401,3 +442,6 @@ pub fn handle_clone(interface: &RustInterface, vcs: &VersionControlSystem) {
 
     });
 }
+
+
+

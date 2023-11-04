@@ -57,6 +57,10 @@ pub struct RustInterface {
     pub clone_entry: gtk::Entry,
     pub info_clone: gtk::Box,
     pub fix: gtk::Fixed,
+    pub both_dialog: gtk::Dialog,
+    pub both_ok: gtk::Button,
+    pub both_box: gtk::Box,
+    pub both_text: gtk::TextView,
 }
 
 impl RustInterface {
@@ -120,6 +124,10 @@ impl RustInterface {
             clone_entry: builder.object("clone-entry").unwrap(),
             info_clone: builder.object("info-clone").unwrap(),
             fix: builder.object("fix").unwrap(),
+            both_dialog: builder.object("both-dialog").unwrap(),
+            both_ok: builder.object("both-ok").unwrap(),
+            both_box: builder.object("both-box").unwrap(),
+            both_text: builder.object("both-text").unwrap(),
         }
     }
     
