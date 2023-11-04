@@ -1,6 +1,6 @@
 
-use std::collections::HashMap;
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes}}}, constants::constants::{CURRENT, INCOMING, BOTH}};
+use std::{fs::{OpenOptions, self}, io::Write};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption}, constants::constants::{CURRENT, INCOMING, BOTH}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_select_repository, handle_rm_button, handle_terminal}, draw::changes_and_staging_area};
 use gtk::{prelude::*, Button, Scrollbar, Adjustment};
@@ -300,6 +300,7 @@ pub fn handle_merge(interface: &RustInterface, vcs: &VersionControlSystem) { //F
                         let m_box = m_changes.clone();
                         move |button|{
                             if let Ok(list_conflicts) = read_changes(&version2){
+                                println!("{:?}",list_conflicts);
                                 let _ = version2.resolve_conflicts(&m_entry1.text(), list_conflicts);
                             }
                             m_box.foreach(|child| {
@@ -362,27 +363,44 @@ pub fn add_both(vcs: &VersionControlSystem, button: &gtk::Button, conflict: &Con
     let conflict_c = conflict.clone();
     let version = vcs.clone();
     let dialog = dialog.clone();
-    let labels = labels.clone();
+    let _labels = labels.clone();
     let both_box = both_box.clone();
     let both_text = both_text.clone();
     let both_ok = both_ok.clone();
     button.connect_clicked({
-        let conflict = conflict_c.clone();
+        let conflict_c = conflict_c.clone();
         let version = version.clone();
         let dialog = dialog.clone();
-        let labels = labels.clone();
         let both_box = both_box.clone();
         let both_ok = both_ok.clone();
         move |_| {
-            //let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: BOTH.to_string() };
-            //let _ = write_changes(&version,&conflict);
-            both_box.add(&labels);
+            //both_box.add(&labels);
+            both_box.add(&both_text);
             both_ok.connect_clicked({
+                let version = version.clone();
+                let conflict_c = conflict_c.clone();
                 let both_text = both_text.clone();
                 move |_| {
-                    println!("{:?}",both_text);
+                    if let Some(result) = both_text.buffer(){
+                        if let Some(result) = result.text(&result.start_iter(), &result.end_iter(), false){
+                            let temp_path = version.path.join("temp2");
+                            if let Ok(mut temp_file) = OpenOptions::new().write(true).create(true).append(true).open(&temp_path) {
+                                let _ = temp_file.write_all(result.as_bytes());
+                                if let Ok(hash) = version.hash_object(&temp_path, WriteOption::Write) {
+                                    let _ = fs::remove_file(temp_path);
+                                    let change_current = Change { file: conflict_c.file.to_string(), hash: hash.clone(), state: conflict_c.change_current.state.clone() };
+                                    let change_branch = Change { file: conflict_c.file.to_string(), hash: hash.clone(), state: conflict_c.change_branch.state.clone() };
+                                    let conflict = Conflict { file: conflict_c.file.clone(), change_current: change_current, change_branch: change_branch, resolved: BOTH.to_string() };
+                                    let _ = write_changes(&version,&conflict);
+                                }
+                            }
+                            
+                        }
+                    }
+                    
                 }
             });
+            
             dialog.run();
             dialog.hide();
     }});
