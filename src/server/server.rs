@@ -87,7 +87,7 @@ impl Server {
                     break;
                 }
             }
-            }
+        }
     
         Ok(())
     }

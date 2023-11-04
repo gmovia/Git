@@ -150,10 +150,10 @@ impl Clone{
                 if len == 0 {
                     break;
                 }
-                print!("PACKETTT ---> {:?} \n", len);
+                println!("ACA 1 PACKETTT ---> {:?} \n", len);
 
                 let packet = read_packet(socket, len);
-                print!("PACKETTT ---> {:?} \n", packet);
+                println!("ACA PACKETTT ---> {:?} \n", packet);
                 packets.push(packet);
             }
         }

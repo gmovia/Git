@@ -2,7 +2,7 @@ use std::io::{Write, Read, self};
 use std::net::TcpStream;
 use std::path::Path;
 use crate::metadata;
-use crate::vcs::commands::clone;
+use crate::vcs::commands::{clone,fetch};
 use crate::packfile::packfile::to_pkt_line;
 use crate::vcs::version_control_system::VersionControlSystem;
 use metadata::{PUERTO, HOST}; 
@@ -16,11 +16,11 @@ pub struct Client;
 impl Client {
 
     //Checkear que este main te lo tome como main momentaneo
-    pub fn client_(command: String,server_repo: String) -> Result<(), ()> {
+    pub fn client_(vcs: &VersionControlSystem, command: String,server_repo: String) -> Result<(), ()> {
         
         let address = format!("{}:{}", HOST, PUERTO);
 
-        if let Err(e) = Self::connect_rust_server(&address, &server_repo, &command) {
+        if let Err(e) = Self::connect_rust_server(&address, &server_repo, &command, vcs) {
             println!("Error: {}",e);
         }
         
@@ -36,20 +36,33 @@ impl Client {
                 let rest_of_input = input.trim_start_matches("git clone");
                 format!("git-upload-pack{}", rest_of_input)
             }
+            _ if input.contains("git fetch") => {
+                let rest_of_input = input.trim_start_matches("git fetch");
+                format!("git-upload-pack{}", rest_of_input)
+            }
             _ => input.to_string(),
         }
     }
 
-    pub fn handler_clone(mut stream: TcpStream, command: &String) -> Result<(),std::io::Error>{
+    pub fn handler_clone(mut stream: TcpStream, command: &String, vcs: &VersionControlSystem) -> Result<(),std::io::Error>{
         let query_to_send = Self::handler_input(&command);
         let pkt_line = to_pkt_line(&query_to_send);
         print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
         stream.write(pkt_line.as_bytes())?;
-        Self::handler_query(&query_to_send, &mut stream); //rompe algo si mandó asi?
+        Self::handler_query("clone",&query_to_send, &mut stream, vcs); //rompe algo si mandó asi?
         Ok(())
     }
 
-    pub fn connect_rust_server(address: &str, path: &str, command: &String) -> Result<(),std::io::Error> {
+    pub fn handler_fetch(mut stream: TcpStream, command: &String, vcs: &VersionControlSystem) -> Result<(),std::io::Error>{
+        let query_to_send = Self::handler_input(&command);
+        let pkt_line = to_pkt_line(&query_to_send);
+        print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
+        stream.write(pkt_line.as_bytes())?;
+        Self::handler_query("fetch",&query_to_send, &mut stream, vcs); //rompe algo si mandó asi?
+        Ok(())
+    }
+
+    pub fn connect_rust_server(address: &str, path: &str, command: &String, vcs: &VersionControlSystem) -> Result<(),std::io::Error> {
         println!("rust_client");
        // let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
        let stream = TcpStream::connect(address)?;
@@ -57,8 +70,9 @@ impl Client {
        let reader = stream.try_clone()?;
 
        let mut input = String::new();
-       match command.as_str() {
-        "git clone" => Self::handler_clone(stream, command),
+       let _ = match command.as_str() {
+        "git clone" => Self::handler_clone(stream, command, vcs),
+        "git fetch" => Self::handler_fetch(stream, command, vcs),
         _ => Ok({}),
     };
        Ok(())
@@ -86,12 +100,22 @@ impl Client {
     }
 
 
-    fn handler_query(query: &str, socket: &mut TcpStream) {
+    fn handler_query(command: &str, query: &str, socket: &mut TcpStream, vcs: &VersionControlSystem) {
         match (query.contains("git-upload-pack"), query.contains("git-send-pack")) {
             (true, _) => {
-                 if let Err(e) = clone::Clone::clone(socket) {
-                    println!("Error: {}", e);
-                }           
+                match command {
+                    "clone" => {
+                        if let Err(e) = clone::Clone::clone(socket) {
+                            println!("Error: {}", e);
+                        }                   
+                    }
+                    "fetch" => {
+                        if let Err(e) = fetch::Fetch::fetch(socket, &vcs) {
+                            println!("Error: {}", e);
+                        }
+                    }
+                    _ => {}
+                }
                 println!("Handling git-upload-pack request");
             }
             (_, true) => {

@@ -1,17 +1,16 @@
 use std::io::{self, Write};
- use std::path::Path;
- use rust_git::handlers::branch::handler_branch;
- use rust_git::handlers::clone::handler_clone;
+use std::path::Path;
+use rust_git::handlers::branch::handler_branch;
+use rust_git::handlers::clone::handler_clone;
 use rust_git::handlers::commit::handler_commit;
- use rust_git::handlers::rm::handler_rm;
- use rust_git::vcs::version_control_system::VersionControlSystem;
- use rust_git::handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, log::handler_log};
-
- use rust_git::client::{client::Client, self};
+use rust_git::handlers::rm::handler_rm;
+use rust_git::vcs::version_control_system::VersionControlSystem;
+use rust_git::handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, log::handler_log};
+use rust_git::handlers::fetch::{self, handler_fetch};
+use rust_git::client::{client::Client, self};
 use rust_git::server::{server::Server, self};
 
-fn main() -> Result<(), std::io::Error> {
-    
+fn main() -> Result<(), std::io::Error> { 
     println!("MAIN");
     let mut vcs = VersionControlSystem::init(Path::new("init_folder"), Vec::new());
 
@@ -32,7 +31,9 @@ fn main() -> Result<(), std::io::Error> {
             x if x.contains("git commit") => {handler_commit(&mut vcs, x.to_string())?;},
             x if x.contains("git branch") => {handler_branch(&vcs, x.to_string())?;},
             x if x.contains("git clone") => {handler_clone(&mut vcs, x.to_string())?;},
+            x if x.contains("git fetch") => {handler_fetch(&mut vcs, x.to_string())?;}
             _ => {}
         }
-    } 
+    }
+     
 }
