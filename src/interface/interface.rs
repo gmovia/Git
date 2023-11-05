@@ -21,7 +21,7 @@ pub struct RustInterface {
     pub delete_repository: gtk::Button,
     pub create_repository: gtk::Button,
     pub select_branch: gtk::ComboBoxText,
-    pub box_window: gtk::Box,
+    pub grid_staging: gtk::Grid,
     pub branch_button: gtk::Button,
     pub branch_dialog: gtk::Dialog,
     pub dialog_entry: gtk::Entry,
@@ -88,7 +88,7 @@ impl RustInterface {
             delete_repository: builder.object("delete-repo").unwrap(),
             create_repository: builder.object("create-repo").unwrap(),
             select_branch: builder.object("select-branch").unwrap(),
-            box_window: builder.object("box-add").unwrap(),
+            grid_staging: builder.object("grid-staging").unwrap(),
             branch_button: builder.object("branch").unwrap(),
             branch_dialog: builder.object("branch-dialog").unwrap(),
             dialog_entry: builder.object("dialog-entry").unwrap(),
@@ -136,7 +136,7 @@ impl RustInterface {
         
         VersionControlSystem::init(Path::new("clone_here"), Vec::new());
 
-        let _ = changes_and_staging_area(&self.grid, &self.box_window);
+        let _ = changes_and_staging_area(&self.grid, &self.grid_staging);
         repositories( &self.select_repository)?;
         branches( &self.select_branch)?;
         handle_branch(&self);

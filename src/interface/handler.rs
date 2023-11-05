@@ -33,7 +33,7 @@ pub fn handle_repository(interface: &RustInterface) {
 }
 
 pub fn handle_commit(interface: &RustInterface){
-    let box_window = interface.box_window.clone();
+    let box_window = interface.grid_staging.clone();
     let dialog = interface.commit_dialog.clone();
     
     let rc_ok = interface.message_ok.clone();
@@ -88,11 +88,11 @@ pub fn handle_branch(interface: &RustInterface) {
 
 
 pub fn handle_status(interface: &RustInterface) {
-    //let version = vcs.clone();
+
     let rc_grid = interface.grid.clone();
-    let rc_add = interface.box_window.clone();
+    let rc_add = interface.grid_staging.clone();
     interface.status.connect_clicked({
-        //let version = version.clone();
+
         let rc_grid = rc_grid.clone();
         let rc_add = rc_add.clone();
         move |_| {
