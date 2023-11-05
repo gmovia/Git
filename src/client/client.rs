@@ -1,11 +1,9 @@
 use std::io::{Write, Read, self};
 use std::net::TcpStream;
-use std::path::Path;
-use crate::metadata;
 use crate::vcs::commands::{clone,fetch};
 use crate::packfile::packfile::to_pkt_line;
 use crate::vcs::version_control_system::VersionControlSystem;
-use metadata::{PUERTO, HOST}; 
+use crate::constants::constants::{PUERTO, HOST}; 
 static CLIENT_ARGS: usize = 4;
 
 //comando para levantar el git daemon --> git daemon --base-path=. --export-all --reuseaddr --informative-errors --verbose --verbose

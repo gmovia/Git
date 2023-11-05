@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
 
-    use std::{fs, io::{Write, Read}};
+    use std::{fs, io::Write};
 
-    use rust_git::vcs::{commands::{checkout::CheckoutOptions, rm::RemoveOption}, entities::conflict};
+    use rust_git::vcs::commands::{checkout::CheckoutOptions, rm::RemoveOption};
 
     use crate::tests_functions::{create_file, set_up};
 

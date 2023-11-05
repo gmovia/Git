@@ -2,10 +2,10 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile, clone::Clone}, client::client::Client, server::server::Server,
+    vcs::commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile, clone::Clone}, client::client::Client, server::server::Server, constants::constants::{NULL_PATH, BDD_PATH},
 };
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge}, files::repository::Repository, entities::conflict::Conflict};
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use std::{collections::HashMap, path::{Path, PathBuf}, fs::OpenOptions, io::Write};
 use super::files::index::Index;
 
 #[derive(Debug, Clone)]
@@ -16,14 +16,30 @@ pub struct VersionControlSystem {
 }
 
 impl VersionControlSystem {
-    /// Inicializacion del versionControlSystem --> posee el repositorio local y la ruta de la carpeta a informar.
-    pub fn init(path: &Path, args: Vec<String>) -> VersionControlSystem {
-        let _ = Init::git_init(&path.to_path_buf(), args);
+
+    pub fn new() -> VersionControlSystem{
+        let path = Path::new(NULL_PATH);
         VersionControlSystem {
             path: path.to_path_buf(),
             repository: Repository::init(path.to_path_buf()),
             index: Index::init(&path.to_path_buf())
         }
+    }
+
+    pub fn write_bdd_of_repositories(path: &Path) -> Result<(), std::io::Error>{
+        let bdd_path = Path::new(BDD_PATH);
+        let mut bdd = OpenOptions::new().write(true).append(true).open(bdd_path)?; //abro la tabla de commits para escribir - si no existe, la creo
+        bdd.write_all(path.to_string_lossy().as_bytes())?;
+        Ok(())
+    }
+
+    /// Inicializacion del versionControlSystem --> posee el repositorio local y la ruta de la carpeta a informar.
+    pub fn init(&mut self, path: &Path, args: Vec<String>){
+        let _ = Self::write_bdd_of_repositories(path);
+        let _ = Init::git_init(&path.to_path_buf(), args);
+        self.path = path.to_path_buf();
+        self.repository = Repository::init(path.to_path_buf());
+        self.index = Index::init(&path.to_path_buf());
     }
 
     /// Devuelve la informacion de los archivos creados, modificados y eliminados recientemente, junto con el area de staging.
@@ -81,6 +97,7 @@ impl VersionControlSystem {
     }
 
     pub fn git_clone(&self, input: String) -> Result<(), std::io::Error> {
+        let _ = Self::write_bdd_of_repositories(Path::new(&input));
         let _ = Client::client_(self,input);
         Ok(())
     }

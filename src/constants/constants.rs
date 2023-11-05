@@ -1,3 +1,10 @@
+pub const BDD_PATH: &str = "repositories.txt";
+pub const NULL_PATH: &str = "null_path";
+
+pub const PUERTO: &str = "9418";
+pub const HOST: &str = "127.0.0.1";
+
+
 pub const NULL: &str = "NULL";
 
 // MERGE

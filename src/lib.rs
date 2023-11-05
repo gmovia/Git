@@ -31,7 +31,6 @@ pub mod types{
 pub mod client{
     pub mod client;
 }
-pub mod metadata;
 
 pub mod server{
     pub mod server;
