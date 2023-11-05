@@ -20,7 +20,7 @@ impl Encoder {
     pub fn init_encoder(path: PathBuf, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let encoder = Encoder { path: path };
         let mut packfile= Vec::new();
-        if messages.1.is_empty() {
+        if messages.1.is_empty() || messages.1[0] == "0" {
             packfile = Self::create_packfile(&encoder.path)?;        
         }
         else {

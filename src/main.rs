@@ -2,7 +2,7 @@ use rust_git::{interface::interface::RustInterface, handlers::commands::handler_
 use std::{io::{self, Write}, path::Path};
 
 fn main() -> Result<(), std::io::Error>{
-    VersionControlSystem::init(Path::new("clone"), Vec::new());
+    VersionControlSystem::init(Path::new("clone_here"), Vec::new());
      loop{
          let mut input = String::new();
          io::stdout().flush().unwrap();
