@@ -309,13 +309,7 @@ pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQ
 
 }
 
-fn add_message(m_changes: &gtk::Box, message: &String) {
-    let label = gtk::Label::new(Some(message));
-    label.set_visible(true);
-    label.set_xalign(0.5);
-    label.set_yalign(0.5);
-    m_changes.add(&label);
-}
+
 
 pub fn add_current(button: &gtk::Button, conflict: &Conflict) {
     let conflict_c = conflict.clone();
@@ -418,7 +412,7 @@ pub fn handle_clone(interface: &RustInterface) {
         let fix_clone = fix_clone.clone();
         move |button| {
             
-            if let Ok(content) = VersionControlSystem::git_clone((&c_entry.text()).to_string()) {
+            if let Ok(content) = VersionControlSystem::git_clone(format!("git clone {}",(&c_entry.text()).to_string())) {
                 let label = gtk::Label::new(Some(&c_entry.text()));
                 label.set_visible(true);
                 label.set_xalign(0.5);
@@ -445,6 +439,14 @@ pub fn handle_clone(interface: &RustInterface) {
         }
 
     });
+}
+
+fn add_message(m_changes: &gtk::Box, message: &String) {
+    let label = gtk::Label::new(Some(message));
+    label.set_visible(true);
+    label.set_xalign(0.5);
+    label.set_yalign(0.5);
+    m_changes.add(&label);
 }
 
 

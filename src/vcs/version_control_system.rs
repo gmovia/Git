@@ -5,7 +5,7 @@ use crate::{
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile, clone::Clone}, files::repository::Repository}, client::client::Client, server::server::Server, constants::constants::{NULL_PATH, BDD_PATH, CURRENT_REPOSITORY_PATH},
 };
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset}, entities::conflict::Conflict};
-use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, File}, io::{Write, BufReader, self, BufRead}};
+use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, File, self}, io::{Write, BufReader, self, BufRead}};
 use super::files::index::Index;
 
 #[derive(Debug, Clone)]
@@ -56,6 +56,21 @@ impl VersionControlSystem {
     pub fn init(path: &Path, args: Vec<String>){
         let _ = Self::write_bdd_of_repositories(path);
         let _ = Init::git_init(&path.to_path_buf(), args);
+    }
+
+    pub fn remove_repository(path: &Path) -> Result<(), std::io::Error>{
+        let _ = fs::remove_dir_all(&path);
+        let mut repositories = Self::read_bdd_of_repositories()?;
+        if let Some(index) = repositories.iter().position(|item| item == &path.display().to_string()) {
+            repositories.remove(index);
+        }
+        let bdd_path = Path::new(BDD_PATH);
+        let mut bdd = OpenOptions::new().write(true).append(true).open(bdd_path)?; 
+        bdd.set_len(0)?;
+        for repo in repositories {
+            bdd.write_all(format!("{}\n",repo).as_bytes())?;
+        }
+        Ok(())
     }
 
     /// Devuelve la informacion de los archivos creados, modificados y eliminados recientemente, junto con el area de staging.
