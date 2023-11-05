@@ -59,7 +59,7 @@ impl Clone{
     fn write_commit_log_file(commit: &str, branch_name: &str) -> Result<(),std::io::Error>{
         if let Some(branch) = branch_name.strip_prefix("refs/head/") {
             let current = VersionControlSystem::read_current_repository()?;
-            let logs_path = current.join(".rust_git").join("logs").join(branch); 
+            let logs_path = current.join(".rust_git").join("logs").join(format!("{}",branch)); 
             let current_time: DateTime<Local> = Local::now();
             let mut rng = rand::thread_rng();
             let format_commit = format!("{}-{}-{}-{}\n", rng.gen_range(1..9), commit, "clone", current_time);

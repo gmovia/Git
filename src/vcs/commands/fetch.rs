@@ -1,4 +1,4 @@
-use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::{File, OpenOptions, self}, path::Path, collections::HashMap};
+use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::{File, OpenOptions, self}, path::{Path, PathBuf}, collections::HashMap};
 use chrono::{DateTime, Local};
 use rand::Rng;
 use crate::utils::files::files::create_file_and_their_folders;
@@ -60,7 +60,7 @@ impl Fetch {
                 for resp in &response {
                     println!("TIPO: {} - CONTENIDO: {}", resp.0, String::from_utf8_lossy(&resp.1)); 
                 }
-                Self::update_repository(&message_to_send, vcs, response)?;
+                Self::update_repository(&message_to_send, response)?;
             },
             Err(_) => {
                 return Err(std::io::Error::new(io::ErrorKind::NotFound, "Error getting server response"));    
@@ -70,7 +70,7 @@ impl Fetch {
         Ok(()) 
     }
 
-    fn update_repository(wants_and_haves: &(Vec<String>,Vec<String>), vcs: &VersionControlSystem, objects: Vec<(u8,Vec<u8>)>) -> Result<(),std::io::Error> {
+    fn update_repository(wants_and_haves: &(Vec<String>,Vec<String>), objects: Vec<(u8,Vec<u8>)>) -> Result<(),std::io::Error> {
         for want in &wants_and_haves.0 {
             let parts: Vec<&str> = want.split_whitespace().collect();
             let mut rng = rand::thread_rng();
@@ -80,12 +80,13 @@ impl Fetch {
 
             if let Some(last_part) = parts.last() {
                 if let Some(branch_name) = last_part.strip_prefix("refs/head/") {
-                    let path = vcs.path.join(".rust_git").join("logs").join(branch_name);
+                    let current = VersionControlSystem::read_current_repository()?;
+                    let path = current.join(".rust_git").join("logs").join(branch_name);
                     let mut file = OpenOptions::new().create(true).write(true).append(true).open(path)?;
 
                     let format = format!("{}-{}-{}-{}\n", id, &parts[1],"fetch", current_time);
                     file.write(format.as_bytes())?;
-                    Self::update_objects_folder(vcs, &objects, &parts[1]);
+                    Self::update_objects_folder(&current, &objects, &parts[1]);
                 }
             } 
             else {
@@ -98,17 +99,17 @@ impl Fetch {
 
 
 
-    fn update_objects_folder(vcs: &VersionControlSystem, objects: &Vec<(u8,Vec<u8>)>, hash_name: &str) -> Result<(),std::io::Error>  {
+    fn update_objects_folder(path: &PathBuf, objects: &Vec<(u8,Vec<u8>)>, hash_name: &str) -> Result<(),std::io::Error>  {
         for object in objects {
             if object.0 == 2 {
-                let path = vcs.path.join(".rust_git").join("objects").join(&hash_name[0..2]);
-                fs::create_dir_all(&path)?;
-                let mut file = File::create(&path.join(&hash_name[2..]))?;
+                let path_obj = path.join(".rust_git").join("objects").join(&hash_name[0..2]);
+                fs::create_dir_all(&path_obj)?;
+                let mut file = File::create(&path_obj.join(&hash_name[2..]))?;
                 file.write_all(&object.1)?;
             }
             else if object.0 == 3 {
                 let content = String::from_utf8_lossy(&object.1.to_owned()).to_string();
-                Self::create_folder(&content, vcs)?;
+                Self::create_folder(&content, path)?;
             }
         }
 
@@ -117,10 +118,10 @@ impl Fetch {
         Ok(())
     }
 
-    fn create_folder(content: &str, vcs: &VersionControlSystem) -> Result<String, std::io::Error> {
-        let temp_path = Path::new(&vcs.path).join("temp");
+    fn create_folder(content: &str, path: &PathBuf) -> Result<String, std::io::Error> {
+        let temp_path = Path::new(&path).join("temp");
         let mut hash_blob = OpenOptions::new().write(true).create(true).append(true).open(&temp_path)?; 
-        let path = format!("{}/.rust_git/objects", vcs.path.display());
+        let path = format!("{}/.rust_git/objects", path.display());
         let format_content = format!("{}\n", content);
         hash_blob.write_all(format_content.as_bytes())?;
     

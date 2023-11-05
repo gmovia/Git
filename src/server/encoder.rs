@@ -73,7 +73,7 @@ impl Encoder {
         let mut packfile = Vec::new();
         Self::create_header(&mut packfile, path)?;        
         
-        let vcs = VersionControlSystem::init(Path::new("test_folder/repo_1"), Vec::new());
+        let path_server = Path::new("test_folder/repo_1");
 
         let objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages)?;
         println!("DATA TO SEND: {:?}", objects_to_send);
@@ -81,11 +81,11 @@ impl Encoder {
 
         let mut objects_to_encode: Vec<(String,usize,usize)> = Vec::new();
         for objects in objects_to_send {
-            let path = format!("{}/.rust_git/objects", vcs.path.display());
+            let path = format!("{}/.rust_git/objects", path_server.display());
             let content = CatFile::cat_file(&objects.1, (&path).into())?;
             let tree_path = format!("{}/{}/{}",path,  &objects.1[0..2], &objects.1[2..]);
             objects_to_encode.push((tree_path, 2, content.len() as usize));
-            Self::get_blobs(content, &mut objects_to_encode, &vcs)?;
+            Self::get_blobs(content, &mut objects_to_encode, path_server)?;
         }
         println!("OBJECTS TO ENCODE: {:?}", objects_to_encode);
 
@@ -104,14 +104,14 @@ impl Encoder {
         Ok(packfile)
     }
 
-    fn get_blobs(content: String, objects_to_encode: &mut Vec<(String,usize,usize)>, vcs: &VersionControlSystem) -> Result<(),std::io::Error> {
+    fn get_blobs(content: String, objects_to_encode: &mut Vec<(String,usize,usize)>, path: &Path) -> Result<(),std::io::Error> {
         let mut blobs: Vec<&str> = content.split("\n").collect();
         blobs.pop();
         for blob in blobs {
             let hash_blob: Vec<&str> = blob.split("-").collect();
-            let path = format!("{}/.rust_git/objects", vcs.path.display());
-            let blob_content = CatFile::cat_file(&hash_blob[1], (&path).into())?;
-            let blob_path = format!("{}/{}/{}",path,  &hash_blob[1][0..2], &hash_blob[1][2..]);
+            let path_server = format!("{}/.rust_git/objects", path.display());
+            let blob_content = CatFile::cat_file(&hash_blob[1], (&path_server).into())?;
+            let blob_path = format!("{}/{}/{}",path_server,  &hash_blob[1][0..2], &hash_blob[1][2..]);
             objects_to_encode.push((blob_path,3,blob_content.len() as usize));
         }
         Ok(())
