@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, fs, path::Path, io::Write};
 use crate::utils::hasher::hasher::Hasher;
 
 /// Recibe un string que representa una ruta.
@@ -38,4 +38,16 @@ fn read_files(path: &Path, files: &mut HashMap<String, String>) -> Result<(), st
         }
     }
     Ok(())
+}
+
+
+pub fn create_file_and_their_folders(path: &Path, content: &str) -> Result<(), std::io::Error>{
+        if let Some(parent) = path.parent(){
+            if !parent.exists(){
+                fs::create_dir_all(parent)?;
+            }
+        }
+        let mut file = fs::File::create(path)?;
+        file.write_all(content.as_bytes())?;
+        Ok(())
 }

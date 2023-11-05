@@ -1,5 +1,10 @@
-use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::{File, OpenOptions}, path::Path, collections::HashMap};
+use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::{File, OpenOptions, self}, path::Path, collections::HashMap};
+use chrono::{DateTime, Local};
+use rand::Rng;
+use crate::utils::files::files::create_file_and_their_folders;
 use crate::{vcs::version_control_system::VersionControlSystem, packfile::packfile::{read_packet, to_pkt_line, decompress_data, send_done_msg}};
+
+use super::hash_object::{HashObject, WriteOption};
 
 pub struct Fetch;
 
@@ -64,23 +69,21 @@ impl Fetch {
     }
 
     fn update_repository(wants_and_haves: &(Vec<String>,Vec<String>), vcs: &VersionControlSystem, objects: Vec<(u8,Vec<u8>)>) -> Result<(),std::io::Error> {
-        for object in objects {
-            println!("OBJECTS: {:?}", String::from_utf8_lossy(&object.1));
-        }
-        /* 
         for want in &wants_and_haves.0 {
             let parts: Vec<&str> = want.split_whitespace().collect();
-    
+            let mut rng = rand::thread_rng();
+            let id = rng.gen_range(1..9);
+            let current_time: DateTime<Local> = Local::now();
+            let _ = current_time.to_rfc2822();
+
             if let Some(last_part) = parts.last() {
                 if let Some(branch_name) = last_part.strip_prefix("refs/head/") {
                     let path = vcs.path.join(".rust_git").join("logs").join(branch_name);
                     let mut file = OpenOptions::new().create(true).write(true).append(true).open(path)?;
-                    //let want_hash = parts[1];
-                    //println!("WANT HASH: {}", want_hash);
-                    
-                    //let format = format!("{}-{}-{}");
-                    
 
+                    let format = format!("{}-{}-{}-{}\n", id, &parts[1],"fetch", current_time);
+                    file.write(format.as_bytes())?;
+                    Self::update_objects_folder(vcs, &objects, &parts[1]);
                 }
             } 
             else {
@@ -88,11 +91,43 @@ impl Fetch {
             }
             
         }   
-        */
-
         Ok(())
     }
 
+
+
+    fn update_objects_folder(vcs: &VersionControlSystem, objects: &Vec<(u8,Vec<u8>)>, hash_name: &str) -> Result<(),std::io::Error>  {
+        for object in objects {
+            if object.0 == 2 {
+                let path = vcs.path.join(".rust_git").join("objects").join(&hash_name[0..2]);
+                fs::create_dir_all(&path)?;
+                let mut file = File::create(&path.join(&hash_name[2..]))?;
+                file.write_all(&object.1)?;
+            }
+            else if object.0 == 3 {
+                let content = String::from_utf8_lossy(&object.1.to_owned()).to_string();
+                Self::create_folder(&content, vcs)?;
+            }
+        }
+
+        println!("OBJECTS: {:?}", objects);
+        println!("hash: {:?}", hash_name);
+        Ok(())
+    }
+
+    fn create_folder(content: &str, vcs: &VersionControlSystem) -> Result<String, std::io::Error> {
+        let temp_path = Path::new(&vcs.path).join("temp");
+        let mut hash_blob = OpenOptions::new().write(true).create(true).append(true).open(&temp_path)?; 
+        let path = format!("{}/.rust_git/objects", vcs.path.display());
+        let format_content = format!("{}\n", content);
+        hash_blob.write_all(format_content.as_bytes())?;
+    
+        let hash = HashObject::hash_object(&temp_path, path.into(), WriteOption::Write)?;
+    
+        let _  = fs::remove_file(temp_path);
+        Ok(hash)
+    }
+    
 
     /// Esta funcion se encarga de parsear la respuesta del servidor al upload pack. Devuelve la rama y el commit
     fn format_packet(packets: &Vec<String>) -> Result<Vec<(String,String)>,std::io::Error> {
