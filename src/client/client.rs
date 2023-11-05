@@ -1,11 +1,9 @@
 use std::io::{Write, Read, self};
 use std::net::TcpStream;
-use std::path::Path;
-use crate::metadata;
 use crate::vcs::commands::{clone,fetch};
 use crate::packfile::packfile::to_pkt_line;
 use crate::vcs::version_control_system::VersionControlSystem;
-use metadata::{PUERTO, HOST}; 
+use crate::constants::constants::{PUERTO, HOST}; 
 static CLIENT_ARGS: usize = 4;
 
 //comando para levantar el git daemon --> git daemon --base-path=. --export-all --reuseaddr --informative-errors --verbose --verbose
@@ -16,15 +14,15 @@ pub struct Client;
 impl Client {
 
     //Checkear que este main te lo tome como main momentaneo
-    pub fn client_(vcs: &VersionControlSystem, command: String,server_repo: String) -> Result<(), ()> {
+    pub fn client_(command: String) -> Result<(), ()> {
         
         let address = format!("{}:{}", HOST, PUERTO);
 
-        if let Err(e) = Self::connect_rust_server(&address, &server_repo, &command, vcs) {
+        if let Err(e) = Self::connect_rust_server(&address, &command) {
             println!("Error: {}",e);
         }
         
-        if let Err(e) = Self::client_run(&address, &server_repo) {
+        if let Err(e) = Self::client_run(&address) {
             println!("Error: {}",e);
         }
         Ok(())
@@ -44,36 +42,36 @@ impl Client {
         }
     }
 
-    pub fn handler_clone(mut stream: TcpStream, command: &String, vcs: &VersionControlSystem) -> Result<(),std::io::Error>{
+    pub fn handler_clone(mut stream: TcpStream, command: &String) -> Result<(),std::io::Error>{
+        let query_to_send = Self::handler_input(&command);
+        println!("query to...  {}", query_to_send);
+        let pkt_line = to_pkt_line(&query_to_send);
+        print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
+        stream.write(pkt_line.as_bytes())?;
+        Self::handler_query("clone",&query_to_send, &mut stream); //rompe algo si mandó asi?
+        Ok(())
+    }
+
+    pub fn handler_fetch(mut stream: TcpStream, command: &String) -> Result<(),std::io::Error>{
         let query_to_send = Self::handler_input(&command);
         let pkt_line = to_pkt_line(&query_to_send);
         print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
         stream.write(pkt_line.as_bytes())?;
-        Self::handler_query("clone",&query_to_send, &mut stream, vcs); //rompe algo si mandó asi?
+        Self::handler_query("fetch",&query_to_send, &mut stream); //rompe algo si mandó asi?
         Ok(())
     }
 
-    pub fn handler_fetch(mut stream: TcpStream, command: &String, vcs: &VersionControlSystem) -> Result<(),std::io::Error>{
-        let query_to_send = Self::handler_input(&command);
-        let pkt_line = to_pkt_line(&query_to_send);
-        print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
-        stream.write(pkt_line.as_bytes())?;
-        Self::handler_query("fetch",&query_to_send, &mut stream, vcs); //rompe algo si mandó asi?
-        Ok(())
-    }
-
-    pub fn connect_rust_server(address: &str, path: &str, command: &String, vcs: &VersionControlSystem) -> Result<(),std::io::Error> {
+    pub fn connect_rust_server(address: &str, command: &String) -> Result<(),std::io::Error> {
         println!("rust_client");
-       // let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
-       let stream = TcpStream::connect(address)?;
+        // let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
+        let stream = TcpStream::connect(address)?;
 
        let reader = stream.try_clone()?;
-
        let mut input = String::new();
        let _ = match command.as_str() {
-        "git clone" => Self::handler_clone(stream, command, vcs),
-        "git fetch" => Self::handler_fetch(stream, command, vcs),
-        _ => Ok({}),
+        command_str if command_str.contains("git clone") => Self::handler_clone(stream, command),
+        command_str if command_str.contains("git fetch") => Self::handler_fetch(stream, command),
+        _ => Ok(()),
     };
        Ok(())
    }
@@ -100,17 +98,17 @@ impl Client {
     }
 
 
-    fn handler_query(command: &str, query: &str, socket: &mut TcpStream, vcs: &VersionControlSystem) {
+    fn handler_query(command: &str, query: &str, socket: &mut TcpStream) {
         match (query.contains("git-upload-pack"), query.contains("git-send-pack")) {
             (true, _) => {
                 match command {
                     "clone" => {
-                        if let Err(e) = clone::Clone::clone(socket, vcs) {
+                        if let Err(e) = clone::Clone::clone(socket) {
                             println!("Error: {}", e);
                         }                   
                     }
                     "fetch" => {
-                        if let Err(e) = fetch::Fetch::fetch(socket, &vcs) {
+                        if let Err(e) = fetch::Fetch::fetch(socket) {
                             println!("Error: {}", e);
                         }
                     }
@@ -127,7 +125,7 @@ impl Client {
         }
     }
     
-    fn client_run(address: &str, path: &str) -> Result<(),std::io::Error> {
+    fn client_run(address: &str) -> Result<(),std::io::Error> {
 
         //println!("Conectándome a {:?}", address);
         //let mut socket = TcpStream::connect(address)?;

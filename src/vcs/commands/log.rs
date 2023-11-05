@@ -10,8 +10,9 @@ pub struct Log;
 
 impl Log {
 
-    pub fn log(vcs: &VersionControlSystem) -> Result<String, std::io::Error> {
-        let commits_file = File::open(Init::get_commits_path(&vcs.path)?)?;
+    pub fn log() -> Result<String, std::io::Error> {
+        let current = VersionControlSystem::read_current_repository()?;
+        let commits_file = File::open(Init::get_commits_path(&current)?)?;
         let reader = BufReader::new(commits_file);
         let mut lines: Vec<String> = Vec::new();
         

@@ -24,8 +24,7 @@ impl Checkout{
     }
 
     pub fn change_branch(path: &PathBuf, branch_name: &str) -> Result<(), std::io::Error>{
-        let index = Index::init(&path.to_path_buf());
-        if !index.read_index()?.is_empty(){
+        if !Index::read_index()?.is_empty(){
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't change branch if you have changes to be commited"));
         }
         let rust_git_path = path.join(".rust_git");
@@ -38,8 +37,7 @@ impl Checkout{
 
 
     pub fn update_cd(path: &PathBuf) -> Result<(), std::io::Error>{
-        let repository = Repository::init(path.to_path_buf());
-        let repository_hashmap = repository.read_repository()?;
+        let repository_hashmap = Repository::read_repository()?;
 
         delete_all_files_and_folders(path)?;
 

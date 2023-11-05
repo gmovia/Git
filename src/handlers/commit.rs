@@ -2,7 +2,7 @@ use crate::{vcs::version_control_system::VersionControlSystem, constants::consta
 
 /// Recibe input del comando, por ejemplo, git commit "primer commit"
 /// Llama a commit() para agregarlo en la tabla de commits
-pub fn handler_commit(vcs: &VersionControlSystem, input: String) -> String{
+pub fn handler_commit(input: String) -> String{
     let mut chain = String::new();
     let mut args: Vec<&str> = input.split(" ").collect();
     args.remove(1);
@@ -11,6 +11,6 @@ pub fn handler_commit(vcs: &VersionControlSystem, input: String) -> String{
         chain += element;
         chain.push( ' ');
     }
-    let _ = vcs.commit(chain.to_string());
+    let _ = VersionControlSystem::commit(chain.to_string());
     RESPONSE_OK_COMMIT.to_string()
 }

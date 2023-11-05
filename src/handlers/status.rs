@@ -1,9 +1,9 @@
 use crate::{vcs::version_control_system::VersionControlSystem, constants::constants::{ERR_STATUS, CHANGES_NOT_BE_COMMITED, UNTRACKED_FILES, CHANGES_TO_BE_COMMITED}};
 
-pub fn handler_status(vcs: &VersionControlSystem) -> String {
+pub fn handler_status() -> String {
     let mut result = String::new();
     
-    if let Ok((untracked, not_commited, commited)) = vcs.status() {
+    if let Ok((untracked, not_commited, commited)) = VersionControlSystem::status() {
         result.push_str(UNTRACKED_FILES);
         result.push('\n');
 

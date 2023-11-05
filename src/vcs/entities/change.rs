@@ -21,8 +21,9 @@ pub fn add_changes(repository: &mut HashMap<String, String>, changes: &HashMap<S
     }
 }
 
-pub fn write_changes(vcs: &VersionControlSystem,conflict: &Conflict) -> Result<File,std::io::Error>{
-    let temp_path = vcs.path.join("temp");
+pub fn write_changes(conflict: &Conflict) -> Result<File,std::io::Error>{
+    let current = VersionControlSystem::read_current_repository()?;
+    let temp_path = current.join("temp");
     let mut currents = OpenOptions::new().write(true).create(true).append(true).open(&temp_path)?;
     currents.write_all(conflict.file.to_string().as_bytes())?;
     currents.write_all("-".as_bytes())?;
@@ -39,9 +40,10 @@ pub fn write_changes(vcs: &VersionControlSystem,conflict: &Conflict) -> Result<F
     Ok(currents)
 }
 
-pub fn read_changes(vcs: &VersionControlSystem) -> Result<HashMap<String,Conflict>,std::io::Error>{
+pub fn read_changes() -> Result<HashMap<String,Conflict>,std::io::Error>{
     let mut conflicts = HashMap::new();
-    let temp_path = vcs.path.join("temp");
+    let current = VersionControlSystem::read_current_repository()?;
+    let temp_path = current.join("temp");
     let currents_file = OpenOptions::new().read(true).open(&temp_path)?;
     let reader = io::BufReader::new(currents_file);
 

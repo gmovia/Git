@@ -1,6 +1,6 @@
 use std::{net::{TcpListener, TcpStream, Shutdown}, io::{Read, Write, self, Error}, thread, path::{Path, PathBuf}};
 
-use crate::{vcs::{version_control_system::VersionControlSystem, files::repository}, handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, rm::handler_rm, log::handler_log, commit::handler_commit, branch::handler_branch}, packfile::packfile::to_pkt_line, utils::files::files::read, metadata::{PUERTO,HOST}};
+use crate::{vcs::{version_control_system::VersionControlSystem, files::repository}, handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, rm::handler_rm, log::handler_log, commit::handler_commit, branch::handler_branch}, packfile::packfile::to_pkt_line, utils::files::files::read, constants::constants::{PUERTO,HOST}};
 
 use crate::packfile::packfile::process_line;
 use crate::server::upload_pack::start_handler_upload;
@@ -40,7 +40,6 @@ impl Server {
                     let read_client = client.try_clone()?;
                     let write_client = client.try_clone()?;
                     let path = self.path.clone();
-    
                     thread::spawn(move || {
                         print!("Parada en el server\n");
                         match Server::handle_client(read_client, write_client, &path) {
@@ -79,7 +78,8 @@ impl Server {
             match process_line(&mut reader) {
                 Ok(message) => {
                     println!("Received message from client: {}", &message);
-                    let response = Server::parse_response( &message.to_string(), &mut reader, path)?;
+                    let client_path = message.trim_start_matches("git-upload-pack ");
+                    let response = Server::parse_response( &message.to_string(), &mut reader, &path.join(client_path))?;
                     Self::shutdown_server(&reader)?;
                 }
                 Err(e) => {
