@@ -1,5 +1,5 @@
-use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::File, path::Path, collections::HashMap};
-use crate::{vcs::version_control_system::VersionControlSystem, packfile::packfile::{read_packet, to_pkt_line, decompress_data, send_done_msg}};
+use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::File, collections::HashMap};
+use crate::{vcs::version_control_system::VersionControlSystem, packfile::packfile::{read_packet, to_pkt_line, send_done_msg}};
 
 pub struct Fetch;
 
@@ -47,7 +47,7 @@ impl Fetch {
         }
         send_done_msg(socket)?;
         
-        let objects = Self::get_socket_response(socket)?;
+        let _ = Self::get_socket_response(socket)?;
 
         Ok(()) 
     }
@@ -78,7 +78,7 @@ impl Fetch {
         let current = VersionControlSystem::read_current_repository()?;
         for packet in &last_branch_commit_recieve {
             match File::open(&current.join(".rust_git").join("logs").join(packet.0.to_string())) {
-                Ok(file) => {
+                Ok(_) => {
                     let file = File::open(&current.join(".rust_git").join("logs").join(packet.0.to_string()))?;
                     let reader = io::BufReader::new(file);
         

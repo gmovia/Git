@@ -1,10 +1,8 @@
-use std::io::{Write, Read, self};
+use std::io::{Write, Read};
 use std::net::TcpStream;
 use crate::vcs::commands::{clone,fetch};
 use crate::packfile::packfile::to_pkt_line;
-use crate::vcs::version_control_system::VersionControlSystem;
 use crate::constants::constants::{PUERTO, HOST}; 
-static CLIENT_ARGS: usize = 4;
 
 //comando para levantar el git daemon --> git daemon --base-path=. --export-all --reuseaddr --informative-errors --verbose --verbose
 //comando para levantar cliente--> cargo run 127.0.0.1 9418 /TEST2
@@ -66,8 +64,8 @@ impl Client {
         // let mut vcs = VersionControlSystem::init(Path::new("test_folder"), Vec::new());
         let stream = TcpStream::connect(address)?;
 
-       let reader = stream.try_clone()?;
-       let mut input = String::new();
+       let _ = stream.try_clone()?;
+       let _ = String::new();
        println!("COMAND: {}", command.as_str());
        let _ = match command.as_str() {
         command_str if command_str.contains("git clone") => Self::handler_clone(stream, command),
@@ -78,7 +76,7 @@ impl Client {
    }
 
  
-    fn handle_server_response(mut reader: TcpStream) {
+    fn _handle_server_response(mut reader: TcpStream) {
         let mut buffer = [0; 1024];
         loop {
             match reader.read(&mut buffer) {
@@ -126,7 +124,7 @@ impl Client {
         }
     }
     
-    fn client_run(address: &str) -> Result<(),std::io::Error> {
+    fn client_run(_: &str) -> Result<(),std::io::Error> {
 
         //println!("Conectándome a {:?}", address);
         //let mut socket = TcpStream::connect(address)?;

@@ -1,7 +1,7 @@
 
-use std::{path::Path, rc::Rc, cell::RefCell, io::{self, BufRead}, fs::{OpenOptions, self}};
+use std::path::Path;
 
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}, files::repository}, handlers::{rm::handler_rm, commands::handler_command}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}}, handlers::{rm::handler_rm, commands::handler_command}};
 
 use super::{interface::RustInterface, draw::{branches, repositories}};
 

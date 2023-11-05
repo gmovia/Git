@@ -1,6 +1,6 @@
 use std::{path::PathBuf, collections::HashMap};
 
-use crate::vcs::files::{repository::{self, Repository}, vcs_file::VCSFile, index::Index};
+use crate::vcs::files::{vcs_file::VCSFile, index::Index};
 
 pub struct Reset;
 

@@ -1,5 +1,5 @@
 
-use std::{cell::RefCell, rc::Rc, path::Path, collections::HashMap, fs::OpenOptions, io::{self, BufRead}};
+use std::{path::Path, collections::HashMap};
 
 use gtk::{prelude::*, Button, ComboBoxText};
 use crate::vcs::version_control_system::VersionControlSystem;

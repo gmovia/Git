@@ -1,9 +1,7 @@
 use std::{fs, io};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
-use std::net::{TcpStream, Shutdown};
-
-use crate::packfile;
+use std::net::TcpStream;
 use crate::packfile::packfile::{to_pkt_line, process_line};
 use crate::server::encoder::Encoder;
 
@@ -14,7 +12,7 @@ pub fn start_handler_upload(stream: &mut TcpStream, path: &PathBuf) -> Result<St
 
     send_response(first_response, stream)?;
     
-    let query = receive_wants_and_have_message(stream);
+    let _ = receive_wants_and_have_message(stream);
     let packfile_result = Encoder::init_encoder((&path).to_path_buf());
 
     match packfile_result {

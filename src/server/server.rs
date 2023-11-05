@@ -1,11 +1,9 @@
-use std::{net::{TcpListener, TcpStream, Shutdown}, io::{Read, Write, self, Error}, thread, path::{Path, PathBuf}};
+use std::{net::{TcpListener, TcpStream, Shutdown}, io::{Write, Error}, thread, path::{Path, PathBuf}};
 
-use crate::{vcs::{version_control_system::VersionControlSystem, files::repository}, handlers::{status::handler_status, add::handler_add, hash_object::handler_hash_object, cat_file::handler_cat_file, rm::handler_rm, log::handler_log, commit::handler_commit, branch::handler_branch}, packfile::packfile::to_pkt_line, utils::files::files::read, constants::constants::{PUERTO,HOST}};
+use crate::{packfile::packfile::to_pkt_line,constants::constants::{PUERTO,HOST}};
 
 use crate::packfile::packfile::process_line;
 use crate::server::upload_pack::start_handler_upload;
-
-use super::encoder::Encoder;
 
 
 pub struct Server {
@@ -24,7 +22,7 @@ impl Server {
         Ok(server)
     }
 
-    fn star_repositorys(){
+    fn _star_repositorys(){
        // let mut remoteRepository = RemoteRepository::init(Path::new(r"C:\Users\luzmi\OneDrive\Escritorio\RemoteRepository\Probanding"), Vec::new());
         //para despues....
     }
@@ -56,7 +54,7 @@ impl Server {
         Ok(())
     }
 
-    fn send_response(response: &String, writer: &mut TcpStream) -> Result<(), std::io::Error> {
+    fn _send_response(response: &String, writer: &mut TcpStream) -> Result<(), std::io::Error> {
         print!("MI RESPONSE ES {}", response);
         if response.contains("\n"){
             for line in response.lines(){
@@ -73,13 +71,13 @@ impl Server {
         Ok(())
     }
 
-    fn handle_client(mut reader: TcpStream, mut writer: TcpStream, path: &PathBuf) -> Result<(),std::io::Error> {
+    fn handle_client(mut reader: TcpStream, mut _writer: TcpStream, path: &PathBuf) -> Result<(),std::io::Error> {
         loop {
             match process_line(&mut reader) {
                 Ok(message) => {
                     println!("Received message from client: {}", &message);
                     let client_path = message.trim_start_matches("git-upload-pack ");
-                    let response = Server::parse_response( &message.to_string(), &mut reader, &path.join(client_path))?;
+                    let _ = Server::parse_response( &message.to_string(), &mut reader, &path.join(client_path))?;
                     Self::shutdown_server(&reader)?;
                 }
                 Err(e) => {

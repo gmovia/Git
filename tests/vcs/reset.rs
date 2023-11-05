@@ -1,10 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use std::{fs, io::Write};
 
-    use rust_git::vcs::{files::{repository::Repository, index::Index}, version_control_system::VersionControlSystem};
+    use rust_git::vcs::version_control_system::VersionControlSystem;
 
-    use crate::tests_functions::{create_file, set_up, equals};
+    use crate::tests_functions::{create_file, set_up};
 
     #[test]
     pub fn test_01_reset() -> Result<(), std::io::Error>{ // git add file1.txt

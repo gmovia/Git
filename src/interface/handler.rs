@@ -3,7 +3,7 @@ use std::{fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption}, constants::constants::{CURRENT, INCOMING, BOTH}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository}, draw::changes_and_staging_area};
-use gtk::{prelude::*, Button, Scrollbar, Adjustment};
+use gtk::{prelude::*, Button};
 
 pub fn handle_repository(interface: &RustInterface) {
     let dialog = interface.repository_dialog.clone();
@@ -412,7 +412,7 @@ pub fn handle_clone(interface: &RustInterface) {
         let fix_clone = fix_clone.clone();
         move |button| {
             
-            if let Ok(content) = VersionControlSystem::git_clone(format!("git clone {}",(&c_entry.text()).to_string())) {
+            if let Ok(_) = VersionControlSystem::git_clone(format!("git clone {}",(&c_entry.text()).to_string())) {
                 let label = gtk::Label::new(Some(&c_entry.text()));
                 label.set_visible(true);
                 label.set_xalign(0.5);

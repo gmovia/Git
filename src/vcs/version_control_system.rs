@@ -2,10 +2,10 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile, clone::Clone}, files::repository::Repository}, client::client::Client, server::server::Server, constants::constants::{NULL_PATH, BDD_PATH, CURRENT_REPOSITORY_PATH},
+    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, client::client::Client, constants::constants::{BDD_PATH, CURRENT_REPOSITORY_PATH},
 };
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset}, entities::conflict::Conflict};
-use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, File, self}, io::{Write, BufReader, self, BufRead}};
+use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, io::{Write, self, BufRead}};
 use super::files::index::Index;
 
 #[derive(Debug, Clone)]
@@ -139,13 +139,13 @@ impl VersionControlSystem {
     }
 
     pub fn git_clone(input: String) -> Result<(), std::io::Error> {
-        let args: Vec<&str> = input.split_whitespace().collect();
+        let _: Vec<&str> = input.split_whitespace().collect();
         let _ = Self::write_bdd_of_repositories(Path::new("clone"));
         let _ = Client::client_(input);
         Ok(())
     }
 
-    pub fn fetch(server_repo: String) -> Result<(), std::io::Error> {
+    pub fn fetch(_server_repo: String) -> Result<(), std::io::Error> {
         let _ = Client::client_( "git fetch".to_string());
         Ok(())
     }

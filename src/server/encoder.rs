@@ -5,7 +5,7 @@ use std::{path::PathBuf, io, fs};
 extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
-use std::io::{Write, Read};
+use std::io::Read;
 
 pub struct Encoder {
     pub path: PathBuf

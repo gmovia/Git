@@ -1,8 +1,8 @@
 
-use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::{Path, PathBuf}};
+use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::Path};
 use chrono::{DateTime, Local};
 
-use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, packfile::packfile::process_line, handlers::branch};
+use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
 use super::{branch::BranchOptions, hash_object::WriteOption};
 use crate::packfile::packfile::{decompress_data, to_pkt_line, read_packet};
 
@@ -99,7 +99,7 @@ impl Clone{
         let current = VersionControlSystem::read_current_repository()?;
         let object_path = current.join(".rust_git").join("objects").join(&tree_hash_folder[0..2]);
         fs::create_dir_all(&object_path)?;
-        let file = File::create(&object_path.join(&tree_hash_folder[2..]))?;
+        let _ = File::create(&object_path.join(&tree_hash_folder[2..]))?;
         let files_names = Self::get_file_names(&tree_hash)?;
         Ok(files_names)
     }
