@@ -83,6 +83,7 @@ pub mod vcs{
         pub mod checkout;
         pub mod merge;
         pub mod diff;
+        pub mod reset;
     }
 
     pub mod sets{

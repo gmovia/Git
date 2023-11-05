@@ -4,7 +4,7 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile, clone::Clone}, files::repository::Repository}, client::client::Client, server::server::Server, constants::constants::{NULL_PATH, BDD_PATH, CURRENT_REPOSITORY_PATH},
 };
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge}, entities::conflict::Conflict};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset}, entities::conflict::Conflict};
 use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, File}, io::{Write, BufReader, self, BufRead}};
 use super::files::index::Index;
 
@@ -75,6 +75,10 @@ impl VersionControlSystem {
     /// Devuelve el area de staging
     pub fn add(path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Add::add(path)        
+    }
+
+    pub fn reset(path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error>{
+        Reset::reset(path.to_path_buf())
     }
 
     /// Calcula el hash object de un archivo. En el caso de que sea una carpeta, debe devolver un error.

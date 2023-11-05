@@ -1,5 +1,0 @@
-test_folder/repo_1
-clone
-git clone repo_1
-repo_1
-clone/repo_1

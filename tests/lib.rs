@@ -17,6 +17,7 @@ pub mod vcs{
     pub mod branch;
     pub mod checkout;
     pub mod merge;
+    pub mod reset;
 }
 
 pub mod tests_functions;
