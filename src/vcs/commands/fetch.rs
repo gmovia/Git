@@ -56,7 +56,7 @@ impl Fetch {
         let mut branch_commit: Vec<(String,String)> = Vec::new();
         for packet in packets {
             let parts: Vec<&str> = packet.splitn(2, ' ').collect();
-            branch_commit.push((parts[1].trim_start_matches("refs/head/").to_owned(), parts[0].to_owned()));
+            branch_commit.push((parts[1].trim_start_matches("refs/heads/").to_owned(), parts[0].to_owned()));
         }
 
         let mut last_entries: HashMap<&String, &String> = std::collections::HashMap::new();
@@ -88,14 +88,14 @@ impl Fetch {
                     }
                     println!("last line: {} -- {}", last_line, &packet.1);
                     if &last_line[2..42] == packet.1 {
-                        have_list.push(to_pkt_line(&format!("have {} refs/head/{}", packet.1, packet.0)));
+                        have_list.push(to_pkt_line(&format!("have {} refs/heads/{}", packet.1, packet.0)));
                     }
                     else {
-                        want_list.push(to_pkt_line(&format!("want {} refs/head/{}", packet.1, &packet.0)));
+                        want_list.push(to_pkt_line(&format!("want {} refs/heads/{}", packet.1, &packet.0)));
                     }
                 }
                 Err(_) => {
-                    want_list.push(to_pkt_line(&format!("want {} refs/head/{}", packet.1, &packet.0)));    
+                    want_list.push(to_pkt_line(&format!("want {} refs/heads/{}", packet.1, &packet.0)));    
                 }
             }
             
