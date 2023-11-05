@@ -134,21 +134,20 @@ impl RustInterface {
     pub fn impl_interface(&self) -> Result<(), std::io::Error>{    
         set_styles_css(self);
         
-        let mut vcs = VersionControlSystem::new();
-        vcs.init(Path::new("clone_here"), Vec::new());
+        VersionControlSystem::init(Path::new("clone_here"), Vec::new());
 
-        let _ = changes_and_staging_area(&vcs, &self.grid, &self.box_window);
-        repositories(&vcs, &self.select_repository)?;
-        branches(&vcs, &self.select_branch)?;
-        handle_branch(&self, &vcs);
-        handle_commit(&self, &vcs);
-        handle_status(&self, &vcs);
-        handle_log(&self, &vcs);
-        handle_repository(&self, &vcs);
-        handle_command(&self, &vcs);
-        handle_rm(&self,&vcs);
-        handle_merge(&self, &vcs);
-        handle_clone(&self, &vcs);
+        let _ = changes_and_staging_area(&self.grid, &self.box_window);
+        repositories( &self.select_repository)?;
+        branches( &self.select_branch)?;
+        handle_branch(&self);
+        handle_commit(&self);
+        handle_status(&self);
+        handle_log(&self);
+        handle_command(&self);
+        handle_rm(&self);
+        handle_merge(&self);
+        handle_clone(&self);
+        handle_repository(&self);
 
         self.window.show_all();   
         gtk::main();  // esto corta el ciclo de ejecucion

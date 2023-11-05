@@ -1,22 +1,23 @@
 
-use std::{cell::RefCell, rc::Rc, path::Path, collections::HashMap};
+use std::{cell::RefCell, rc::Rc, path::Path, collections::HashMap, fs::OpenOptions, io::{self, BufRead}};
 
 use gtk::{prelude::*, Button, ComboBoxText};
 use crate::vcs::version_control_system::VersionControlSystem;
 
-pub fn branches(vcs: &VersionControlSystem, combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
-    let branches = vcs.get_branches()?;
+pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
+    let branches = VersionControlSystem::get_branches()?;
     draw_branches(&branches, combo_box);
     Ok(())
 }
 
-pub fn repositories(_vcs: &VersionControlSystem, combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
-    let repositories: Vec<String> = vec!["repo_1".to_string(),"repo_2".to_string(),"repo_3".to_string()];
+pub fn repositories(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
+    
+    let repositories = VersionControlSystem::read_bdd_of_repositories()?;
     draw_repositories(&repositories, combo_box);
     Ok(())
 }
 
-pub fn changes_and_staging_area(vcs: &VersionControlSystem, grid: &gtk::Grid, box_window: &gtk::Box) -> Result<(), std::io::Error>{
+pub fn changes_and_staging_area(grid: &gtk::Grid, box_window: &gtk::Box) -> Result<(), std::io::Error>{
     grid.foreach(|child|{
         grid.remove(child);
     });
@@ -24,21 +25,22 @@ pub fn changes_and_staging_area(vcs: &VersionControlSystem, grid: &gtk::Grid, bo
     box_window.foreach(|child|{
         box_window.remove(child);
     });
-    
-    let (untracked_files, changes_not_be_commited, changes_to_be_commited) = vcs.status()?;
+    println!("HOLA");
+    let (untracked_files, changes_not_be_commited, changes_to_be_commited) = VersionControlSystem::status()?;
+    println!("Hola");
     let staging_area: Vec<String> = changes_to_be_commited.keys().cloned().collect();
 
     let mut changes = untracked_files.clone();
     changes.extend(changes_not_be_commited);
 
     draw_staging_area(&staging_area, box_window);
-    draw_changes(&changes, grid, vcs, box_window);
+    draw_changes(&changes, grid, box_window);
     Ok(())
 }
 
-pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, vcs: &VersionControlSystem, box_window: &gtk::Box){
+pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, box_window: &gtk::Box){
 
-    let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+    //let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
 
     let mut index = 0;
     for (path, state) in changes {
@@ -79,12 +81,12 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, vcs: &V
 
         let path_clone = path.clone(); // Clona el path
         add_button.connect_clicked({
-            let version = version.clone();
+            //let version = version.clone();
             let rc_grid = grid.clone();
             let rc_add = box_window.clone();
             move |widget|{ 
-                let version = version.borrow_mut();
-                let _ = version.add(Path::new(&path_clone)); // Usa la copia clonada
+                //let version = version.borrow_mut();
+                let _ = VersionControlSystem::add(Path::new(&path_clone)); // Usa la copia clonada
                 rc_grid.remove(widget);
                 rc_grid.remove(&path_label);
                 rc_grid.remove(&state_label);

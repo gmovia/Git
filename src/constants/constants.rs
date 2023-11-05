@@ -1,5 +1,6 @@
 pub const BDD_PATH: &str = "repositories.txt";
 pub const NULL_PATH: &str = "null_path";
+pub const CURRENT_REPOSITORY_PATH: &str = "current_repository.txt";
 
 pub const PUERTO: &str = "9418";
 pub const HOST: &str = "127.0.0.1";

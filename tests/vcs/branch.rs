@@ -4,7 +4,7 @@
 mod tests {
     use std::{fs, path::Path};
 
-    use rust_git::vcs::commands::branch::{BranchOptions, Branch};
+    use rust_git::vcs::{commands::branch::{BranchOptions, Branch}, version_control_system::VersionControlSystem};
 
     use crate::tests_functions::set_up;
 
@@ -23,12 +23,12 @@ mod tests {
 
     #[test]
     pub fn test_01_create_a_branch_then_len_dir_logs_is_2() -> Result<(),std::io::Error>{
-        let (_temp_dir, vcs) = set_up();
+        let temp_dir = set_up();
 
-        vcs.branch(BranchOptions::NewBranch("new_branch"))?;
-        
-        let path = Path::new(&vcs.path);
-        let branch_path = path.join(".rust_git").join("refs").join("heads");
+        VersionControlSystem::branch(BranchOptions::NewBranch("new_branch"))?;
+        let current = VersionControlSystem::read_current_repository()?;
+        //let path = Path::new(&VersionControlSystem::path);
+        let branch_path = current.join(".rust_git").join("refs").join("heads");
 
         assert_eq!(count_files(&branch_path)?,2);
         Ok(())
@@ -38,12 +38,13 @@ mod tests {
 
     #[test]
     pub fn test_02_create_2_branches_and_get_it() -> Result<(),std::io::Error>{
-        let (_temp_dir, vcs) = set_up();
+        let temp_dir = set_up();
 
-        vcs.branch(BranchOptions::NewBranch("new_branch"))?;
-        vcs.branch(BranchOptions::NewBranch("another_branch"))?;
-        
-        let branches = Branch::get_branches(&vcs.path)?;
+        VersionControlSystem::branch(BranchOptions::NewBranch("new_branch"))?;
+        VersionControlSystem::branch(BranchOptions::NewBranch("another_branch"))?;
+
+        let current = VersionControlSystem::read_current_repository()?;
+        let branches = Branch::get_branches(&current)?;
 
         assert_eq!(branches.contains(&"master".to_string()),true);
         assert_eq!(branches.contains(&"new_branch".to_string()),true);
@@ -54,16 +55,16 @@ mod tests {
 
     #[test]
     pub fn test_03_delete_a_branch_then_len_is_2() -> Result<(),std::io::Error>{
-        let (_temp_dir, vcs) = set_up();
+        let temp_dir = set_up();
 
-        vcs.branch(BranchOptions::NewBranch("new_branch"))?;
-        vcs.branch(BranchOptions::NewBranch("another_brach"))?;
-        vcs.branch(BranchOptions::NewBranch("a_third_brach"))?;
+        VersionControlSystem::branch(BranchOptions::NewBranch("new_branch"))?;
+        VersionControlSystem::branch(BranchOptions::NewBranch("another_brach"))?;
+        VersionControlSystem::branch(BranchOptions::NewBranch("a_third_brach"))?;
 
-        vcs.branch(BranchOptions::DeleteBranch("new_branch"))?;
+        VersionControlSystem::branch(BranchOptions::DeleteBranch("new_branch"))?;
         
-        let path = Path::new(&vcs.path);
-        let branch_path = path.join(".rust_git").join("refs").join("heads");
+        let current = VersionControlSystem::read_current_repository()?;
+        let branch_path = current.join(".rust_git").join("refs").join("heads");
 
         assert_eq!(count_files(&branch_path)?, 3);
 
@@ -73,9 +74,9 @@ mod tests {
 
 #[test]
     pub fn test_04_try_to_delete_master_branch() -> Result<(),std::io::Error>{
-        let (_temp_dir, vcs) = set_up();
+        let temp_dir = set_up();
 
-        let result = vcs.branch(BranchOptions::DeleteBranch("master"));
+        let result = VersionControlSystem::branch(BranchOptions::DeleteBranch("master"));
 
         assert!(result.is_err());
 

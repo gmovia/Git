@@ -5,14 +5,14 @@ pub struct Fetch;
 
 impl Fetch {
 
-    pub fn fetch(socket: &mut TcpStream, vcs: &VersionControlSystem) -> Result<(), std::io::Error> {
+    pub fn fetch(socket: &mut TcpStream) -> Result<(), std::io::Error> {
         
-        Self::get_upload_pack_response(socket, vcs)?;
+        Self::get_upload_pack_response(socket)?;
         
         Ok(())
     }
 
-    pub fn get_upload_pack_response(socket: &mut TcpStream, vcs: &VersionControlSystem) -> Result<(), std::io::Error> {
+    pub fn get_upload_pack_response(socket: &mut TcpStream) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
         loop {
             let mut len_buf = [0; 4]; 
@@ -31,7 +31,7 @@ impl Fetch {
             println!("Paquete: {:?}", packet);
         }
         let branch_commits_received = Self::format_packet(&packets)?;
-        let message_to_send =Self::packet_manager(branch_commits_received, vcs)?;
+        let message_to_send =Self::packet_manager(branch_commits_received)?;
         
         println!("{:?}", message_to_send);
         for want in &message_to_send.0 {
@@ -72,13 +72,14 @@ impl Fetch {
         Ok(last_commits)
     }
 
-    fn packet_manager(last_branch_commit_recieve: Vec<(String,String)>, vcs: &VersionControlSystem) -> Result<(Vec<String>,Vec<String>), std::io::Error>{
+    fn packet_manager(last_branch_commit_recieve: Vec<(String,String)>) -> Result<(Vec<String>,Vec<String>), std::io::Error>{
         let mut want_list: Vec<String> = Vec::new();
         let mut have_list: Vec<String> = Vec::new();
+        let current = VersionControlSystem::read_current_repository()?;
         for packet in &last_branch_commit_recieve {
-            match File::open(&vcs.path.join(".rust_git").join("logs").join(packet.0.to_string())) {
+            match File::open(&current.join(".rust_git").join("logs").join(packet.0.to_string())) {
                 Ok(file) => {
-                    let file = File::open(&vcs.path.join(".rust_git").join("logs").join(packet.0.to_string()))?;
+                    let file = File::open(&current.join(".rust_git").join("logs").join(packet.0.to_string()))?;
                     let reader = io::BufReader::new(file);
         
                     let mut last_line = String::new();
