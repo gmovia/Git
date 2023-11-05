@@ -1,4 +1,4 @@
-use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::File, path::Path, collections::HashMap};
+use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::{File, OpenOptions}, path::Path, collections::HashMap};
 use crate::{vcs::version_control_system::VersionControlSystem, packfile::packfile::{read_packet, to_pkt_line, decompress_data, send_done_msg}};
 
 pub struct Fetch;
@@ -50,6 +50,9 @@ impl Fetch {
         match Self::get_socket_response(socket) {
             Ok(response) => {
                 println!("RESPONSE: {:?}", response);
+                for resp in &response {
+                    println!("TIPO: {} - CONTENIDO: {}", resp.0, String::from_utf8_lossy(&resp.1)); 
+                }
                 Self::update_repository(&message_to_send, vcs, response)?;
             },
             Err(_) => {
@@ -64,7 +67,29 @@ impl Fetch {
         for object in objects {
             println!("OBJECTS: {:?}", String::from_utf8_lossy(&object.1));
         }
-        
+        /* 
+        for want in &wants_and_haves.0 {
+            let parts: Vec<&str> = want.split_whitespace().collect();
+    
+            if let Some(last_part) = parts.last() {
+                if let Some(branch_name) = last_part.strip_prefix("refs/head/") {
+                    let path = vcs.path.join(".rust_git").join("logs").join(branch_name);
+                    let mut file = OpenOptions::new().create(true).write(true).append(true).open(path)?;
+                    //let want_hash = parts[1];
+                    //println!("WANT HASH: {}", want_hash);
+                    
+                    //let format = format!("{}-{}-{}");
+                    
+
+                }
+            } 
+            else {
+                std::io::Error::new(io::ErrorKind::Other, "Error parsing branch name");
+            }
+            
+        }   
+        */
+
         Ok(())
     }
 
@@ -127,7 +152,7 @@ impl Fetch {
         let mut buffer = Vec::new();
             match socket.read_to_end(&mut buffer) {
                 Ok(_) => {
-                    println!("{:?}",String::from_utf8_lossy(&buffer));
+                    println!("GET SOCKET RESPONSE {:?}",String::from_utf8_lossy(&buffer));
                     return Ok(Self::manage_pack(&buffer[8..])?);
                 }
                 Err(e) => {
@@ -149,18 +174,25 @@ impl Fetch {
         let mut position: usize = 12;
         let mut objects = Vec::new();
         for object in 0..object_number {
-            let objet_type = Self::get_object_type(pack[position]);
-            while Self::is_bit_set(pack[position]) {
-                position = position + 1;
-            }
-            position = position + 1;
+            
+            match pack.get(position) {
+                Some( _ ) => {
+                    let objet_type = Self::get_object_type(pack[position]);
+                    while Self::is_bit_set(pack[position]) {
+                        position = position + 1;
+                    }
+                    position = position + 1;
 
-            if let Ok(data) = decompress_data(&pack[position..]) {
-                println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
-                println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                position = position + data.1 as usize; 
-                objects.push((objet_type, data.0))   
+                    if let Ok(data) = decompress_data(&pack[position..]) {
+                        println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
+                        println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                        position = position + data.1 as usize; 
+                        objects.push((objet_type, data.0))   
+                    }
+                }
+                None => break
             }
+            
         } 
         objects.sort_by(|a, b| a.0.cmp(&b.0));
         for (number, inner_vec) in &objects {

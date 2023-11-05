@@ -5,9 +5,11 @@ use std::{path::PathBuf, io, fs};
 extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
-use std::io::{Write, Read};
+use std::io::{Write, Read, BufRead};
 
 use crate::packfile;
+use crate::vcs::commands::cat_file::CatFile;
+use crate::vcs::version_control_system::VersionControlSystem;
 
 pub struct Encoder {
     pub path: PathBuf
@@ -18,7 +20,13 @@ impl Encoder {
     pub fn init_encoder(path: PathBuf, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let encoder = Encoder { path: path };
         let mut packfile= Vec::new();
-        packfile = Self::create_packfile(&encoder.path, messages)?;    
+        if messages.1.is_empty() {
+            packfile = Self::create_packfile(&encoder.path)?;        
+        }
+        else {
+            println!("FETCH\n\n");
+            packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
+        }
         Ok(packfile)
     }
     
@@ -38,15 +46,12 @@ impl Encoder {
         Ok(objects)
     }
 
-    fn create_packfile(path: &PathBuf, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
+    fn create_packfile(path: &PathBuf) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile: Vec<u8> = Vec::new();
         Self::create_header(&mut packfile, path)?;
         
-        /// ACA TENGO LAS DUDAS DE QUE HACE. COMO SE DE QUE RAM ES EL OBJETO?
-        Self::process_logs(&path.join(".rust_git").join("logs"), &messages);
-
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
-        Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data, &messages)?;
+        Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
         
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
@@ -63,32 +68,94 @@ impl Encoder {
         Ok(packfile)
     }
 
-    fn process_logs(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
-        let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
+
+    fn create_fetch_packfile(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
+        let mut packfile = Vec::new();
+        Self::create_header(&mut packfile, path)?;        
+        
+        let vcs = VersionControlSystem::init(Path::new("test_folder/repo_1"), Vec::new());
+
+        let objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages)?;
+        println!("DATA TO SEND: {:?}", objects_to_send);
+
+
+        let mut objects_to_encode: Vec<(String,usize,usize)> = Vec::new();
+        for objects in objects_to_send {
+            let path = format!("{}/.rust_git/objects", vcs.path.display());
+            let content = CatFile::cat_file(&objects.1, (&path).into())?;
+            let tree_path = format!("{}/{}/{}",path,  &objects.1[0..2], &objects.1[2..]);
+            objects_to_encode.push((tree_path, 2, content.len() as usize));
+            Self::get_blobs(content, &mut objects_to_encode, &vcs)?;
+        }
+        println!("OBJECTS TO ENCODE: {:?}", objects_to_encode);
+
+        for objects in objects_to_encode.iter().rev() {
+            let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
+            for object in object_type {
+                packfile.push(object);
+            }
+            let path = Path::new(&objects.0);
+            let compress_data = Self::compress_object((&path).to_path_buf())?;
+            for byte in compress_data {
+                packfile.push(byte);    
+            }
+        }
+
+        Ok(packfile)
+    }
+
+    fn get_blobs(content: String, objects_to_encode: &mut Vec<(String,usize,usize)>, vcs: &VersionControlSystem) -> Result<(),std::io::Error> {
+        let mut blobs: Vec<&str> = content.split("\n").collect();
+        blobs.pop();
+        for blob in blobs {
+            let hash_blob: Vec<&str> = blob.split("-").collect();
+            let path = format!("{}/.rust_git/objects", vcs.path.display());
+            let blob_content = CatFile::cat_file(&hash_blob[1], (&path).into())?;
+            let blob_path = format!("{}/{}/{}",path,  &hash_blob[1][0..2], &hash_blob[1][2..]);
+            objects_to_encode.push((blob_path,3,blob_content.len() as usize));
+        }
+        Ok(())
+    }
+
+    fn process_logs(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,String)>, std::io::Error> {
+        let mut data_to_send = Vec::new();
         for entrada in fs::read_dir(path)? {
             let entrada = entrada?;
             let entry_path = entrada.path();
             if entry_path.is_file() {
-                let data = Self::process_log_file(&entry_path, &messages)?;
-                //objects_data.push(data);
+                data_to_send = Self::process_log_file(&entry_path, &messages)?;
             }
         }
-        Ok(objects_data.to_vec())        
+        Ok(data_to_send)        
     }
 
-    fn process_log_file(file_path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<(),std::io::Error> {
+    fn process_log_file(file_path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,String)>,std::io::Error> {
         println!("PROCESS LOG FILE: {:?}",file_path);
         println!("{:?}-{:?}", &messages.0,&messages.1);
-        let branch_hash: Vec<(String, String)> = Vec::new();
+        let mut objecto_to_send_list: Vec<(String, String)> = Vec::new();
+        
         if let Some(branch) = file_path.file_name() {
-            let branch_string: String = branch.to_string_lossy().to_string();
-            let mut content = String::new();
-            let mut file = fs::File::open(file_path)?;
-            file.read_to_string(&mut content)?;
+            let branch_as_string: String = branch.to_string_lossy().to_string();
+            let file = fs::File::open(file_path)?;
+            
+            let reader = io::BufReader::new(file);
+            let mut last_line = String::new();
+            for line in reader.lines() {
+                last_line = line?;
+            }
+            
+            let content_vec: Vec<&str> = last_line.split('-').collect();
+            println!("CONTENT VEC: {:?}", content_vec);
+            for message in &messages.0 {   
+                if message.contains(&branch_as_string) && message.contains(&content_vec[1]) {
+                    objecto_to_send_list.push((file_path.to_string_lossy().to_string(), content_vec[1].to_owned()));
+                }
+            }
         } else {
-            println!("La opción es None.");
+            return Err(std::io::Error::new(io::ErrorKind::NotFound, "Branch name not found"));
         }
-        Ok(())
+        println!("OBJECT TO SEND: {:?}", objecto_to_send_list);
+        Ok(objecto_to_send_list)
     }
 
     
@@ -153,8 +220,8 @@ impl Encoder {
         packfile.extend(number_bytes);
     }
 
-    /// ESTO ES LO QUE ESTABA HACIENDO
-    fn process_file(file_path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<(String,usize,usize),std::io::Error> {
+
+    fn process_file(file_path: &PathBuf) -> Result<(String,usize,usize),std::io::Error> {
         let metadata = fs::metadata(file_path)?;
         let mut content = String::new();
         let mut file = fs::File::open(file_path)?;
@@ -172,16 +239,16 @@ impl Encoder {
         }
     }
     
-    fn process_directory(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+    fn process_directory(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
         for entrada in fs::read_dir(path)? {
             let entrada = entrada?;
             let entry_path = entrada.path();
             if entry_path.is_file() {
-                let data = Self::process_file(&entry_path, &messages)?;
+                let data = Self::process_file(&entry_path)?;
                 objects_data.push(data);
             }
             else {
-                Self::process_directory(&entry_path, objects_data, &messages)?;
+                Self::process_directory(&entry_path, objects_data)?;
             }
         }
         Ok(objects_data.to_vec())
