@@ -126,8 +126,8 @@ impl VersionControlSystem {
         Ok(())
     }
 
-    pub fn fetch(server_repo: String) -> Result<(), std::io::Error> {
-        let _ = Client::client_( "git fetch".to_string());
+    pub fn fetch(input: String) -> Result<(), std::io::Error> {
+        let _ = Client::client_(input);
         Ok(())
     }
     

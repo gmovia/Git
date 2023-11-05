@@ -1,6 +1,7 @@
 
 use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::TcpStream, str::from_utf8, path::{Path, PathBuf}};
 use chrono::{DateTime, Local};
+use rand::Rng;
 
 use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random, packfile::packfile::process_line, handlers::branch};
 use super::{branch::BranchOptions, hash_object::WriteOption};
@@ -60,7 +61,8 @@ impl Clone{
             let current = VersionControlSystem::read_current_repository()?;
             let logs_path = current.join(".rust_git").join("logs").join(branch); 
             let current_time: DateTime<Local> = Local::now();
-            let format_commit = format!("{}-{}-{}-{}\n", Random::random(), commit, "clone", current_time);
+            let mut rng = rand::thread_rng();
+            let format_commit = format!("{}-{}-{}-{}\n", rng.gen_range(1..9), commit, "clone", current_time);
             let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
             file.write(format_commit.as_bytes())?;
 
