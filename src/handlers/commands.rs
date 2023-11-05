@@ -9,6 +9,8 @@ use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
 use crate::vcs::version_control_system::VersionControlSystem;
 
+use super::clone::handler_clone;
+
 pub fn handler_command<'a>(input: &str) -> String{
     let input = input.trim(); 
     let _: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
@@ -30,6 +32,7 @@ pub fn handler_command<'a>(input: &str) -> String{
         x if x.contains("git commit") => handler_commit(x.to_string()),
         x if x.contains("git branch") => handler_branch(x.to_string()),
         x if x.contains("git checkout") => handler_checkout(x.to_string()),
+        x if x.contains("git clone") => handler_clone(x.to_string()),
          _ => "Failed or Panicked.".to_string()
      }
 }

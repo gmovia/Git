@@ -67,7 +67,7 @@ fn get_log_entries(logs_path: &Path) -> Result<Vec<String>, std::io::Error>{
                 last_line = line.clone(); // Clonamos la línea si la necesitas posteriormente
                 let last_commit = line[2..42].to_string(); // Clonamos la porción de la línea
                 let log_file_name = log_file.file_name().to_string_lossy().to_string();
-                let format = format!("{} refs/head/{}", last_commit, log_file_name);
+                let format = format!("{} refs/heads/{}", last_commit, log_file_name);
                 log_entries.push(format);
  
             }

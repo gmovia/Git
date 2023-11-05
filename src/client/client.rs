@@ -68,6 +68,7 @@ impl Client {
 
        let reader = stream.try_clone()?;
        let mut input = String::new();
+       println!("COMAND: {}", command.as_str());
        let _ = match command.as_str() {
         command_str if command_str.contains("git clone") => Self::handler_clone(stream, command),
         command_str if command_str.contains("git fetch") => Self::handler_fetch(stream, command),

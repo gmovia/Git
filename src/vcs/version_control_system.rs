@@ -124,7 +124,8 @@ impl VersionControlSystem {
     }
 
     pub fn git_clone(input: String) -> Result<(), std::io::Error> {
-        let _ = Self::write_bdd_of_repositories(Path::new(&input));
+        let args: Vec<&str> = input.split_whitespace().collect();
+        let _ = Self::write_bdd_of_repositories(Path::new("clone"));
         let _ = Client::client_(input);
         Ok(())
     }
