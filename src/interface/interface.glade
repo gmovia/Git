@@ -587,8 +587,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="log">
-                <property name="label" translatable="yes">log</property>
+              <object class="GtkButton" id="fetch">
+                <property name="label" translatable="yes">fetch</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -597,14 +597,14 @@
                 <property name="border-width">5</property>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="terminal">
-                <property name="label" translatable="yes">terminal</property>
+              <object class="GtkButton" id="log">
+                <property name="label" translatable="yes">log</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -632,6 +632,22 @@
                 <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="terminal">
+                <property name="label" translatable="yes">terminal</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="margin-top">2</property>
+                <property name="margin-bottom">3</property>
+                <property name="border-width">5</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">4</property>
               </packing>
             </child>
           </object>

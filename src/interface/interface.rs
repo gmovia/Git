@@ -61,6 +61,7 @@ pub struct RustInterface {
     pub both_ok: gtk::Button,
     pub both_box: gtk::Box,
     pub both_text: gtk::TextView,
+    pub fetch: gtk::Button,
 }
 
 impl RustInterface {
@@ -128,6 +129,7 @@ impl RustInterface {
             both_ok: builder.object("both-ok").unwrap(),
             both_box: builder.object("both-box").unwrap(),
             both_text: builder.object("both-text").unwrap(),
+            fetch: builder.object("fetch").unwrap(),
         }
     }
     
