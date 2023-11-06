@@ -178,4 +178,11 @@ impl VersionControlSystem {
     pub fn resolve_conflicts(branch: &str, conflicts: HashMap<String, Conflict>) -> Result<HashMap<String, Conflict>,std::io::Error> {
         Merge::merge(branch, conflicts)
     }
+
+    pub fn pull() -> Result<(),std::io::Error> {
+        let current = Self::read_current_repository()?;
+        Self::fetch(format!("git fetch {}", current.display().to_string()))?;
+        Self::merge(&Init::get_current_branch(&current)?)?;
+        Ok(())
+    }
 }

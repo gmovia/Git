@@ -11,6 +11,7 @@ use crate::vcs::version_control_system::VersionControlSystem;
 
 use super::clone::handler_clone;
 use super::fetch::handler_fetch;
+use super::pull::handler_pull;
 
 pub fn handler_command<'a>(input: &str) -> String{
     let input = input.trim(); 
@@ -35,6 +36,7 @@ pub fn handler_command<'a>(input: &str) -> String{
         x if x.contains("git checkout") => handler_checkout(x.to_string()),
         x if x.contains("git clone") => handler_clone(x.to_string()),
         x if x.contains("git fetch") => handler_fetch(x.to_string()),
+        x if x.contains("git pull") => handler_pull(),
          _ => "Failed or Panicked.".to_string()
      }
 }

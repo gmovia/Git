@@ -87,18 +87,15 @@ impl Fetch {
 
                     let format = format!("{}-{}-{}-{}\n", id, &parts[1],"fetch", current_time);
                     file.write(format.as_bytes())?;
-                    Self::update_objects_folder(&current, &objects, &parts[1]);
+                    Self::update_objects_folder(&current, &objects, &parts[1])?;
                 }
             } 
             else {
                 std::io::Error::new(io::ErrorKind::Other, "Error parsing branch name");
             }
-            
         }   
         Ok(())
     }
-
-
 
     fn update_objects_folder(path: &PathBuf, objects: &Vec<(u8,Vec<u8>)>, hash_name: &str) -> Result<(),std::io::Error>  {
         for object in objects {
@@ -107,17 +104,12 @@ impl Fetch {
                 fs::create_dir_all(&path_obj)?;
                 let mut file = File::create(&path_obj.join(&hash_name[2..]))?;
                 
-                // Convierte el array de u8 a un String
                 let string_from_u8 = String::from_utf8(object.1.to_vec()).expect("No se pudo convertir a String");
-
-                // Divide el String en un vector de String utilizando '\n' como separador
                 let lines: Vec<&str> = string_from_u8.split('\n').collect();
-
-                //let splits: Vec<&str> = String::from_utf8_lossy(&object.1).split("\n").collect();
-                //let vector_of_strings: Vec<String> = lines.iter().map(|line| line.to_string()).collect();
 
                 for split in lines {
                     let format = Self::parse_blob(split);
+                    println!("FORMAT: {}", format);
                     file.write_all(format.as_bytes())?;
                     file.write_all("\n".as_bytes())?;    
                 }

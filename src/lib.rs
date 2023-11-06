@@ -15,6 +15,7 @@ pub mod handlers{
     pub mod checkout;
     pub mod log;
     pub mod commit;
+    pub mod pull;
 }
 
 pub mod interface{
