@@ -38,9 +38,10 @@ impl Server {
                     let read_client = client.try_clone()?;
                     let write_client = client.try_clone()?;
                     let path = self.path.clone();
+                    let current =
                     thread::spawn(move || {
                         print!("Parada en el server\n");
-                        match Server::handle_client(read_client, write_client, &path) {
+                        match Server::handle_client( read_client, write_client, &path) {
                             Ok(_) => Ok(()),
                             Err(e) => Err(e)
                         }
@@ -71,13 +72,13 @@ impl Server {
         Ok(())
     }
 
-    fn handle_client(mut reader: TcpStream, mut _writer: TcpStream, path: &PathBuf) -> Result<(),std::io::Error> {
+    fn handle_client( mut reader: TcpStream, mut _writer: TcpStream, path: &PathBuf) -> Result<(),std::io::Error> {
         loop {
             match process_line(&mut reader) {
                 Ok(message) => {
                     println!("Received message from client: {}", &message);
                     let client_path = message.trim_start_matches("git-upload-pack ");
-                    let _ = Server::parse_response( &message.to_string(), &mut reader, &path.join(client_path))?;
+                    let _ = Server::parse_response(&message.to_string(), &mut reader, &path.join(client_path))?;
                     Self::shutdown_server(&reader)?;
                 }
                 Err(e) => {
@@ -103,7 +104,7 @@ impl Server {
         }
     }
 
-    fn parse_response(message: &String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
+    fn parse_response( message: &String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
         let response = match message.as_str() {
             s if s.contains("hola") => "Hola".to_string(),
             s if s.contains("chau") => "Chau".to_string(),

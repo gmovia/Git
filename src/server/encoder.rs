@@ -71,8 +71,10 @@ impl Encoder {
     fn create_fetch_packfile(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile = Vec::new();
         Self::create_header(&mut packfile, path)?;        
-        
-        let path_server = Path::new("test_folder/repo_2");
+        let current = VersionControlSystem::read_current_repository()?;
+        let formatted_path = format!("test_folder/{}", current.display().to_string());
+        let path_server = Path::new(&formatted_path);
+
         
         let mut objects_to_send: Vec<(String,String)> = Vec::new();
         objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages, &mut objects_to_send)?;

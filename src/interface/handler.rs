@@ -441,6 +441,17 @@ pub fn handle_clone(interface: &RustInterface) {
     });
 }
 
+pub fn handle_fetch(interface: &RustInterface) {
+
+    interface.fetch.connect_clicked({
+        move |_| {
+            if let Ok(current) = VersionControlSystem::read_current_repository() {
+                let _ = VersionControlSystem::fetch(format!("git fetch {}",current.display().to_string()));
+            }
+        }
+    });
+}
+
 fn add_message(m_changes: &gtk::Box, message: &String) {
     let label = gtk::Label::new(Some(message));
     label.set_visible(true);
