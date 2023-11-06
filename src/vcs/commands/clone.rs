@@ -16,8 +16,9 @@ impl Clone{
     }
 
     pub fn request_branch(list_refs: &Vec<String>, objects: Vec<(u8,Vec<u8>)>) -> Result<(),std::io::Error> {
+        
         for item in list_refs {
-            if item.contains("HEAD") {
+            if item.contains("HEAD") || !item.contains("master") {
                 continue;
             }
             let parts: Vec<&str> = item.splitn(2, ' ').collect(); // Divide el elemento en dos partes.
@@ -30,8 +31,12 @@ impl Clone{
                     let branch_name = ref_part.trim_start_matches("refs/heads/");
                     let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
-                    
-                    Self::write_commit_log_file(commit, branch_name)?;            
+
+                    println!("ANTES DE WRITE COMMIT");            
+                    if let Err(e) = Self::write_commit_log_file(commit, branch_name) {
+                        println!("ERROR: {}",e);
+                        return Err(std::io::Error::new(io::ErrorKind::NotFound, e))
+                    }            
 
                     let mut tree_hash = String::new();
                     let mut files = Vec::new();
@@ -39,14 +44,18 @@ impl Clone{
                         match object.0 {
                             1 => {
                                 tree_hash = Self::create_commit_folder(&object.1, commit)?
-                                },
-                            2 => files = Self::create_tree_folder( object.1.to_owned(), &tree_hash)?,
+                            },
+                            2 => files = Self::create_tree_folder(object.1.to_owned(), &tree_hash)?,
                             3 => {
-                                let file_name = files.remove(0);
-                                let file_name_hash = Self::create_blob_folder( object.1.to_owned(), file_name)?;
-                                Self::add_hash_to_tree(file_name_hash, &tree_hash)?
-                                },
-                            _ => Err(io::Error::new(io::ErrorKind::NotFound, "Unknow object"))?,
+                                if !files.is_empty() {
+                                    let file_name = files.remove(0);
+                                    let file_name_hash = Self::create_blob_folder(object.1.to_owned(), file_name)?;
+                                    Self::add_hash_to_tree(file_name_hash, &tree_hash)?;
+                                } else {
+                                    break;
+                                }
+                            },
+                            _ => Err(io::Error::new(io::ErrorKind::NotFound, "Unknown object"))?,
                         };
                     }
                 }
@@ -57,17 +66,16 @@ impl Clone{
 
     // Falta ver que el archivo de logs tiene varios commits, capaz sale por el lado del parent?
     fn write_commit_log_file(commit: &str, branch_name: &str) -> Result<(),std::io::Error>{
-        if let Some(branch) = branch_name.strip_prefix("refs/head/") {
-            let current = VersionControlSystem::read_current_repository()?;
-            let logs_path = current.join(".rust_git").join("logs").join(format!("{}",branch)); 
-            let current_time: DateTime<Local> = Local::now();
-            let mut rng = rand::thread_rng();
-            let format_commit = format!("{}-{}-{}-{}\n", rng.gen_range(1..9), commit, "clone", current_time);
-            let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
-            file.write(format_commit.as_bytes())?;
+        let current = VersionControlSystem::read_current_repository()?;
 
-        }
-        
+        let logs_path = current.join(".rust_git").join("logs").join(format!("{}",branch_name)); 
+        println!("CURRENT PATH CLONE: {:?}", logs_path);
+        let current_time: DateTime<Local> = Local::now();
+        let mut rng = rand::thread_rng();
+        let format_commit = format!("{}-{}-{}-{}\n", rng.gen_range(1..9), commit, "clone", current_time);
+        let mut file = OpenOptions::new().write(true).create(true).open(logs_path).expect("No se pudo abrir el archivo");
+        file.write(format_commit.as_bytes())?;
+
         Ok(())
     }
 
@@ -175,7 +183,7 @@ impl Clone{
 
         Self::send_done_msg(socket)?;
         let objects = Self::get_socket_response(socket)?;
-
+        println!("ANTES DE ENTRAR A REQUEST");
         Self::request_branch(&packets, objects)?;
         Ok(()) 
     }

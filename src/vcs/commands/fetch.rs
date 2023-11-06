@@ -77,9 +77,10 @@ impl Fetch {
             let id = rng.gen_range(1..9);
             let current_time: DateTime<Local> = Local::now();
             let _ = current_time.to_rfc2822();
-
+            println!("ANTES DE LAST: {:?}", parts);
             if let Some(last_part) = parts.last() {
-                if let Some(branch_name) = last_part.strip_prefix("refs/head/") {
+                println!("LAST PART: {}", last_part);
+                if let Some(branch_name) = last_part.strip_prefix("refs/heads/") {
                     let current = VersionControlSystem::read_current_repository()?;
                     let path = current.join(".rust_git").join("logs").join(branch_name);
                     let mut file = OpenOptions::new().create(true).write(true).append(true).open(path)?;
@@ -158,6 +159,8 @@ impl Fetch {
         let mut have_list: Vec<String> = Vec::new();
         let current = VersionControlSystem::read_current_repository()?;
         for packet in &last_branch_commit_recieve {
+            println!("ACA: {:?}", packet);
+            println!("ACA 2: {:?}", &current.join(".rust_git").join("logs").join(packet.0.to_string()));
             match File::open(&current.join(".rust_git").join("logs").join(packet.0.to_string())) { 
                 Ok(file) => {
                     let file = File::open(&current.join(".rust_git").join("logs").join(packet.0.to_string()))?;

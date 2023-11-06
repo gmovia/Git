@@ -24,7 +24,6 @@ impl Encoder {
             packfile = Self::create_packfile(&encoder.path)?;        
         }
         else {
-            println!("FETCH\n\n");
             packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
         }
         Ok(packfile)
@@ -73,7 +72,7 @@ impl Encoder {
         let mut packfile = Vec::new();
         Self::create_header(&mut packfile, path)?;        
         
-        let path_server = Path::new("test_folder/repo_1");
+        let path_server = Path::new("test_folder/repo_2");
 
         let objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages)?;
         println!("DATA TO SEND: {:?}", objects_to_send);
