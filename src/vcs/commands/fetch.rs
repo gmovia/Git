@@ -106,7 +106,21 @@ impl Fetch {
                 let path_obj = path.join(".rust_git").join("objects").join(&hash_name[0..2]);
                 fs::create_dir_all(&path_obj)?;
                 let mut file = File::create(&path_obj.join(&hash_name[2..]))?;
-                file.write_all(&object.1)?;
+                
+                // Convierte el array de u8 a un String
+                let string_from_u8 = String::from_utf8(object.1.to_vec()).expect("No se pudo convertir a String");
+
+                // Divide el String en un vector de String utilizando '\n' como separador
+                let lines: Vec<&str> = string_from_u8.split('\n').collect();
+
+                //let splits: Vec<&str> = String::from_utf8_lossy(&object.1).split("\n").collect();
+                //let vector_of_strings: Vec<String> = lines.iter().map(|line| line.to_string()).collect();
+
+                for split in lines {
+                    let format = Self::parse_blob(split);
+                    file.write_all(format.as_bytes())?;
+                    file.write_all("\n".as_bytes())?;    
+                }
             }
             else if object.0 == 3 {
                 let content = String::from_utf8_lossy(&object.1.to_owned()).to_string();
@@ -118,6 +132,18 @@ impl Fetch {
         println!("hash: {:?}", hash_name);
         Ok(())
     }
+
+    fn parse_blob(split: &str) -> String {
+        let prefix_to_remove = "test_folder/";
+        if split.starts_with("test_folder/") {
+            let modified_string = &split[prefix_to_remove.len()..];
+            return modified_string.to_string();
+        } else {
+            split.to_string()
+        }
+    }
+
+
 
     fn create_folder(content: &str, path: &PathBuf) -> Result<String, std::io::Error> {
         let temp_path = Path::new(&path).join("temp");
