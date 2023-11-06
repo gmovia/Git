@@ -73,8 +73,9 @@ impl Encoder {
         Self::create_header(&mut packfile, path)?;        
         
         let path_server = Path::new("test_folder/repo_2");
-
-        let objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages)?;
+        
+        let mut objects_to_send: Vec<(String,String)> = Vec::new();
+        objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages, &mut objects_to_send)?;
         println!("DATA TO SEND: {:?}", objects_to_send);
 
 
@@ -116,23 +117,22 @@ impl Encoder {
         Ok(())
     }
 
-    fn process_logs(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,String)>, std::io::Error> {
+    fn process_logs(path: &PathBuf, messages: &(Vec<String>,Vec<String>), object_to_send_list: &mut Vec<(String, String)>) -> Result<Vec<(String,String)>, std::io::Error> {
         let mut data_to_send = Vec::new();
         for entrada in fs::read_dir(path)? {
             let entrada = entrada?;
             let entry_path = entrada.path();
             if entry_path.is_file() {
-                data_to_send = Self::process_log_file(&entry_path, &messages)?;
+                data_to_send = Self::process_log_file(&entry_path, &messages, object_to_send_list)?;
             }
         }
         Ok(data_to_send)        
     }
 
-    fn process_log_file(file_path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,String)>,std::io::Error> {
+    fn process_log_file(file_path: &PathBuf, messages: &(Vec<String>,Vec<String>), object_to_send_list: &mut Vec<(String, String)>) -> Result<Vec<(String,String)>,std::io::Error> {
         println!("PROCESS LOG FILE: {:?}",file_path);
         println!("{:?}-{:?}", &messages.0,&messages.1);
-        let mut objecto_to_send_list: Vec<(String, String)> = Vec::new();
-        
+
         if let Some(branch) = file_path.file_name() {
             let branch_as_string: String = branch.to_string_lossy().to_string();
             let file = fs::File::open(file_path)?;
@@ -146,15 +146,23 @@ impl Encoder {
             let content_vec: Vec<&str> = last_line.split('-').collect();
             println!("CONTENT VEC: {:?}", content_vec);
             for message in &messages.0 {   
+                println!("ACA: {}-{}-{:?}", message, branch_as_string,&content_vec);
+                println!("COND 1: {}", message.contains(&branch_as_string));
+                println!("COND 2: {}", message.contains(&content_vec[1]));
                 if message.contains(&branch_as_string) && message.contains(&content_vec[1]) {
-                    objecto_to_send_list.push((file_path.to_string_lossy().to_string(), content_vec[1].to_owned()));
+                    object_to_send_list.push((file_path.to_string_lossy().to_string(), content_vec[1].to_owned()));
+                    println!("PUSH: {:?}", object_to_send_list);
+                }
+                else {
+                    println!("NO ENTRO");
                 }
             }
+            println!("VECTOR: {:?}", object_to_send_list);
         } else {
             return Err(std::io::Error::new(io::ErrorKind::NotFound, "Branch name not found"));
         }
-        println!("OBJECT TO SEND: {:?}", objecto_to_send_list);
-        Ok(objecto_to_send_list)
+        println!("OBJECT TO SEND: {:?}", object_to_send_list);
+        Ok(object_to_send_list.to_vec())
     }
 
     

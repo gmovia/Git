@@ -123,7 +123,7 @@ impl Fetch {
         let temp_path = Path::new(&path).join("temp");
         let mut hash_blob = OpenOptions::new().write(true).create(true).append(true).open(&temp_path)?; 
         let path = format!("{}/.rust_git/objects", path.display());
-        let format_content = format!("{}\n", content);
+        let format_content = format!("{}", content);
         hash_blob.write_all(format_content.as_bytes())?;
     
         let hash = HashObject::hash_object(&temp_path, path.into(), WriteOption::Write)?;
