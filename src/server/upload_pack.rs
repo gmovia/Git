@@ -1,9 +1,7 @@
 use std::{fs, io};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
-use std::net::{TcpStream, Shutdown};
-
-use crate::packfile;
+use std::net::TcpStream;
 use crate::packfile::packfile::{to_pkt_line, process_line};
 use crate::server::encoder::Encoder;
 

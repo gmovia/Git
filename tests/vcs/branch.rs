@@ -23,7 +23,7 @@ mod tests {
 
     #[test]
     pub fn test_01_create_a_branch_then_len_dir_logs_is_2() -> Result<(),std::io::Error>{
-        let temp_dir = set_up();
+        let _temp_dir = set_up();
 
         VersionControlSystem::branch(BranchOptions::NewBranch("new_branch"))?;
         let current = VersionControlSystem::read_current_repository()?;
@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     pub fn test_02_create_2_branches_and_get_it() -> Result<(),std::io::Error>{
-        let temp_dir = set_up();
+        let __temp_dir = set_up();
 
         VersionControlSystem::branch(BranchOptions::NewBranch("new_branch"))?;
         VersionControlSystem::branch(BranchOptions::NewBranch("another_branch"))?;
@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     pub fn test_03_delete_a_branch_then_len_is_2() -> Result<(),std::io::Error>{
-        let temp_dir = set_up();
+        let _temp_dir = set_up();
 
         VersionControlSystem::branch(BranchOptions::NewBranch("new_branch"))?;
         VersionControlSystem::branch(BranchOptions::NewBranch("another_brach"))?;
@@ -74,7 +74,7 @@ mod tests {
 
 #[test]
     pub fn test_04_try_to_delete_master_branch() -> Result<(),std::io::Error>{
-        let temp_dir = set_up();
+        let _temp_dir = set_up();
 
         let result = VersionControlSystem::branch(BranchOptions::DeleteBranch("master"));
 

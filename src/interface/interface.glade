@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.40.0 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkDialog" id="both-dialog">
@@ -587,8 +587,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="log">
-                <property name="label" translatable="yes">log</property>
+              <object class="GtkButton" id="fetch">
+                <property name="label" translatable="yes">fetch</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -597,14 +597,14 @@
                 <property name="border-width">5</property>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="terminal">
-                <property name="label" translatable="yes">terminal</property>
+              <object class="GtkButton" id="log">
+                <property name="label" translatable="yes">log</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -632,6 +632,22 @@
                 <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="terminal">
+                <property name="label" translatable="yes">terminal</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="margin-top">2</property>
+                <property name="margin-bottom">3</property>
+                <property name="border-width">5</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">4</property>
               </packing>
             </child>
           </object>
@@ -903,12 +919,30 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkBox" id="box-add">
+                  <!-- n-columns=3 n-rows=3 -->
+                  <object class="GtkGrid" id="grid-staging">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="halign">center</property>
                     <property name="border-width">5</property>
-                    <property name="orientation">vertical</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
                     <child>
                       <placeholder/>
                     </child>
@@ -922,7 +956,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
