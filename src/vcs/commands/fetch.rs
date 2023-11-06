@@ -1,5 +1,5 @@
 
-use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::{File, OpenOptions, self}, path::{Path, PathBuf}, collections::HashMap};
+use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::{File, OpenOptions, self}, path::{Path, PathBuf}, collections::{HashMap, HashSet}};
 use chrono::{DateTime, Local};
 use rand::Rng;
 use crate::utils::files::files::create_file_and_their_folders;
@@ -98,6 +98,7 @@ impl Fetch {
     }
 
     fn update_objects_folder(path: &PathBuf, objects: &Vec<(u8,Vec<u8>)>, hash_name: &str) -> Result<(),std::io::Error>  {
+        let mut to_write: Vec<(String,String)> = Vec::new();
         for object in objects {
             if object.0 == 2 {
                 let path_obj = path.join(".rust_git").join("objects").join(&hash_name[0..2]);
@@ -110,8 +111,7 @@ impl Fetch {
                 for split in lines {
                     let format = Self::parse_blob(split);
                     println!("FORMAT: {}", format);
-                    file.write_all(format.as_bytes())?;
-                    file.write_all("\n".as_bytes())?;    
+                    to_write.push((hash_name.to_string(),format));  
                 }
             }
             else if object.0 == 3 {
@@ -119,9 +119,25 @@ impl Fetch {
                 Self::create_folder(&content, path)?;
             }
         }
+        
+        let mut unique_tuplas = HashSet::new();
+        for tupla in &to_write {
+            unique_tuplas.insert(tupla);
+        }
+        let unique_tuplas_vec: Vec<_> = unique_tuplas.into_iter().collect();
 
-        println!("OBJECTS: {:?}", objects);
-        println!("hash: {:?}", hash_name);
+        for tupla in &unique_tuplas_vec {
+            let path_obj = path.join(".rust_git").join("objects").join(&tupla.0[0..2]);
+            fs::create_dir_all(&path_obj)?;
+            let mut file = OpenOptions::new().create(true).append(true).open(path_obj.join(&tupla.0[2..])).expect("No se pudo abrir el archivo");
+            if tupla.1 == "" {
+                continue;
+            }
+            else {
+                let format = format!("{}\n",tupla.1);            
+                file.write(format.as_bytes())?;
+            }
+        }
         Ok(())
     }
 
