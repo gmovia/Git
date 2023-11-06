@@ -44,13 +44,13 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
     for (path, state) in changes {
         let path_label = gtk::Label::new(Some(path));
         path_label.set_visible(true);
-        path_label.set_xalign(2.0); // Alinea el texto a la izquierda
-        path_label.set_yalign(0.5); // Alinea el texto arriba
+        path_label.set_xalign(2.0); 
+        path_label.set_yalign(0.5); 
 
         let state_label = gtk::Label::new(Some(state));
         state_label.set_visible(true);
-        state_label.set_xalign(2.0); // Alinea el texto a la izquierda
-        state_label.set_yalign(0.5); // Alinea el texto arriba
+        state_label.set_xalign(2.0); 
+        state_label.set_yalign(0.5); 
 
         path_label.style_context().add_class("custom-add-label");
 
@@ -113,7 +113,7 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
             let path_clone = path_clone.clone(); 
             let path_label = path_label.clone();
             move |widget|{ 
-                let _ = VersionControlSystem::reset(Path::new(&path_clone)); // Usa la copia clonada
+                let _ = VersionControlSystem::reset(Path::new(&path_clone));
                 rc_grid.remove(widget);
                 rc_grid.remove(&path_label);
         }});
@@ -146,7 +146,7 @@ pub fn draw_staging_area(staging_area: &Vec<String>, grid: &gtk::Grid){
         reset_button.connect_clicked({
             let rc_grid = grid.clone();
             move |widget|{ 
-                let _ = VersionControlSystem::reset(Path::new(&path_clone)); // Usa la copia clonada
+                let _ = VersionControlSystem::reset(Path::new(&path_clone));
                 rc_grid.remove(widget);
                 rc_grid.remove(&label);
         }});

@@ -103,13 +103,13 @@ pub fn handle_status(interface: &RustInterface) {
 
 pub fn handle_log(interface: &RustInterface) {
 
-    //let version = vcs.clone();
+
     interface.log_dialog.set_title("Log information");
     let dialog = interface.log_dialog.clone();
     let log_box = interface.log_box.clone();
 
     interface.log.connect_clicked({
-        //let version = version.clone();
+
         move |_| {
 
             log_box.foreach(|child| {
@@ -180,12 +180,10 @@ pub fn handle_rm(interface: &RustInterface) {
 
 }
 
-pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQUE TODAVIA NO ESTA IMPLEMENTADO LO DE CONFLICTOS
+pub fn handle_merge(interface: &RustInterface) {
 
     let merge_dialog = interface.merge_dialog.clone();
     let button_merge = interface.merge.clone();
-    //let version = vcs.clone();
-    //let version1 = vcs.clone();
     let m_entry = interface.merge_entry.clone();
     let m_changes = interface.merge_changes.clone();
     let button_resolve = interface.resolve.clone();
@@ -206,8 +204,8 @@ pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQ
         }
     });
     
-    interface.merge.connect_clicked({  //TRATAR DE DIVIDIRLO EN FUNCIONES
-        //let version = version.clone();
+    interface.merge.connect_clicked({
+
         let m_changes = m_changes.clone();
         let apply_c = apply_clone.clone();
         let m_entry = m_entry.clone();
@@ -219,14 +217,12 @@ pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQ
                 if conflicts.len() == 0 {
                     add_message(&m_changes, &"Merged successfully".to_string());
                     button_resolve.set_sensitive(false);
-                    //button_resolve.set_visible(false);
                 }
                 else{
                     add_message(&m_changes, &"Conflicts need to be resolve".to_string());
                     button_resolve.set_visible(true);
                     button_resolve.set_sensitive(true);
                     button_resolve.connect_clicked({
-                       // let version1 = version1.clone();
                         let m_box = m_changes.clone();
                         let m_grid = merge_grid_clone.clone();
                         let apply_c = apply_c.clone();
@@ -270,7 +266,7 @@ pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQ
                                     index += 1;
                                     add_current(&current, &value);
                                     add_incoming(&incoming, &value);
-                                    add_both(&both, &value,&labels,&b_dialog,&b_box,&b_text,&ok);
+                                    add_both(&both, &value,&b_dialog,&b_box,&b_text,&ok);
                                 } 
                                 m_box.add(&m_grid);
                             }
@@ -282,7 +278,6 @@ pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQ
                         }
                     });
                     apply_c.connect_clicked({
-                        //let version2 = version1.clone();
                         let m_entry1 = m_entry.clone();
                         let m_box = m_changes.clone();
                         move |button|{
@@ -295,7 +290,6 @@ pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQ
                             });
                             add_message(&m_box, &"Merged successfully".to_string());
                             button.set_sensitive(false);
-                            //button.set_visible(false);
                         }
                     });   
                 }
@@ -314,10 +308,8 @@ pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQ
 
 pub fn add_current(button: &gtk::Button, conflict: &Conflict) {
     let conflict_c = conflict.clone();
-    //let version = vcs.clone();
     button.connect_clicked({
         let conflict = conflict_c.clone();
-       // let version = version.clone();
         move |_| {
             let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: CURRENT.to_string() };
             let _ = write_changes( &conflict);
@@ -328,10 +320,8 @@ pub fn add_current(button: &gtk::Button, conflict: &Conflict) {
 
 pub fn add_incoming( button: &gtk::Button, conflict: &Conflict) {
     let conflict_c = conflict.clone();
-    //let version = vcs.clone();
     button.connect_clicked({
         let conflict = conflict_c.clone();
-        //let version = version.clone();
         move |_| {
             let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: INCOMING.to_string() };
             let _ = write_changes(&conflict);
@@ -340,25 +330,20 @@ pub fn add_incoming( button: &gtk::Button, conflict: &Conflict) {
     
 }
 
-pub fn add_both(button: &gtk::Button, conflict: &Conflict,labels: &gtk::Label, dialog: &gtk::Dialog, both_box: &gtk::Box, both_text: &gtk::TextView, both_ok: &gtk::Button) {
+pub fn add_both(button: &gtk::Button, conflict: &Conflict, dialog: &gtk::Dialog, both_box: &gtk::Box, both_text: &gtk::TextView, both_ok: &gtk::Button) {
     let conflict_c = conflict.clone();
-    //let version = vcs.clone();
     let dialog = dialog.clone();
-    let _labels = labels.clone();
     let both_box = both_box.clone();
     let both_text = both_text.clone();
     let both_ok = both_ok.clone();
     button.connect_clicked({
         let conflict_c = conflict_c.clone();
-       // let version = version.clone();
         let dialog = dialog.clone();
         let both_box = both_box.clone();
         let both_ok = both_ok.clone();
         move |_| {
-            //both_box.add(&labels);
             both_box.add(&both_text);
             both_ok.connect_clicked({
-               // let version = version.clone();
                 let conflict_c = conflict_c.clone();
                 let both_text = both_text.clone();
                 move |_| {
@@ -390,7 +375,7 @@ pub fn add_both(button: &gtk::Button, conflict: &Conflict,labels: &gtk::Label, d
 
 
 pub fn handle_clone(interface: &RustInterface) {
-    //let version = vcs.clone();
+
     let c_entry = interface.clone_entry.clone();
     let clone_button = interface.clone.clone();
     let info = interface.info_clone.clone();
@@ -407,7 +392,6 @@ pub fn handle_clone(interface: &RustInterface) {
     });
 
     interface.clone.connect_clicked({
-        //let _version = version.clone();
         let info = info.clone();
         let c_entry = c_entry.clone();
         let fix_clone = fix_clone.clone();

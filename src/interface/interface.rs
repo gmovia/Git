@@ -159,7 +159,7 @@ impl RustInterface {
         handle_pull(&self);
 
         self.window.show_all();   
-        gtk::main();  // esto corta el ciclo de ejecucion
+        gtk::main();
 
         Ok(())
     }
