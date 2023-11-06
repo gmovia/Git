@@ -9,9 +9,9 @@ pub struct Repository;
 impl Repository{
 
     /// Leo el archivo commits donde esta la tabla y lo paso al HashMap del local_repository
+    /// Nos quedamos con la ultima entrada de la tabla de commits del archivo commits_file
      pub fn read_repository() -> Result<HashMap<String,String>,std::io::Error>{
         let current_path = VersionControlSystem::read_current_repository()?;
-        // leer el archivo, quedarte con la linea que tiene el A, y recuperas el path
         let mut local_repository:HashMap<String, String>  = HashMap::new();
         
         let commits_file = OpenOptions::new().read(true).open(Init::get_commits_path(&current_path)?)?;
@@ -19,7 +19,7 @@ impl Repository{
         let reader = io::BufReader::new(commits_file);
         
         if let Some(last_commit) = reader.lines().filter_map(Result::ok).last(){
-            let parts: Vec<&str> = last_commit.split("-").collect(); // parts[0] = id ; parts[1] = hash ; parts[2] = message ; parts[3] = date
+            let parts: Vec<&str> = last_commit.split("-").collect(); // parts[0] = id ; parts[1] = hash ; parts[2] = message ; parts[3] = date ; parts[4] = tree
             local_repository.extend(CommitsTable::read_repository_of_commit(current_path.clone(), &Init::get_current_branch(&current_path)?, parts[1])?);
         }
         
