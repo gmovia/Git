@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, io::{self, BufRead}, path::Path};
+    use std::{fs::File, io::{self, BufRead}};
 
     use rust_git::vcs::{commands::{branch::BranchOptions, checkout::CheckoutOptions}, version_control_system::VersionControlSystem};
 

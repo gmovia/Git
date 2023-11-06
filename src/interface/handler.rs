@@ -3,7 +3,7 @@ use std::{fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption}, constants::constants::{CURRENT, INCOMING, BOTH}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository}, draw::changes_and_staging_area};
-use gtk::{prelude::*, Button, Scrollbar, Adjustment};
+use gtk::{prelude::*, Button};
 
 pub fn handle_repository(interface: &RustInterface) {
     let dialog = interface.repository_dialog.clone();
@@ -33,7 +33,7 @@ pub fn handle_repository(interface: &RustInterface) {
 }
 
 pub fn handle_commit(interface: &RustInterface){
-    let box_window = interface.box_window.clone();
+    let box_window = interface.grid_staging.clone();
     let dialog = interface.commit_dialog.clone();
     
     let rc_ok = interface.message_ok.clone();
@@ -88,11 +88,11 @@ pub fn handle_branch(interface: &RustInterface) {
 
 
 pub fn handle_status(interface: &RustInterface) {
-    //let version = vcs.clone();
+
     let rc_grid = interface.grid.clone();
-    let rc_add = interface.box_window.clone();
+    let rc_add = interface.grid_staging.clone();
     interface.status.connect_clicked({
-        //let version = version.clone();
+
         let rc_grid = rc_grid.clone();
         let rc_add = rc_add.clone();
         move |_| {
@@ -309,13 +309,7 @@ pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQ
 
 }
 
-fn add_message(m_changes: &gtk::Box, message: &String) {
-    let label = gtk::Label::new(Some(message));
-    label.set_visible(true);
-    label.set_xalign(0.5);
-    label.set_yalign(0.5);
-    m_changes.add(&label);
-}
+
 
 pub fn add_current(button: &gtk::Button, conflict: &Conflict) {
     let conflict_c = conflict.clone();
@@ -418,7 +412,7 @@ pub fn handle_clone(interface: &RustInterface) {
         let fix_clone = fix_clone.clone();
         move |button| {
             
-            if let Ok(content) = VersionControlSystem::git_clone((&c_entry.text()).to_string()) {
+            if let Ok(_) = VersionControlSystem::git_clone(format!("git clone {}",(&c_entry.text()).to_string())) {
                 let label = gtk::Label::new(Some(&c_entry.text()));
                 label.set_visible(true);
                 label.set_xalign(0.5);
@@ -445,6 +439,14 @@ pub fn handle_clone(interface: &RustInterface) {
         }
 
     });
+}
+
+fn add_message(m_changes: &gtk::Box, message: &String) {
+    let label = gtk::Label::new(Some(message));
+    label.set_visible(true);
+    label.set_xalign(0.5);
+    label.set_yalign(0.5);
+    m_changes.add(&label);
 }
 
 

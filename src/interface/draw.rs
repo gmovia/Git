@@ -1,5 +1,5 @@
 
-use std::{cell::RefCell, rc::Rc, path::Path, collections::HashMap, fs::OpenOptions, io::{self, BufRead}};
+use std::{path::Path, collections::HashMap};
 
 use gtk::{prelude::*, Button, ComboBoxText};
 use crate::vcs::version_control_system::VersionControlSystem;
@@ -17,30 +17,28 @@ pub fn repositories(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
     Ok(())
 }
 
-pub fn changes_and_staging_area(grid: &gtk::Grid, box_window: &gtk::Box) -> Result<(), std::io::Error>{
+pub fn changes_and_staging_area(grid: &gtk::Grid, grid_staging: &gtk::Grid) -> Result<(), std::io::Error>{
     grid.foreach(|child|{
         grid.remove(child);
     });
     
-    box_window.foreach(|child|{
-        box_window.remove(child);
+    grid_staging.foreach(|child|{
+        grid_staging.remove(child);
     });
-    println!("HOLA");
+
     let (untracked_files, changes_not_be_commited, changes_to_be_commited) = VersionControlSystem::status()?;
-    println!("Hola");
+
     let staging_area: Vec<String> = changes_to_be_commited.keys().cloned().collect();
 
     let mut changes = untracked_files.clone();
     changes.extend(changes_not_be_commited);
 
-    draw_staging_area(&staging_area, box_window);
-    draw_changes(&changes, grid, box_window);
+    draw_staging_area(&staging_area, grid_staging);
+    draw_changes(&changes, grid, grid_staging);
     Ok(())
 }
 
-pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, box_window: &gtk::Box){
-
-    //let version: Rc<RefCell<VersionControlSystem>> = Rc::new(RefCell::new(vcs.clone()));
+pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_staging: &gtk::Grid){
 
     let mut index = 0;
     for (path, state) in changes {
@@ -72,37 +70,86 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, box_win
         .build();
         add_button.set_visible(true);
 
+        
         add_button.style_context().add_class("custom-add-button");
+        
+        let reset_button = Button::builder()
+        .margin_start(10)
+        .label("-")
+        .build();
+
+        reset_button.set_visible(true);
+        reset_button.style_context().add_class("custom-reset-button");
 
         grid.attach(&path_label, 0, index as i32, 1, 1);
         grid.attach(&state_label, 1, index as i32, 1, 1);
         grid.attach(&add_button, 2, index as i32, 1, 1);
+        
         index += 1;
 
-        let path_clone = path.clone(); // Clona el path
+        let path_clone = path.clone(); 
+        let reset_button = reset_button.clone();
+        let path_label = path_label.clone();
         add_button.connect_clicked({
-            //let version = version.clone();
+            let reset_button = reset_button.clone();
             let rc_grid = grid.clone();
-            let rc_add = box_window.clone();
+            let rc_add = grid_staging.clone();
+            let path_label = path_label.clone();
             move |widget|{ 
-                //let version = version.borrow_mut();
-                let _ = VersionControlSystem::add(Path::new(&path_clone)); // Usa la copia clonada
+
+                let _ = VersionControlSystem::add(Path::new(&path_clone)); 
                 rc_grid.remove(widget);
                 rc_grid.remove(&path_label);
                 rc_grid.remove(&state_label);
                 rc_add.add(&path_label);
+                rc_add.add(&reset_button);
         }});
+
+        let reset_button = reset_button.clone();
+        let path_clone = path.clone(); 
+        let path_label = path_label.clone();
+        reset_button.connect_clicked({
+            let rc_grid = grid_staging.clone();
+            let path_clone = path_clone.clone(); 
+            let path_label = path_label.clone();
+            move |widget|{ 
+                let _ = VersionControlSystem::reset(Path::new(&path_clone)); // Usa la copia clonada
+                rc_grid.remove(widget);
+                rc_grid.remove(&path_label);
+        }});
+        
     }
 }
 
-pub fn draw_staging_area(staging_area: &Vec<String>, _box: &gtk::Box){
+pub fn draw_staging_area(staging_area: &Vec<String>, grid: &gtk::Grid){
 
+    let mut index = 0;
     for path in staging_area {
         let label = gtk::Label::new(Some(path));
         label.set_visible(true);
         label.set_xalign(2.0);
         label.set_yalign(0.5);
-        _box.add(&label);
+
+        let reset_button = Button::builder()
+        .margin_start(10)
+        .label("-")
+        .build();
+
+        reset_button.set_visible(true);
+        reset_button.style_context().add_class("custom-reset-button");
+
+        grid.attach(&label, 0, index as i32, 1, 1);
+        grid.attach(&reset_button, 1, index as i32, 1, 1);
+        
+        index += 1;
+        let path_clone = path.clone(); 
+        reset_button.connect_clicked({
+            let rc_grid = grid.clone();
+            move |widget|{ 
+                let _ = VersionControlSystem::reset(Path::new(&path_clone)); // Usa la copia clonada
+                rc_grid.remove(widget);
+                rc_grid.remove(&label);
+        }});
      }
 }
 

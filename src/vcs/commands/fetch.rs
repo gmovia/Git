@@ -1,3 +1,4 @@
+
 use std::{net::TcpStream, io::{Read, Write, self, BufRead}, str::from_utf8, fs::{File, OpenOptions, self}, path::{Path, PathBuf}, collections::HashMap};
 use chrono::{DateTime, Local};
 use rand::Rng;
@@ -53,7 +54,6 @@ impl Fetch {
         }
 
         send_done_msg(socket)?;
-        
         match Self::get_socket_response(socket) {
             Ok(response) => {
                 println!("RESPONSE: {:?}", response);
@@ -159,10 +159,8 @@ impl Fetch {
         let mut have_list: Vec<String> = Vec::new();
         let current = VersionControlSystem::read_current_repository()?;
         for packet in &last_branch_commit_recieve {
-            println!("ACA: {:?}", packet);
-            println!("ACA 2: {:?}", &current.join(".rust_git").join("logs").join(packet.0.to_string()));
-            match File::open(&current.join(".rust_git").join("logs").join(packet.0.to_string())) { 
-                Ok(file) => {
+        match File::open(&current.join(".rust_git").join("logs").join(packet.0.to_string())) { 
+            Ok(file) => {
                     let file = File::open(&current.join(".rust_git").join("logs").join(packet.0.to_string()))?;
                     let reader = io::BufReader::new(file);
         

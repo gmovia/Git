@@ -1,6 +1,6 @@
 use std::{path::Path, fs, collections::HashMap};
 use crate::{
-    vcs::{files::{vcs_file::VCSFile, repository::Repository, index::Index}, version_control_system::VersionControlSystem},
+    vcs::files::{vcs_file::VCSFile, repository::Repository, index::Index},
     utils::files::files::read, constants::constants::{STATE_DELETED, NULL},
 };
 pub struct Rm;
