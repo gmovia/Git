@@ -427,7 +427,6 @@ pub fn handle_clone(interface: &RustInterface) {
 }
 
 pub fn handle_fetch(interface: &RustInterface) {
-
     interface.fetch.connect_clicked({
         move |_| {
             if let Ok(current) = VersionControlSystem::read_current_repository() {
