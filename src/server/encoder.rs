@@ -5,7 +5,11 @@ use std::{path::PathBuf, io, fs};
 extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
-use std::io::Read;
+use std::io::{Write, Read, BufRead};
+
+use crate::packfile;
+use crate::vcs::commands::cat_file::CatFile;
+use crate::vcs::version_control_system::VersionControlSystem;
 
 pub struct Encoder {
     pub path: PathBuf
@@ -13,11 +17,15 @@ pub struct Encoder {
 
 impl Encoder {
     
-    pub fn init_encoder(path: PathBuf) -> Result<Vec<u8>,std::io::Error> {
+    pub fn init_encoder(path: PathBuf, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let encoder = Encoder { path: path };
-        let packfile = Self::create_packfile(&encoder.path)?;
-        //println!("PACKFILE BYTES: {:?}", packfile);
-        //println!("PACKFILE STRING: {:?}", String::from_utf8_lossy(&packfile));
+        let mut packfile= Vec::new();
+        if messages.1.is_empty() || messages.1[0] == "0" {
+            packfile = Self::create_packfile(&encoder.path)?;        
+        }
+        else {
+            packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
+        }
         Ok(packfile)
     }
     
@@ -59,6 +67,96 @@ impl Encoder {
         Ok(packfile)
     }
 
+
+    fn create_fetch_packfile(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
+        let mut packfile = Vec::new();
+        Self::create_header(&mut packfile, path)?;        
+        
+        let path_server = Path::new("test_folder/repo_2");
+
+        let objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages)?;
+        println!("DATA TO SEND: {:?}", objects_to_send);
+
+
+        let mut objects_to_encode: Vec<(String,usize,usize)> = Vec::new();
+        for objects in objects_to_send {
+            let path = format!("{}/.rust_git/objects", path_server.display());
+            let content = CatFile::cat_file(&objects.1, (&path).into())?;
+            let tree_path = format!("{}/{}/{}",path,  &objects.1[0..2], &objects.1[2..]);
+            objects_to_encode.push((tree_path, 2, content.len() as usize));
+            Self::get_blobs(content, &mut objects_to_encode, path_server)?;
+        }
+        println!("OBJECTS TO ENCODE: {:?}", objects_to_encode);
+
+        for objects in objects_to_encode.iter().rev() {
+            let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
+            for object in object_type {
+                packfile.push(object);
+            }
+            let path = Path::new(&objects.0);
+            let compress_data = Self::compress_object((&path).to_path_buf())?;
+            for byte in compress_data {
+                packfile.push(byte);    
+            }
+        }
+
+        Ok(packfile)
+    }
+
+    fn get_blobs(content: String, objects_to_encode: &mut Vec<(String,usize,usize)>, path: &Path) -> Result<(),std::io::Error> {
+        let mut blobs: Vec<&str> = content.split("\n").collect();
+        blobs.pop();
+        for blob in blobs {
+            let hash_blob: Vec<&str> = blob.split("-").collect();
+            let path_server = format!("{}/.rust_git/objects", path.display());
+            let blob_content = CatFile::cat_file(&hash_blob[1], (&path_server).into())?;
+            let blob_path = format!("{}/{}/{}",path_server,  &hash_blob[1][0..2], &hash_blob[1][2..]);
+            objects_to_encode.push((blob_path,3,blob_content.len() as usize));
+        }
+        Ok(())
+    }
+
+    fn process_logs(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,String)>, std::io::Error> {
+        let mut data_to_send = Vec::new();
+        for entrada in fs::read_dir(path)? {
+            let entrada = entrada?;
+            let entry_path = entrada.path();
+            if entry_path.is_file() {
+                data_to_send = Self::process_log_file(&entry_path, &messages)?;
+            }
+        }
+        Ok(data_to_send)        
+    }
+
+    fn process_log_file(file_path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,String)>,std::io::Error> {
+        println!("PROCESS LOG FILE: {:?}",file_path);
+        println!("{:?}-{:?}", &messages.0,&messages.1);
+        let mut objecto_to_send_list: Vec<(String, String)> = Vec::new();
+        
+        if let Some(branch) = file_path.file_name() {
+            let branch_as_string: String = branch.to_string_lossy().to_string();
+            let file = fs::File::open(file_path)?;
+            
+            let reader = io::BufReader::new(file);
+            let mut last_line = String::new();
+            for line in reader.lines() {
+                last_line = line?;
+            }
+            
+            let content_vec: Vec<&str> = last_line.split('-').collect();
+            println!("CONTENT VEC: {:?}", content_vec);
+            for message in &messages.0 {   
+                if message.contains(&branch_as_string) && message.contains(&content_vec[1]) {
+                    objecto_to_send_list.push((file_path.to_string_lossy().to_string(), content_vec[1].to_owned()));
+                }
+            }
+        } else {
+            return Err(std::io::Error::new(io::ErrorKind::NotFound, "Branch name not found"));
+        }
+        println!("OBJECT TO SEND: {:?}", objecto_to_send_list);
+        Ok(objecto_to_send_list)
+    }
+
     
     fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
         if object_type > 7 {
@@ -98,8 +196,6 @@ impl Encoder {
     }
 
     fn create_header(mut packfile: &mut Vec<u8>, path: &PathBuf) -> Result<usize,std::io::Error>{
-        
-        
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
         }
@@ -130,7 +226,8 @@ impl Encoder {
         let mut file = fs::File::open(file_path)?;
         
         file.read_to_string(&mut content)?;
-    
+
+
         if content.contains("tree") {
             return Ok((file_path.to_string_lossy().to_string(),1 as usize,metadata.len() as usize))
         } else if content.contains(".txt-"){

@@ -12,8 +12,8 @@ pub fn start_handler_upload(stream: &mut TcpStream, path: &PathBuf) -> Result<St
 
     send_response(first_response, stream)?;
     
-    let _ = receive_wants_and_have_message(stream);
-    let packfile_result = Encoder::init_encoder((&path).to_path_buf());
+    let query = receive_wants_and_have_message(stream)?;
+    let packfile_result = Encoder::init_encoder((&path).to_path_buf(), query);
 
     match packfile_result {
         Ok( packfile) => {
@@ -29,7 +29,7 @@ pub fn start_handler_upload(stream: &mut TcpStream, path: &PathBuf) -> Result<St
 
 
 
-pub fn receive_wants_and_have_message(reader: &mut TcpStream) -> Result<Vec<String>, io::Error> {
+pub fn receive_wants_and_have_message(reader: &mut TcpStream) -> Result<(Vec<String>,Vec<String>), io::Error> {
     let mut query = vec![];
     loop {
         let msg_received = process_line(reader)?;
@@ -39,7 +39,23 @@ pub fn receive_wants_and_have_message(reader: &mut TcpStream) -> Result<Vec<Stri
         }
         query.push(msg_received.clone());
     }
-    Ok(query)
+
+    let messages_type = process_messages(query)?;
+    Ok(messages_type)
+}
+
+pub fn process_messages(messages: Vec<String>) -> Result<(Vec<String>,Vec<String>), io::Error> {
+    let mut wants: Vec<String> = Vec::new();
+    let mut haves: Vec<String> = Vec::new();
+    for message in messages {
+        if message.contains("want") {
+            wants.push(message);
+        }
+        else {
+            haves.push(message)
+        }
+    }
+    Ok((wants,haves))
 }
 
 
