@@ -742,6 +742,7 @@
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="border-width">5</property>
             <property name="homogeneous">True</property>
             <child>
               <object class="GtkButton" id="repository">
@@ -782,6 +783,7 @@
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="border-width">5</property>
             <property name="homogeneous">True</property>
             <child>
               <object class="GtkComboBoxText" id="select-repository">
@@ -826,6 +828,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="border-width">5</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -1020,6 +1023,7 @@
           <object class="GtkBox" id="push-pull">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="border-width">5</property>
             <child>
               <object class="GtkButton" id="push">
                 <property name="label" translatable="yes">Push</property>

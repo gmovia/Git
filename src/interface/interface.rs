@@ -6,7 +6,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_clone, handle_fetch};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_clone, handle_fetch, handle_pull};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -62,6 +62,8 @@ pub struct RustInterface {
     pub both_box: gtk::Box,
     pub both_text: gtk::TextView,
     pub fetch: gtk::Button,
+    pub push: gtk::Button,
+    pub pull: gtk::Button,
 }
 
 impl RustInterface {
@@ -130,6 +132,8 @@ impl RustInterface {
             both_box: builder.object("both-box").unwrap(),
             both_text: builder.object("both-text").unwrap(),
             fetch: builder.object("fetch").unwrap(),
+            push: builder.object("pull").unwrap(),
+            pull: builder.object("pull").unwrap(),
         }
     }
     
@@ -151,6 +155,8 @@ impl RustInterface {
         handle_clone(&self);
         handle_repository(&self);
         handle_fetch(&self);
+        //handle_push(&self);
+        handle_pull(&self);
 
         self.window.show_all();   
         gtk::main();  // esto corta el ciclo de ejecucion

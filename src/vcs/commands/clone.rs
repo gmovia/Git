@@ -3,7 +3,7 @@ use std::{fs::{OpenOptions, self, File}, self, io::{Write, self, Read}, net::Tcp
 use chrono::{DateTime, Local};
 use rand::Rng;
 
-use crate::{vcs::version_control_system::VersionControlSystem, utils::random::random::Random};
+use crate::vcs::version_control_system::VersionControlSystem;
 use super::{branch::BranchOptions, hash_object::WriteOption};
 use crate::packfile::packfile::{decompress_data, to_pkt_line, read_packet};
 

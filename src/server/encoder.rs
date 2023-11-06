@@ -5,9 +5,7 @@ use std::{path::PathBuf, io, fs};
 extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
-use std::io::{Write, Read, BufRead};
-
-use crate::packfile;
+use std::io::{Read, BufRead};
 use crate::vcs::commands::cat_file::CatFile;
 use crate::vcs::version_control_system::VersionControlSystem;
 
@@ -72,7 +70,7 @@ impl Encoder {
         let mut packfile = Vec::new();
         Self::create_header(&mut packfile, path)?;        
         let current = VersionControlSystem::read_current_repository()?;
-        let formatted_path = format!("test_folder/{}", current.display().to_string());
+        let formatted_path = format!("test_folder/{}", current.display().to_string()); // Puede ser aca el error?
         let path_server = Path::new(&formatted_path);
 
         

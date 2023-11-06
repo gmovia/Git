@@ -223,6 +223,7 @@ pub fn handle_merge(interface: &RustInterface) { //FALTA VER SI EL FOR ANDA PORQ
                 }
                 else{
                     add_message(&m_changes, &"Conflicts need to be resolve".to_string());
+                    button_resolve.set_visible(true);
                     button_resolve.set_sensitive(true);
                     button_resolve.connect_clicked({
                        // let version1 = version1.clone();
@@ -451,6 +452,27 @@ pub fn handle_fetch(interface: &RustInterface) {
         }
     });
 }
+
+// pub fn handle_push(interface: &RustInterface) {
+
+//     interface.push.connect_clicked({
+//        move |_| {
+//         if let Ok(current) = VersionControlSystem::read_current_repository() {
+//             let _ = VersionControlSystem::push();
+//         }
+//        } 
+//     });
+// }
+
+pub fn handle_pull(interface: &RustInterface) {
+
+    interface.push.connect_clicked({
+        move |_| {
+         let _ = VersionControlSystem::pull();
+        } 
+     });
+}
+
 
 fn add_message(m_changes: &gtk::Box, message: &String) {
     let label = gtk::Label::new(Some(message));

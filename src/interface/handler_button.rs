@@ -12,7 +12,6 @@ pub fn handle_buttons_branch(interface: &RustInterface, button_branch: &gtk::But
     let rc_branch = interface.select_branch.clone();
     let rc_entry = interface.dialog_entry.clone();
     button_branch.connect_clicked({
-        //let version = version.clone();
         let rc_branch = rc_branch.clone();
         let rc_entry = rc_entry.clone();
         move |button| {
@@ -36,7 +35,6 @@ pub fn handle_buttons_branch(interface: &RustInterface, button_branch: &gtk::But
 
 pub fn handle_button_select_branch(interface: &RustInterface) {
     interface.select_branch.connect_changed({
-        //let version = version.clone();
         move |combo_box|{
             if let Some(branch) = combo_box.active_text(){
                 let _ = VersionControlSystem::checkout(CheckoutOptions::ChangeBranch(&branch.to_string()));
@@ -48,8 +46,8 @@ pub fn handle_button_select_branch(interface: &RustInterface) {
 pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::Button) {
     let rc_repo = interface.select_repository.clone();
     let rc_entry = interface.repository_entry.clone();
+    let rc_branch = interface.select_branch.clone();
     button_repo.connect_clicked({
-        //let version = version.clone();
         let rc_repo = rc_repo.clone();
         let rc_entry = rc_entry.clone();
         move |button| {
@@ -60,9 +58,10 @@ pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::B
                     _ => {},
                 }
             }
-
+            rc_branch.remove_all();
             rc_repo.remove_all();
             let _ = repositories( &rc_repo);
+            let _ = branches(&rc_branch);
 
             rc_entry.set_text("");
             button.set_sensitive(false);
@@ -72,23 +71,22 @@ pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::B
 }
 
 pub fn handle_button_select_repository(interface: &RustInterface) {
+    let rc_branch = interface.select_branch.clone();
     interface.select_repository.connect_changed({
-        //let version = version.clone();
         move |combo_box|{
-            //let mut version = version.borrow_mut();
             if let Some(repository) = combo_box.active_text(){
                 let _ = VersionControlSystem::init(Path::new(&repository.to_string()), Vec::new());
             }
+            rc_branch.remove_all();
+            let _ = branches(&rc_branch);
         }
     });
 }
 
 pub fn handle_commit_button(interface: &RustInterface) {
-    //let version = vcs.clone();
     let rc_entry = interface.message.clone();
     interface.message_ok.connect_clicked({
         let rc_entry = rc_entry.clone();
-        //let version = version.clone();
         move |button| {
             let _ = VersionControlSystem::commit(rc_entry.text().to_string());
 
@@ -104,7 +102,6 @@ pub fn handle_terminal(interface: &RustInterface) {
     let rc_box = interface.command_box.clone();
     
     interface.enter.connect_clicked({
-        //let version = version.clone();
         let rc_entry = rc_entry.clone();
         move |button| {
             rc_box.foreach(|child| {
@@ -130,7 +127,6 @@ pub fn handle_rm_button(interface: &RustInterface) {
     let rm_entry = interface.rm_entry.clone();
     interface.rm_enter.connect_clicked({
         let rm_entry1 = rm_entry.clone();
-        //let version1 = version.clone();
         move |button| {
             
             let binding = rm_entry1.text();
