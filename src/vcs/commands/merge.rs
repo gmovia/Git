@@ -4,8 +4,8 @@ use crate::vcs::entities::change::add_changes;
 use crate::vcs::entities::conflict::{Conflict, resolve_conflicts, conflicts_search};
 use crate::vcs::files::commits_table::CommitsTable;
 use crate::vcs::commands::branch::Branch;
+use crate::vcs::files::current_repository::CurrentRepository;
 use crate::vcs::files::repository::Repository;
-use crate::vcs::version_control_system::VersionControlSystem;
 use super::checkout::Checkout;
 use super::commit::Commit;
 use super::diff::Diff;
@@ -15,7 +15,7 @@ pub struct Merge;
 impl Merge {
     pub fn merge(branch: &str, potential_conflicts: HashMap<String, Conflict>) -> Result<HashMap<String, Conflict>,std::io::Error> {
         let mut repository = Repository::read_repository()?;
-        let current = VersionControlSystem::read_current_repository()?;
+        let current = CurrentRepository::read()?;
         let current_branch = Branch::get_current_branch(&current)?;
 
         let current_commits_table = CommitsTable::read(current.clone().to_path_buf(), &current_branch)?;

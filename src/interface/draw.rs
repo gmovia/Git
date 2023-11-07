@@ -1,8 +1,7 @@
 
 use std::{path::Path, collections::HashMap};
-
 use gtk::{prelude::*, Button, ComboBoxText};
-use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions};
+use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::repositories::Repositories};
 
 pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
     let branches = VersionControlSystem::branch(BranchOptions::GetBranches)?;
@@ -12,7 +11,7 @@ pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
 
 pub fn repositories(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
     
-    let repositories = VersionControlSystem::read_bdd_of_repositories()?;
+    let repositories = Repositories::read()?;
     draw_repositories(&repositories, combo_box);
     Ok(())
 }

@@ -1,6 +1,6 @@
 
 use std::{fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption}, constants::constants::{CURRENT, INCOMING, BOTH}};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{CURRENT, INCOMING, BOTH}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository}, draw::changes_and_staging_area};
 use gtk::{prelude::*, Button};
@@ -348,7 +348,7 @@ pub fn add_both(button: &gtk::Button, conflict: &Conflict, dialog: &gtk::Dialog,
                 move |_| {
                     if let Some(result) = both_text.buffer(){
                         if let Some(result) = result.text(&result.start_iter(), &result.end_iter(), false){
-                            if let Ok(current) = VersionControlSystem::read_current_repository() {
+                            if let Ok(current) = CurrentRepository::read() {
                                 let temp_path = current.join("temp2");
                                 if let Ok(mut temp_file) = OpenOptions::new().write(true).create(true).append(true).open(&temp_path) {
                                     let _ = temp_file.write_all(result.as_bytes());

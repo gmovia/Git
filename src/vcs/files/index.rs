@@ -1,12 +1,13 @@
-use crate::vcs::{files::vcs_file::VCSFile, version_control_system::VersionControlSystem};
+use crate::vcs::files::vcs_file::VCSFile;
 use std::{path::PathBuf, fs::{OpenOptions, File}, io::{Write, self, BufRead}, collections::HashMap};
+use super::current_repository::CurrentRepository;
 
 #[derive(Debug, Clone)]
 pub struct Index;
 
 impl Index{
     pub fn index_path() -> Result<PathBuf, io::Error>{
-        let vcs_path = VersionControlSystem::read_current_repository()?;
+        let vcs_path = CurrentRepository::read()?;
         let path = vcs_path.join(".rust_git").join("index");
         Ok(path)
     }

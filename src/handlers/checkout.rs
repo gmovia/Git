@@ -1,10 +1,10 @@
 use std::{ path::Path, fs};
 
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::checkout::CheckoutOptions}, constants::constants::ERR_INVALID_PARAMETERS};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::checkout::CheckoutOptions, files::current_repository::CurrentRepository}, constants::constants::ERR_INVALID_PARAMETERS};
 
 pub fn handler_checkout(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();
-    if let Ok(current) = VersionControlSystem::read_current_repository() {
+    if let Ok(current) = CurrentRepository::read() {
         let p = Path::new(&current);
         let branchs_dir_path = p.join(".rust_git").join("refs").join("heads");
         match args.len(){

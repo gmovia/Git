@@ -1,5 +1,5 @@
 use std::{io::{BufReader, BufRead}, fs::File};
-use crate::vcs::version_control_system::VersionControlSystem;
+use crate::vcs::files::current_repository::CurrentRepository;
 use super::init::Init;
 
 pub struct Log;
@@ -7,7 +7,7 @@ pub struct Log;
 impl Log {
 
     pub fn log() -> Result<String, std::io::Error> {
-        let current = VersionControlSystem::read_current_repository()?;
+        let current = CurrentRepository::read()?;
         let commits_file = File::open(Init::get_commits_path(&current)?)?;
         let reader = BufReader::new(commits_file);
         let mut lines: Vec<String> = Vec::new();

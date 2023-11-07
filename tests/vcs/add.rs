@@ -2,7 +2,7 @@
 mod tests {
     use std::{fs, io::Write};
 
-    use rust_git::vcs::{files::{repository::Repository, index::Index}, version_control_system::VersionControlSystem};
+    use rust_git::vcs::{files::{repository::Repository, index::Index, current_repository::CurrentRepository}, version_control_system::VersionControlSystem};
 
     use crate::tests_functions::{create_file, set_up, equals};
 
@@ -88,7 +88,7 @@ mod tests {
         let _ = create_file(&temp_dir, "file1.txt");
         let _ = create_file(&temp_dir, "file2.txt");        
         let _ = create_file(&temp_dir, "file3.txt");     
-        let current  = VersionControlSystem::read_current_repository()?;
+        let current  = CurrentRepository::read()?;
         let staging_area = VersionControlSystem::add(&current)?;
         assert_eq!(staging_area.len(), 3);
         Ok(())
@@ -100,7 +100,7 @@ mod tests {
         let _ = create_file(&temp_dir, "file1.txt");
         let _ = create_file(&temp_dir, "file2.txt");   
 
-        let current  = VersionControlSystem::read_current_repository()?;
+        let current  = CurrentRepository::read()?;
         let staging_area = VersionControlSystem::add(&current)?;
         let staging = Index::read_index()?;
         for (key, value) in &staging{

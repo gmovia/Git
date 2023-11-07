@@ -1,7 +1,6 @@
 use std::{collections::HashMap, path::Path, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
-use crate::vcs::{commands::{hash_object::{WriteOption, HashObject},  init::Init}, version_control_system::VersionControlSystem};
-
-use super::commits_table::CommitsTable;
+use crate::vcs::commands::{hash_object::{WriteOption, HashObject},  init::Init};
+use super::{commits_table::CommitsTable, current_repository::CurrentRepository};
 
 #[derive(Debug, Clone)]
 pub struct Repository;
@@ -11,7 +10,7 @@ impl Repository{
     /// Leo el archivo commits donde esta la tabla y lo paso al HashMap del local_repository
     /// Nos quedamos con la ultima entrada de la tabla de commits del archivo commits_file
      pub fn read_repository() -> Result<HashMap<String,String>,std::io::Error>{
-        let current_path = VersionControlSystem::read_current_repository()?;
+        let current_path = CurrentRepository::read()?;
         let mut local_repository:HashMap<String, String>  = HashMap::new();
         
         let commits_file = OpenOptions::new().read(true).open(Init::get_commits_path(&current_path)?)?;
@@ -30,7 +29,7 @@ impl Repository{
     /// Luego se lo mando al hash_object para que me genere su hash.
     /// Genero una tupla (id,commit_hash_message)
     pub fn write_repository(repository: &HashMap<String,String>) -> Result<String, std::io::Error>{
-        let current_path = VersionControlSystem::read_current_repository()?;
+        let current_path = CurrentRepository::read()?;
 
         let path = Path::new(&current_path).join("temp");
         let mut commit_file = OpenOptions::new().write(true).create(true).append(true).open(&path)?; 

@@ -4,7 +4,7 @@
 mod tests {
     use std::{fs, path::Path};
 
-    use rust_git::vcs::{commands::branch::{BranchOptions, Branch}, version_control_system::VersionControlSystem};
+    use rust_git::vcs::{commands::branch::{BranchOptions, Branch}, version_control_system::VersionControlSystem, files::current_repository::CurrentRepository};
 
     use crate::tests_functions::set_up;
 
@@ -26,8 +26,8 @@ mod tests {
         let _temp_dir = set_up();
 
         VersionControlSystem::branch(BranchOptions::NewBranch("new_branch"))?;
-        let current = VersionControlSystem::read_current_repository()?;
-        //let path = Path::new(&VersionControlSystem::path);
+        let current  = CurrentRepository::read()?;
+
         let branch_path = current.join(".rust_git").join("refs").join("heads");
 
         assert_eq!(count_files(&branch_path)?,2);
@@ -43,7 +43,7 @@ mod tests {
         VersionControlSystem::branch(BranchOptions::NewBranch("new_branch"))?;
         VersionControlSystem::branch(BranchOptions::NewBranch("another_branch"))?;
 
-        let current = VersionControlSystem::read_current_repository()?;
+        let current  = CurrentRepository::read()?;
         let branches = Branch::get_branches(&current)?;
 
         assert_eq!(branches.contains(&"master".to_string()),true);
@@ -63,7 +63,7 @@ mod tests {
 
         VersionControlSystem::branch(BranchOptions::DeleteBranch("new_branch"))?;
         
-        let current = VersionControlSystem::read_current_repository()?;
+        let current  = CurrentRepository::read()?;
         let branch_path = current.join(".rust_git").join("refs").join("heads");
 
         assert_eq!(count_files(&branch_path)?, 3);

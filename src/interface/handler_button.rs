@@ -1,7 +1,7 @@
 
 use std::path::Path;
 
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}}, handlers::{rm::handler_rm, commands::handler_command}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}};
 
 use super::{interface::RustInterface, draw::{branches, repositories}};
 
@@ -53,8 +53,8 @@ pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::B
         move |button| {
             if let Some(label) = button.label() {
                 match label.as_str() {
-                    "Create" => {let _ = VersionControlSystem::write_bdd_of_repositories(Path::new(&rc_entry.text().to_string()));},
-                    "Delete" => {let _ = VersionControlSystem::remove_repository(Path::new(&rc_entry.text().to_string()));},
+                    "Create" => {let _ = Repositories::write(Path::new(&rc_entry.text().to_string()));},
+                    "Delete" => {let _ = Repositories::remove(Path::new(&rc_entry.text().to_string()));},
                     _ => {},
                 }
             }

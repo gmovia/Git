@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{vcs::version_control_system::VersionControlSystem, constants::constants::{FULL_ADD, RESPONSE_OK_ADD}};
+use crate::{vcs::{version_control_system::VersionControlSystem, files::current_repository::CurrentRepository}, constants::constants::{FULL_ADD, RESPONSE_OK_ADD}};
 
 pub fn handler_add(input: String) -> String{
     let mut paths: Vec<String> = Vec::new();
@@ -22,7 +22,7 @@ pub fn handler_add(input: String) -> String{
     }
 
     for path_string in &paths{
-        if let Ok(current) = VersionControlSystem::read_current_repository() {
+        if let Ok(current) = CurrentRepository::read() {
             let path = current.join(path_string);
             let _ = VersionControlSystem::add(&path);
         }

@@ -1,7 +1,7 @@
 use std::{fs::{OpenOptions, self}, self, io::{Write, self}, collections::HashMap, path::{PathBuf, Path}};
-use crate::{vcs::{version_control_system::VersionControlSystem, files::{repository::Repository, index::Index}}, utils::random::random::Random, constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED}};
+use crate::{utils::random::random::Random, vcs::files::{repository::Repository, index::Index, current_repository::CurrentRepository}};
+use crate::constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED};
 use super::{init::Init, hash_object::{HashObject, WriteOption}};
-
 extern crate chrono;
 use chrono::{DateTime, Local};
 
@@ -34,7 +34,7 @@ impl Commit{
     pub fn write_commit(message: &String, repository: &HashMap<String, String>) -> Result<(),std::io::Error>{
         let id = Random::random();
         let hash = Repository::write_repository(&repository)?;
-        let current = VersionControlSystem::read_current_repository()?;
+        let current = CurrentRepository::read()?;
         let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&current)?)?; //abro la tabla de commits para escribir - si no existe, la creo
 
         let current_time: DateTime<Local> = Local::now();

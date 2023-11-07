@@ -51,7 +51,9 @@ pub mod vcs{
         pub mod vcs_file;
         pub mod index;
         pub mod repository;
+        pub mod current_repository;
         pub mod commits_table;
+        pub mod repositories;
     }
 
     pub mod commands{
