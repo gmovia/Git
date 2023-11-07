@@ -2,7 +2,7 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, client::client::Client, constants::constants::{BDD_PATH, CURRENT_REPOSITORY_PATH},
+    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constants::{BDD_PATH, CURRENT_REPOSITORY_PATH},
 };
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset}, entities::conflict::Conflict};
 use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, io::{Write, self, BufRead}};
@@ -12,7 +12,6 @@ use super::files::index::Index;
 pub struct VersionControlSystem;
 
 impl VersionControlSystem {
-
 
     pub fn write_bdd_of_repositories(path: &Path) -> Result<(), std::io::Error>{
         let repositories = Self::read_bdd_of_repositories()?;
@@ -52,12 +51,6 @@ impl VersionControlSystem {
             "El archivo no existe",))
     }
 
-    /// Inicializacion del versionControlSystem --> posee el repositorio local y la ruta de la carpeta a informar.
-    pub fn init(path: &Path, args: Vec<String>){
-        let _ = Self::write_bdd_of_repositories(path);
-        let _ = Init::git_init(&path.to_path_buf(), args);
-    }
-
     pub fn remove_repository(path: &Path) -> Result<(), std::io::Error>{
         let _ = fs::remove_dir_all(&path);
         let mut repositories = Self::read_bdd_of_repositories()?;
@@ -73,21 +66,19 @@ impl VersionControlSystem {
         Ok(())
     }
 
-    /// Devuelve la informacion de los archivos creados, modificados y eliminados recientemente, junto con el area de staging.
+    pub fn init(path: &Path, args: Vec<String>){
+        let _ = Self::write_bdd_of_repositories(path);
+        let _ = Init::git_init(&path.to_path_buf(), args);
+    }
+    
     pub fn status() -> Result<(UntrackedFiles, ChangesNotStagedForCommit, ChangesToBeCommited), std::io::Error> {
         let current = Self::read_current_repository()?;
-        println!("CURRENT {:?}",current);
         let files = read(&current)?;
         let staging_area = Index::read_index()?;
-        println!("STAGING {:?}",staging_area);
         let repository = Repository::read_repository()?;
-        println!("REPOSITORY {:?}",repository);
         Ok(Status::status(&files, &staging_area, &repository))
     }
 
-    /// Recibe un path
-    /// Agrega los archivos que se encuentran dentro del path al area de staging
-    /// Devuelve el area de staging
     pub fn add(path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Add::add(path)        
     }
@@ -96,76 +87,35 @@ impl VersionControlSystem {
         Reset::reset(path.to_path_buf())
     }
 
-    /// Calcula el hash object de un archivo. En el caso de que sea una carpeta, debe devolver un error.
-    /// Si se añade el comando -w lo que sucede es que se guardan los datos en .git/objects (investigar bien) FALTA HACER
     pub fn hash_object(path: &Path, option: WriteOption) -> Result<String, std::io::Error>{
         let current = Self::read_current_repository()?;
-        let object_path = Init::get_object_path(&current, ".rust_git")?;
+        let object_path = Init::get_object_path(&current)?;
         HashObject::hash_object(path, object_path, option)
     }
- 
-    /// Recibe un hash
-    /// Obtiene el path del hash y devuelve el contenido que hay en el archivo del path
-    pub fn cat_file(hash: &str, path: &str) -> Result<String, std::io::Error>{
+
+    pub fn cat_file(hash: &str) -> Result<String, std::io::Error>{
         let current = Self::read_current_repository()?;
-        let object_path = Init::get_object_path(&current, path)?;
+        let object_path = Init::get_object_path(&current)?;
         CatFile::cat_file(hash, object_path)
     }
 
-    /// Recibe un hash
-    /// Obtiene el path del hash y devuelve el contenido que hay en el archivo del path en bytes
-    pub fn cat_file_bytes(hash: &str, path: &str) -> Result<Vec<u8>, std::io::Error>{
-        let current = Self::read_current_repository()?;
-        let object_path = Init::get_object_path(&current, path)?;
-        CatFile::cat_file_bytes(hash, object_path)
-    }
-
-    /// Recibe un path
-    /// Elimina los archivos del workspace y repositorio local dado el path
-    /// Si el comando tiene un -r se eliminan los archivos de un directorio entero
     pub fn rm(path: &Path, option: RemoveOption) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Rm::rm(path, option)
     }
 
-    /// Recibe un mensaje
-    /// Crea una entrada en la tabla de commits con su correspondiente id, hash del repositorio y mensaje.
     pub fn commit(message: String) -> Result<HashMap<String, String>, std::io::Error>{
         Commit::commit(message)
     }
 
-    ///Muestra el historial de commits
     pub fn log() -> Result<String, std::io::Error> {
         Log::log()
     }
-
-    pub fn git_clone(input: String) -> Result<(), std::io::Error> {
-        let args: Vec<&str> = input.split_whitespace().collect();
-        println!("{:?}", args);
-        let _ = Self::write_bdd_of_repositories(Path::new(&args[2]));
-        let _ = Client::client_(input.clone());
-        let _ = Client::client_(format!("git fetch {}", args[2].to_owned()));
-        Ok(())
-    }
-
-    pub fn fetch(input: String) -> Result<(), std::io::Error> {
-        let _ = Client::client_(input);
-        Ok(())
-    }
     
-    /// Recibe una opcion de branch (crear, borrar, listar)
-    /// Segun la opcion, el branch permite crear una rama, borrar una ya existente o listar todas las ramas
     pub fn branch(option: BranchOptions) -> Result<Vec<String>, std::io::Error>{
         let current = Self::read_current_repository()?;
         Branch::branch(&current, option)
-    } 
-
-    pub fn get_branches() -> Result<Vec<String>, std::io::Error>{
-        let current = Self::read_current_repository()?;
-        Branch::get_branches(&current)
-    } 
-
-    /// Recibe una opcion de checkout (cambiar rama, crear y cambiar rama, analizar commit)
-    /// Segun la opcion, el checkout actua
+    }
+    
     pub fn checkout(option: CheckoutOptions) -> Result<(), std::io::Error>{
         let current = Self::read_current_repository()?;
         Checkout::checkout(&current, option)
@@ -179,10 +129,4 @@ impl VersionControlSystem {
         Merge::merge(branch, conflicts)
     }
 
-    pub fn pull() -> Result<(),std::io::Error> {
-        let current = Self::read_current_repository()?;
-        Self::fetch(format!("git fetch {}", current.display().to_string()))?;
-        Self::merge(&Init::get_current_branch(&current)?)?;
-        Ok(())
-    }
 }

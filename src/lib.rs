@@ -10,12 +10,10 @@ pub mod handlers{
     pub mod rm;
     pub mod cat_file;
     pub mod branch;
-    pub mod clone;
-    pub mod  fetch;
     pub mod checkout;
     pub mod log;
     pub mod commit;
-    pub mod pull;
+    pub mod merge;
 }
 
 pub mod interface{
@@ -25,22 +23,9 @@ pub mod interface{
     pub mod css;
     pub mod handler_button;
 }
+
 pub mod types{
     pub mod types;
-}
-
-pub mod client{
-    pub mod client;
-}
-
-pub mod server{
-    pub mod server;
-    pub mod encoder;
-    pub mod upload_pack;
-}
-
-pub mod packfile{
-    pub mod packfile;
 }
 
 pub mod utils {
@@ -79,8 +64,6 @@ pub mod vcs{
         pub mod commit;
         pub mod log;
         pub mod branch;
-        pub mod clone;
-        pub mod fetch;
         pub mod checkout;
         pub mod merge;
         pub mod diff;

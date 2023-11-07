@@ -7,11 +7,7 @@ use crate::handlers::branch::handler_branch;
 use crate::handlers::checkout::handler_checkout;
 use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
-use crate::vcs::version_control_system::VersionControlSystem;
-
-use super::clone::handler_clone;
-use super::fetch::handler_fetch;
-use super::pull::handler_pull;
+use super::merge::handler_merge;
 
 pub fn handler_command<'a>(input: &str) -> String{
     let input = input.trim(); 
@@ -19,24 +15,15 @@ pub fn handler_command<'a>(input: &str) -> String{
 
     match input {
         "git status" => handler_status(),
-        x if x.contains("git merge") => {
-            if let Ok(_) = VersionControlSystem::merge("new_branch"){
-                println!("hola");
-                return "Ok".to_string();
-            }
-            return "Err".to_string();
-        },
+        x if x.contains("git merge") => handler_merge(x.to_string()),
         x if x.contains("git hash-object") => handler_hash_object(x.to_string()),
         x if x.contains("git add") => handler_add(x.to_string()),
-        x if x.contains("git cat-file") => handler_cat_file(x.to_string(), ".rust_git".to_string()),
+        x if x.contains("git cat-file") => handler_cat_file(x.to_string()),
         x if x.contains("git rm") => handler_rm(x.to_string()),
         x if x.contains("git log") => handler_log(),
         x if x.contains("git commit") => handler_commit(x.to_string()),
         x if x.contains("git branch") => handler_branch(x.to_string()),
         x if x.contains("git checkout") => handler_checkout(x.to_string()),
-        x if x.contains("git clone") => handler_clone(x.to_string()),
-        x if x.contains("git fetch") => handler_fetch(x.to_string()),
-        x if x.contains("git pull") => handler_pull(),
          _ => "Failed or Panicked.".to_string()
      }
 }

@@ -2,10 +2,10 @@
 use std::{path::Path, collections::HashMap};
 
 use gtk::{prelude::*, Button, ComboBoxText};
-use crate::vcs::version_control_system::VersionControlSystem;
+use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions};
 
 pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
-    let branches = VersionControlSystem::get_branches()?;
+    let branches = VersionControlSystem::branch(BranchOptions::GetBranches)?;
     draw_branches(&branches, combo_box);
     Ok(())
 }

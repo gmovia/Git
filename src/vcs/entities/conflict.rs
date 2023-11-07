@@ -24,7 +24,6 @@ pub fn conflicts_search(changes: &HashMap<String, Change>, other_changes: &HashM
 }
 
 pub fn resolve_conflicts(conflicts: &HashMap<String, Conflict>, current_changes: &mut HashMap<String, Change>, incoming_change: &mut HashMap<String, Change>){
-    println!("{:?}",conflicts);
     for (file, conflict) in conflicts{
         match conflict.resolved.as_str(){
             CURRENT => {incoming_change.remove(file);},
@@ -32,7 +31,7 @@ pub fn resolve_conflicts(conflicts: &HashMap<String, Conflict>, current_changes:
             BOTH => {
                 current_changes.insert(file.to_string(), conflict.change_current.clone());
                 incoming_change.remove(file);
-            }, // MERGEAR EL ARCHIVO Y GUARDAR!
+            },
             _ => {}
         }
     }

@@ -1,9 +1,5 @@
-use std::{
-    io::{BufReader, BufRead},
-    fs::File,
-};
+use std::{io::{BufReader, BufRead}, fs::File};
 use crate::vcs::version_control_system::VersionControlSystem;
-
 use super::init::Init;
 
 pub struct Log;

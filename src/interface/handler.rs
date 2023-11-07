@@ -236,7 +236,7 @@ pub fn handle_merge(interface: &RustInterface) {
                             });
                             let mut index = 0;
                             for (key, value) in &conflicts {
-                                if let (Ok(cat_current), Ok(cat_incoming)) = (VersionControlSystem::cat_file(&value.change_current.hash, ".rust_git"),VersionControlSystem::cat_file(&value.change_branch.hash,".rust_git")) {
+                                if let (Ok(cat_current), Ok(cat_incoming)) = (VersionControlSystem::cat_file(&value.change_current.hash),VersionControlSystem::cat_file(&value.change_branch.hash)) {
                                     let set_label_current = format!("{}\n             {}\n",key,cat_current);
                                     let set_label_incoming = format!("\n{}\n            {}\n",key,cat_incoming);
                                     let set_format = set_label_current + &set_label_incoming;
@@ -282,7 +282,6 @@ pub fn handle_merge(interface: &RustInterface) {
                         let m_box = m_changes.clone();
                         move |button|{
                             if let Ok(list_conflicts) = read_changes(){
-                                println!("{:?}",list_conflicts);
                                 let _ = VersionControlSystem::resolve_conflicts(&m_entry1.text(), list_conflicts);
                             }
                             m_box.foreach(|child| {
@@ -373,24 +372,33 @@ pub fn add_both(button: &gtk::Button, conflict: &Conflict, dialog: &gtk::Dialog,
     
 }
 
+fn add_message(m_changes: &gtk::Box, message: &String) {
+    let label = gtk::Label::new(Some(message));
+    label.set_visible(true);
+    label.set_xalign(0.5);
+    label.set_yalign(0.5);
+    m_changes.add(&label);
+}
 
+
+/* 
 pub fn handle_clone(interface: &RustInterface) {
-
+    
     let c_entry = interface.clone_entry.clone();
     let clone_button = interface.clone.clone();
     let info = interface.info_clone.clone();
     let fix_clone = interface.fix.clone();
-
+    
     interface.clone.set_sensitive(false);
     interface.info_clone.set_visible(false);
     
-
+    
     interface.clone_entry.connect_changed({
         move |e| {
             clone_button.set_sensitive(!e.text().is_empty());
         }
     });
-
+    
     interface.clone.connect_clicked({
         let info = info.clone();
         let c_entry = c_entry.clone();
@@ -403,29 +411,31 @@ pub fn handle_clone(interface: &RustInterface) {
                 label.set_xalign(0.5);
                 label.set_yalign(0.5);
                 let close = Button::builder()
-                            .label("close")
-                            .build();
-                close.set_visible(true);
-                fix_clone.add(&label);
-                info.add(&close);
-                info.add(&fix_clone);
-                info.set_visible(true);
-                close.connect_clicked({
-                    let info = info.clone();
-                    move |_| {
-                        info.foreach({|child|{
-                            info.remove(child);
-                        }});
-                    }
-                });
-            }
-            c_entry.set_text("");
-            button.set_sensitive(false);
+                .label("close")
+                .build();
+            close.set_visible(true);
+            fix_clone.add(&label);
+            info.add(&close);
+            info.add(&fix_clone);
+            info.set_visible(true);
+            close.connect_clicked({
+                let info = info.clone();
+                move |_| {
+                    info.foreach({|child|{
+                        info.remove(child);
+                    }});
+                }
+            });
         }
-
-    });
+        c_entry.set_text("");
+        button.set_sensitive(false);
+    }
+    
+});
 }
+*/
 
+/* 
 pub fn handle_fetch(interface: &RustInterface) {
     interface.fetch.connect_clicked({
         move |_| {
@@ -436,34 +446,22 @@ pub fn handle_fetch(interface: &RustInterface) {
     });
 }
 
-// pub fn handle_push(interface: &RustInterface) {
-
-//     interface.push.connect_clicked({
-//        move |_| {
-//         if let Ok(current) = VersionControlSystem::read_current_repository() {
-//             let _ = VersionControlSystem::push();
-//         }
-//        } 
-//     });
-// }
-
-pub fn handle_pull(interface: &RustInterface) {
-
+pub fn handle_push(interface: &RustInterface) {
     interface.push.connect_clicked({
         move |_| {
-         let _ = VersionControlSystem::pull();
+            if let Ok(current) = VersionControlSystem::read_current_repository() {
+                let _ = VersionControlSystem::push();
+            }
         } 
-     });
+    });
 }
 
-
-fn add_message(m_changes: &gtk::Box, message: &String) {
-    let label = gtk::Label::new(Some(message));
-    label.set_visible(true);
-    label.set_xalign(0.5);
-    label.set_yalign(0.5);
-    m_changes.add(&label);
+pub fn handle_pull(interface: &RustInterface) {
+    
+    interface.push.connect_clicked({
+        move |_| {
+            let _ = VersionControlSystem::pull();
+        } 
+    });
 }
-
-
-
+*/

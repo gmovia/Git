@@ -31,14 +31,7 @@ impl Merge {
             let mut changes_current_repository = Diff::diff(&parent_repository, &current_repository);
             let mut changes_branch_repository = Diff::diff(&parent_repository, &branch_repository);
             
-            // si busco mergear => pasar una lista de nulos potencilaes conflictos
-            // si busco resolver conflictos => paso una lista de potenciales conflictos
-
             resolve_conflicts(&potential_conflicts, &mut changes_current_repository, &mut changes_branch_repository);
-
-            // recorro los potenciales conflictos y trato de arreglarlos
-            // si no tengo potenciales conflictos entonces sigo de largo => me fijo si puedo hacer una f.a
-            // si tengo los arreglo => me fijo si puedo hacer una f.a
 
             conflicts = conflicts_search(&changes_current_repository, &changes_branch_repository);
 

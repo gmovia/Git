@@ -25,7 +25,7 @@ impl Commit{
         }
 
         let _ = Commit::write_commit(&message, &repository)?;
-        let _ = Index::clear(); //limpio el index
+        let _ = Index::clear();
         Ok(repository)
     }
     
@@ -55,7 +55,7 @@ impl Commit{
         let entry = format!("tree-{}\n", hash);
         tree_file.write_all(entry.as_bytes())?;
 
-        let hash = HashObject::hash_object(&temp_path, Init::get_object_path(&path, ".rust_git")?, WriteOption::Write)?;
+        let hash = HashObject::hash_object(&temp_path, Init::get_object_path(&path)?, WriteOption::Write)?;
         let _ = fs::remove_file(temp_path);
         Ok(hash)
     }

@@ -12,7 +12,7 @@ impl CommitsTable{
 
         for commit in commits_table {
             if commit.hash == commit_hash {
-                let content = CatFile::cat_file(commit_hash, Init::get_object_path(&repo_path, ".rust_git")?)?;
+                let content = CatFile::cat_file(commit_hash, Init::get_object_path(&repo_path)?)?;
                 let content_lines: Vec<&str> = content.split("\n").collect();
                 for line in content_lines{
                     if line != ""{
@@ -31,10 +31,10 @@ impl CommitsTable{
         let commits_file = OpenOptions::new().read(true).open(path)?;
 
         let reader = io::BufReader::new(commits_file);
-        for line in reader.lines().filter_map(Result::ok) { //leo linea a linea la tabla
+        for line in reader.lines().filter_map(Result::ok) {
             let parts: Vec<&str> = line.split("-").collect();
             let commit = CommitEntry{id: parts[0].to_string(), hash: parts[1].to_string(), message: parts[2].to_string(), date: parts[3].to_string()};
-            commits.push(commit); //me quedo con el hash, lo agrego al vec
+            commits.push(commit);
         }
         Ok(commits)
     } 

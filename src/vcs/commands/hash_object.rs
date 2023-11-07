@@ -1,5 +1,4 @@
 use std::{fs::{self, File}, path::{Path, PathBuf}, io::Write};
-
 use crate::utils::hasher::hasher::Hasher;
 
 pub enum WriteOption {

@@ -38,7 +38,7 @@ impl Repository{
             let entry = format!("{}-{}\n", key, value);
             commit_file.write_all(entry.as_bytes())?;
         }
-        let hash = HashObject::hash_object(&path, Init::get_object_path(&current_path, ".rust_git")?, WriteOption::Write)?;
+        let hash = HashObject::hash_object(&path, Init::get_object_path(&current_path)?, WriteOption::Write)?;
         let _ = fs::remove_file(path);
         Ok(hash)
     }
