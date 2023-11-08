@@ -1,9 +1,8 @@
-use std::{fs::{OpenOptions, self}, self, io::{Write, self}, collections::HashMap, path::{PathBuf, Path}};
-use crate::{utils::random::random::Random, vcs::files::{repository::Repository, index::Index, current_repository::CurrentRepository, commits_table::CommitsTable}};
+use std::collections::HashMap;
+use std::io;
+use crate::vcs::files::{repository::Repository, index::Index, commits_table::CommitsTable};
 use crate::constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED};
-use super::{init::Init, hash_object::{HashObject, WriteOption}};
 extern crate chrono;
-use chrono::{DateTime, Local};
 
 pub struct Commit;
 

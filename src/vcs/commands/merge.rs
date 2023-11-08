@@ -7,7 +7,6 @@ use crate::vcs::commands::branch::Branch;
 use crate::vcs::files::current_repository::CurrentRepository;
 use crate::vcs::files::repository::Repository;
 use super::checkout::Checkout;
-use super::commit::Commit;
 use super::diff::Diff;
 #[derive(Debug, Clone)]
 pub struct Merge;
