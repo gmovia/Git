@@ -1,16 +1,15 @@
-use std::{path::{PathBuf, Path}, fs::{OpenOptions, self}, collections::HashMap, io::{Write, self, BufRead}};
-
+use std::{path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap, io::{Write, self, BufRead}};
+use crate::{vcs::{entities::{commit_entry::CommitEntry, tree::Tree}, files::current_repository::CurrentRepository, commands::{init::Init, hash_object::{WriteOption, HashObject}}}, utils::random::random::Random};
 use chrono::{Local, DateTime};
 
-use crate::{vcs::{entities::commit_entry::CommitEntry, files::current_repository::CurrentRepository, commands::{init::Init, hash_object::{WriteOption, HashObject}}}, utils::random::random::Random};
-
-use super::repository::Repository;
 
 #[derive(Debug, Clone)]
 pub struct CommitsTable;
 
 impl CommitsTable{
 
+    /// Recibe el path del repositorio y una branch
+    /// Devuelve la tabla de commits
     pub fn read(repo_path: PathBuf, branch: &str) -> Result<Vec<CommitEntry>, std::io::Error>{
         let mut commits: Vec<CommitEntry> = Vec::new();
         let path = repo_path.join(".rust_git").join("logs").join(Path::new(branch));
@@ -25,6 +24,8 @@ impl CommitsTable{
         Ok(commits)
     } 
 
+    /// Recibe un mensaje y el conjunto de blobs que va a almacenar el commits
+    /// Escribe la tabla de commits, crea el tree y los blobs relacionados al commit
     pub fn write(message: &String, repository: &HashMap<String, String>) -> Result<(),std::io::Error>{
         let id = Random::random();
         let current_time: DateTime<Local> = Local::now();
@@ -34,13 +35,15 @@ impl CommitsTable{
 
         let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&current)?)?; //abro la tabla de commits para escribir - si no existe, la creo
         
-        let commit_hash = Self::create_tree(&current, &repository)?;
+        let hash = Tree::create(&repository, &current)?;
 
-        let commit = format!("{}-{}-{}-{}\n", id, commit_hash, message, current_time); 
+        let commit = format!("{}-{}-{}-{}\n", id, hash, message, current_time); 
         commits_file.write_all(commit.as_bytes())?;
         Ok(())
     }
 
+    /// Recibe dos listados de commits 
+    /// Devuelve el ultimo commit comun
     pub fn get_parent_commit(current_commits: &Vec<CommitEntry>, branch_commits: &Vec<CommitEntry>) ->  Option<CommitEntry>{
         let size = if current_commits.len() >= branch_commits.len() { branch_commits.len() } else { current_commits.len() };
         for index in 0..size{
@@ -53,20 +56,5 @@ impl CommitsTable{
             return Some(current_commits[index-1].clone());
         }
         None
-    }
-
-    pub fn create_tree(path: &PathBuf, repository: &HashMap<String, String>) -> Result<String, std::io::Error>{
-        let tree_path = Path::new(&path).join("tree");
-        let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&tree_path)?; 
-
-        let repository_hash = Repository::write_repository(&repository)?;
-        
-        let entry = format!("tree {}\n", repository_hash);
-        tree_file.write_all(entry.as_bytes())?;
-        
-        let hash = HashObject::hash_object(&tree_path, Init::get_object_path(&path)?, WriteOption::Write)?;
-        
-        let _ = fs::remove_file(tree_path);
-        Ok(hash)
     }
 }

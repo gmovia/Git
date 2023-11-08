@@ -80,6 +80,7 @@ pub mod vcs{
         pub mod commit_entry;
         pub mod change;
         pub mod conflict;
+        pub mod tree;
     }
   
     pub mod version_control_system;

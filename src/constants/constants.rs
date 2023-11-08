@@ -4,12 +4,16 @@ pub const NULL_PATH: &str = "null_path";
 pub const CURRENT_REPOSITORY_PATH: &str = "current_repository.txt";
 pub const RUST_PATH: &str = ".rust_git";
 
+// TREE
+pub const TREE_CODE: &str = "tree";
+
 // SERVER
 pub const PUERTO: &str = "9418";
 pub const HOST: &str = "127.0.0.1";
 
 // NULL
 pub const NULL: &str = "NULL";
+pub const END_OF_LINE: &str = "";
 
 // MERGE
 pub const MERGE: &str = "merge";
