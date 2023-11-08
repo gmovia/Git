@@ -11,13 +11,7 @@ pub fn equals(staging_area: HashMap<String, VCSFile>, path: &Path, state: &str) 
 
 pub fn set_up() -> TempDir{
     let temp_dir = TempDir::new("test_version_control_system").expect("Failed to create temp directory");
-    // let repositories_path = temp_dir.path().join(BDD_PATH);
-    // let current_repository_path = temp_dir.path().join(CURRENT_REPOSITORY_PATH);
-    // let _ = create_file(&temp_dir, &repositories_path.to_string_lossy());
-    // let _ = create_file(&temp_dir, &current_repository_path.to_string_lossy());
-    //let mut vcs = VersionControlSystem::new();
     VersionControlSystem::init(temp_dir.path(), Vec::new());
-    //let vsc = VersionControlSystem::init(temp_dir.path(), Vec::new());
     temp_dir
 }
 

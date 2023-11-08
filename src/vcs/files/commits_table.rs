@@ -1,29 +1,15 @@
-use std::{path::{PathBuf, Path}, io::{self, BufRead, Write}, fs::OpenOptions, collections::HashMap};
-use crate::vcs::{commands::{cat_file::CatFile, init::Init}, entities::commit_entry::CommitEntry};
+use std::{path::{PathBuf, Path}, fs::{OpenOptions, self}, collections::HashMap, io::{Write, self, BufRead}};
+
+use chrono::{Local, DateTime};
+
+use crate::{vcs::{entities::commit_entry::CommitEntry, files::current_repository::CurrentRepository, commands::{init::Init, hash_object::{WriteOption, HashObject}}}, utils::random::random::Random};
+
+use super::repository::Repository;
 
 #[derive(Debug, Clone)]
 pub struct CommitsTable;
 
 impl CommitsTable{
-
-    pub fn read_repository_of_commit(repo_path: PathBuf, branch: &str, commit_hash: &str) -> Result<HashMap<String, String>,std::io::Error>{
-        let mut repository: HashMap<String, String> = HashMap::new();
-        let commits_table = CommitsTable::read(repo_path.clone(), branch)?;
-
-        for commit in commits_table {
-            if commit.hash == commit_hash {
-                let content = CatFile::cat_file(commit_hash, Init::get_object_path(&repo_path)?)?;
-                let content_lines: Vec<&str> = content.split("\n").collect();
-                for line in content_lines{
-                    if line != ""{
-                        let line_parts: Vec<&str> = line.split("-").collect(); // line_parts[0] = path ; line_parts[1] = content
-                        repository.insert(line_parts[0].to_string(), line_parts[1].to_string());
-                    }
-                }
-            }
-        }
-        Ok(repository)
-    }
 
     pub fn read(repo_path: PathBuf, branch: &str) -> Result<Vec<CommitEntry>, std::io::Error>{
         let mut commits: Vec<CommitEntry> = Vec::new();
@@ -39,16 +25,21 @@ impl CommitsTable{
         Ok(commits)
     } 
 
-    pub fn write(repo_path: PathBuf, commits: &Vec<CommitEntry>, branch: &str) -> Result<(), std::io::Error>{
-        let path = repo_path.join(".rust_git").join("logs").join(Path::new(branch));
-        let mut commits_file = OpenOptions::new().read(true).open(path)?;
+    pub fn write(message: &String, repository: &HashMap<String, String>) -> Result<(),std::io::Error>{
+        let id = Random::random();
+        let current_time: DateTime<Local> = Local::now();
+        let _ = current_time.to_rfc2822();
+        
+        let current = CurrentRepository::read()?;
 
-        for commit in commits{
-            let entry = format!("{}-{}-{}-{}\n", commit.id, commit.hash, commit.message, commit.date);
-            commits_file.write_all(entry.as_bytes())?;
-        }
+        let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&current)?)?; //abro la tabla de commits para escribir - si no existe, la creo
+        
+        let commit_hash = Self::create_tree(&current, &repository)?;
+
+        let commit = format!("{}-{}-{}-{}\n", id, commit_hash, message, current_time); 
+        commits_file.write_all(commit.as_bytes())?;
         Ok(())
-    } 
+    }
 
     pub fn get_parent_commit(current_commits: &Vec<CommitEntry>, branch_commits: &Vec<CommitEntry>) ->  Option<CommitEntry>{
         let size = if current_commits.len() >= branch_commits.len() { branch_commits.len() } else { current_commits.len() };
@@ -62,5 +53,20 @@ impl CommitsTable{
             return Some(current_commits[index-1].clone());
         }
         None
+    }
+
+    pub fn create_tree(path: &PathBuf, repository: &HashMap<String, String>) -> Result<String, std::io::Error>{
+        let tree_path = Path::new(&path).join("tree");
+        let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&tree_path)?; 
+
+        let repository_hash = Repository::write_repository(&repository)?;
+        
+        let entry = format!("tree {}\n", repository_hash);
+        tree_file.write_all(entry.as_bytes())?;
+        
+        let hash = HashObject::hash_object(&tree_path, Init::get_object_path(&path)?, WriteOption::Write)?;
+        
+        let _ = fs::remove_file(tree_path);
+        Ok(hash)
     }
 }

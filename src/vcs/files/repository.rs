@@ -1,5 +1,5 @@
-use std::{collections::HashMap, path::Path, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
-use crate::vcs::commands::{hash_object::{WriteOption, HashObject},  init::Init};
+use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, io::{self, BufRead, Write}};
+use crate::vcs::commands::{hash_object::{WriteOption, HashObject},  init::Init, cat_file::CatFile};
 use super::{commits_table::CommitsTable, current_repository::CurrentRepository};
 
 #[derive(Debug, Clone)]
@@ -19,10 +19,35 @@ impl Repository{
         
         if let Some(last_commit) = reader.lines().filter_map(Result::ok).last(){
             let parts: Vec<&str> = last_commit.split("-").collect(); // parts[0] = id ; parts[1] = hash ; parts[2] = message ; parts[3] = date ; parts[4] = tree
-            local_repository.extend(CommitsTable::read_repository_of_commit(current_path.clone(), &Init::get_current_branch(&current_path)?, parts[1])?);
+            local_repository.extend(Repository::read_repository_of_commit(current_path.clone(), &Init::get_current_branch(&current_path)?, parts[1])?);
         }
         
         Ok(local_repository)
+    }
+
+    // read_blobs
+    pub fn read_repository_of_commit(repo_path: PathBuf, branch: &str, commit_hash: &str) -> Result<HashMap<String, String>,std::io::Error>{
+        let mut repository: HashMap<String, String> = HashMap::new();
+        let commits_table = CommitsTable::read(repo_path.clone(), branch)?;
+
+        for commit in commits_table {
+            if commit.hash == commit_hash {
+                let tree = CatFile::cat_file(commit_hash, Init::get_object_path(&repo_path)?)?;
+                let tree_lines: Vec<&str> = tree.split_whitespace().collect();
+                let tree_hash = tree_lines[1];
+                
+                let blobs = CatFile::cat_file(tree_hash, Init::get_object_path(&repo_path)?)?;
+                let blobs_lines: Vec<&str> = blobs.split("\n").collect();
+
+                for blob in blobs_lines{
+                    if blob != ""{
+                        let blobs_parts: Vec<&str> = blob.split("-").collect(); // line_parts[0] = path ; line_parts[1] = content
+                        repository.insert(blobs_parts[0].to_string(), blobs_parts[1].to_string());
+                    }
+                }
+            }
+        }
+        Ok(repository)
     }
 
     /// leo del hashmap local repository y armo un archivo commit_file que es temporal del commit.

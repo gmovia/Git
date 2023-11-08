@@ -13,7 +13,6 @@ impl HashObject{
     /// Escribe el contenido dentro de un archivo cuya ruta depende del hash.
     pub fn write_object(hash: &str, object_path: PathBuf, data: &[u8]) -> Result<(), std::io::Error> {
         let folder_name = hash.chars().take(2).collect::<String>();
-
         let object = object_path.join(format!("{}",folder_name));
 
         fs::create_dir_all(&object)?;
@@ -43,7 +42,7 @@ impl HashObject{
         let hash = Hasher::hash( &file);
 
         match option{
-            WriteOption::Write => HashObject::write_object(&hash, object_path, &file)?,
+            WriteOption::Write => HashObject::write_object(&hash, object_path, &file)?, // aca rompe
             WriteOption::NoWrite => ()
         }
 

@@ -24,9 +24,9 @@ impl Merge {
         let mut conflicts: HashMap<String, Conflict> = HashMap::new();
 
         if let (Some(last_commit_of_current_commits_table), Some(last_commit_of_branch_commits_table), Some(parent_commit)) = (current_commits_table.last(), branch_commits_table.last(), CommitsTable::get_parent_commit(&current_commits_table, &branch_commits_table)){
-            let current_repository = CommitsTable::read_repository_of_commit(current.clone(), &current_branch, &last_commit_of_current_commits_table.hash)?;
-            let branch_repository = CommitsTable::read_repository_of_commit(current.clone(), branch, &last_commit_of_branch_commits_table.hash)?;
-            let parent_repository = CommitsTable::read_repository_of_commit(current.clone(), &current_branch, &parent_commit.hash)?;
+            let current_repository = Repository::read_repository_of_commit(current.clone(), &current_branch, &last_commit_of_current_commits_table.hash)?;
+            let branch_repository = Repository::read_repository_of_commit(current.clone(), branch, &last_commit_of_branch_commits_table.hash)?;
+            let parent_repository = Repository::read_repository_of_commit(current.clone(), &current_branch, &parent_commit.hash)?;
 
             let mut changes_current_repository = Diff::diff(&parent_repository, &current_repository);
             let mut changes_branch_repository = Diff::diff(&parent_repository, &branch_repository);
@@ -38,7 +38,7 @@ impl Merge {
             if conflicts.len() == 0 { // FUSION AUTOMATICA
                 add_changes(&mut repository, &changes_current_repository);
                 add_changes(&mut repository, &changes_branch_repository);
-                Commit::write_commit( &MERGE.to_string(), &repository)?;
+                CommitsTable::write( &MERGE.to_string(), &repository)?;
                 Checkout::update_cd(&current)?;
             }
         }
