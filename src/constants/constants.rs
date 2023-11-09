@@ -7,6 +7,9 @@ pub const RUST_PATH: &str = ".rust_git";
 // TREE
 pub const TREE_CODE: &str = "tree";
 
+// BLOB
+pub const BLOB_CODE: &str = "blob";
+
 // SERVER
 pub const PUERTO: &str = "9418";
 pub const HOST: &str = "127.0.0.1";

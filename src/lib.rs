@@ -16,6 +16,10 @@ pub mod handlers{
     pub mod merge;
 }
 
+pub mod proxy{
+    pub mod proxy;
+}
+
 pub mod interface{
     pub mod interface;
     pub mod draw;
@@ -77,10 +81,12 @@ pub mod vcs{
     }
 
     pub mod entities{
-        pub mod commit_entry;
+        pub mod commit_table_entry;
+        pub mod commit_entity;
+        pub mod tree_entity;
+        pub mod blob_entity;
         pub mod change;
         pub mod conflict;
-        pub mod tree;
     }
   
     pub mod version_control_system;
