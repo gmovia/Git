@@ -1,7 +1,5 @@
-use std::{collections::HashMap, path::{PathBuf, Path}, fs::{OpenOptions, self}, io::Write};
-use crate::vcs::{files::repository::Repository, commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}};
-
-use super::{tree_entity::TreeEntity, blob_entity::BlobEntity};
+use std::{path::{PathBuf, Path}, fs::{OpenOptions, self}, io::Write};
+use crate::vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile};
 
 pub struct CommitEntity{    // tree + el hash del tree
     pub content_type: String, // "tree"

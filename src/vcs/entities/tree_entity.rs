@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::{PathBuf, Path}, fs::{OpenOptions, self}, io::Write};
+use std::{path::{PathBuf, Path}, fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, constants::constants::END_OF_LINE};
 
 use super::blob_entity::BlobEntity;
