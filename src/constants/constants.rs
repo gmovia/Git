@@ -45,7 +45,7 @@ pub const RESPONSE_OK_CREATE_BRANCH: &str = "Created successfully.";
 pub const RESPONSE_OK_DELETED_BRANCH: &str = "Deleted successfully.";
 pub const RESPONSE_OK_COMMIT: &str = "Commit created succesfully.";
 pub const RESPONSE_OK_MERGE: &str = "Merged successfully";
-
+pub const RESPONSE_OK_CLONE: &str = "Clone successfully";
 
 // ERRORS
 pub const ERR_INVALID_PARAMETERS: &str = "Invalid parameters.";
