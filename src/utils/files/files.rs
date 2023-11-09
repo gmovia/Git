@@ -10,7 +10,7 @@ pub fn read(path: &Path) -> Result<HashMap<String, String>, std::io::Error> {
     Ok(files)
 }
 
-fn is_excluded_directory(entry: &std::fs::DirEntry) -> bool {
+pub fn is_excluded_directory(entry: &std::fs::DirEntry) -> bool {
     let excluded_directories = ["target", ".git", ".gitignore", ".rust_git"];
     if let Some(name) = entry.file_name().to_str() {
         excluded_directories.contains(&name)
