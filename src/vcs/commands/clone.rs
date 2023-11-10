@@ -2,7 +2,7 @@ use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, pa
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, cat_file::CatFile, init::Init}, files::repository::Repository, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, utils::files::files::create_file_and_their_folders, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, cat_file::CatFile, init::Init, checkout::Checkout}, files::repository::Repository, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, utils::files::files::{create_file_and_their_folders, delete_all_files_and_folders}, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER}};
 pub struct Clone;
 
 impl Clone{
@@ -41,7 +41,6 @@ impl Clone{
         Ok(()) 
     }
 
-
     fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>, repo: PathBuf) -> Result<(), std::io::Error>  {
         let mut objects_processed: Vec<(u8, String)> = Vec::new();
         let mut branch_name = String::new(); // Initialize branch_name
@@ -66,7 +65,7 @@ impl Clone{
             }
         }
         Self::create_folders(objects_processed.clone(), &repo, &branch_name); // Pass a reference to branch_name
-        let _ = Self::update_working_directory(objects_processed, &repo);
+        Checkout::update_cd(&repo)?;
         Ok(())
     }
 
@@ -152,29 +151,26 @@ impl Clone{
     
                 let blob = BlobEntity {
                     content_type: "blob".to_string(),
-                    path: path.to_string(),
+                    path: format!("{}/{}",repo.display(), path.to_string()),
                     blob_hash: blob_hash.to_string(),
                 };
     
                 blobs.push(blob);
             }
         }
+        println!("REPO.clone TREE ---> {:?}\n", repo.clone());
         let hash_tree = Proxy::write_tree(repo.clone(), blobs)?;
         Ok(hash_tree)
     }
 
 
     fn update_working_directory(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<(), std::io::Error>{
-        println!("update_working_directory....{:?}\n", objects);
-        for (index, _content) in objects {
-           if index == TREE_CODE_NUMBER{
-            let repository_hashmap = Repository::read_repository()?;
-            for (key, value) in repository_hashmap{
-                let content = CatFile::cat_file(&value, Init::get_object_path(repo)?)?;
-                let path_file = repo.join(key); //clone/file.txt
-                create_file_and_their_folders(Path::new(&path_file), &content)?
-            }
-           }
+        let repository_hashmap = Repository::read_repository()?;
+        delete_all_files_and_folders(repo)?;
+        
+        for (key, value) in repository_hashmap{
+            let content = CatFile::cat_file(&value, Init::get_object_path(repo)?)?;
+            create_file_and_their_folders(Path::new(&key), &content)?
         }
         Ok(())
     }
@@ -262,7 +258,6 @@ impl Clone{
         }
         objects.sort_by(|a, b| a.0.cmp(&b.0));
         
-
         Ok(objects)
     }
 
