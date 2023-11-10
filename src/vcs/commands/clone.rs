@@ -163,18 +163,6 @@ impl Clone{
         Ok(hash_tree)
     }
 
-
-    fn update_working_directory(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<(), std::io::Error>{
-        let repository_hashmap = Repository::read_repository()?;
-        delete_all_files_and_folders(repo)?;
-        
-        for (key, value) in repository_hashmap{
-            let content = CatFile::cat_file(&value, Init::get_object_path(repo)?)?;
-            create_file_and_their_folders(Path::new(&key), &content)?
-        }
-        Ok(())
-    }
-
     fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
         let file = OpenOptions::new()
