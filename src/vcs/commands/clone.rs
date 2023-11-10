@@ -158,7 +158,6 @@ impl Clone{
                 blobs.push(blob);
             }
         }
-        println!("REPO.clone TREE ---> {:?}\n", repo.clone());
         let hash_tree = Proxy::write_tree(repo.clone(), blobs)?;
         Ok(hash_tree)
     }
