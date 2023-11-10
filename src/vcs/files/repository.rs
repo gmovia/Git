@@ -14,13 +14,14 @@ impl Repository{
         let mut local_repository: HashMap<String, String>  = HashMap::new();
         
         let commits_file = OpenOptions::new().read(true).open(Init::get_commits_path(&current_path)?)?;
-
+        println!("COMMITS FILES {:?}", commits_file );
         let reader = io::BufReader::new(commits_file);
         
         if let Some(last_commit) = reader.lines().filter_map(Result::ok).last(){
             let parts: Vec<&str> = last_commit.split("-").collect(); // parts[0] = id ; parts[1] = hash ; parts[2] = message ; parts[3] = date ; parts[4] = tree
             local_repository.extend(Repository::read_repository_of_commit(current_path.clone(), &Init::get_current_branch(&current_path)?, parts[1])?);
         }
+        println!("LOCAL REPOSITORY ---> {:?}\n", local_repository);
         
         Ok(local_repository)
     }

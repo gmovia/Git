@@ -118,6 +118,7 @@ impl Clone{
     }
     
     fn create_commit_folder(content: &String, repo: &PathBuf){
+        println!("CONTENIDO DEL COMMIT {:?}\n", content.trim_end());
         let _ = Proxy::write_commit(repo.clone(), content.to_string());
     } 
 
@@ -128,20 +129,17 @@ impl Clone{
     fn create_tree_folder(content: &String, repo: &PathBuf) {
         let mut blobs: Vec<BlobEntity> = Vec::new();
     
-        // Dividir el contenido en blobs usando '\n' como delimitador
         let blob_strings: Vec<&str> = content.split('\n').collect();
     
         for blob_string in blob_strings {
-            // Dividir cada línea del blob usando '-' como delimitador
             let parts: Vec<&str> = blob_string.split('-').collect();
     
             if parts.len() == 2 {
                 let path = parts[0].trim();
                 let blob_hash = parts[1].trim();
     
-                // Puedes ajustar el content_type según tus necesidades
                 let blob = BlobEntity {
-                    content_type: "3".to_string(),
+                    content_type: "blob".to_string(),
                     path: path.to_string(),
                     blob_hash: blob_hash.to_string(),
                 };
@@ -150,7 +148,6 @@ impl Clone{
             }
         }
     
-        // Llamar a la función que escribe los blobs en el servidor
         let _ = Proxy::write_tree(repo.clone(), blobs);
     }
 
