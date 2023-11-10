@@ -13,7 +13,7 @@ impl CommitEntity{
         let commit_path = Path::new(&repo_path).join("objects");
         let mut commit_file = OpenOptions::new().write(true).create(true).append(true).open(&commit_path)?; 
 
-        let entry = format!("{}", content);
+        let entry = format!("tree {}", content);
         commit_file.write_all(entry.as_bytes())?;
         
         let commit_hash = HashObject::hash_object(&commit_path, Init::get_object_path(&repo_path)?, WriteOption::Write)?;

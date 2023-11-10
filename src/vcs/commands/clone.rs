@@ -45,6 +45,7 @@ impl Clone{
 
     fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>, repo: PathBuf) -> Result<(), std::io::Error>  {
         let mut objects_processed: Vec<(u8, String)> = Vec::new();
+        let mut branch_name = String::new(); // Initialize branch_name
         for item in list_refs {
             if item.contains("HEAD") {
                 continue;
@@ -53,21 +54,19 @@ impl Clone{
             if parts.len() == 2 {
                 let commit = parts[0];
                 let ref_part = parts[1];
-    
                     if ref_part.starts_with("refs/") {
-                    let branch_name = ref_part.trim_start_matches("refs/heads/");
-                    let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
+                        branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
+                        let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
                     
                     objects_processed = Self::process_folder(objects.to_vec());
-                    Self::write_commit_log(&repo, branch_name, commit, objects_processed.clone())?;
                     for obj in &objects_processed{
                         println!("-->{:?}", obj);
                     }
                 }
             }
         }
-        Self::create_folders(objects_processed.clone(), &repo);
+        Self::create_folders(objects_processed.clone(), &repo, &branch_name); // Pass a reference to branch_name
         let _ = Self::update_working_directory(objects_processed, &repo);
         Ok(())
     }
@@ -106,27 +105,43 @@ impl Clone{
         objects_processed
     }
 
-     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) {
-        for (index, content) in objects {
+     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf, branch_name: &str) {
+        let mut hash_tree = String::new();     
+        let mut hash_commit = String::new();     
+
+        for (index, content) in objects.iter() {
             match index {
-                1 => Self::create_commit_folder(&content, repo),
-                2 => Self::create_tree_folder(&content, repo),
+                2 => {
+                    let result = Self::create_tree_folder(&content, repo);
+                    match result {
+                        Ok(value) => hash_tree = value,
+                        Err(e) => println!("Error creating tree {}", e),
+                    }
+                },
                 3 => Self::create_blob_folder(&content, repo),
                 _ => println!("Type not identify {}", index),
             }
         }
+
+        let result = Self::create_commit_folder(&hash_tree, repo);
+        match result {
+            Ok(value) => hash_commit = value,
+            Err(e) => println!("Error creating tree {}", e),
+        }
+        let _ = Self::write_commit_log(repo, branch_name, &hash_commit, objects);
     }
     
-    fn create_commit_folder(content: &String, repo: &PathBuf){
+    fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<String, io::Error>{
         println!("CONTENIDO DEL COMMIT {:?}\n", content.trim_end());
-        let _ = Proxy::write_commit(repo.clone(), content.to_string());
+        let hash_commit = Proxy::write_commit(repo.clone(), content.to_string());
+        hash_commit
     } 
 
     fn create_blob_folder(content: &String, repo: &PathBuf){
         let _ = Proxy::write_blob(repo.clone(),content);
     }
 
-    fn create_tree_folder(content: &String, repo: &PathBuf) {
+    fn create_tree_folder(content: &String, repo: &PathBuf)  -> Result<String, std::io::Error> {
         let mut blobs: Vec<BlobEntity> = Vec::new();
     
         let blob_strings: Vec<&str> = content.split('\n').collect();
@@ -147,21 +162,22 @@ impl Clone{
                 blobs.push(blob);
             }
         }
-    
-        let _ = Proxy::write_tree(repo.clone(), blobs);
+        let hash_tree = Proxy::write_tree(repo.clone(), blobs)?;
+        Ok(hash_tree)
     }
 
 
     fn update_working_directory(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<(), std::io::Error>{
-        println!("INSEDEEE UPDAT {:?}\n", objects);
+        println!("update_working_directory....{:?}\n", objects);
         for (index, content) in objects {
            if index == 2{
-            print!("ENTRE EN 2\n");
             let repository_hashmap = Repository::read_repository()?;
             println!("table:  ---->->-<>-<>->{:?} \n", repository_hashmap);
             for (key, value) in repository_hashmap{
                 let content = CatFile::cat_file(&value, Init::get_object_path(repo)?)?;
-                create_file_and_their_folders(Path::new(&key), &content)?
+                println!("KEY ES---> \n{:?}", key);
+                let path_file = repo.join(key);
+                create_file_and_their_folders(Path::new(&path_file), &content)?
             }
            }
         }
@@ -170,7 +186,7 @@ impl Clone{
 
     fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
-        println!("ENTRE A write commit logggg \n");
+        println!("ENTRE A write commit log \n");
         let file = OpenOptions::new()
             .create(true)
             .write(true)
