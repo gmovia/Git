@@ -1,9 +1,8 @@
-use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, collections::HashMap, fs::OpenOptions};
+use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, fs::OpenOptions};
 
-use chrono::{DateTime, Utc, TimeZone};
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, cat_file::CatFile, init::Init}, files::repository::Repository, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, utils::{files::files::create_file_and_their_folders, random::random::Random}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, cat_file::CatFile, init::Init}, files::repository::Repository, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, utils::files::files::create_file_and_their_folders};
 pub struct Clone;
 
 impl Clone{
@@ -23,7 +22,7 @@ impl Clone{
                 if len == 0 {
                     break;
                 }
-                println!("ACA 1 PACKETTT ---> {:?} \n", len);
+                println!("LEN del packet ---> {:?} \n", len);
 
                 let packet = read_packet(socket, len);
                 println!("ACA PACKETTT ---> {:?} \n", packet);
@@ -84,7 +83,7 @@ impl Clone{
                     if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
                         let entry_string: String = entries
                             .iter()
-                            .map(|(mode, name, sha1)| {
+                            .map(|(_mode, name, sha1)| {
                                 let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
                                 format!("{}-{}", name, hex_string)
                             })
@@ -93,7 +92,7 @@ impl Clone{
                         objects_processed.push((*number, entry_string));
                     }
                      else {
-                        eprintln!("Error al decodificar el objeto tree");
+                        eprintln!("Error decoding the tree object");
                     }
                 }else{
                     //aca estaria la rpta de nuestro server no hace falta processed, solo pego directo ;)
@@ -122,17 +121,15 @@ impl Clone{
                 _ => println!("Type not identify {}", index),
             }
         }
-
         let result = Self::create_commit_folder(&hash_tree, repo);
         match result {
             Ok(value) => hash_commit = value,
-            Err(e) => println!("Error creating tree {}", e),
+            Err(e) => println!("Error commit folder {}", e),
         }
         let _ = Self::write_commit_log(repo, branch_name, &hash_commit, objects);
     }
     
     fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<String, io::Error>{
-        println!("CONTENIDO DEL COMMIT {:?}\n", content.trim_end());
         let hash_commit = Proxy::write_commit(repo.clone(), content.to_string());
         hash_commit
     } 
@@ -169,14 +166,12 @@ impl Clone{
 
     fn update_working_directory(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<(), std::io::Error>{
         println!("update_working_directory....{:?}\n", objects);
-        for (index, content) in objects {
+        for (index, _content) in objects {
            if index == 2{
             let repository_hashmap = Repository::read_repository()?;
-            println!("table:  ---->->-<>-<>->{:?} \n", repository_hashmap);
             for (key, value) in repository_hashmap{
                 let content = CatFile::cat_file(&value, Init::get_object_path(repo)?)?;
-                println!("KEY ES---> \n{:?}", key);
-                let path_file = repo.join(key);
+                let path_file = repo.join(key); //clone/file.txt
                 create_file_and_their_folders(Path::new(&path_file), &content)?
             }
            }
@@ -184,9 +179,8 @@ impl Clone{
         Ok(())
     }
 
-    fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+    fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
-        println!("ENTRE A write commit log \n");
         let file = OpenOptions::new()
             .create(true)
             .write(true)
@@ -206,7 +200,6 @@ impl Clone{
                message = msg.to_string();
             }
         } */
-
         let format_commit = format!("{}-{}-{}-{}", random_number, commit, "message", "2023-11-08 19:26:10.805633340 -03:00");
         println!("Format commit ------->{} ", format_commit);
         writeln!(writer, "{}", format_commit)?;
