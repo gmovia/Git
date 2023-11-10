@@ -2,7 +2,7 @@ use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, pa
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, cat_file::CatFile, init::Init, checkout::Checkout}, files::repository::Repository, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, utils::files::files::{create_file_and_their_folders, delete_all_files_and_folders}, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER}};
 pub struct Clone;
 
 impl Clone{
