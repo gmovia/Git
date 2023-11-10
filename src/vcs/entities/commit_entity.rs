@@ -9,11 +9,11 @@ pub struct CommitEntity{    // tree + el hash del tree
 impl CommitEntity{
     /// Recibe el conjunto de blobs que se va a escribir y el path del repositorio
     /// Crea el archivo de commit y devuelve su hash => el que se encuentra en la tabla de commits => id hash_commit message date
-    pub fn write(repo_path: &PathBuf, tree_hash: &String) -> Result<String, std::io::Error>{
-        let commit_path = Path::new(&repo_path).join("commit");
+    pub fn write(repo_path: &PathBuf, content: &String) -> Result<String, std::io::Error>{
+        let commit_path = Path::new(&repo_path).join("objects");
         let mut commit_file = OpenOptions::new().write(true).create(true).append(true).open(&commit_path)?; 
 
-        let entry = format!("tree {}\n", tree_hash);
+        let entry = format!("{}", content);
         commit_file.write_all(entry.as_bytes())?;
         
         let commit_hash = HashObject::hash_object(&commit_path, Init::get_object_path(&repo_path)?, WriteOption::Write)?;

@@ -9,7 +9,7 @@ impl TreeEntity{
     /// Recibe el conjunto de blobs que se van a escribir y el path del repositorio
     /// Crea el archivo de tree y devuelve su hash => es el que se encuentra en la entrada del commit => tree hash_tree
     pub fn write(repo_path: &PathBuf, blobs: &Vec<BlobEntity>) -> Result<String, std::io::Error>{
-        let tree_path = Path::new(&repo_path).join("tree");
+        let tree_path = Path::new(&repo_path).join("objects");
         let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&tree_path)?; 
 
         for blob in blobs {

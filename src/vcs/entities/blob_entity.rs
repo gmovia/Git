@@ -12,7 +12,7 @@ impl BlobEntity{
     /// Recibe el path del file y el path del repositorio
     /// Crea el archivo de blob, y devuelve su hash
     pub fn write(repo_path: PathBuf, content: &String) -> Result<String, std::io::Error>{
-        let blob_path = Path::new(&repo_path).join("blob");
+        let blob_path = Path::new(&repo_path).join("objects");
         let mut blob_file = OpenOptions::new().write(true).create(true).append(true).open(&blob_path)?; 
 
         blob_file.write_all(content.as_bytes())?;

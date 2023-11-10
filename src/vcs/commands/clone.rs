@@ -1,16 +1,18 @@
-use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8};
+use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, collections::HashMap, fs::OpenOptions};
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions}};
+use chrono::{DateTime, Utc, TimeZone};
+use rand::Rng;
 
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, cat_file::CatFile, init::Init}, files::repository::Repository, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, utils::{files::files::create_file_and_their_folders, random::random::Random}};
 pub struct Clone;
 
 impl Clone{
-    pub fn git_clone(stream: &mut TcpStream) -> Result<(),std::io::Error> {
-        Self::receive_pack(stream)?;
+    pub fn git_clone(stream: &mut TcpStream, repo: PathBuf) -> Result<(),std::io::Error> {
+        Self::receive_pack(stream, repo)?;
         Ok(())
     }
     
-    pub fn receive_pack(socket: &mut TcpStream) -> Result<(), std::io::Error> {
+    pub fn receive_pack(socket: &mut TcpStream, repo: PathBuf) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
         print!("Entro a receive packs ---------------\n");
         loop {
@@ -34,43 +36,39 @@ impl Clone{
         for want in Self::get_want_msgs(&packets) {
             socket.write(want.as_bytes())?;
         }
-
         send_done_msg(socket)?;
         let objects = Self::get_socket_response(socket)?;
-        //aca recien recibo tipo de objeto y bytes!!!! 
-        Self::init_commits(&packets , &objects)?;
-        //println!("ANTES DE ENTRAR A REQUEST");
-        //Self::request_branch(&packets, objects)?; //CREACION DE MIS FILES INTO CURRENT DIR
+        Self::init_commits(&packets , &objects, repo)?;
         Ok(()) 
     }
 
 
-    fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>) -> Result<(), std::io::Error>  {
+    fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>, repo: PathBuf) -> Result<(), std::io::Error>  {
+        let mut objects_processed: Vec<(u8, String)> = Vec::new();
         for item in list_refs {
             if item.contains("HEAD") {
                 continue;
             }
-
-            let parts: Vec<&str> = item.splitn(2, ' ').collect(); // Divide el elemento en dos partes.
+            let parts: Vec<&str> = item.splitn(2, ' ').collect(); 
             if parts.len() == 2 {
                 let commit = parts[0];
                 let ref_part = parts[1];
     
-                // Realiza una acción con la parte que sigue después de "refs/". Por ejemplo:
-                if ref_part.starts_with("refs/") {
+                    if ref_part.starts_with("refs/") {
                     let branch_name = ref_part.trim_start_matches("refs/heads/");
                     let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                     println!("Commit: {}, Branch: {}", commit, branch_name);
-
-                    let objects_prosessed = Self::process_folder(objects.to_vec());
-
-                    //println!("SALI DE PROCESAR EN INIT COMMIT \n {:?}", objects_prosessed);
-                    for obj in &objects_prosessed{
+                    
+                    objects_processed = Self::process_folder(objects.to_vec());
+                    Self::write_commit_log(&repo, branch_name, commit, objects_processed.clone())?;
+                    for obj in &objects_processed{
                         println!("-->{:?}", obj);
                     }
                 }
             }
         }
+        Self::create_folders(objects_processed.clone(), &repo);
+        let _ = Self::update_working_directory(objects_processed, &repo);
         Ok(())
     }
 
@@ -82,17 +80,20 @@ impl Clone{
                 objects_processed.push((*number, String::from_utf8_lossy(inner_vec).to_string()));
             }else{
                let content = String::from_utf8_lossy(inner_vec);
-               print!("CONTENNNNTTTT {:?}\n", content);
                 if content.contains(&10064.to_string()) {
                     let mut reader = inner_vec.as_slice();
-                    println!("ENTRE AL IF DEL TREEE \n");
                     if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
-                        for (mode, name, sha1) in entries {
-                            let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
-                            println!("Mode: {:o}, Name: {}, SHA-1: {}", mode, name, hex_string);  
-                            objects_processed.push((*number, format!("{}-{}", name, hex_string))); 
-                        }
-                    } else {
+                        let entry_string: String = entries
+                            .iter()
+                            .map(|(mode, name, sha1)| {
+                                let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
+                                format!("{}-{}", name, hex_string)
+                            })
+                            .collect::<Vec<String>>()
+                            .join("\n");
+                        objects_processed.push((*number, entry_string));
+                    }
+                     else {
                         eprintln!("Error al decodificar el objeto tree");
                     }
                 }else{
@@ -105,10 +106,101 @@ impl Clone{
         objects_processed
     }
 
-/*     fn create_folder(){
+     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) {
+        for (index, content) in objects {
+            match index {
+                1 => Self::create_commit_folder(&content, repo),
+                2 => Self::create_tree_folder(&content, repo),
+                3 => Self::create_blob_folder(&content, repo),
+                _ => println!("Type not identify {}", index),
+            }
+        }
+    }
+    
+    fn create_commit_folder(content: &String, repo: &PathBuf){
+        let _ = Proxy::write_commit(repo.clone(), content.to_string());
+    } 
 
-    } */
+    fn create_blob_folder(content: &String, repo: &PathBuf){
+        let _ = Proxy::write_blob(repo.clone(),content);
+    }
 
+    fn create_tree_folder(content: &String, repo: &PathBuf) {
+        let mut blobs: Vec<BlobEntity> = Vec::new();
+    
+        // Dividir el contenido en blobs usando '\n' como delimitador
+        let blob_strings: Vec<&str> = content.split('\n').collect();
+    
+        for blob_string in blob_strings {
+            // Dividir cada línea del blob usando '-' como delimitador
+            let parts: Vec<&str> = blob_string.split('-').collect();
+    
+            if parts.len() == 2 {
+                let path = parts[0].trim();
+                let blob_hash = parts[1].trim();
+    
+                // Puedes ajustar el content_type según tus necesidades
+                let blob = BlobEntity {
+                    content_type: "3".to_string(),
+                    path: path.to_string(),
+                    blob_hash: blob_hash.to_string(),
+                };
+    
+                blobs.push(blob);
+            }
+        }
+    
+        // Llamar a la función que escribe los blobs en el servidor
+        let _ = Proxy::write_tree(repo.clone(), blobs);
+    }
+
+
+    fn update_working_directory(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<(), std::io::Error>{
+        println!("INSEDEEE UPDAT {:?}\n", objects);
+        for (index, content) in objects {
+           if index == 2{
+            print!("ENTRE EN 2\n");
+            let repository_hashmap = Repository::read_repository()?;
+            println!("table:  ---->->-<>-<>->{:?} \n", repository_hashmap);
+            for (key, value) in repository_hashmap{
+                let content = CatFile::cat_file(&value, Init::get_object_path(repo)?)?;
+                create_file_and_their_folders(Path::new(&key), &content)?
+            }
+           }
+        }
+        Ok(())
+    }
+
+    fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+        let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
+        println!("ENTRE A write commit logggg \n");
+        let file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .append(true)
+            .open(&logs_path)?;
+    
+        let mut writer = BufWriter::new(file);
+        let random_number: u8 = rand::thread_rng().gen_range(1..=9);
+  /*    
+        let mut datetime: String = String::new();
+        let mut message: String = String::new();
+    
+       for (index, item) in &objects{
+            if *index == 1 {
+                println!("ESTE ES EL ITEMMMM --- {:?}", item);
+               let msg = Self::extract_message(&item.as_str());
+               message = msg.to_string();
+            }
+        } */
+
+        let format_commit = format!("{}-{}-{}-{}", random_number, commit, "message", "2023-11-08 19:26:10.805633340 -03:00");
+        println!("Format commit ------->{} ", format_commit);
+        writeln!(writer, "{}", format_commit)?;
+    
+        Ok(())
+    }
+    
     fn get_want_msgs(commits_list: &Vec<String>) -> Vec<String> {
         let mut want_msgs = Vec::new();
     
@@ -158,8 +250,6 @@ impl Clone{
             if let Ok(data) = decompress_data(&pack[position..]) {
                 println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
                 println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-
-                //print!();
                 position = position + data.1 as usize; 
                 objects.push((objet_type, data.0))   
             }
