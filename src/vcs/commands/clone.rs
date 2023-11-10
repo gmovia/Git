@@ -2,7 +2,7 @@ use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, pa
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, cat_file::CatFile, init::Init}, files::repository::Repository, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, utils::files::files::create_file_and_their_folders};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, cat_file::CatFile, init::Init}, files::repository::Repository, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, utils::files::files::create_file_and_their_folders, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER}};
 pub struct Clone;
 
 impl Clone{
@@ -56,7 +56,7 @@ impl Clone{
                     if ref_part.starts_with("refs/") {
                         branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
                         let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
-                    println!("Commit: {}, Branch: {}", commit, branch_name);
+                        println!("Commit: {}, Branch: {}", commit, branch_name);
                     
                     objects_processed = Self::process_folder(objects.to_vec());
                     for obj in &objects_processed{
@@ -109,15 +109,15 @@ impl Clone{
         let mut hash_commit = String::new();     
 
         for (index, content) in objects.iter() {
-            match index {
-                2 => {
+            match *index {
+                TREE_CODE_NUMBER => {
                     let result = Self::create_tree_folder(&content, repo);
                     match result {
                         Ok(value) => hash_tree = value,
                         Err(e) => println!("Error creating tree {}", e),
                     }
                 },
-                3 => Self::create_blob_folder(&content, repo),
+                BLOB_CODE_NUMBER => Self::create_blob_folder(&content, repo),
                 _ => println!("Type not identify {}", index),
             }
         }
@@ -167,7 +167,7 @@ impl Clone{
     fn update_working_directory(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<(), std::io::Error>{
         println!("update_working_directory....{:?}\n", objects);
         for (index, _content) in objects {
-           if index == 2{
+           if index == TREE_CODE_NUMBER{
             let repository_hashmap = Repository::read_repository()?;
             for (key, value) in repository_hashmap{
                 let content = CatFile::cat_file(&value, Init::get_object_path(repo)?)?;

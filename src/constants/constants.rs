@@ -6,9 +6,14 @@ pub const RUST_PATH: &str = ".rust_git";
 
 // TREE
 pub const TREE_CODE: &str = "tree";
+pub const TREE_CODE_NUMBER: u8 = 2;
 
 // BLOB
 pub const BLOB_CODE: &str = "blob";
+pub const BLOB_CODE_NUMBER: u8 = 3;
+
+//COMMIT
+pub const COMMIT_CODE_NUMBER: u8 = 1;
 
 // SERVER
 pub const PUERTO: &str = "9418";
