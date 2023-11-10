@@ -1,6 +1,6 @@
 use std::{net::TcpStream, io::{Read, Write}, str::from_utf8};
 
-use crate::packfile::packfile::{read_packet, to_pkt_line, send_done_msg};
+use crate::packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data};
 
 pub struct Clone;
 
@@ -37,9 +37,9 @@ impl Clone{
         }
 
         send_done_msg(socket)?;
-        //let objects = Self::get_socket_response(socket)?;
+        let objects = Self::get_socket_response(socket)?;
         //println!("ANTES DE ENTRAR A REQUEST");
-        //Self::request_branch(&packets, objects)?;
+        //Self::request_branch(&packets, objects)?; //CREACION DE MIS FILES INTO CURRENT DIR
         Ok(()) 
     }
 
@@ -58,5 +58,79 @@ impl Clone{
         want_msgs
     }
 
+
+    fn get_socket_response(socket: &mut TcpStream) -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
+        let mut buffer = Vec::new();
+            match socket.read_to_end(&mut buffer) {
+                Ok(_) => {
+                    return Self::manage_pack(&buffer[8..]);
+                }
+                Err(e) => {
+                    println!("Failed to receive data: {}\n", e);
+                    return Err(e)
+                }
+            } 
+    }
+
+    fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
+        let signature_pack_msg = &pack[0..4];
+        println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
+        let version = &pack[4..8];
+        println!("VERSION: {:?} - {:?}", version, Self::parse_number(version)?);
+        let object_number = Self::parse_number(&pack[8..12])?;
+        println!("CANTIDAD DE OBJETOS: {}", object_number);
+        
+        let mut position: usize = 12;
+        let mut objects = Vec::new();
+        for object in 0..object_number {
+            let objet_type = Self::get_object_type(pack[position]);
+            while Self::is_bit_set(pack[position]) {
+                position = position + 1;
+            }
+            position = position + 1;
+
+            if let Ok(data) = decompress_data(&pack[position..]) {
+                println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
+                println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                position = position + data.1 as usize; 
+                objects.push((objet_type, data.0))   
+            }
+        } 
+        objects.sort_by(|a, b| a.0.cmp(&b.0));
+        for (number, inner_vec) in &objects {
+            println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
+        }
+        
+        Ok(objects)
+    }
+
+    fn parse_number(bytes: &[u8]) -> Result<u8, std::io::Error> {
+        let texto: String = bytes.iter().map(|&b| b.to_string()).collect();
+        match texto.parse() {
+            Ok(numero) => return Ok(numero),
+            Err(_) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Can not parse number")),
+        }
+    }
+
+
+    fn get_object_type(bytes: u8) -> u8 {
+        let mut bits = Vec::new();
+        for i in (0..8).rev() {
+            if i == 4 || i == 5 || i == 6 {
+                let bit = (bytes >> i) & 1;
+                bits.push(bit);
+            } 
+        }
+        let mut numero = 0;
+        for bit in &bits {
+            numero = (numero << 1) | bit;
+        }
+        numero
+    }
+
+    fn is_bit_set(byte: u8) -> bool {
+        let mask = 0b10000000;
+        (byte & mask) == mask
+     }
 
 }
