@@ -1,7 +1,6 @@
 use std::{collections::HashMap, path::PathBuf, fs::OpenOptions, io::{self, BufRead}};
-use crate::vcs::{commands::init::Init, entities::entity::{Entity, convert_to_repository}};
-use crate::vcs::entities::{commit_entity::CommitEntity, tree_entity::TreeEntity, blob_entity::BlobEntity};
-use crate::constants::constants::BLOB_CODE;
+use crate::vcs::{commands::init::Init, entities::entity::convert_to_repository};
+use crate::vcs::entities::{commit_entity::CommitEntity, tree_entity::TreeEntity};
 use super::{commits_table::CommitsTable, current_repository::CurrentRepository};
 
 #[derive(Debug, Clone)]

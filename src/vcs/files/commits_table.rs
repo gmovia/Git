@@ -1,7 +1,7 @@
 use std::{path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap, io::{Write, self, BufRead}};
 use chrono::{Local, DateTime};
 use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::random::random::Random};
-use super::{repository::Repository, current_repository::CurrentRepository};
+use super::current_repository::CurrentRepository;
 
 #[derive(Debug, Clone)]
 pub struct CommitsTable;
