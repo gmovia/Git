@@ -33,7 +33,7 @@ impl Repository{
                 
                 let entities  = TreeEntity::read(&repo_path, commit_entity.tree_hash)?;
 
-                return Ok(convert_to_repository(&entities));
+                return Ok(convert_to_repository(&entities, CurrentRepository::read()?));
             }
         }
         Ok(HashMap::new())

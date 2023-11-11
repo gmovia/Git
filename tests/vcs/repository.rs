@@ -5,6 +5,7 @@ mod tests {
     use rust_git::vcs::entities::blob_entity::BlobEntity;
     use rust_git::vcs::entities::entity::{Entity, convert_to_repository, convert_to_entities};
     use rust_git::vcs::entities::tree_entity::TreeEntity;
+    use rust_git::vcs::files::current_repository::CurrentRepository;
 
     fn count_blobs(entities: &Vec<Entity>) -> i32{
         let mut index = 0;
@@ -41,7 +42,7 @@ mod tests {
         entities.push(Entity::Blob(blob_1));
         entities.push(Entity::Blob(blob_2));
 
-        let repository = convert_to_repository(&entities);
+        let repository = convert_to_repository(&entities, CurrentRepository::read()?);
 
         assert_eq!(repository.len(), 2);
         Ok(())
@@ -62,7 +63,7 @@ mod tests {
         let mut entities: Vec<Entity> = Vec::new();
         entities.push(Entity::Tree(tree));
 
-        let repository = convert_to_repository(&entities);
+        let repository = convert_to_repository(&entities, CurrentRepository::read()?);
 
         assert_eq!(repository.len(), 2);
         Ok(())
@@ -84,7 +85,7 @@ mod tests {
         entities.push(Entity::Tree(tree));
         entities.push(Entity::Blob(blob_3));
 
-        let repository = convert_to_repository(&entities);
+        let repository = convert_to_repository(&entities, CurrentRepository::read()?);
 
         assert_eq!(repository.len(), 3);
         Ok(())
@@ -114,7 +115,7 @@ mod tests {
 
         entities.push(Entity::Tree(tree));
 
-        let repository = convert_to_repository(&entities);
+        let repository = convert_to_repository(&entities, CurrentRepository::read()?);
 
         assert_eq!(repository.len(), 4);
         Ok(())

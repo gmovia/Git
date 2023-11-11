@@ -1,5 +1,5 @@
 use std::{fs::{self, File}, path::{Path, PathBuf}, io::Write};
-use crate::{utils::hasher::hasher::Hasher, constants::constants::{BLOB_CODE, TREE_CODE, COMMIT_CODE}};
+use crate::{utils::hasher::hasher::Hasher, constants::constants::{TREE_CODE, COMMIT_CODE}};
 use std::num::ParseIntError;
 
 pub enum WriteOption {
@@ -77,10 +77,12 @@ impl HashObject{
         let input: Vec<u8> = match entity_type {
             TREE_CODE => {    
                 let array: Vec<&str> = content.split("\n").collect();
-                let tree_entries = Self::parse_input(array)?;
+                let tree_entries: Vec<u8> = Self::parse_input(array)?;
+
                 let lenght = tree_entries.len();
                 let mut git_content = format!("tree {lenght}\0").into_bytes();
                 git_content.extend(tree_entries);
+
                 git_content
             },
             COMMIT_CODE => {      
