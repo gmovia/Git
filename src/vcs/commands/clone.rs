@@ -94,19 +94,28 @@ impl Clone{
                         eprintln!("Error decoding the tree object");
                     }
                 }else{
-                    //aca estaria la rpta de nuestro server no hace falta processed, solo pego directo ;)
-                    println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
-                    objects_processed.push((*number, String::from_utf8_lossy(inner_vec).to_string()));
+                    let blobs: Vec<String> = String::from_utf8_lossy(inner_vec).split("\n").map(String::from).collect();
+                    let mut string_to_send = String::new();
+                    for blob in &blobs {
+                        let blob_parts: Vec<&str> = blob.split(" ").collect();
+                        if blob_parts.len() == 3 {
+                            let path = Path::new(blob_parts[1]);
+                            if let Some(file_name) = path.file_name() {
+                                string_to_send = format!("{}{}-{}\n", string_to_send, file_name.to_string_lossy(), blob_parts[2]);  
+                            }
+                        }                      
+                    }
+                    objects_processed.push((*number, string_to_send))
                 }
             }
         }
         objects_processed
     }
 
-     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf, branch_name: &str) {
+     fn create_folders(mut objects: Vec<(u8, String)>, repo: &PathBuf, branch_name: &str) {
         let mut hash_tree = String::new();     
         let mut hash_commit = String::new();     
-
+        
         for (index, content) in objects.iter() {
             match *index {
                 TREE_CODE_NUMBER => {
@@ -144,7 +153,6 @@ impl Clone{
     
         for blob_string in blob_strings {
             let parts: Vec<&str> = blob_string.split('-').collect();
-    
             if parts.len() == 2 {
                 let path = parts[0].trim();
                 let blob_hash = parts[1].trim();
@@ -154,7 +162,6 @@ impl Clone{
                     path: format!("{}/{}",repo.display(), path.to_string()),
                     blob_hash: blob_hash.to_string(),
                 };
-    
                 blobs.push(blob);
             }
         }

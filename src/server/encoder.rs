@@ -49,7 +49,7 @@ impl Encoder {
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-        
+        println!("OBJECTS DATA: {:?}", objects_data);
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -197,10 +197,10 @@ impl Encoder {
         
         file.read_to_string(&mut content)?;
 
-
+        println!("CONTENT: {:?}", content);
         if content.contains("tree") {
             return Ok((file_path.to_string_lossy().to_string(),1 as usize,metadata.len() as usize))
-        } else if content.contains(".txt-"){
+        } else if content.contains("blob"){
             return Ok((file_path.to_string_lossy().to_string(),2 as usize,metadata.len() as usize))
         }
         else {
