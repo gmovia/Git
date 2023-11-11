@@ -9,6 +9,10 @@ edition = "2021"
 name = "main"
 path = "src/main.rs"
 
+[[bin]]
+name = "server"
+path = "src/main_server.rs"
+
 [dependencies]
 
 crypto = "0.5.1"

@@ -25,6 +25,8 @@ pub fn read_packet(stream: &mut TcpStream, len: usize) -> String {
     String::from_utf8_lossy(&packet_buf).to_string()
 }
 
+
+/// Esta linea prcesa lo recibido por el servidor y lo devuelve.
 pub fn process_line(stream: &mut TcpStream) -> Result<String, std::io::Error> {
 
     let mut result = String::new();

@@ -25,6 +25,12 @@ pub mod client{
     pub mod client;
 }
 
+pub mod server{
+    pub mod server;
+    pub mod upload_pack;
+    pub mod encoder;
+}
+
 pub mod packfile{
     pub mod packfile;
 }
