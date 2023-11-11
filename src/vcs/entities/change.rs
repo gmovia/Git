@@ -1,5 +1,5 @@
 use std::{collections::HashMap, fs::{File, OpenOptions, self}, io::{Write, self, BufRead}};
-use crate::{constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED}, vcs::files::current_repository::CurrentRepository};
+use crate::{constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED}, vcs::files::current_repository::CurrentRepository, utils::random::random::Random};
 use super::conflict::Conflict;
 
 #[derive(Debug, Clone)]
@@ -21,7 +21,7 @@ pub fn add_changes(repository: &mut HashMap<String, String>, changes: &HashMap<S
 
 pub fn write_changes(conflict: &Conflict) -> Result<File,std::io::Error>{
     let current = CurrentRepository::read()?;
-    let temp_path = current.join("temp");
+    let temp_path = current.join(Random::random());
     let mut currents = OpenOptions::new().write(true).create(true).append(true).open(&temp_path)?;
     let data_to_write = format!(
         "{}-{}-{}-{}-{}-{}\n",
