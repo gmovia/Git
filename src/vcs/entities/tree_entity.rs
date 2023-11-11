@@ -28,7 +28,6 @@ impl TreeEntity{
                     let entry = format!("{} {} {}\n", tree.content_type, tree.path, tree_hash);
                     tree_file.write_all(entry.as_bytes())?;
                 }
-                _ => {}
             }
         }
         let tree_hash = HashObject::hash_object(&tree_path, Init::get_object_path(&repo_path)?, WriteOption::Write)?;
