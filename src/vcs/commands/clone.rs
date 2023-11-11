@@ -44,6 +44,7 @@ impl Clone{
     fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>, repo: PathBuf) -> Result<(), std::io::Error>  {
         let mut objects_processed: Vec<(u8, String)> = Vec::new();
         let mut branch_name = String::new(); // Initialize branch_name
+        println!("--------------------LIST REFERENCESSSS ---> {:?}\n", list_refs);
         for item in list_refs {
             if item.contains("HEAD") {
                 continue;
@@ -63,8 +64,9 @@ impl Clone{
                     }
                 }
             }
+            let hash_commit_branch = Self::create_folders(objects_processed.clone(), &repo, &branch_name);
+            let _ = Self::write_commit_log(&repo, &branch_name, &hash_commit_branch, objects);
         }
-        Self::create_folders(objects_processed.clone(), &repo, &branch_name); // Pass a reference to branch_name
         Checkout::update_cd(&repo)?;
         Ok(())
     }
@@ -103,7 +105,7 @@ impl Clone{
         objects_processed
     }
 
-     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf, branch_name: &str) {
+     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf, branch_name: &str) -> String {
         let mut hash_tree = String::new();     
         let mut hash_commit = String::new();     
 
@@ -125,7 +127,8 @@ impl Clone{
             Ok(value) => hash_commit = value,
             Err(e) => println!("Error commit folder {}", e),
         }
-        let _ = Self::write_commit_log(repo, branch_name, &hash_commit, objects);
+        //let _ = Self::write_commit_log(repo, branch_name, &hash_commit, objects);
+        hash_commit
     }
     
     fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<String, io::Error>{
@@ -162,7 +165,7 @@ impl Clone{
         Ok(hash_tree)
     }
 
-    fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+    fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, objects: &Vec<(u8,Vec<u8>)>,) -> Result<(), std::io::Error> {
         let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
         let file = OpenOptions::new()
             .create(true)
@@ -183,8 +186,9 @@ impl Clone{
                message = msg.to_string();
             }
         } */
+        println!("WRITEEEE LOGGGGGGGGGGGGGG\n");
         let format_commit = format!("{}-{}-{}-{}", random_number, commit, "message", "2023-11-08 19:26:10.805633340 -03:00");
-        println!("Format commit ------->{} ", format_commit);
+        println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, branch_name);
         writeln!(writer, "{}", format_commit)?;
     
         Ok(())
