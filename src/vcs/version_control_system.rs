@@ -34,10 +34,10 @@ impl VersionControlSystem {
         Reset::reset(path.to_path_buf())
     }
 
-    pub fn hash_object(path: &Path, option: WriteOption) -> Result<String, std::io::Error>{
+    pub fn hash_object(path: &Path, option: WriteOption, _type: &str) -> Result<String, std::io::Error>{
         let current = CurrentRepository::read()?;
         let object_path = Init::get_object_path(&current)?;
-        HashObject::hash_object(path, object_path, option)
+        HashObject::hash_object(path, object_path, option, _type)
     }
 
     pub fn cat_file(hash: &str) -> Result<String, std::io::Error>{

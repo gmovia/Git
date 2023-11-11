@@ -1,6 +1,6 @@
 use std::{path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap, io::{Write, self, BufRead}};
 use chrono::{Local, DateTime};
-use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::random::random::Random};
+use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::{CommitEntity, self}, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::random::random::Random};
 use super::current_repository::CurrentRepository;
 
 #[derive(Debug, Clone)]
@@ -38,7 +38,9 @@ impl CommitsTable{
         let entities = convert_to_entities(repository, &format!("{}/", &current.display().to_string()));
 
         let tree_hash = TreeEntity::write(&current, &entities)?;
-        let commit_hash = CommitEntity::write(&current, &tree_hash)?;
+
+        let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), message: message.clone()};
+        let commit_hash = CommitEntity::write(&current, &commit_entity)?;
 
         let commit = format!("{}-{}-{}-{}\n", id, commit_hash, message, current_time); 
         commits_file.write_all(commit.as_bytes())?;

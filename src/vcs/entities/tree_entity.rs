@@ -13,24 +13,24 @@ pub struct TreeEntity{
 }
 
 impl TreeEntity{
-
+    
     pub fn write(repo_path: &PathBuf, entities: &Vec<Entity>) -> Result<String, std::io::Error>{
         let tree_path = Path::new(&repo_path).join(Random::random());
         let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&tree_path)?; 
         for entity in entities {
             match entity{
                 Entity::Blob(blob) => {
-                    let entry = format!("{} {} {}\n", blob.content_type, blob.path, blob.blob_hash);
+                    let entry = format!("100644 {} {} {}\n", blob.content_type, blob.blob_hash, blob.path);
                     tree_file.write_all(entry.as_bytes())?;
                 },
                 Entity::Tree(tree) => {
                     let tree_hash = TreeEntity::write(repo_path, &tree.entities)?;
-                    let entry = format!("{} {} {}\n", tree.content_type, tree.path, tree_hash);
+                    let entry = format!("40000 {} {} {}\n", tree.content_type, tree_hash, tree.path,);
                     tree_file.write_all(entry.as_bytes())?;
                 }
             }
         }
-        let tree_hash = HashObject::hash_object(&tree_path, Init::get_object_path(&repo_path)?, WriteOption::Write)?;
+        let tree_hash = HashObject::hash_object(&tree_path, Init::get_object_path(&repo_path)?, WriteOption::Write, TREE_CODE)?;
         let _ = fs::remove_file(tree_path);
         Ok(tree_hash)
     }
@@ -44,13 +44,13 @@ impl TreeEntity{
             if line != END_OF_LINE{
                 let parts: Vec<&str> = line.split_whitespace().collect();
 
-                if parts[0] == BLOB_CODE{
-                    let blob = BlobEntity{content_type: BLOB_CODE.to_string(), path: parts[1].to_string(), blob_hash: parts[2].to_string()};
+                if parts[1] == BLOB_CODE{
+                    let blob = BlobEntity{content_type: BLOB_CODE.to_string(), path: parts[3].to_string(), blob_hash: parts[2].to_string()};
                     entities.push(Entity::Blob(blob));
                 }
 
-                if parts[0] == TREE_CODE{
-                    let tree = TreeEntity{content_type: TREE_CODE.to_string(), path: parts[1].to_string(), tree_hash: parts[2].to_string(), entities: Self::read(repo_path, parts[2].to_string())?};
+                if parts[1] == TREE_CODE{
+                    let tree = TreeEntity{content_type: TREE_CODE.to_string(), path: parts[3].to_string(), tree_hash: parts[2].to_string(), entities: Self::read(repo_path, parts[2].to_string())?};
                     entities.push(Entity::Tree(tree));
                 }
             }

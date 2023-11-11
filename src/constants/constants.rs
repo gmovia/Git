@@ -4,11 +4,11 @@ pub const NULL_PATH: &str = "null_path";
 pub const CURRENT_REPOSITORY_PATH: &str = "current_repository.txt";
 pub const RUST_PATH: &str = ".rust_git";
 
-// TREE
+// CODES
 pub const TREE_CODE: &str = "tree";
-
-// BLOB
 pub const BLOB_CODE: &str = "blob";
+pub const COMMIT_CODE: &str = "commit";
+
 
 // SERVER
 pub const PUERTO: &str = "9418";

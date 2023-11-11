@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, fs::{OpenOptions, self}, io::Write};
 
-use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, utils::random::random::Random};
+use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, utils::random::random::Random, constants::constants::BLOB_CODE};
 
 #[derive(Debug, Clone)]
 
@@ -19,7 +19,7 @@ impl BlobEntity{
 
         blob_file.write_all(content.as_bytes())?;
 
-        let blob_hash = HashObject::hash_object(Path::new(&blob_path), Init::get_object_path(&repo_path)?, WriteOption::Write)?;
+        let blob_hash = HashObject::hash_object(Path::new(&blob_path), Init::get_object_path(&repo_path)?, WriteOption::Write, BLOB_CODE)?;
         let _ = fs::remove_file(blob_path);
         Ok(blob_hash)
     }
