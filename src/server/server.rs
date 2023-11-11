@@ -20,7 +20,7 @@ impl Server {
                     let read_client = client.try_clone()?;
                     let write_client = client.try_clone()?;
                     let path_clone = path.to_path_buf();
-                    let current =
+                    let _ =
                     thread::spawn(move || {
                         match Server::handle_client( read_client, write_client, &path_clone) {
                             Ok(_) => Ok(()),
@@ -61,9 +61,7 @@ impl Server {
     }
 
     /// Esta funcion se encarga de responder al mensaje recibido por parte del cliente
-    fn parse_response( message: &String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
-        println!("PATH PARSE RESP: {:?}", path);
-        
+    fn parse_response( message: &String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {       
         let response = match message.as_str() {
             s if s.contains("git-upload-pack") => start_handler_upload(reader, path)?,
             _ => "No entiendo tu mensaje".to_string(),

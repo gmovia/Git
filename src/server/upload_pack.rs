@@ -8,19 +8,18 @@ use crate::server::encoder::Encoder;
 
 /// Esta funcion se encarga de procesar la respuesta que el server le entregara al cliente al mensaje de upload pack
 pub fn start_handler_upload(stream: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
-    println!("PATH HANDLER: {:?}", path);
-       
     let first_response = handler_upload_pack(path)?;
 
     send_response(first_response, stream)?;
     
     let query = receive_wants_and_have_message(stream)?;
+    println!("QUERYSSS: {:?}", query);
     let packfile_result = Encoder::init_encoder((&path).to_path_buf(), query);
 
     match packfile_result {
         Ok( packfile) => {
             stream.write(&packfile)?;
-            println!("--------------------------------ENVIADO\n");
+            println!("PAQUETE ENVIADO CON EXITO\n");
         },
         Err(e) => {
             println!("Error al inicializar el packfile: {:?}", e);
@@ -81,10 +80,10 @@ fn get_log_entries(logs_path: &Path) -> Result<Vec<String>, std::io::Error>{
 
         for line in reader.by_ref().lines() {
             if let Ok(line) = line {
-                last_line = line.clone(); // Clonamos la línea si la necesitas posteriormente
-                let last_commit = line[2..42].to_string(); // Clonamos la porción de la línea
+                last_line = line.clone(); 
+                let last_commit: Vec<&str> = line.split("-").collect();
                 let log_file_name = log_file.file_name().to_string_lossy().to_string();
-                let format = format!("{} refs/heads/{}", last_commit, log_file_name);
+                let format = format!("{} refs/heads/{}", last_commit[1], log_file_name);
                 log_entries.push(format);
  
             }
@@ -94,7 +93,6 @@ fn get_log_entries(logs_path: &Path) -> Result<Vec<String>, std::io::Error>{
             log_entries.push(format!("{} refs/heads/{}\n", hash, filename));
         }
     }
-
     Ok(log_entries)
 }
 
@@ -133,9 +131,7 @@ fn send_response(response: Vec<String>, writer: &mut TcpStream) -> Result<(), st
                 writer.write(to_pkt_line(resp.as_str()).as_bytes())?;
             
         }
-    }
-        
+    }    
     writer.write("0000".as_bytes())?;
-    //writer.flush()?;
     Ok(())
 }
