@@ -91,6 +91,7 @@ pub mod vcs{
     }
 
     pub mod entities{
+        pub mod entity;
         pub mod commit_table_entry;
         pub mod commit_entity;
         pub mod tree_entity;

@@ -1,6 +1,6 @@
 use crate::{
     vcs::{files::{vcs_file::VCSFile, repository::Repository, index::Index}, version_control_system::VersionControlSystem},
-    utils::files::files::read, constants::constants::{STATE_CREATED, STATE_DELETED, NULL},
+    utils::files::files::read, constants::constants::{STATE_CREATED, STATE_DELETED, NULL, BLOB_CODE},
 };
 
 use std::{collections::HashMap, path::Path};
@@ -24,7 +24,7 @@ impl Add{
                     (_, Some(state)) => state.to_string(),
                     _ => continue,
                 };
-                let hash = VersionControlSystem::hash_object(Path::new(&key.clone()), WriteOption::Write)?;
+                let hash = VersionControlSystem::hash_object(Path::new(&key.clone()), WriteOption::Write, BLOB_CODE)?;
                 let file = VCSFile::new(key.clone(), hash, state.clone());
                 staging_area.insert(key.clone(), file);
             }

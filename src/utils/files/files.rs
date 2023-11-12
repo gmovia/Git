@@ -1,5 +1,5 @@
 use std::{collections::HashMap, fs, path::Path, io::Write};
-use crate::utils::hasher::hasher::Hasher;
+use crate::{vcs::commands::hash_object::HashObject, constants::constants::BLOB_CODE};
 
 /// Recibe un string que representa una ruta.
 /// Devuelve los archivos y carpetas que esta contiene en formato HashMap. La clave representa la ruta al archivo y el valor su contenido.
@@ -21,8 +21,8 @@ pub fn is_excluded_directory(entry: &std::fs::DirEntry) -> bool {
 
 fn read_files(path: &Path, files: &mut HashMap<String, String>) -> Result<(), std::io::Error>{
     if path.is_file() {
-        let value = fs::read(path)?;
-        let hash = Hasher::hash( &value);
+        let value = fs::read_to_string(path)?;
+        let hash = HashObject::hash(&value, BLOB_CODE)?;
         files.insert(path.display().to_string(), hash);
     }
 
