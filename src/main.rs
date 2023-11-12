@@ -3,7 +3,7 @@ use std::{io::{self, Write}, path::Path};
 use rust_git::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command};
 
 fn main() -> Result<(), std::io::Error>{
-    let _ = VersionControlSystem::init(Path::new("clone"), Vec::new());
+    let _ = VersionControlSystem::init(Path::new("probanding"), Vec::new());
     
     loop{
         let mut input = String::new();

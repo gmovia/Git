@@ -13,8 +13,8 @@ impl CommitEntity{
         let commit_path = Path::new(&repo_path).join(Random::random());
         let mut commit_file = OpenOptions::new().write(true).create(true).append(true).open(&commit_path)?; 
 
-        let author_user_info = "author ldiazcto <ldiazc@fi.uba.ar> 1699704762 -0300";
-        let commiter_user_info = "committer ldiazcto <ldiazc@fi.uba.ar> 1699704762 -0300";
+        let author_user_info = "author ldiazcto <ldiazc@fi.uba.ar> 1699743432 -0300";
+        let commiter_user_info = "committer ldiazcto <ldiazc@fi.uba.ar> 1699743432 -0300";
 
         let entry = format!("tree {}\n{}\n{}\n\n{}", commit.tree_hash, author_user_info, commiter_user_info, commit.message);
         commit_file.write_all(entry.as_bytes())?;
