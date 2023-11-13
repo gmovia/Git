@@ -16,7 +16,7 @@ impl CommitEntity{
         let author_user_info = "author ldiazcto <ldiazc@fi.uba.ar> 1699704762 -0300";
         let commiter_user_info = "committer ldiazcto <ldiazc@fi.uba.ar> 1699704762 -0300";
 
-        let entry = format!("tree {}\n{}\n{}\n\n{}", commit.tree_hash, author_user_info, commiter_user_info, commit.message);
+        let entry = format!("tree {}\n{}\n{}\n\n{}\n", commit.tree_hash, author_user_info, commiter_user_info, commit.message);
         commit_file.write_all(entry.as_bytes())?;
         
         let commit_hash = HashObject::hash_object(&commit_path, Init::get_object_path(&repo_path)?, WriteOption::Write, COMMIT_CODE)?;
