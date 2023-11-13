@@ -80,7 +80,6 @@ impl Clone{
                 objects_processed.push((*number, String::from_utf8_lossy(inner_vec).to_string()));
             }else{
                let content = String::from_utf8_lossy(inner_vec);
-                if content.contains(&10064.to_string()) {
                     let mut reader = inner_vec.as_slice();
                     if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
                         let entry_string: String = entries
@@ -96,11 +95,6 @@ impl Clone{
                      else {
                         eprintln!("Error decoding the tree object");
                     }
-                }else{
-                    //aca estaria la rpta de nuestro server no hace falta processed, solo pego directo ;)
-                    println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
-                    objects_processed.push((*number, String::from_utf8_lossy(inner_vec).to_string()));
-                }
             }
         }
         objects_processed
