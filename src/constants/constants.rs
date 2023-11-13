@@ -9,6 +9,7 @@ pub const TREE_CODE: &str = "tree";
 pub const BLOB_CODE: &str = "blob";
 pub const COMMIT_CODE: &str = "commit";
 
+pub const COMMIT_INIT_HASH: &str = "0000000000000000000000000000000000000000";
 
 // SERVER
 pub const PUERTO: &str = "9418";
