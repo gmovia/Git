@@ -64,14 +64,14 @@ impl Clone{
                 let ref_part = parts[1];
                     if ref_part.starts_with("refs/") {
                         branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
-                        let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
+                        let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.clone().trim_end_matches('\n')));
                         println!("Commit: {}, Branch: {}", commit, branch_name);
                         branchs.insert(commit.to_owned(), branch_name);
                 }
             }
-            let _ = Self::write_commit_log(&repo, branchs, &commits_created, objects_processed.clone());
+            let _ = Self::write_commit_log(&repo, branchs.clone(), &commits_created, objects_processed.clone());
         }
-        Checkout::update_cd(&repo)?;
+        Checkout::update_cd(&repo)?; //Esto recien me crea los files.txt en working directory si tiene en la tabla de commits lleno
         Ok(())
     }
 
@@ -141,11 +141,18 @@ impl Clone{
     }
     
     fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<(String, CommitEntity), std::io::Error>{
-        // Separar la cadena por \n y guardar las partes en un vector
         let partes: Vec<&str> = content.split("\n").collect();
-        // Crear la entidad de commit con los datos de la cadena
-        let mut commit_entity: CommitEntity;
+        let commit_entity: CommitEntity;
 
+        commit_entity = CommitEntity{
+            content_type: "commit".trim_end_matches("\n").to_string(),
+            tree_hash: partes[0].trim_end_matches("\n").trim_start_matches("tree ").to_string(),
+            message: partes[4..].join("\n").trim_start_matches("\n").trim_end_matches("\n").to_string(), 
+            author: partes[1].trim_end_matches("\n").trim_start_matches("\n").to_string(), 
+            committer: partes[2].trim_end_matches("\n").to_string(),
+        };
+
+        /*  
         if !content.contains("parent"){
             let commit_entity = CommitEntity{
                     content_type: "commit".to_string(),
@@ -153,9 +160,10 @@ impl Clone{
                     message: partes[4..].join("\n").trim_start_matches("\n").to_string(), // La quinta parte en adelante es el mensaje del commit, se unen con \n y se elimina el \n inicial
                     author: partes[1].to_string(), // La segunda parte es el autor del commit
                     committer: partes[2].to_string(),
-                    parent: "".to_string(), // La tercera parte es el committer del commit
+                    //parent: "".to_string(), // La tercera parte es el committer del commit
                 };
-            }else{
+            }
+           else{
                 let commit_entity = CommitEntity{
                     content_type: "commit".to_string(),
                     tree_hash: partes[0].to_string(),
@@ -164,9 +172,9 @@ impl Clone{
                     committer: partes[3].to_string(),
                     parent: partes[1].to_string(),
                 };
-        }
+        } */
  
-        let hash_commit = Proxy::write_commit(repo.clone(), commit_entity)?;
+        let hash_commit = Proxy::write_commit(repo.clone(), &commit_entity)?;
 
         Ok((hash_commit, commit_entity))
     }
@@ -204,15 +212,19 @@ impl Clone{
                 entities.push(Entity::Tree(tree_entity));
             }
         }
+        println!("MI VECCC DE ENTIDADES BLOBS --- {:?}\n", entities);
         let hash_tree = Proxy::write_tree(repo.clone(), entities)?;
         Ok(hash_tree)
     }
     
 
     fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
-        
+        println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
+        println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
+
         for (hash_commit_branch, value) in branchs{
             if commits_created.contains_key(&hash_commit_branch) {
+                println!("HUBO MATCHHHHHHH\n");
                 let logs_path = repo.join(".rust_git").join("logs").join(value.trim_end_matches("\n"));
                 let file = OpenOptions::new()
                     .create(true)
