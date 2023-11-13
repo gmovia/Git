@@ -5,7 +5,7 @@ use rust_git::{vcs::version_control_system::VersionControlSystem, handlers::comm
 fn main() -> Result<(), std::io::Error>{
     //let _ = VersionControlSystem::init(Path::new("test_folder/clone"), Vec::new());
     let _ = VersionControlSystem::init(Path::new("clone"), Vec::new());
-    
+
     loop{
         let mut input = String::new();
         io::stdout().flush().unwrap();

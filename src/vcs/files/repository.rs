@@ -1,7 +1,6 @@
 use std::{collections::HashMap, path::PathBuf, fs::OpenOptions, io::{self, BufRead}};
-use crate::vcs::commands::init::Init;
-use crate::vcs::entities::{commit_entity::CommitEntity, tree_entity::TreeEntity, blob_entity::BlobEntity};
-use crate::constants::constants::BLOB_CODE;
+use crate::vcs::{commands::init::Init, entities::entity::convert_to_repository};
+use crate::vcs::entities::{commit_entity::CommitEntity, tree_entity::TreeEntity};
 use super::{commits_table::CommitsTable, current_repository::CurrentRepository};
 
 #[derive(Debug, Clone)]
@@ -31,29 +30,12 @@ impl Repository{
             if commit.hash == commit_hash {
                 let commit_entity = CommitEntity::read(&repo_path, commit_hash)?; 
                 
-                let blobs  = TreeEntity::read(&repo_path, commit_entity.tree_hash)?;
-                
-                return Ok(Self::convert_to_repository(&blobs));
+                let entities  = TreeEntity::read(&repo_path, commit_entity.tree_hash)?;
+
+                return Ok(convert_to_repository(&entities, CurrentRepository::read()?));
             }
         }
         Ok(HashMap::new())
-    }
-    
-    pub fn convert_to_repository(blobs: &Vec<BlobEntity>) -> HashMap<String, String>{
-        let mut local_repository: HashMap<String, String> = HashMap::new();
-        for blob in blobs{
-            local_repository.insert(blob.path.clone(), blob.blob_hash.clone());
-        }
-        local_repository
-    }
-
-    pub fn convert_to_blobs(repository: &HashMap<String,String>) -> Vec<BlobEntity>{
-        let mut blobs: Vec<BlobEntity> = Vec::new();
-        for (key, value) in repository{
-            let blob = BlobEntity{content_type: BLOB_CODE.to_string(), path: key.to_string(), blob_hash: value.to_string()};
-            blobs.push(blob)
-        }
-        blobs       
     }
 }
 

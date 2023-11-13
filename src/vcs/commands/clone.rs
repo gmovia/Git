@@ -1,8 +1,9 @@
 use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, fs::OpenOptions};
+use std::str::FromStr;
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::blob_entity::BlobEntity}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::{BlobEntity, self}, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER}};
 pub struct Clone;
 
 impl Clone{
@@ -17,7 +18,7 @@ impl Clone{
         loop {
             let mut len_buf = [0; 4]; 
             if socket.read_exact(&mut len_buf).is_ok() {
-                let len_str = from_utf8(&len_buf).unwrap();
+                let len_str: &str = from_utf8(&len_buf).unwrap();
                 let len = usize::from_str_radix(len_str, 16).unwrap();
                 if len == 0 {
                     break;
@@ -44,6 +45,7 @@ impl Clone{
     fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>, repo: PathBuf) -> Result<(), std::io::Error>  {
         let mut objects_processed: Vec<(u8, String)> = Vec::new();
         let mut branch_name = String::new(); // Initialize branch_name
+        println!("--------------------LIST REFERENCESSSS ---> {:?}\n", list_refs);
         for item in list_refs {
             if item.contains("HEAD") {
                 continue;
@@ -63,8 +65,9 @@ impl Clone{
                     }
                 }
             }
+            let hash_commit_branch = Self::create_folders(objects_processed.clone(), &repo, &branch_name);
+            let _ = Self::write_commit_log(&repo, &branch_name, &hash_commit_branch, objects);
         }
-        Self::create_folders(objects_processed.clone(), &repo, &branch_name); // Pass a reference to branch_name
         Checkout::update_cd(&repo)?;
         Ok(())
     }
@@ -79,12 +82,14 @@ impl Clone{
                let content = String::from_utf8_lossy(inner_vec);
                 if content.contains(&10064.to_string()) {
                     let mut reader = inner_vec.as_slice();
+                    println!("INNERR VEC----->>>>>>>>{:?}\n", inner_vec);
                     if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
+                        println!("ENTRIES DE 85 {:?}\n", entries);
                         let entry_string: String = entries
                             .iter()
-                            .map(|(_mode, name, sha1)| {
+                            .map(|(mode, name, sha1)| {
                                 let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
-                                format!("{}-{}", name, hex_string)
+                                format!("{}-{}-{}",mode, name, hex_string)
                             })
                             .collect::<Vec<String>>()
                             .join("\n");
@@ -112,7 +117,7 @@ impl Clone{
         objects_processed
     }
 
-     fn create_folders(mut objects: Vec<(u8, String)>, repo: &PathBuf, branch_name: &str) {
+     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf, branch_name: &str) -> String {
         let mut hash_tree = String::new();     
         let mut hash_commit = String::new();     
         
@@ -134,11 +139,18 @@ impl Clone{
             Ok(value) => hash_commit = value,
             Err(e) => println!("Error commit folder {}", e),
         }
-        let _ = Self::write_commit_log(repo, branch_name, &hash_commit, objects);
+        //let _ = Self::write_commit_log(repo, branch_name, &hash_commit, objects);
+        hash_commit
     }
     
     fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<String, io::Error>{
-        let hash_commit = Proxy::write_commit(repo.clone(), content.to_string());
+        println!("CONTENIDO que me llega de la clonación {} ", content);
+        let commit_entity = CommitEntity{
+            content_type: "commit".to_string(),
+            tree_hash: content.to_string(),
+            message: "un commit".to_string(),
+        };
+        let hash_commit = Proxy::write_commit(repo.clone(), commit_entity);
         hash_commit
     } 
 
@@ -146,30 +158,41 @@ impl Clone{
         let _ = Proxy::write_blob(repo.clone(),content);
     }
 
-    fn create_tree_folder(content: &String, repo: &PathBuf)  -> Result<String, std::io::Error> {
-        let mut blobs: Vec<BlobEntity> = Vec::new();
+
+    fn create_tree_folder(content: &String, repo: &PathBuf) -> Result<String, std::io::Error> {
+        let mut entities: Vec<Entity> = Vec::new();
     
-        let blob_strings: Vec<&str> = content.split('\n').collect();
+        let entity_strings: Vec<&str> = content.split('\n').collect();
     
-        for blob_string in blob_strings {
-            let parts: Vec<&str> = blob_string.split('-').collect();
-            if parts.len() == 2 {
-                let path = parts[0].trim();
-                let blob_hash = parts[1].trim();
+        for entries in entity_strings {
+            let parts: Vec<&str> = entries.split('-').collect();
     
-                let blob = BlobEntity {
+            let path = parts[1].trim();
+            let entity_hash = parts[2].trim();
+            if entries.contains("100644") {
+                let blob_entity = BlobEntity {
                     content_type: "blob".to_string(),
-                    path: format!("{}/{}",repo.display(), path.to_string()),
-                    blob_hash: blob_hash.to_string(),
+                    path: format!("{}", path.to_string()),
+                    blob_hash: entity_hash.to_string(),
                 };
-                blobs.push(blob);
+                entities.push(Entity::Blob(blob_entity));
+            } else {
+                let tree_entity = TreeEntity {
+                    content_type: "tree".to_string(),
+                    path: format!("{}/{}", repo.display(), path.to_string()),
+                    tree_hash: entity_hash.to_string(),
+                    entities: Vec::new(), // Initialize with an empty vector
+                };
+                entities.push(Entity::Tree(tree_entity));
             }
         }
-        let hash_tree = Proxy::write_tree(repo.clone(), blobs)?;
+    
+        let hash_tree = Proxy::write_tree(repo.clone(), entities)?;
         Ok(hash_tree)
     }
+    
 
-    fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+    fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, objects: &Vec<(u8,Vec<u8>)>,) -> Result<(), std::io::Error> {
         let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
         let file = OpenOptions::new()
             .create(true)
@@ -190,8 +213,9 @@ impl Clone{
                message = msg.to_string();
             }
         } */
+        println!("WRITEEEE LOGGGGGGGGGGGGGG\n");
         let format_commit = format!("{}-{}-{}-{}", random_number, commit, "message", "2023-11-08 19:26:10.805633340 -03:00");
-        println!("Format commit ------->{} ", format_commit);
+        println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, branch_name);
         writeln!(writer, "{}", format_commit)?;
     
         Ok(())
@@ -269,21 +293,25 @@ impl Clone{
         Ok(String::from_utf8_lossy(&buffer).to_string())
     }
 
-    fn read_tree_entry<R: Read>(reader: &mut R) -> io::Result<(u32, String, Vec<u8>)> {
+
+    fn from_octal_string(s: &str) -> Result<u32, std::num::ParseIntError> {
+        u32::from_str_radix(s, 8)
+    }
+
+    fn read_tree_entry<R: Read>(reader: &mut R) -> io::Result<(String, String, Vec<u8>)> {
         let mut mode_bytes = [0; 6];
         reader.read_exact(&mut mode_bytes)?;
     
         let binding = String::from_utf8_lossy(&mode_bytes[..]);
-        let mode_str = binding.trim();
-        let mode = u32::from_str_radix(mode_str, 8).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-    
+        let mode_str = binding.trim();    
         let name = Self::read_cstring(reader)?;
     
         let mut sha1 = vec![0; 20];
         reader.read_exact(&mut sha1)?;
-    
-        Ok((mode, name, sha1))
+
+        Ok((mode_str.to_string(), name, sha1))
     }
+
     
 
     fn parse_number(bytes: &[u8]) -> Result<u8, std::io::Error> {
@@ -294,9 +322,9 @@ impl Clone{
         }
     }
 
-    fn read_tree_sha1<R: Read>(reader: &mut R) -> io::Result<Vec<(u32, String, Vec<u8>)>> {
+    fn read_tree_sha1<R: Read>(reader: &mut R) -> io::Result<Vec<(String, String, Vec<u8>)>> {
         let mut entries = Vec::new();
-    
+        //println!("READERRR :::::::::::::{:?}\n", reader);
         while let Ok(entry) = Self::read_tree_entry(reader) {
             entries.push(entry);
         }

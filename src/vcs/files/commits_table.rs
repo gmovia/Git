@@ -1,7 +1,7 @@
 use std::{path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap, io::{Write, self, BufRead}};
 use chrono::{Local, DateTime};
-use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity}, commands::init::Init}, utils::random::random::Random};
-use super::{repository::Repository, current_repository::CurrentRepository};
+use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::random::random::Random};
+use super::current_repository::CurrentRepository;
 
 #[derive(Debug, Clone)]
 pub struct CommitsTable;
@@ -35,9 +35,12 @@ impl CommitsTable{
 
         let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&current)?)?; //abro la tabla de commits para escribir - si no existe, la creo
         
-        let blobs = Repository::convert_to_blobs(repository);
-        let tree_hash = TreeEntity::write(&current, &blobs)?;
-        let commit_hash = CommitEntity::write(&current, &tree_hash)?;
+        let entities = convert_to_entities(repository, &format!("{}/", &current.display().to_string()));
+
+        let tree_hash = TreeEntity::write(&current, &entities)?;
+
+        let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), message: message.clone()};
+        let commit_hash = CommitEntity::write(&current, &commit_entity)?;
 
         let commit = format!("{}-{}-{}-{}\n", id, commit_hash, message, current_time); 
         commits_file.write_all(commit.as_bytes())?;
