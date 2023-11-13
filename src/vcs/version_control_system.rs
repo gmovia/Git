@@ -2,7 +2,7 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, client::client::Client, constants::constants::{BDD_PATH, CURRENT_REPOSITORY_PATH},
+    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constants::{BDD_PATH, CURRENT_REPOSITORY_PATH},
 };
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset}, entities::conflict::Conflict};
 use std::{collections::HashMap, path::{Path, PathBuf}, fs::{OpenOptions, self}, io::{Write, self, BufRead}};
@@ -138,20 +138,7 @@ impl VersionControlSystem {
         Log::log()
     }
 
-    pub fn git_clone(input: String) -> Result<(), std::io::Error> {
-        let args: Vec<&str> = input.split_whitespace().collect();
-        println!("{:?}", args);
-        let _ = Self::write_bdd_of_repositories(Path::new(&args[2]));
-        let _ = Client::client_(input.clone());
-        let _ = Client::client_(format!("git fetch {}", args[2].to_owned()));
-        Ok(())
-    }
 
-    pub fn fetch(input: String) -> Result<(), std::io::Error> {
-        let _ = Client::client_(input);
-        Ok(())
-    }
-    
     /// Recibe una opcion de branch (crear, borrar, listar)
     /// Segun la opcion, el branch permite crear una rama, borrar una ya existente o listar todas las ramas
     pub fn branch(option: BranchOptions) -> Result<Vec<String>, std::io::Error>{
@@ -177,12 +164,5 @@ impl VersionControlSystem {
 
     pub fn resolve_conflicts(branch: &str, conflicts: HashMap<String, Conflict>) -> Result<HashMap<String, Conflict>,std::io::Error> {
         Merge::merge(branch, conflicts)
-    }
-
-    pub fn pull() -> Result<(),std::io::Error> {
-        let current = Self::read_current_repository()?;
-        Self::fetch(format!("git fetch {}", current.display().to_string()))?;
-        Self::merge(&Init::get_current_branch(&current)?)?;
-        Ok(())
     }
 }
