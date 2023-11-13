@@ -4,6 +4,8 @@ use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, 
 pub struct CommitEntity{
     pub content_type: String,
     pub tree_hash: String,
+    pub author: String,
+    pub committer: String,
     pub message: String,
 }
 
@@ -13,10 +15,7 @@ impl CommitEntity{
         let commit_path = Path::new(&repo_path).join(Random::random());
         let mut commit_file = OpenOptions::new().write(true).create(true).append(true).open(&commit_path)?; 
 
-        let author_user_info = "author ldiazcto <ldiazc@fi.uba.ar> 1699704762 -0300";
-        let commiter_user_info = "committer ldiazcto <ldiazc@fi.uba.ar> 1699704762 -0300";
-
-        let entry = format!("tree {}\n{}\n{}\n\n{}\n", commit.tree_hash, author_user_info, commiter_user_info, commit.message);
+        let entry = format!("tree {}\n{}\n{}\n\n{}\n", commit.tree_hash, commit.author, commit.committer, commit.message);
         commit_file.write_all(entry.as_bytes())?;
         
         let commit_hash = HashObject::hash_object(&commit_path, Init::get_object_path(&repo_path)?, WriteOption::Write, COMMIT_CODE)?;
@@ -27,7 +26,8 @@ impl CommitEntity{
     
     pub fn read(repo_path: &PathBuf, commit_hash: &str) -> Result<CommitEntity, std::io::Error>{
         let commit = CatFile::cat_file(commit_hash, Init::get_object_path(repo_path)?)?;
-        let commit_lines: Vec<&str> = commit.split_whitespace().collect();
-        Ok(CommitEntity{content_type: commit_lines[0].to_string(), tree_hash: commit_lines[1].to_string(), message: commit_lines[5].to_string()})
+        let commit_lines: Vec<&str> = commit.split("\n").collect();
+        let tree_info: Vec<&str> = commit_lines[0].split_whitespace().collect();
+        Ok(CommitEntity{content_type: tree_info[0].to_string(), tree_hash: tree_info[1].to_string(), author: commit_lines[2].to_string(), committer: commit_lines[3].to_string(),  message: commit_lines[5].to_string() })
     }
 }
