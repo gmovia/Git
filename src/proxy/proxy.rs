@@ -5,7 +5,7 @@ pub struct Proxy;
 
 impl Proxy{
 
-    pub fn write_commit(repo_path: PathBuf, commit: CommitEntity) -> Result<String, std::io::Error>{
+    pub fn write_commit(repo_path: PathBuf, commit: &CommitEntity) -> Result<String, std::io::Error>{
         Ok(CommitEntity::write(&repo_path, &commit)?)
     }
 

@@ -1,9 +1,9 @@
-use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, fs::OpenOptions};
+use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap};
 use std::str::FromStr;
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::{BlobEntity, self}, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::{BlobEntity, self}, entity::Entity, tree_entity::TreeEntity, commit_entity::{CommitEntity, self}}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE, COMMIT_CODE_NUMBER, NULL}};
 pub struct Clone;
 
 impl Clone{
@@ -45,7 +45,15 @@ impl Clone{
     fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>, repo: PathBuf) -> Result<(), std::io::Error>  {
         let mut objects_processed: Vec<(u8, String)> = Vec::new();
         let mut branch_name = String::new(); // Initialize branch_name
+        let mut branchs: HashMap<String, String> = HashMap::new();
         println!("--------------------LIST REFERENCESSSS ---> {:?}\n", list_refs);
+
+        objects_processed = Self::process_folder(objects.to_vec());
+        for obj in &objects_processed{
+            println!("-->{:?}", obj);
+        }
+        let commits_created = Self::create_folders(objects_processed.clone(), &repo);
+
         for item in list_refs {
             if item.contains("HEAD") {
                 continue;
@@ -56,19 +64,14 @@ impl Clone{
                 let ref_part = parts[1];
                     if ref_part.starts_with("refs/") {
                         branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
-                        let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
+                        let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.clone().trim_end_matches('\n')));
                         println!("Commit: {}, Branch: {}", commit, branch_name);
-                    
-                    objects_processed = Self::process_folder(objects.to_vec());
-                    for obj in &objects_processed{
-                        println!("-->{:?}", obj);
-                    }
+                        branchs.insert(commit.to_owned(), branch_name);
                 }
             }
-            let hash_commit_branch = Self::create_folders(objects_processed.clone(), &repo, &branch_name);
-            let _ = Self::write_commit_log(&repo, &branch_name, &hash_commit_branch, objects);
+            let _ = Self::write_commit_log(&repo, branchs.clone(), &commits_created, objects_processed.clone());
         }
-        Checkout::update_cd(&repo)?;
+        Checkout::update_cd(&repo)?; //Esto recien me crea los files.txt en working directory si tiene en la tabla de commits lleno
         Ok(())
     }
 
@@ -82,9 +85,7 @@ impl Clone{
                let content = String::from_utf8_lossy(inner_vec);
                 if content.contains(&10064.to_string()) {
                     let mut reader = inner_vec.as_slice();
-                    println!("INNERR VEC----->>>>>>>>{:?}\n", inner_vec);
                     if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
-                        println!("ENTRIES DE 85 {:?}\n", entries);
                         let entry_string: String = entries
                             .iter()
                             .map(|(mode, name, sha1)| {
@@ -117,12 +118,23 @@ impl Clone{
         objects_processed
     }
 
-     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf, branch_name: &str) -> String {
+     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> HashMap<String, CommitEntity>{
         let mut hash_tree = String::new();     
         let mut hash_commit = String::new();     
-        
+        let mut commits_created: HashMap<String, CommitEntity> = HashMap::new();
+
         for (index, content) in objects.iter() {
             match *index {
+                COMMIT_CODE_NUMBER => {
+                    match Self::create_commit_folder(&content, repo) {
+                        Ok((hash, commit_entity)) => {
+                            commits_created.insert(hash.clone(), commit_entity);
+                        },
+                        Err(e) => {
+                            println!("Error creating commit: {}", e);
+                        },
+                    }
+                }
                 TREE_CODE_NUMBER => {
                     let result = Self::create_tree_folder(&content, repo);
                     match result {
@@ -134,25 +146,48 @@ impl Clone{
                 _ => println!("Type not identify {}", index),
             }
         }
-        let result = Self::create_commit_folder(&hash_tree, repo);
-        match result {
-            Ok(value) => hash_commit = value,
-            Err(e) => println!("Error commit folder {}", e),
-        }
-        //let _ = Self::write_commit_log(repo, branch_name, &hash_commit, objects);
-        hash_commit
+        commits_created
     }
     
-    fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<String, io::Error>{
-        println!("CONTENIDO que me llega de la clonación {} ", content);
-        let commit_entity = CommitEntity{
-            content_type: "commit".to_string(),
-            tree_hash: content.to_string(),
-            message: "un commit".to_string(),
+    fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<(String, CommitEntity), std::io::Error>{
+        let partes: Vec<&str> = content.split("\n").collect();
+        let commit_entity: CommitEntity;
+
+        commit_entity = CommitEntity{
+            content_type: "commit".trim_end_matches("\n").to_string(),
+            tree_hash: partes[0].trim_end_matches("\n").trim_start_matches("tree ").to_string(),
+            message: partes[4..].join("\n").trim_start_matches("\n").trim_end_matches("\n").to_string(), 
+            author: partes[1].trim_end_matches("\n").trim_start_matches("\n").to_string(), 
+            committer: partes[2].trim_end_matches("\n").to_string(),
         };
-        let hash_commit = Proxy::write_commit(repo.clone(), commit_entity);
-        hash_commit
-    } 
+
+        /*  
+        if !content.contains("parent"){
+            let commit_entity = CommitEntity{
+                    content_type: "commit".to_string(),
+                    tree_hash: partes[0].to_string(), // La primera parte es el hash del árbol
+                    message: partes[4..].join("\n").trim_start_matches("\n").to_string(), // La quinta parte en adelante es el mensaje del commit, se unen con \n y se elimina el \n inicial
+                    author: partes[1].to_string(), // La segunda parte es el autor del commit
+                    committer: partes[2].to_string(),
+                    //parent: "".to_string(), // La tercera parte es el committer del commit
+                };
+            }
+           else{
+                let commit_entity = CommitEntity{
+                    content_type: "commit".to_string(),
+                    tree_hash: partes[0].to_string(),
+                    message: partes[5..].join("\n").trim_start_matches("\n").to_string(), 
+                    author: partes[2].to_string(), 
+                    committer: partes[3].to_string(),
+                    parent: partes[1].to_string(),
+                };
+        } */
+ 
+        let hash_commit = Proxy::write_commit(repo.clone(), &commit_entity)?;
+
+        Ok((hash_commit, commit_entity))
+    }
+    
 
     fn create_blob_folder(content: &String, repo: &PathBuf){
         let _ = Proxy::write_blob(repo.clone(),content);
@@ -186,38 +221,36 @@ impl Clone{
                 entities.push(Entity::Tree(tree_entity));
             }
         }
-    
+        println!("MI VECCC DE ENTIDADES BLOBS --- {:?}\n", entities);
         let hash_tree = Proxy::write_tree(repo.clone(), entities)?;
         Ok(hash_tree)
     }
     
 
-    fn write_commit_log( repo: &Path, branch_name: &str, commit: &str, objects: &Vec<(u8,Vec<u8>)>,) -> Result<(), std::io::Error> {
-        let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
-        let file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .append(true)
-            .open(&logs_path)?;
-    
-        let mut writer = BufWriter::new(file);
-        let random_number: u8 = rand::thread_rng().gen_range(1..=9);
-  /*    
-        let mut datetime: String = String::new();
-        let mut message: String = String::new();
-    
-       for (index, item) in &objects{
-            if *index == 1 {
-                println!("ESTE ES EL ITEMMMM --- {:?}", item);
-               let msg = Self::extract_message(&item.as_str());
-               message = msg.to_string();
+    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+        println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
+        println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
+
+        for (hash_commit_branch, value) in branchs{
+            if commits_created.contains_key(&hash_commit_branch) {
+                println!("HUBO MATCHHHHHHH\n");
+                let logs_path = repo.join(".rust_git").join("logs").join(value.trim_end_matches("\n"));
+                let file = OpenOptions::new()
+                    .create(true)
+                    .write(true)
+                    .append(true)
+                    .open(&logs_path)?;
+            
+                let mut writer = BufWriter::new(file);
+                let random_number: u8 = rand::thread_rng().gen_range(1..=9);
+                
+                if let Some(commit_entity) = commits_created.get(&hash_commit_branch) {
+                    let format_commit = format!("{}-{}-{}-{}", random_number, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                    println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
+                    writeln!(writer, "{}", format_commit)?;
+                }
             }
-        } */
-        println!("WRITEEEE LOGGGGGGGGGGGGGG\n");
-        let format_commit = format!("{}-{}-{}-{}", random_number, commit, "message", "2023-11-08 19:26:10.805633340 -03:00");
-        println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, branch_name);
-        writeln!(writer, "{}", format_commit)?;
-    
+        }
         Ok(())
     }
     

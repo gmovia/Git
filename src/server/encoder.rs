@@ -64,8 +64,45 @@ impl Encoder {
         }
         Ok(packfile)
     }
+/* 
+    fn create_fetch_packfile(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
+        let mut packfile = Vec::new();
+        Self::create_header(&mut packfile, path)?;        
+        let current = VersionControlSystem::read_current_repository()?;
+        let formatted_path = format!("test_folder/{}", current.display().to_string()); // Puede ser aca el error?
+        let path_server = Path::new(&formatted_path);
+
+        
+        let mut objects_to_send: Vec<(String,String)> = Vec::new();
+        objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages, &mut objects_to_send)?;
+        println!("DATA TO SEND: {:?}", objects_to_send);
 
 
+        let mut objects_to_encode: Vec<(String,usize,usize)> = Vec::new();
+        for objects in objects_to_send {
+            let path = format!("{}/.rust_git/objects", path_server.display());
+            let content = CatFile::cat_file(&objects.1, (&path).into())?;
+            let tree_path = format!("{}/{}/{}",path,  &objects.1[0..2], &objects.1[2..]);
+            objects_to_encode.push((tree_path, 2, content.len() as usize));
+            Self::get_blobs(content, &mut objects_to_encode, path_server)?;
+        }
+        println!("OBJECTS TO ENCODE: {:?}", objects_to_encode);
+
+        for objects in objects_to_encode.iter().rev() {
+            let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
+            for object in object_type {
+                packfile.push(object);
+            }
+            let path = Path::new(&objects.0);
+            let compress_data = Self::compress_object((&path).to_path_buf())?;
+            for byte in compress_data {
+                packfile.push(byte);    
+            }
+        }
+
+        Ok(packfile)
+    }
+*/
     fn get_blobs(content: String, objects_to_encode: &mut Vec<(String,usize,usize)>, path: &Path) -> Result<(),std::io::Error> {
         let mut blobs: Vec<&str> = content.split("\n").collect();
         blobs.pop();
