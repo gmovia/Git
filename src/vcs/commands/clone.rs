@@ -109,18 +109,21 @@ impl Clone{
         objects_processed
     }
 
-     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> Vec<String> {
+     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> HashMap<String, CommitEntity>{
         let mut hash_tree = String::new();     
         let mut hash_commit = String::new();     
-        let mut commits_created = Vec::new();
+        let mut commits_created: HashMap<String, CommitEntity> = HashMap::new();
 
         for (index, content) in objects.iter() {
             match *index {
                 COMMIT_CODE_NUMBER => {
-                    let result = Self::create_commit_folder(&content, repo);
-                    match result{
-                        Ok(value) => commits_created.push(value),
-                        Err(e) => println!("Error creating commit {}", e),
+                    match Self::create_commit_folder(&content, repo) {
+                        Ok((hash, commit_entity)) => {
+                            commits_created.insert(hash.clone(), commit_entity);
+                        },
+                        Err(e) => {
+                            println!("Error creating commit: {}", e);
+                        },
                     }
                 }
                 TREE_CODE_NUMBER => {
@@ -137,12 +140,12 @@ impl Clone{
         commits_created
     }
     
-    fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<String, io::Error>{
+    fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<(String, CommitEntity), std::io::Error>{
         // Separar la cadena por \n y guardar las partes en un vector
         let partes: Vec<&str> = content.split("\n").collect();
         // Crear la entidad de commit con los datos de la cadena
-        let commit_entity: CommitEntity;
-        
+        let mut commit_entity: CommitEntity;
+
         if !content.contains("parent"){
             let commit_entity = CommitEntity{
                     content_type: "commit".to_string(),
@@ -163,9 +166,9 @@ impl Clone{
                 };
         }
  
-        // Escribir el commit en el repositorio y devolver el hash del commit
-        let hash_commit = Proxy::write_commit(repo.clone(), commit_entity);
-        hash_commit
+        let hash_commit = Proxy::write_commit(repo.clone(), commit_entity)?;
+
+        Ok((hash_commit, commit_entity))
     }
     
 
@@ -206,10 +209,10 @@ impl Clone{
     }
     
 
-    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created: &Vec<String>, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         
         for (hash_commit_branch, value) in branchs{
-            if commits_created.contains(&hash_commit_branch){
+            if commits_created.contains_key(&hash_commit_branch) {
                 let logs_path = repo.join(".rust_git").join("logs").join(value.trim_end_matches("\n"));
                 let file = OpenOptions::new()
                     .create(true)
@@ -219,10 +222,12 @@ impl Clone{
             
                 let mut writer = BufWriter::new(file);
                 let random_number: u8 = rand::thread_rng().gen_range(1..=9);
-        
-                let format_commit = format!("{}-{}-{}-{}", random_number, hash_commit_branch, "message", "2023-11-08 19:26:10.805633340 -03:00");
-                println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
-                writeln!(writer, "{}", format_commit)?; 
+                
+                if let Some(commit_entity) = commits_created.get(&hash_commit_branch) {
+                    let format_commit = format!("{}-{}-{}-{}", random_number, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                    println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
+                    writeln!(writer, "{}", format_commit)?;
+                }
             }
         }
         Ok(())
