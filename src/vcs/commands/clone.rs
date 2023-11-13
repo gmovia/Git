@@ -79,7 +79,7 @@ impl Clone{
                 println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
                 objects_processed.push((*number, String::from_utf8_lossy(inner_vec).to_string()));
             }else{
-               let content = String::from_utf8_lossy(inner_vec);
+               let _content = String::from_utf8_lossy(inner_vec);
                     let mut reader = inner_vec.as_slice();
                     if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
                         let entry_string: String = entries
