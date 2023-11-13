@@ -4,7 +4,7 @@ use crate::{
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository},
 };
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
 use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
@@ -76,4 +76,8 @@ impl VersionControlSystem {
         Merge::merge(branch, conflicts)
     }
 
+    pub fn ls_files(option: LsFilesOptions) -> Result<Vec<String>,std::io::Error>{
+        let current = CurrentRepository::read()?;
+        LsFiles::ls_files(option, &current)
+    }
 }

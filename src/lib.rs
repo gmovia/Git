@@ -14,6 +14,7 @@ pub mod handlers{
     pub mod log;
     pub mod commit;
     pub mod merge;
+    pub mod ls_files;
 }
 
 pub mod proxy{
@@ -74,6 +75,7 @@ pub mod vcs{
         pub mod merge;
         pub mod diff;
         pub mod reset;
+        pub mod ls_files;
     }
 
     pub mod sets{

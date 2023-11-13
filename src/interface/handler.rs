@@ -2,7 +2,7 @@
 use std::{fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{CURRENT, INCOMING, BOTH, BLOB_CODE}};
 
-use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository}, draw::changes_and_staging_area};
+use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons}, draw::changes_and_staging_area};
 use gtk::{prelude::*, Button};
 
 pub fn handle_repository(interface: &RustInterface) {
@@ -372,7 +372,38 @@ pub fn add_both(button: &gtk::Button, conflict: &Conflict, dialog: &gtk::Dialog,
     
 }
 
-fn add_message(m_changes: &gtk::Box, message: &String) {
+pub fn handle_ls_files(interface: &RustInterface) {
+    let files_dialog = interface.ls_files_dialog.clone();
+    let rc_box = interface.selection_box.clone();
+
+    interface.selection_box.set_visible(false);
+
+    interface.files.connect_clicked({
+        let rc_box = rc_box.clone();
+        move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            files_dialog.run();
+            files_dialog.hide();
+        }
+    });
+
+    handle_ls_files_buttons(interface,&interface.all);
+    handle_ls_files_buttons(interface,&interface.o);
+    handle_ls_files_buttons(interface,&interface.m);
+    handle_ls_files_buttons(interface,&interface.c);
+    handle_ls_files_buttons(interface,&interface.d);
+
+    interface.close_files.connect_clicked({
+        let dialog_2 = interface.ls_files_dialog.clone();
+        move |_| {
+            dialog_2.hide();
+    }});
+
+}
+
+pub fn add_message(m_changes: &gtk::Box, message: &String) {
     let label = gtk::Label::new(Some(message));
     label.set_visible(true);
     label.set_xalign(0.5);
