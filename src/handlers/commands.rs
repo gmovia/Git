@@ -7,7 +7,8 @@ use crate::handlers::branch::handler_branch;
 use crate::handlers::checkout::handler_checkout;
 use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
-use super::merge::handler_merge;
+use crate::handlers::merge::handler_merge;
+use crate::vcs::version_control_system::VersionControlSystem;
 
 pub fn handler_command<'a>(input: &str) -> String{
     let input = input.trim(); 
