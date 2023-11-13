@@ -1,9 +1,8 @@
-use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap};
-use std::str::FromStr;
+use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::PathBuf, fs::OpenOptions, collections::HashMap};
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::{BlobEntity, self}, entity::Entity, tree_entity::TreeEntity, commit_entity::{CommitEntity, self}}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE, COMMIT_CODE_NUMBER, NULL}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::BlobEntity, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER}};
 pub struct Clone;
 
 impl Clone{
@@ -43,12 +42,10 @@ impl Clone{
     }
 
     fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>, repo: PathBuf) -> Result<(), std::io::Error>  {
-        let mut objects_processed: Vec<(u8, String)> = Vec::new();
-        let mut branch_name = String::new(); // Initialize branch_name
         let mut branchs: HashMap<String, String> = HashMap::new();
         println!("--------------------LIST REFERENCESSSS ---> {:?}\n", list_refs);
 
-        objects_processed = Self::process_folder(objects.to_vec());
+        let objects_processed = Self::process_folder(objects.to_vec());
         for obj in &objects_processed{
             println!("-->{:?}", obj);
         }
@@ -63,7 +60,7 @@ impl Clone{
                 let commit = parts[0];
                 let ref_part = parts[1];
                     if ref_part.starts_with("refs/") {
-                        branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
+                        let branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
                         let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.clone().trim_end_matches('\n')));
                         println!("Commit: {}, Branch: {}", commit, branch_name);
                         branchs.insert(commit.to_owned(), branch_name);
@@ -110,8 +107,6 @@ impl Clone{
     }
 
      fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> HashMap<String, CommitEntity>{
-        let mut hash_tree = String::new();     
-        let mut hash_commit = String::new();     
         let mut commits_created: HashMap<String, CommitEntity> = HashMap::new();
 
         for (index, content) in objects.iter() {
@@ -127,10 +122,8 @@ impl Clone{
                     }
                 }
                 TREE_CODE_NUMBER => {
-                    let result = Self::create_tree_folder(&content, repo);
-                    match result {
-                        Ok(value) => hash_tree = value,
-                        Err(e) => println!("Error creating tree {}", e),
+                    if let Err(e) = Self::create_tree_folder(&content, repo) {
+                        println!("Error creating tree {}", e);
                     }
                 },
                 BLOB_CODE_NUMBER => Self::create_blob_folder(&content, repo),
@@ -218,7 +211,7 @@ impl Clone{
     }
     
 
-    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
         println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
 
@@ -317,10 +310,6 @@ impl Clone{
         Ok(String::from_utf8_lossy(&buffer).to_string())
     }
 
-
-    fn from_octal_string(s: &str) -> Result<u32, std::num::ParseIntError> {
-        u32::from_str_radix(s, 8)
-    }
 
     fn read_tree_entry<R: Read>(reader: &mut R) -> io::Result<(String, String, Vec<u8>)> {
         let mut mode_bytes = [0; 6];
