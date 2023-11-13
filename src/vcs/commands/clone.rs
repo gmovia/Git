@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::{BlobEntity, self}, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE, COMMIT_CODE_NUMBER}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::{BlobEntity, self}, entity::Entity, tree_entity::TreeEntity, commit_entity::{CommitEntity, self}}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE, COMMIT_CODE_NUMBER, NULL}};
 pub struct Clone;
 
 impl Clone{
@@ -45,14 +45,14 @@ impl Clone{
     fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>, repo: PathBuf) -> Result<(), std::io::Error>  {
         let mut objects_processed: Vec<(u8, String)> = Vec::new();
         let mut branch_name = String::new(); // Initialize branch_name
+        let mut branchs: HashMap<String, String> = HashMap::new();
         println!("--------------------LIST REFERENCESSSS ---> {:?}\n", list_refs);
 
         objects_processed = Self::process_folder(objects.to_vec());
         for obj in &objects_processed{
             println!("-->{:?}", obj);
         }
-
-        let commits_to_create = Self::create_folders(objects_processed.clone(), &repo);
+        let commits_created = Self::create_folders(objects_processed.clone(), &repo);
 
         for item in list_refs {
             if item.contains("HEAD") {
@@ -66,9 +66,10 @@ impl Clone{
                         branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
                         let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.trim_end_matches('\n')));
                         println!("Commit: {}, Branch: {}", commit, branch_name);
+                        branchs.insert(commit.to_owned(), branch_name);
                 }
             }
-            let _ = Self::write_commit_log(&repo, &branch_name, &commits_to_create, objects_processed.clone());
+            let _ = Self::write_commit_log(&repo, branchs, &commits_created, objects_processed.clone());
         }
         Checkout::update_cd(&repo)?;
         Ok(())
@@ -111,42 +112,62 @@ impl Clone{
      fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> Vec<String> {
         let mut hash_tree = String::new();     
         let mut hash_commit = String::new();     
-        let mut commits_to_create = Vec::new();
+        let mut commits_created = Vec::new();
 
         for (index, content) in objects.iter() {
             match *index {
+                COMMIT_CODE_NUMBER => {
+                    let result = Self::create_commit_folder(&content, repo);
+                    match result{
+                        Ok(value) => commits_created.push(value),
+                        Err(e) => println!("Error creating commit {}", e),
+                    }
+                }
                 TREE_CODE_NUMBER => {
                     let result = Self::create_tree_folder(&content, repo);
                     match result {
                         Ok(value) => hash_tree = value,
                         Err(e) => println!("Error creating tree {}", e),
                     }
-                    commits_to_create.push(hash_tree.clone());
-
                 },
                 BLOB_CODE_NUMBER => Self::create_blob_folder(&content, repo),
                 _ => println!("Type not identify {}", index),
             }
         }
-        commits_to_create
+        commits_created
     }
-    /*         let result = Self::create_commit_folder(&hash_tree, repo, );
-            match result {
-                Ok(value) => hash_commit = value,
-                Err(e) => println!("Error commit folder {}", e),
-            } */
-            //let _ = Self::write_commit_log(repo, branch_name, &hash_commit, objects);
     
-    fn create_commit_folder(hash_tree: &String, repo: &PathBuf, content: &String) -> Result<String, io::Error>{
-        let commit_entity = CommitEntity{
-            content_type: "commit".to_string(),
-            tree_hash: hash_tree.to_string(),
-            message: "un commit".to_string(),
-            content: content.to_string(),
-        };
+    fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<String, io::Error>{
+        // Separar la cadena por \n y guardar las partes en un vector
+        let partes: Vec<&str> = content.split("\n").collect();
+        // Crear la entidad de commit con los datos de la cadena
+        let commit_entity: CommitEntity;
+        
+        if !content.contains("parent"){
+            let commit_entity = CommitEntity{
+                    content_type: "commit".to_string(),
+                    tree_hash: partes[0].to_string(), // La primera parte es el hash del árbol
+                    message: partes[4..].join("\n").trim_start_matches("\n").to_string(), // La quinta parte en adelante es el mensaje del commit, se unen con \n y se elimina el \n inicial
+                    author: partes[1].to_string(), // La segunda parte es el autor del commit
+                    committer: partes[2].to_string(),
+                    parent: "".to_string(), // La tercera parte es el committer del commit
+                };
+            }else{
+                let commit_entity = CommitEntity{
+                    content_type: "commit".to_string(),
+                    tree_hash: partes[0].to_string(),
+                    message: partes[5..].join("\n").trim_start_matches("\n").to_string(), 
+                    author: partes[2].to_string(), 
+                    committer: partes[3].to_string(),
+                    parent: partes[1].to_string(),
+                };
+        }
+ 
+        // Escribir el commit en el repositorio y devolver el hash del commit
         let hash_commit = Proxy::write_commit(repo.clone(), commit_entity);
         hash_commit
-    } 
+    }
+    
 
     fn create_blob_folder(content: &String, repo: &PathBuf){
         let _ = Proxy::write_blob(repo.clone(),content);
@@ -185,42 +206,25 @@ impl Clone{
     }
     
 
-    fn write_commit_log( repo: &PathBuf, branch_name: &str, list_hash_tree: &Vec<String>,objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
-        let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
-        let file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .append(true)
-            .open(&logs_path)?;
-    
-        let mut writer = BufWriter::new(file);
-        let random_number: u8 = rand::thread_rng().gen_range(1..=9);
-
-        let mut hash_commit = String::new();     
-
-        for (tipo, contenido) in objects {
-            if tipo == COMMIT_CODE_NUMBER {
-                let contenido_lines: Vec<&str> = contenido.split('\n').collect();
-                if contenido_lines.len() >= 3 {
-                    let hash_line = contenido_lines[1];
-                    let hash = hash_line.trim_start_matches("tree ").trim();
-    
-                    if list_hash_tree.contains(&hash.to_string()) {
-                        let rest_content: String = contenido_lines[2..].join("\n");
-                        let result = Self::create_commit_folder(&hash.to_string(), repo, &rest_content);
-                        match result {
-                            Ok(value) => {
-                                let hash_commit = value;
-                            }
-                            Err(e) => println!("Error commit folder {}", e),
-                        }
-                    }
-                }
+    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created: &Vec<String>, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+        
+        for (hash_commit_branch, value) in branchs{
+            if commits_created.contains(&hash_commit_branch){
+                let logs_path = repo.join(".rust_git").join("logs").join(value.trim_end_matches("\n"));
+                let file = OpenOptions::new()
+                    .create(true)
+                    .write(true)
+                    .append(true)
+                    .open(&logs_path)?;
+            
+                let mut writer = BufWriter::new(file);
+                let random_number: u8 = rand::thread_rng().gen_range(1..=9);
+        
+                let format_commit = format!("{}-{}-{}-{}", random_number, hash_commit_branch, "message", "2023-11-08 19:26:10.805633340 -03:00");
+                println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
+                writeln!(writer, "{}", format_commit)?; 
             }
         }
-/*         let format_commit = format!("{}-{}-{}-{}", random_number, commit, "message", "2023-11-08 19:26:10.805633340 -03:00");
-        println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, branch_name);
-        writeln!(writer, "{}", format_commit)?; */
         Ok(())
     }
     
