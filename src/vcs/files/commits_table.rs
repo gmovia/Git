@@ -39,7 +39,11 @@ impl CommitsTable{
 
         let tree_hash = TreeEntity::write(&current, &entities)?;
 
-        let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), message: message.clone()};
+        // LEER DE ALGUN ARCHIVO LA DATA!
+        let author = "author gmovia <gmovia@fi.uba.ar> 1699842870 -0300";
+        let committer = "committer gmovia <gmovia@fi.uba.ar> 1699842870 -0300";
+
+        let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
         let commit_hash = CommitEntity::write(&current, &commit_entity)?;
 
         let commit = format!("{}-{}-{}-{}\n", id, commit_hash, message, current_time); 
