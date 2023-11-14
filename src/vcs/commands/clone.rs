@@ -1,4 +1,4 @@
-use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::PathBuf, fs::OpenOptions, collections::HashMap};
+use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap};
 
 use rand::Rng;
 
@@ -74,33 +74,58 @@ impl Clone{
         Ok(())
     }
 
+    fn process_non_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
+        println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
+        (number, String::from_utf8_lossy(inner_vec).to_string())
+    }
+
+    fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
+        if let Ok(_) = std::str::from_utf8(inner_vec) {
+            let blobs: Vec<String> = String::from_utf8_lossy(inner_vec).split("\n").map(String::from).collect();
+            let mut string_to_send = String::new();
+            for blob in &blobs {
+                let blob_parts: Vec<&str> = blob.split(" ").collect();
+                if blob_parts.len() == 3 {
+                    let path = Path::new(blob_parts[1]);
+                    if let Some(file_name) = path.file_name() {
+                        string_to_send = format!("{}{}-{}-{}\n", string_to_send, blob_parts[0], file_name.to_string_lossy(), blob_parts[2]);  
+                    }
+                }                      
+            }
+            (number, string_to_send)
+        } else {
+            let mut reader = inner_vec.as_slice();
+        
+            if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
+                let entry_string: String = entries
+                    .iter()
+                    .map(|(mode, name, sha1)| {
+                        let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
+                        format!("{}-{}-{}", mode, name, hex_string)
+                    })
+                    .collect::<Vec<String>>()
+                    .join("\n");
+                (number, entry_string)
+            } else {
+                eprintln!("Error decoding the tree object");
+                (number, String::new())
+            }
+        }
+    }
+
     fn process_folder(objects: Vec<(u8,Vec<u8>)>) -> Vec<(u8, String)> {
         let mut objects_processed : Vec<(u8, String)> = Vec::new();
         for (number, inner_vec) in &objects {
-            if *number != 2 {
-                println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
-                objects_processed.push((*number, String::from_utf8_lossy(inner_vec).to_string()));
+            if *number != TREE_CODE_NUMBER {
+                objects_processed.push(Self::process_non_tree_object(*number, inner_vec));
             }else{
-               let _content = String::from_utf8_lossy(inner_vec);
-                    let mut reader = inner_vec.as_slice();
-                    if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
-                        let entry_string: String = entries
-                            .iter()
-                            .map(|(mode, name, sha1)| {
-                                let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
-                                format!("{}-{}-{}",mode, name, hex_string)
-                            })
-                            .collect::<Vec<String>>()
-                            .join("\n");
-                        objects_processed.push((*number, entry_string));
-                    }
-                     else {
-                        eprintln!("Error decoding the tree object");
-                    }
+                objects_processed.push(Self::process_tree_object(*number, inner_vec));
             }
         }
         objects_processed
     }
+
+
 
      fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> HashMap<String, CommitEntity>{
         let mut commits_created: HashMap<String, CommitEntity> = HashMap::new();
@@ -192,10 +217,11 @@ impl Clone{
             } else {
                 let tree_entity = TreeEntity {
                     content_type: "tree".to_string(),
-                    path: format!("{}/{}", repo.display(), path.to_string()),
+                    path: format!("{}", path.to_string()),
                     tree_hash: entity_hash.to_string(),
                     entities: Vec::new(), // Initialize with an empty vector
                 };
+                println!("-----------_>PATHHHH DEL TREEEE ENTRYYYY --> {}\n", tree_entity.path);
                 entities.push(Entity::Tree(tree_entity));
             }
         }
