@@ -6,7 +6,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_ls_files};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -64,6 +64,15 @@ pub struct RustInterface {
     pub fetch: gtk::Button,
     pub push: gtk::Button,
     pub pull: gtk::Button,
+    pub files: gtk::Button,
+    pub ls_files_dialog: gtk::Dialog,
+    pub all: gtk::Button,
+    pub o: gtk::Button,
+    pub m: gtk::Button,
+    pub c: gtk::Button,
+    pub d: gtk::Button,
+    pub selection_box: gtk::Box,
+    pub close_files: gtk::Button,
 }
 
 impl RustInterface {
@@ -134,6 +143,15 @@ impl RustInterface {
             fetch: builder.object("fetch").unwrap(),
             push: builder.object("pull").unwrap(),
             pull: builder.object("pull").unwrap(),
+            files: builder.object("ls-files").unwrap(),
+            ls_files_dialog: builder.object("ls-files-dialog").unwrap(),
+            all: builder.object("all-files").unwrap(),
+            o: builder.object("-o").unwrap(),
+            m: builder.object("-m").unwrap(),
+            c: builder.object("-c").unwrap(),
+            d: builder.object("-d").unwrap(),
+            selection_box: builder.object("ls-files-box").unwrap(),
+            close_files: builder.object("close-files").unwrap(),
         }
     }
     
@@ -153,6 +171,7 @@ impl RustInterface {
         handle_rm(&self);
         handle_merge(&self);
         handle_repository(&self);
+        handle_ls_files(&self);
 
         self.window.show_all();   
         gtk::main();
@@ -160,4 +179,3 @@ impl RustInterface {
         Ok(())
     }
 }
-

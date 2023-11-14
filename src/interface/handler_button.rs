@@ -1,9 +1,9 @@
 
 use std::path::Path;
 
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions, ls_files::LsFilesOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}};
 
-use super::{interface::RustInterface, draw::{branches, repositories}};
+use super::{interface::RustInterface, draw::{branches, repositories}, handler::add_message};
 
 use gtk::prelude::*;
 
@@ -141,5 +141,53 @@ pub fn handle_rm_button(interface: &RustInterface) {
             rm_entry1.set_text("");
             button.set_sensitive(false);
         }
+    });
+}
+
+pub fn handle_ls_files_buttons(interface: &RustInterface, button_file: &gtk::Button) {
+    let rc_box = interface.selection_box.clone();
+    button_file.connect_clicked({
+        let rc_box = rc_box.clone();
+       move |button| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            if let Some(label) = button.label() {
+                match label.as_str() {
+                    "all" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::EverythingInVCS) {
+                                for entry in files {
+                                    let message = format!("{}\n",entry);
+                                    add_message(&rc_box, &message);
+                                    add_message(&rc_box, &"\n".to_string());
+                                }}},
+                    "-o" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::OnlyUntracked) {
+                                for entry in files {
+                                    let message = format!("{}\n",entry);
+                                    add_message(&rc_box, &message);
+                                    add_message(&rc_box, &"\n".to_string());
+                                }}},
+                    "-m" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::OnlyModified) {
+                                for entry in files {
+                                    let message = format!("{}\n",entry);
+                                    add_message(&rc_box, &message);
+                                    add_message(&rc_box, &"\n".to_string());
+                                }}},
+                    "-d" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::OnlyDeleted) {
+                                for entry in files {
+                                    let message = format!("{}\n",entry);
+                                    add_message(&rc_box, &message);
+                                    add_message(&rc_box, &"\n".to_string());
+                                }}},
+                    "-c" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::OnlyStaging) {
+                                for entry in files {
+                                    let message = format!("{}\n",entry);
+                                    add_message(&rc_box, &message);
+                                    add_message(&rc_box, &"\n".to_string());
+                                }}},
+                    _ => {},
+                }
+            }
+            rc_box.set_visible(true);
+       } 
     });
 }

@@ -20,6 +20,7 @@ pub mod vcs{
     pub mod reset;
     pub mod repository;
     pub mod clone;
+    pub mod ls_files;
 }
 
 pub mod tests_functions;
