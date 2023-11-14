@@ -83,9 +83,8 @@ impl Clone{
                 objects_processed.push((*number, String::from_utf8_lossy(inner_vec).to_string()));
             }else{
                 println!("INNER VECCCCCC ----------> {:?}", String::from_utf8_lossy(inner_vec));
-                let non_utf8_bytes = "hello".as_bytes().to_vec();
 
-                if let Ok(_) = std::str::from_utf8(non_utf8_bytes.as_slice()) {
+                if let Ok(_) = std::str::from_utf8(inner_vec) {
                     // La tira de bytes es UTF-8 válida
                     println!("EXCELENTE");
                     let blobs: Vec<String> = String::from_utf8_lossy(inner_vec).split("\n").map(String::from).collect();
