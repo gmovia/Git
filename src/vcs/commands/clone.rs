@@ -65,7 +65,7 @@ impl Clone{
                         let branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
                         let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.clone().trim_end_matches('\n')));
                         println!("Commit: {}, Branch: {}", commit, branch_name);
-                        branchs.insert(commit.to_owned(), branch_name);
+                        branchs.insert(branch_name, commit.to_owned());
                 }
             }
         }
@@ -209,9 +209,10 @@ impl Clone{
         println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
         println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
 
-        for (hash_commit_branch, value) in branchs{ // 2 hash, nombre_rama
-            if commits_created.contains_key(&hash_commit_branch) {
-                let logs_path = repo.join(".rust_git").join("logs").join(value.trim_end_matches("\n"));
+        for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
+
+            if commits_created.contains_key(hash_commit_branch) {
+                let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
                 let file = OpenOptions::new()
                     .create(true)
                     .write(true)
@@ -221,12 +222,12 @@ impl Clone{
                 let _writer = BufWriter::new(file);
                 let random_number: u8 = rand::thread_rng().gen_range(1..=9);
 
-                if let Some(commit_entity) = commits_created.get(&hash_commit_branch) {
+                if let Some(commit_entity) = commits_created.get(hash_commit_branch) {
                     let date = Self::get_date(&commit_entity.author);
                     let format_commit = format!("{}-{}-{}-{}-{}", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
                     println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
-                    let mut a: HashMap<String, String> = HashMap::new();
-                    a.insert(hash_commit_branch, value);
+                    let mut a: Vec<(String, String)> = Vec::new();
+                    a.push((branch_name.to_string(), hash_commit_branch.to_string()));
                     let _ = Self::complete_commit_table(repo, a, commits_created);
                 }
             }
@@ -234,9 +235,9 @@ impl Clone{
         Ok(())
     }
 
-    fn complete_commit_table(repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
-        //hash, branch_name
-        for(hash_commit_branch, branch_name)in branchs {
+    fn complete_commit_table(repo: &PathBuf, branchs: Vec<(String, String)>, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
+        //branch_name, hash
+        for(branch_name, hash_commit_branch)in branchs {
             let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
             let mut file = OpenOptions::new()
                 .create(true)
@@ -248,24 +249,24 @@ impl Clone{
             if content.contains("parent"){
                 let part:Vec<&str> = content.split("\n").collect();
                 let hash_parent = part[1].trim_start_matches("parent ");
-                let mut a: HashMap<String, String> = HashMap::new();
+                let mut a: Vec<(String, String)> = Vec::new();
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch){
                     let random_number: u8 = rand::thread_rng().gen_range(1..=9);
                     let date = Self::get_date(&commit_entity.author);
                     let format_commit = format!("{}-{}-{}-{}-{}\n", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
-                    a.insert(hash_parent.to_string(), branch_name);
+                    a.push((branch_name.to_string(), hash_parent.to_string()));
                     let _ = Self::complete_commit_table(repo, a, commits_created);
                     file.write_all(format_commit.as_bytes())?;
                 }
             }else{
                 let part:Vec<&str> = content.split("\n").collect();
                 let hash_parent = part[1].trim_start_matches("parent ");
-                let mut a: HashMap<String, String> = HashMap::new();
+                let mut a: Vec<(String, String)> = Vec::new();
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch){
                     let random_number: u8 = rand::thread_rng().gen_range(1..=9);
                     let date = Self::get_date(&commit_entity.author);
                     let format_commit = format!("{}-{}-{}-{}-{}\n", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
-                    a.insert(hash_parent.to_string(), branch_name);
+                    a.push((branch_name.to_string(), hash_parent.to_string()));
                     file.write_all(format_commit.as_bytes())?;
                 }
             }
