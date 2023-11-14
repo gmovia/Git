@@ -9,6 +9,7 @@ use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
 use crate::handlers::merge::handler_merge;
 use super::ls_files::handler_ls_files;
+use super::ls_tree::handler_ls_tree;
 
 pub fn handler_command<'a>(input: &str) -> String{
     let input = input.trim(); 
@@ -26,6 +27,7 @@ pub fn handler_command<'a>(input: &str) -> String{
         x if x.contains("git branch") => handler_branch(x.to_string()),
         x if x.contains("git checkout") => handler_checkout(x.to_string()),
         x if x.contains("git ls-files") => handler_ls_files(x.to_string()),
+        x if x.contains("git ls-tree") => handler_ls_tree(x.to_string()),
          _ => "Failed or Panicked.".to_string()
      }
 }
