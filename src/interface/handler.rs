@@ -403,6 +403,60 @@ pub fn handle_ls_files(interface: &RustInterface) {
 
 }
 
+pub fn handle_ls_tree(interface: &RustInterface) {
+    let tree_dialog = interface.ls_tree_dialog.clone();
+    let rc_box = interface.tree_box.clone();
+    let rc_entry = interface.tree_branch_entry.clone();
+
+    interface.tree_box.set_visible(false);
+
+    let apply = interface.apply_tree.clone();
+
+    interface.apply_tree.set_sensitive(false);
+
+    interface.tree_branch_entry.connect_changed({  
+        move |e| {
+        apply.set_sensitive(!e.text().is_empty());
+    }});
+
+    interface.ls_tree.connect_clicked({
+        let rc_box = rc_box.clone();
+        let rc_entry = rc_entry.clone();
+        move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            tree_dialog.run();
+            tree_dialog.hide();
+            rc_entry.set_text("");
+        }
+    });
+
+    interface.apply_tree.connect_clicked({
+        let rc_box = rc_box.clone();
+        move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            if let Ok(information) = VersionControlSystem::ls_tree(&rc_entry.text().to_string()) {
+                for entry in information {
+                    let message = format!("{}\n",entry);
+                    add_message(&rc_box, &message);
+                    add_message(&rc_box, &"\n".to_string());
+                }
+            }
+            rc_box.set_visible(true);
+            rc_entry.set_text("");
+        }
+    });
+
+    interface.close_tree.connect_clicked({
+        let dialog_2 = interface.ls_tree_dialog.clone();
+        move |_| {
+            dialog_2.hide();
+    }});
+}
+
 pub fn add_message(m_changes: &gtk::Box, message: &String) {
     let label = gtk::Label::new(Some(message));
     label.set_visible(true);
