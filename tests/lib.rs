@@ -19,6 +19,7 @@ pub mod vcs{
     pub mod merge;
     pub mod reset;
     pub mod repository;
+    pub mod clone;
     pub mod ls_files;
 }
 
