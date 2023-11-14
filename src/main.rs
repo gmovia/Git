@@ -14,5 +14,5 @@ fn main() -> Result<(), std::io::Error>{
     }
     // let interface = RustInterface::new();
     // let _ = interface.impl_interface();
-    Ok(())
+    
 }

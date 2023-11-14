@@ -7,7 +7,6 @@ extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, BufRead, Write};
-use crate::constants::constants::TREE_CODE_NUMBER;
 use crate::vcs::commands::cat_file::CatFile;
 
 pub struct Encoder {
