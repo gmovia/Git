@@ -258,7 +258,8 @@ impl Clone{
                 let mut a: HashMap<String, String> = HashMap::new();
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch){
                     let random_number: u8 = rand::thread_rng().gen_range(1..=9);
-                    let format_commit = format!("{}-{}-{}-{}-{}\n", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                    let date = Self::get_date(&commit_entity.author);
+                    let format_commit = format!("{}-{}-{}-{}-{}\n", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
                     a.insert(hash_parent.to_string(), branch_name);
                     let _ = Self::complete_commit_table(repo, a, commits_created);
                     file.write_all(format_commit.as_bytes())?;
@@ -269,13 +270,22 @@ impl Clone{
                 let mut a: HashMap<String, String> = HashMap::new();
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch){
                     let random_number: u8 = rand::thread_rng().gen_range(1..=9);
-                    let format_commit = format!("{}-{}-{}-{}-{}\n", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                    let date = Self::get_date(&commit_entity.author);
+                    let format_commit = format!("{}-{}-{}-{}-{}\n", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
                     a.insert(hash_parent.to_string(), branch_name);
                     file.write_all(format_commit.as_bytes())?;
                 }
             }
         }
         Ok(())
+    }
+
+    fn get_date(line: &str) -> &str {
+        let start = match line.find('>') {
+            Some(pos) => pos + 2, 
+            None => 0, 
+        };
+        &line[start..] 
     }
     
     fn get_want_msgs(commits_list: &Vec<String>) -> Vec<String> {
