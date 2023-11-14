@@ -42,19 +42,19 @@ impl CommitsTable{
         // LEER DE ALGUN ARCHIVO LA DATA!
         let author = "author gmovia <gmovia@fi.uba.ar> 1699842870 -0300";
         let committer = "committer gmovia <gmovia@fi.uba.ar> 1699842870 -0300";
-
-        let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
-        let commit_hash = CommitEntity::write(&current, &commit_entity)?;
-
+        
         let current_repository = CurrentRepository::read()?;
-
         let commits = CommitsTable::read(current_repository.clone(), &Init::get_current_branch(&current_repository.clone())?)?;
 
         if let Some(last_commit) = commits.last(){
+            let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), parent_hash: last_commit.hash.clone(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
+            let commit_hash = CommitEntity::write(&current, &commit_entity)?;
             let commit = format!("{}-{}-{}-{}-{}\n", id, last_commit.hash, commit_hash, message, current_time); 
             commits_file.write_all(commit.as_bytes())?;
         }
         else{
+            let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), parent_hash: COMMIT_INIT_HASH.to_string(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
+            let commit_hash = CommitEntity::write(&current, &commit_entity)?;
             let commit = format!("{}-{}-{}-{}-{}\n", id, COMMIT_INIT_HASH, commit_hash, message, current_time); 
             commits_file.write_all(commit.as_bytes())?;
         }
