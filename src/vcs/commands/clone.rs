@@ -1,8 +1,8 @@
-use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap};
+use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, path::{PathBuf, Path}, fs::{OpenOptions, self}, collections::HashMap, fmt::format};
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::BlobEntity, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout, hash_object::{HashObject, WriteOption}}, entities::{blob_entity::BlobEntity, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TREE_CODE}, utils::random::random::Random};
 
 use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
@@ -196,38 +196,8 @@ impl Clone{
         let _ = Proxy::write_blob(repo.clone(),content);
     }
 
-
     fn create_tree_folder(content: &String, repo: &PathBuf) -> Result<String, std::io::Error> {
-        let mut entities: Vec<Entity> = Vec::new();
-    
-        let entity_strings: Vec<&str> = content.split('\n').collect();
-    
-        for entries in entity_strings {
-            let parts: Vec<&str> = entries.split('-').collect();
-    
-            let path = parts[1].trim();
-            let entity_hash = parts[2].trim();
-            if entries.contains("100644") {
-                let blob_entity = BlobEntity {
-                    content_type: "blob".to_string(),
-                    path: format!("{}", path.to_string()),
-                    blob_hash: entity_hash.to_string(),
-                };
-                entities.push(Entity::Blob(blob_entity));
-            } else {
-                let tree_entity = TreeEntity {
-                    content_type: "tree".to_string(),
-                    path: format!("{}", path.to_string()),
-                    tree_hash: entity_hash.to_string(),
-                    entities: Vec::new(), // Initialize with an empty vector
-                };
-                println!("-----------_>PATHHHH DEL TREEEE ENTRYYYY --> {}\n", tree_entity.path);
-                entities.push(Entity::Tree(tree_entity));
-            }
-        }
-        println!("MI VECCC DE ENTIDADES BLOBS --- {:?}\n", entities);
-        let hash_tree = Proxy::write_tree(repo.clone(), entities)?;
-        Ok(hash_tree)
+        Ok(Proxy::write_tree(repo.to_path_buf(), content)?)
     }
     
 
