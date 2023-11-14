@@ -16,12 +16,15 @@ pub struct Encoder {
 impl Encoder {
     
     pub fn init_encoder(path: PathBuf, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
-        let encoder = Encoder { path: path };
+        let encoder = Encoder { path: path.clone() };
         let mut packfile= Vec::new();
+        println!("MENSAJES: {:?} - PATH: {:?}", messages, path.clone());
+        
         if messages.1.is_empty() || messages.1[0] == "0" {
             packfile = Self::create_packfile(&encoder.path)?;        
         }
         else {
+            println!("ENTRA BIEN");
             //packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
         }
         Ok(packfile)

@@ -8,6 +8,7 @@ use crate::handlers::checkout::handler_checkout;
 use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
 use super::clone::handler_clone;
+use super::fetch::handler_fetch;
 use super::merge::handler_merge;
 use super::ls_files::handler_ls_files;
 
@@ -28,6 +29,7 @@ pub fn handler_command<'a>(input: &str) -> String{
         x if x.contains("git checkout") => handler_checkout(x.to_string()),
         x if x.contains("git clone") => handler_clone(x.to_string()),
         x if x.contains("git ls-files") => handler_ls_files(x.to_string()),
+        x if x.contains("git fetch") => handler_fetch(x.to_string()),
          _ => "Failed or Panicked.".to_string()
      }
 }
