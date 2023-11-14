@@ -1,6 +1,6 @@
 use std::{path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap, io::{Write, self, BufRead}};
 use chrono::{Local, DateTime};
-use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::random::random::Random};
+use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::random::random::Random, constants::constants::COMMIT_INIT_HASH};
 use super::current_repository::CurrentRepository;
 
 #[derive(Debug, Clone)]
@@ -18,7 +18,7 @@ impl CommitsTable{
         let reader = io::BufReader::new(commits_file);
         for line in reader.lines().filter_map(Result::ok) {
             let parts: Vec<&str> = line.split("-").collect();
-            let commit = CommitTableEntry{id: parts[0].to_string(), hash: parts[1].to_string(), message: parts[2].to_string(), date: parts[3].to_string()};
+            let commit = CommitTableEntry{id: parts[0].to_string(), last_hash: parts[1].to_string(), hash: parts[2].to_string(), message: parts[3].to_string(), date: parts[4].to_string()};
             commits.push(commit);
         }
         Ok(commits)
@@ -46,8 +46,19 @@ impl CommitsTable{
         let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
         let commit_hash = CommitEntity::write(&current, &commit_entity)?;
 
-        let commit = format!("{}-{}-{}-{}\n", id, commit_hash, message, current_time); 
-        commits_file.write_all(commit.as_bytes())?;
+        let current_repository = CurrentRepository::read()?;
+
+        let commits = CommitsTable::read(current_repository.clone(), &Init::get_current_branch(&current_repository.clone())?)?;
+
+        if let Some(last_commit) = commits.last(){
+            let commit = format!("{}-{}-{}-{}-{}\n", id, last_commit.hash, commit_hash, message, current_time); 
+            commits_file.write_all(commit.as_bytes())?;
+        }
+        else{
+            let commit = format!("{}-{}-{}-{}-{}\n", id, COMMIT_INIT_HASH, commit_hash, message, current_time); 
+            commits_file.write_all(commit.as_bytes())?;
+        }
+
         Ok(())
     }
 

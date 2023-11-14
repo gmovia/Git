@@ -16,6 +16,7 @@ pub const BLOB_CODE_NUMBER: u8 = 3;
 pub const COMMIT_CODE_NUMBER: u8 = 1;
 pub const COMMIT_CODE: &str = "commit";
 
+pub const COMMIT_INIT_HASH: &str = "0000000000000000000000000000000000000000";
 
 // SERVER
 pub const PUERTO: &str = "9418";
