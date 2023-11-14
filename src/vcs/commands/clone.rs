@@ -2,7 +2,7 @@ use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, pa
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::BlobEntity, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::BlobEntity, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH}};
 pub struct Clone;
 
 impl Clone{
@@ -130,37 +130,35 @@ impl Clone{
     fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<(String, CommitEntity), std::io::Error>{
         let partes: Vec<&str> = content.split("\n").collect();
         let commit_entity: CommitEntity;
-
-        commit_entity = CommitEntity{
-            content_type: "commit".trim_end_matches("\n").to_string(),
-            tree_hash: partes[0].trim_end_matches("\n").trim_start_matches("tree ").to_string(),
-            message: partes[4..].join("\n").trim_start_matches("\n").trim_end_matches("\n").to_string(), 
-            author: partes[1].trim_end_matches("\n").trim_start_matches("\n").to_string(), 
-            committer: partes[2].trim_end_matches("\n").to_string(),
-        };
-
-        /*  
+        
         if !content.contains("parent"){
-            let commit_entity = CommitEntity{
-                    content_type: "commit".to_string(),
-                    tree_hash: partes[0].to_string(), // La primera parte es el hash del árbol
-                    message: partes[4..].join("\n").trim_start_matches("\n").to_string(), // La quinta parte en adelante es el mensaje del commit, se unen con \n y se elimina el \n inicial
-                    author: partes[1].to_string(), // La segunda parte es el autor del commit
-                    committer: partes[2].to_string(),
-                    //parent: "".to_string(), // La tercera parte es el committer del commit
-                };
-            }
-           else{
-                let commit_entity = CommitEntity{
-                    content_type: "commit".to_string(),
-                    tree_hash: partes[0].to_string(),
-                    message: partes[5..].join("\n").trim_start_matches("\n").to_string(), 
-                    author: partes[2].to_string(), 
-                    committer: partes[3].to_string(),
-                    parent: partes[1].to_string(),
-                };
-        } */
- 
+                println!("----> ENTRA No parent\n");
+                commit_entity = CommitEntity{
+                content_type: "commit".trim_end_matches("\n").to_string(),
+                tree_hash: partes[0].trim_end_matches("\n").trim_start_matches("tree ").to_string(),
+                message: partes[4..].join("\n").trim_start_matches("\n").trim_end_matches("\n").to_string(), 
+                author: partes[1].trim_end_matches("\n").trim_start_matches("\n").to_string(), 
+                committer: partes[2].trim_end_matches("\n").to_string(),
+                parent_hash: COMMIT_INIT_HASH.to_string(),
+            };
+        }else{
+                commit_entity = CommitEntity{
+                content_type: "commit".to_string(),
+                tree_hash: partes[0].trim_end_matches("\n").trim_start_matches("tree ").to_string(),
+                message: partes[5..].join("\n").trim_start_matches("\n").trim_end_matches("\n").to_string(), 
+                author: partes[2].trim_end_matches("\n").trim_start_matches("\n").to_string(), 
+                committer: partes[3].trim_end_matches("\n").to_string(),
+                parent_hash: partes[1].trim_end_matches("\n").trim_start_matches("\n").to_string(),
+            };
+        }
+        println!("Content Type: {}", commit_entity.content_type);
+        println!("Tree Hash: {}", commit_entity.tree_hash);
+        println!("Author: {}", commit_entity.author);
+        println!("Committer: {}", commit_entity.committer);
+        println!("Message: {}", commit_entity.message);
+        println!("PARENT: {}", commit_entity.parent_hash);
+
+
         let hash_commit = Proxy::write_commit(repo.clone(), &commit_entity)?;
 
         Ok((hash_commit, commit_entity))
@@ -205,7 +203,14 @@ impl Clone{
     }
     
 
-    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+    fn extract_hash_parent(content: String) -> Result<String, std::io::Error> {
+        let parts: Vec<&str> = content.split("\n").collect();
+        println!("Parts --> {:?}", parts);
+        let hash_parent = parts[1].trim_start_matches("parent ");
+        Ok(hash_parent.to_string())
+    }
+
+    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
         println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
 
@@ -221,11 +226,23 @@ impl Clone{
             
                 let mut writer = BufWriter::new(file);
                 let random_number: u8 = rand::thread_rng().gen_range(1..=9);
-                
+
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch) {
-                    let format_commit = format!("{}-{}-{}-{}", random_number, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
-                    println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
-                    writeln!(writer, "{}", format_commit)?;
+                    for object in &objects{
+                        if object.0 == COMMIT_CODE_NUMBER{
+                            if !object.1.contains("parent"){
+                                let format_commit = format!("{}-{}-{}-{}-{}", random_number, COMMIT_INIT_HASH, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                                println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
+                                writeln!(writer, "{}", format_commit)?;
+                            }else{
+                                let parent_tree = Self::extract_hash_parent(object.1.clone())?;
+                                let format_commit = format!("{}-{}-{}-{}-{}", random_number, parent_tree, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                                println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
+                                writeln!(writer, "{}", format_commit)?;
+                            }
+                        }
+                    }
+
                 }
             }
         }
