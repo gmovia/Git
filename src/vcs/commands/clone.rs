@@ -2,7 +2,9 @@ use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, pa
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::BlobEntity, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::BlobEntity, entity::Entity, tree_entity::TreeEntity, commit_entity::{CommitEntity, self}}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH}};
+
+use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
 
 impl Clone{
@@ -220,7 +222,7 @@ impl Clone{
                 let file = OpenOptions::new()
                     .create(true)
                     .write(true)
-                    .append(false)
+                    .append(true)
                     .open(&logs_path)?;
 
                 let mut writer = BufWriter::new(file);
@@ -229,7 +231,47 @@ impl Clone{
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch) {
                     let format_commit = format!("{}-{}-{}-{}-{}", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
                     println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
-                    writeln!(writer, "{}", format_commit)?;
+                    let mut a: HashMap<String, String> = HashMap::new();
+                    a.insert(hash_commit_branch, value);
+                    let _ = Self::complete_commit_table(repo, a, commits_created);
+                    //writeln!(writer, "{}", format_commit)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn complete_commit_table(repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
+        //hash, branch_name
+        for(hash_commit_branch, branch_name)in branchs {
+            let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
+            let mut file = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .append(true)
+                .open(&logs_path)?;
+            let content = CatFile::cat_file(&hash_commit_branch, Init::get_object_path(&repo)?)?;
+
+            if content.contains("parent"){
+                let part:Vec<&str> = content.split("\n").collect();
+                let hash_parent = part[1].trim_start_matches("parent ");
+                let mut a: HashMap<String, String> = HashMap::new();
+                if let Some(commit_entity) = commits_created.get(&hash_commit_branch){
+                    let random_number: u8 = rand::thread_rng().gen_range(1..=9);
+                    let format_commit = format!("{}-{}-{}-{}-{}\n", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                    a.insert(hash_parent.to_string(), branch_name);
+                    let _ = Self::complete_commit_table(repo, a, commits_created);
+                    file.write_all(format_commit.as_bytes())?;
+                }
+            }else{
+                let part:Vec<&str> = content.split("\n").collect();
+                let hash_parent = part[1].trim_start_matches("parent ");
+                let mut a: HashMap<String, String> = HashMap::new();
+                if let Some(commit_entity) = commits_created.get(&hash_commit_branch){
+                    let random_number: u8 = rand::thread_rng().gen_range(1..=9);
+                    let format_commit = format!("{}-{}-{}-{}-{}\n", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                    a.insert(hash_parent.to_string(), branch_name);
+                    file.write_all(format_commit.as_bytes())?;
                 }
             }
         }
@@ -335,7 +377,6 @@ impl Clone{
 
     fn read_tree_sha1<R: Read>(reader: &mut R) -> io::Result<Vec<(String, String, Vec<u8>)>> {
         let mut entries = Vec::new();
-        //println!("READERRR :::::::::::::{:?}\n", reader);
         while let Ok(entry) = Self::read_tree_entry(reader) {
             entries.push(entry);
         }
