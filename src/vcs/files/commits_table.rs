@@ -46,18 +46,16 @@ impl CommitsTable{
         let current_repository = CurrentRepository::read()?;
         let commits = CommitsTable::read(current_repository.clone(), &Init::get_current_branch(&current_repository.clone())?)?;
 
-        if let Some(last_commit) = commits.last(){
-            let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), parent_hash: last_commit.hash.clone(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
-            let commit_hash = CommitEntity::write(&current, &commit_entity)?;
-            let commit = format!("{}-{}-{}-{}-{}\n", id, last_commit.hash, commit_hash, message, current_time); 
-            commits_file.write_all(commit.as_bytes())?;
-        }
-        else{
-            let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), parent_hash: COMMIT_INIT_HASH.to_string(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
-            let commit_hash = CommitEntity::write(&current, &commit_entity)?;
-            let commit = format!("{}-{}-{}-{}-{}\n", id, COMMIT_INIT_HASH, commit_hash, message, current_time); 
-            commits_file.write_all(commit.as_bytes())?;
-        }
+        let parent_hash = if let Some(last_commit) = commits.last() {
+            last_commit.hash.clone()
+        } else {
+            COMMIT_INIT_HASH.to_string()
+        };
+
+        let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), parent_hash: parent_hash.clone(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
+        let commit_hash = CommitEntity::write(&current, &commit_entity)?;
+        let commit = format!("{}-{}-{}-{}-{}\n", id, parent_hash, commit_hash, message, current_time); 
+        commits_file.write_all(commit.as_bytes())?;
 
         Ok(())
     }
