@@ -231,7 +231,6 @@ impl Clone{
     fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
         println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
-
         for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
 
             if commits_created.contains_key(hash_commit_branch) {

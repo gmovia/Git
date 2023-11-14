@@ -83,7 +83,7 @@ fn get_log_entries(logs_path: &Path) -> Result<Vec<String>, std::io::Error>{
                 last_line = line.clone(); 
                 let last_commit: Vec<&str> = line.split("-").collect();
                 let log_file_name = log_file.file_name().to_string_lossy().to_string();
-                let format = format!("{} refs/heads/{}", last_commit[1], log_file_name);
+                let format = format!("{} refs/heads/{}", last_commit[2], log_file_name);
                 log_entries.push(format);
  
             }
