@@ -9,7 +9,6 @@ use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
 use super::clone::handler_clone;
 use super::merge::handler_merge;
-use crate::handlers::merge::handler_merge;
 use super::ls_files::handler_ls_files;
 
 pub fn handler_command<'a>(input: &str) -> String{
