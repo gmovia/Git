@@ -66,8 +66,8 @@ impl Clone{
                         branchs.insert(commit.to_owned(), branch_name);
                 }
             }
-            let _ = Self::write_commit_log(&repo, branchs.clone(), &commits_created, objects_processed.clone());
         }
+        let _ = Self::write_commit_log(&repo, branchs.clone(), &commits_created, objects_processed.clone());
         Checkout::update_cd(&repo)?; //Esto recien me crea los files.txt en working directory si tiene en la tabla de commits lleno
         Ok(())
     }
@@ -148,7 +148,7 @@ impl Clone{
                 message: partes[5..].join("\n").trim_start_matches("\n").trim_end_matches("\n").to_string(), 
                 author: partes[2].trim_end_matches("\n").trim_start_matches("\n").to_string(), 
                 committer: partes[3].trim_end_matches("\n").to_string(),
-                parent_hash: partes[1].trim_end_matches("\n").trim_start_matches("\n").to_string(),
+                parent_hash: partes[1].trim_end_matches("\n").trim_start_matches("\n").trim_start_matches("parent ").to_string(),
             };
         }
         println!("Content Type: {}", commit_entity.content_type);
@@ -214,35 +214,22 @@ impl Clone{
         println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
         println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
 
-        for (hash_commit_branch, value) in branchs{
+        for (hash_commit_branch, value) in branchs{ // 2 hash, nombre_rama
             if commits_created.contains_key(&hash_commit_branch) {
-                println!("HUBO MATCHHHHHHH\n");
                 let logs_path = repo.join(".rust_git").join("logs").join(value.trim_end_matches("\n"));
                 let file = OpenOptions::new()
                     .create(true)
                     .write(true)
-                    .append(true)
+                    .append(false)
                     .open(&logs_path)?;
-            
+
                 let mut writer = BufWriter::new(file);
                 let random_number: u8 = rand::thread_rng().gen_range(1..=9);
 
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch) {
-                    for object in &objects{
-                        if object.0 == COMMIT_CODE_NUMBER{
-                            if !object.1.contains("parent"){
-                                let format_commit = format!("{}-{}-{}-{}-{}", random_number, COMMIT_INIT_HASH, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
-                                println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
-                                writeln!(writer, "{}", format_commit)?;
-                            }else{
-                                let parent_tree = Self::extract_hash_parent(object.1.clone())?;
-                                let format_commit = format!("{}-{}-{}-{}-{}", random_number, parent_tree, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
-                                println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
-                                writeln!(writer, "{}", format_commit)?;
-                            }
-                        }
-                    }
-
+                    let format_commit = format!("{}-{}-{}-{}-{}", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                    println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
+                    writeln!(writer, "{}", format_commit)?;
                 }
             }
         }
