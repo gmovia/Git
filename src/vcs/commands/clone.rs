@@ -2,7 +2,7 @@ use std::{net::TcpStream, io::{Read, Write, self, BufWriter}, str::from_utf8, pa
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::BlobEntity, entity::Entity, tree_entity::TreeEntity, commit_entity::{CommitEntity, self}}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH}};
+use crate::{packfile::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::{blob_entity::BlobEntity, entity::Entity, tree_entity::TreeEntity, commit_entity::CommitEntity}}, proxy::proxy::Proxy, constants::constants::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH}};
 
 use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
@@ -205,14 +205,7 @@ impl Clone{
     }
     
 
-    fn extract_hash_parent(content: String) -> Result<String, std::io::Error> {
-        let parts: Vec<&str> = content.split("\n").collect();
-        println!("Parts --> {:?}", parts);
-        let hash_parent = parts[1].trim_start_matches("parent ");
-        Ok(hash_parent.to_string())
-    }
-
-    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
         println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
 
@@ -225,16 +218,16 @@ impl Clone{
                     .append(true)
                     .open(&logs_path)?;
 
-                let mut writer = BufWriter::new(file);
+                let _writer = BufWriter::new(file);
                 let random_number: u8 = rand::thread_rng().gen_range(1..=9);
 
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch) {
-                    let format_commit = format!("{}-{}-{}-{}-{}", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, "2023-11-08 19:26:10.805633340 -03:00");
+                    let date = Self::get_date(&commit_entity.author);
+                    let format_commit = format!("{}-{}-{}-{}-{}", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
                     println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
                     let mut a: HashMap<String, String> = HashMap::new();
                     a.insert(hash_commit_branch, value);
                     let _ = Self::complete_commit_table(repo, a, commits_created);
-                    //writeln!(writer, "{}", format_commit)?;
                 }
             }
         }
