@@ -1,13 +1,14 @@
 use std::fs::File;
+use tempdir::TempDir;
 use std::path::Path;
 use std::{path::PathBuf, io, fs};
 
 extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
-use std::io::{Read, BufRead};
+use std::io::{Read, BufRead, Write};
+use crate::constants::constants::TREE_CODE_NUMBER;
 use crate::vcs::commands::cat_file::CatFile;
-use crate::vcs::version_control_system::VersionControlSystem;
 
 pub struct Encoder {
     pub path: PathBuf
@@ -50,6 +51,7 @@ impl Encoder {
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
         println!("OBJECTS DATA: {:?}", objects_data);
+
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -57,7 +59,8 @@ impl Encoder {
             }
 
             let path = Path::new(&objects.0);
-            let compress_data = Self::compress_object((&path).to_path_buf())?;
+            
+            let compress_data = Self::compress_object((&path).to_path_buf(), objects.1)?;
             for byte in compress_data {
                 packfile.push(byte);    
             }
@@ -234,10 +237,10 @@ impl Encoder {
         
         file.read_to_string(&mut content)?;
 
-        println!("CONTENT: {:?}", content);
-        if content.contains("tree") {
+        println!("CONTENT: {:?}\n", content);
+        if !(content.contains("100644") || content.contains("40000")) && content.contains("tree") {
             return Ok((file_path.to_string_lossy().to_string(),1 as usize,metadata.len() as usize))
-        } else if content.contains("blob"){
+        } else if content.contains("100644") || content.contains("40000"){
             return Ok((file_path.to_string_lossy().to_string(),2 as usize,metadata.len() as usize))
         }
         else {
@@ -251,6 +254,8 @@ impl Encoder {
             let entry_path = entrada.path();
             if entry_path.is_file() {
                 let data = Self::process_file(&entry_path)?;
+                println!("LA DATA QUE SE VA PROCesando y agregando a objects_data es: {:?}\n", data);
+
                 objects_data.push(data);
             }
             else {
@@ -260,13 +265,40 @@ impl Encoder {
         Ok(objects_data.to_vec())
     }
 
-    fn compress_object(archivo_entrada: PathBuf) -> Result<Vec<u8>, std::io::Error> {
+    fn modify_entry_tree(input: &str) -> String {
+        let mut output = String::new();
+        for line in input.lines() {
+            let elements: Vec<&str> = line.split_whitespace().collect();
+            if elements.len() == 4 {
+                output.push_str(&format!("{} {} {}\n", elements[0], elements[3], elements[2]));
+            }
+        }
+        output
+    }
+
+
+    fn compress_object(archivo_entrada: PathBuf, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
         let mut entrada = File::open(archivo_entrada)?;
+        
+        if object_type == 2 {
+            let mut buf = String::new();
+            let _ = entrada.read_to_string(&mut buf);  
+
+            buf = Self::modify_entry_tree(&buf.clone());
+    
+            println!("CONTENT compress_object ---->: {}", buf); 
+
+            let temp_dir = TempDir::new("my_temp_dir")?;
+            let temp_file_path = temp_dir.path().join("temp_file.txt");
+            let mut temp_file = File::create(&temp_file_path)?;
+            temp_file.write_all(buf.as_bytes())?;
+            entrada = File::open(&temp_file_path)?; 
+        }
+
         let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
         io::copy(&mut entrada, &mut encoder)?;
         let datos_comprimidos = encoder.finish()?;
         
         Ok(datos_comprimidos)
-    }
-
+    } 
 }

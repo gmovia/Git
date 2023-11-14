@@ -82,24 +82,12 @@ impl Clone{
                 println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
                 objects_processed.push((*number, String::from_utf8_lossy(inner_vec).to_string()));
             }else{
-               let content = String::from_utf8_lossy(inner_vec);
-                if content.contains(&10064.to_string()) {
-                    let mut reader = inner_vec.as_slice();
-                    if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
-                        let entry_string: String = entries
-                            .iter()
-                            .map(|(mode, name, sha1)| {
-                                let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
-                                format!("{}-{}-{}",mode, name, hex_string)
-                            })
-                            .collect::<Vec<String>>()
-                            .join("\n");
-                        objects_processed.push((*number, entry_string));
-                    }
-                     else {
-                        eprintln!("Error decoding the tree object");
-                    }
-                }else{
+                println!("INNER VECCCCCC ----------> {:?}", String::from_utf8_lossy(inner_vec));
+                let non_utf8_bytes = "hello".as_bytes().to_vec();
+
+                if let Ok(_) = std::str::from_utf8(non_utf8_bytes.as_slice()) {
+                    // La tira de bytes es UTF-8 válida
+                    println!("EXCELENTE");
                     let blobs: Vec<String> = String::from_utf8_lossy(inner_vec).split("\n").map(String::from).collect();
                     let mut string_to_send = String::new();
                     for blob in &blobs {
@@ -107,11 +95,28 @@ impl Clone{
                         if blob_parts.len() == 3 {
                             let path = Path::new(blob_parts[1]);
                             if let Some(file_name) = path.file_name() {
-                                string_to_send = format!("{}{}-{}\n", string_to_send, file_name.to_string_lossy(), blob_parts[2]);  
+                                string_to_send = format!("{}{}-{}-{}\n", string_to_send, blob_parts[0], file_name.to_string_lossy(), blob_parts[2]);  
                             }
                         }                      
                     }
-                    objects_processed.push((*number, string_to_send))
+                    objects_processed.push((*number, string_to_send));
+                } else {
+                    println!("BIEN");
+                    let mut reader = inner_vec.as_slice();
+                
+                    if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
+                        let entry_string: String = entries
+                            .iter()
+                            .map(|(mode, name, sha1)| {
+                                let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
+                                format!("{}-{}-{}", mode, name, hex_string)
+                            })
+                            .collect::<Vec<String>>()
+                            .join("\n");
+                        objects_processed.push((*number, entry_string));
+                    } else {
+                        eprintln!("Error decoding the tree object");
+                    }
                 }
             }
         }
@@ -200,8 +205,12 @@ impl Clone{
         let entity_strings: Vec<&str> = content.split('\n').collect();
     
         for entries in entity_strings {
+
             let parts: Vec<&str> = entries.split('-').collect();
-    
+            if parts.len() != 3 {
+                continue;
+            }
+            println!("PARTS de create_tree_folder : {:?}\n", parts);
             let path = parts[1].trim();
             let entity_hash = parts[2].trim();
             if entries.contains("100644") {
