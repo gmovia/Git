@@ -1,8 +1,8 @@
 
 use std::{fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption}, constants::constants::{CURRENT, INCOMING, BOTH}};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{CURRENT, INCOMING, BOTH, BLOB_CODE}};
 
-use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository}, draw::changes_and_staging_area};
+use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons}, draw::changes_and_staging_area};
 use gtk::{prelude::*, Button};
 
 pub fn handle_repository(interface: &RustInterface) {
@@ -236,7 +236,7 @@ pub fn handle_merge(interface: &RustInterface) {
                             });
                             let mut index = 0;
                             for (key, value) in &conflicts {
-                                if let (Ok(cat_current), Ok(cat_incoming)) = (VersionControlSystem::cat_file(&value.change_current.hash, ".rust_git"),VersionControlSystem::cat_file(&value.change_branch.hash,".rust_git")) {
+                                if let (Ok(cat_current), Ok(cat_incoming)) = (VersionControlSystem::cat_file(&value.change_current.hash),VersionControlSystem::cat_file(&value.change_branch.hash)) {
                                     let set_label_current = format!("{}\n             {}\n",key,cat_current);
                                     let set_label_incoming = format!("\n{}\n            {}\n",key,cat_incoming);
                                     let set_format = set_label_current + &set_label_incoming;
@@ -282,7 +282,6 @@ pub fn handle_merge(interface: &RustInterface) {
                         let m_box = m_changes.clone();
                         move |button|{
                             if let Ok(list_conflicts) = read_changes(){
-                                println!("{:?}",list_conflicts);
                                 let _ = VersionControlSystem::resolve_conflicts(&m_entry1.text(), list_conflicts);
                             }
                             m_box.foreach(|child| {
@@ -349,11 +348,11 @@ pub fn add_both(button: &gtk::Button, conflict: &Conflict, dialog: &gtk::Dialog,
                 move |_| {
                     if let Some(result) = both_text.buffer(){
                         if let Some(result) = result.text(&result.start_iter(), &result.end_iter(), false){
-                            if let Ok(current) = VersionControlSystem::read_current_repository() {
+                            if let Ok(current) = CurrentRepository::read() {
                                 let temp_path = current.join("temp2");
                                 if let Ok(mut temp_file) = OpenOptions::new().write(true).create(true).append(true).open(&temp_path) {
                                     let _ = temp_file.write_all(result.as_bytes());
-                                    if let Ok(hash) = VersionControlSystem::hash_object(&temp_path, WriteOption::Write) {
+                                    if let Ok(hash) = VersionControlSystem::hash_object(&temp_path, WriteOption::Write, BLOB_CODE) {
                                         let _ = fs::remove_file(temp_path);
                                         let change_current = Change { file: conflict_c.file.to_string(), hash: hash.clone(), state: conflict_c.change_current.state.clone() };
                                         let change_branch = Change { file: conflict_c.file.to_string(), hash: hash.clone(), state: conflict_c.change_branch.state.clone() };
@@ -373,7 +372,92 @@ pub fn add_both(button: &gtk::Button, conflict: &Conflict, dialog: &gtk::Dialog,
     
 }
 
-fn add_message(m_changes: &gtk::Box, message: &String) {
+pub fn handle_ls_files(interface: &RustInterface) {
+    let files_dialog = interface.ls_files_dialog.clone();
+    let rc_box = interface.selection_box.clone();
+
+    interface.selection_box.set_visible(false);
+
+    interface.files.connect_clicked({
+        let rc_box = rc_box.clone();
+        move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            files_dialog.run();
+            files_dialog.hide();
+        }
+    });
+
+    handle_ls_files_buttons(interface,&interface.all);
+    handle_ls_files_buttons(interface,&interface.o);
+    handle_ls_files_buttons(interface,&interface.m);
+    handle_ls_files_buttons(interface,&interface.c);
+    handle_ls_files_buttons(interface,&interface.d);
+
+    interface.close_files.connect_clicked({
+        let dialog_2 = interface.ls_files_dialog.clone();
+        move |_| {
+            dialog_2.hide();
+    }});
+
+}
+
+pub fn handle_ls_tree(interface: &RustInterface) {
+    let tree_dialog = interface.ls_tree_dialog.clone();
+    let rc_box = interface.tree_box.clone();
+    let rc_entry = interface.tree_branch_entry.clone();
+
+    interface.tree_box.set_visible(false);
+
+    let apply = interface.apply_tree.clone();
+
+    interface.apply_tree.set_sensitive(false);
+
+    interface.tree_branch_entry.connect_changed({  
+        move |e| {
+        apply.set_sensitive(!e.text().is_empty());
+    }});
+
+    interface.ls_tree.connect_clicked({
+        let rc_box = rc_box.clone();
+        let rc_entry = rc_entry.clone();
+        move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            tree_dialog.run();
+            tree_dialog.hide();
+            rc_entry.set_text("");
+        }
+    });
+
+    interface.apply_tree.connect_clicked({
+        let rc_box = rc_box.clone();
+        move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            if let Ok(information) = VersionControlSystem::ls_tree(&rc_entry.text().to_string()) {
+                for entry in information {
+                    let message = format!("{}\n",entry);
+                    add_message(&rc_box, &message);
+                    add_message(&rc_box, &"\n".to_string());
+                }
+            }
+            rc_box.set_visible(true);
+            rc_entry.set_text("");
+        }
+    });
+
+    interface.close_tree.connect_clicked({
+        let dialog_2 = interface.ls_tree_dialog.clone();
+        move |_| {
+            dialog_2.hide();
+    }});
+}
+
+pub fn add_message(m_changes: &gtk::Box, message: &String) {
     let label = gtk::Label::new(Some(message));
     label.set_visible(true);
     label.set_xalign(0.5);
@@ -382,4 +466,87 @@ fn add_message(m_changes: &gtk::Box, message: &String) {
 }
 
 
+/* 
+pub fn handle_clone(interface: &RustInterface) {
+    
+    let c_entry = interface.clone_entry.clone();
+    let clone_button = interface.clone.clone();
+    let info = interface.info_clone.clone();
+    let fix_clone = interface.fix.clone();
+    
+    interface.clone.set_sensitive(false);
+    interface.info_clone.set_visible(false);
+    
+    
+    interface.clone_entry.connect_changed({
+        move |e| {
+            clone_button.set_sensitive(!e.text().is_empty());
+        }
+    });
+    
+    interface.clone.connect_clicked({
+        let info = info.clone();
+        let c_entry = c_entry.clone();
+        let fix_clone = fix_clone.clone();
+        move |button| {
+            
+            if let Ok(_) = VersionControlSystem::git_clone(format!("git clone {}",(&c_entry.text()).to_string())) {
+                let label = gtk::Label::new(Some(&c_entry.text()));
+                label.set_visible(true);
+                label.set_xalign(0.5);
+                label.set_yalign(0.5);
+                let close = Button::builder()
+                .label("close")
+                .build();
+            close.set_visible(true);
+            fix_clone.add(&label);
+            info.add(&close);
+            info.add(&fix_clone);
+            info.set_visible(true);
+            close.connect_clicked({
+                let info = info.clone();
+                move |_| {
+                    info.foreach({|child|{
+                        info.remove(child);
+                    }});
+                }
+            });
+        }
+        c_entry.set_text("");
+        button.set_sensitive(false);
+    }
+    
+});
+}
+*/
 
+/* 
+pub fn handle_fetch(interface: &RustInterface) {
+    interface.fetch.connect_clicked({
+        move |_| {
+            if let Ok(current) = VersionControlSystem::read_current_repository() {
+                let _ = VersionControlSystem::fetch(format!("git fetch {}",current.display().to_string()));
+            }
+        }
+    });
+}
+
+pub fn handle_push(interface: &RustInterface) {
+    interface.push.connect_clicked({
+        move |_| {
+            if let Ok(current) = VersionControlSystem::read_current_repository() {
+                let _ = VersionControlSystem::push();
+            }
+        } 
+    });
+}
+
+pub fn handle_pull(interface: &RustInterface) {
+    
+    interface.push.connect_clicked({
+        move |_| {
+            let _ = VersionControlSystem::pull();
+        } 
+    });
+}
+*/

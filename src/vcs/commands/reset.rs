@@ -1,5 +1,4 @@
 use std::{path::PathBuf, collections::HashMap};
-
 use crate::vcs::files::{vcs_file::VCSFile, index::Index};
 
 pub struct Reset;

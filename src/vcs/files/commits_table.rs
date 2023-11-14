@@ -1,56 +1,68 @@
-use std::{path::{PathBuf, Path}, io::{self, BufRead, Write}, fs::OpenOptions, collections::HashMap};
-use crate::vcs::{commands::{cat_file::CatFile, init::Init}, entities::commit_entry::CommitEntry};
+use std::{path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap, io::{Write, self, BufRead}};
+use chrono::{Local, DateTime};
+use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::random::random::Random, constants::constants::COMMIT_INIT_HASH};
+use super::current_repository::CurrentRepository;
 
 #[derive(Debug, Clone)]
 pub struct CommitsTable;
 
 impl CommitsTable{
 
-    pub fn read_repository_of_commit(repo_path: PathBuf, branch: &str, commit_hash: &str) -> Result<HashMap<String, String>,std::io::Error>{
-        let mut repository: HashMap<String, String> = HashMap::new();
-        let commits_table = CommitsTable::read(repo_path.clone(), branch)?;
-
-        for commit in commits_table {
-            if commit.hash == commit_hash {
-                let content = CatFile::cat_file(commit_hash, Init::get_object_path(&repo_path, ".rust_git")?)?;
-                let content_lines: Vec<&str> = content.split("\n").collect();
-                for line in content_lines{
-                    if line != ""{
-                        let line_parts: Vec<&str> = line.split("-").collect(); // line_parts[0] = path ; line_parts[1] = content
-                        repository.insert(line_parts[0].to_string(), line_parts[1].to_string());
-                    }
-                }
-            }
-        }
-        Ok(repository)
-    }
-
-    pub fn read(repo_path: PathBuf, branch: &str) -> Result<Vec<CommitEntry>, std::io::Error>{
-        let mut commits: Vec<CommitEntry> = Vec::new();
+    /// Recibe el path del repositorio y una branch
+    /// Devuelve la tabla de commits
+    pub fn read(repo_path: PathBuf, branch: &str) -> Result<Vec<CommitTableEntry>, std::io::Error>{
+        let mut commits: Vec<CommitTableEntry> = Vec::new();
         let path = repo_path.join(".rust_git").join("logs").join(Path::new(branch));
         let commits_file = OpenOptions::new().read(true).open(path)?;
 
         let reader = io::BufReader::new(commits_file);
-        for line in reader.lines().filter_map(Result::ok) { //leo linea a linea la tabla
+        for line in reader.lines().filter_map(Result::ok) {
             let parts: Vec<&str> = line.split("-").collect();
-            let commit = CommitEntry{id: parts[0].to_string(), hash: parts[1].to_string(), message: parts[2].to_string(), date: parts[3].to_string()};
-            commits.push(commit); //me quedo con el hash, lo agrego al vec
+            let commit = CommitTableEntry{id: parts[0].to_string(), last_hash: parts[1].to_string(), hash: parts[2].to_string(), message: parts[3].to_string(), date: parts[4].to_string()};
+            commits.push(commit);
         }
         Ok(commits)
     } 
 
-    pub fn write(repo_path: PathBuf, commits: &Vec<CommitEntry>, branch: &str) -> Result<(), std::io::Error>{
-        let path = repo_path.join(".rust_git").join("logs").join(Path::new(branch));
-        let mut commits_file = OpenOptions::new().read(true).open(path)?;
+    /// Recibe un mensaje y el conjunto de blobs que va a almacenar el commits
+    /// Escribe la tabla de commits, crea el tree y los blobs relacionados al commit
+    pub fn write(message: &String, repository: &HashMap<String, String>) -> Result<(),std::io::Error>{
+        let id = Random::random();
+        let current_time: DateTime<Local> = Local::now();
+        let _ = current_time.to_rfc2822();
+        
+        let current = CurrentRepository::read()?;
 
-        for commit in commits{
-            let entry = format!("{}-{}-{}-{}\n", commit.id, commit.hash, commit.message, commit.date);
-            commits_file.write_all(entry.as_bytes())?;
-        }
+        let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_commits_path(&current)?)?; //abro la tabla de commits para escribir - si no existe, la creo
+        
+        let entities = convert_to_entities(repository, &format!("{}/", &current.display().to_string()));
+
+        let tree_hash = TreeEntity::write(&current, &entities)?;
+
+        // LEER DE ALGUN ARCHIVO LA DATA!
+        let author = "author gmovia <gmovia@fi.uba.ar> 1699842870 -0300";
+        let committer = "committer gmovia <gmovia@fi.uba.ar> 1699842870 -0300";
+        
+        let current_repository = CurrentRepository::read()?;
+        let commits = CommitsTable::read(current_repository.clone(), &Init::get_current_branch(&current_repository.clone())?)?;
+
+        let parent_hash = if let Some(last_commit) = commits.last() {
+            last_commit.hash.clone()
+        } else {
+            COMMIT_INIT_HASH.to_string()
+        };
+
+        let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), parent_hash: parent_hash.clone(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
+        let commit_hash = CommitEntity::write(&current, &commit_entity)?;
+        let commit = format!("{}-{}-{}-{}-{}\n", id, parent_hash, commit_hash, message, current_time); 
+        commits_file.write_all(commit.as_bytes())?;
+
         Ok(())
-    } 
+    }
 
-    pub fn get_parent_commit(current_commits: &Vec<CommitEntry>, branch_commits: &Vec<CommitEntry>) ->  Option<CommitEntry>{
+    /// Recibe dos listados de commits 
+    /// Devuelve el ultimo commit comun
+    pub fn get_parent_commit(current_commits: &Vec<CommitTableEntry>, branch_commits: &Vec<CommitTableEntry>) ->  Option<CommitTableEntry>{
         let size = if current_commits.len() >= branch_commits.len() { branch_commits.len() } else { current_commits.len() };
         for index in 0..size{
             if current_commits[index].id == branch_commits[index].id{

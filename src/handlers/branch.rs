@@ -18,9 +18,7 @@ pub fn handler_branch(input: String) -> String{
                     let mut content = String::new();
                     for r in &result{
                         content.push_str(&format!("{}\n",r));
-                        println!("{:?}",r);
                     }
-                    println!("{:?}",content);
                     return content;
                 }else{
                     ERR_INVALID_PARAMETERS.to_string()
@@ -30,7 +28,7 @@ pub fn handler_branch(input: String) -> String{
                 RESPONSE_OK_CREATE_BRANCH.to_string()}
         }},
         2 => {
-            if let Ok(branches) = VersionControlSystem::get_branches(){
+            if let Ok(branches) = VersionControlSystem::branch(BranchOptions::GetBranches){
                 branches.join("\n").to_string()
             }else{
                 ERR_GET_BRANCHES.to_string()

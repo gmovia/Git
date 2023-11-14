@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use crate::{vcs::entities::change::Change, constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED}};
 
 pub struct Diff;

@@ -1,7 +1,5 @@
 use std::{path::{Path, PathBuf}, fs::{File, self}, io};
-
 use super::init::Init;
-
 
 pub struct Branch;
 

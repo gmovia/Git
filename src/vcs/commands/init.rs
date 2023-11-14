@@ -1,5 +1,7 @@
 use std::{path::{Path, PathBuf}, fs::{self, File}, io::{Write, Read, self}};
 
+use crate::constants::constants::RUST_PATH;
+
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
     pub example_text: String,
@@ -138,9 +140,9 @@ impl Init {
         Ok(())
     }
 
-    pub fn get_object_path(path: &PathBuf, git_path: &str) -> Result<PathBuf,std::io::Error>{
+    pub fn get_object_path(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
         let p = Path::new(path);
-        let objects_path = p.join(git_path).join("objects");
+        let objects_path = p.join(RUST_PATH).join("objects");
         Ok(Path::new(&objects_path).to_path_buf())
     }
 

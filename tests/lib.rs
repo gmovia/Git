@@ -18,6 +18,9 @@ pub mod vcs{
     pub mod checkout;
     pub mod merge;
     pub mod reset;
+    pub mod repository;
+    pub mod ls_files;
+    pub mod ls_tree;
 }
 
 pub mod tests_functions;

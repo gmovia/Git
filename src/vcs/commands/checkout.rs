@@ -1,9 +1,6 @@
 use std::{path::{Path, PathBuf}, fs::File, io::{Write, self}};
-
 use crate::{vcs::files::{repository::Repository, index::Index}, utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders}};
-
 use super::{branch::Branch, cat_file::CatFile, init::Init};
-
 
 pub struct Checkout;
 
@@ -42,7 +39,7 @@ impl Checkout{
         delete_all_files_and_folders(path)?;
 
         for (key, value) in repository_hashmap{
-            let content = CatFile::cat_file(&value, Init::get_object_path(path, ".rust_git")?)?;
+            let content = CatFile::cat_file(&value, Init::get_object_path(path)?)?;
             create_file_and_their_folders(Path::new(&key), &content)?
         }
         Ok(())

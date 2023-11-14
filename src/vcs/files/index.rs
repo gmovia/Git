@@ -1,12 +1,13 @@
-use crate::vcs::{files::vcs_file::VCSFile, version_control_system::VersionControlSystem};
+use crate::vcs::files::vcs_file::VCSFile;
 use std::{path::PathBuf, fs::{OpenOptions, File}, io::{Write, self, BufRead}, collections::HashMap};
+use super::current_repository::CurrentRepository;
 
 #[derive(Debug, Clone)]
 pub struct Index;
 
 impl Index{
     pub fn index_path() -> Result<PathBuf, io::Error>{
-        let vcs_path = VersionControlSystem::read_current_repository()?;
+        let vcs_path = CurrentRepository::read()?;
         let path = vcs_path.join(".rust_git").join("index");
         Ok(path)
     }
@@ -32,20 +33,15 @@ impl Index{
     /// Devuelve el hashmap.
     pub fn read_index() -> Result<HashMap<String,VCSFile>,std::io::Error>{
         let mut staging_area:HashMap<String, VCSFile>  = HashMap::new();
-        println!("INDEX PATH {:?}",Self::index_path());
         let index_file = OpenOptions::new().read(true).open(Self::index_path()?)?;
         let reader = io::BufReader::new(index_file);
-        println!("READER {:?}",reader);
         for line in reader.lines().filter_map(Result::ok){
-            println!("LINE {:?}",line);
             let parts: Vec<&str> = line.split("-").collect();
             let file = VCSFile::new(parts[0].to_string(), parts[2].to_string(), parts[1].to_string());
             staging_area.insert(parts[0].to_string(), file);
         }
-        println!("staging {:?}",staging_area);
         Ok(staging_area)
     }
-    
     
     /// Recibe index y un archivo
     /// Escribe el archivo en index

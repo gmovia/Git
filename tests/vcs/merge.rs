@@ -51,7 +51,7 @@ mod tests {
         assert_eq!(conflicts.len(), 0);
 
         let repository = Repository::read_repository()?;
-        println!("{:?}", repository);
+
         assert_eq!(repository.len(), 4);
         Ok(())    
     }

@@ -1,18 +1,17 @@
 
 use std::{path::Path, collections::HashMap};
-
 use gtk::{prelude::*, Button, ComboBoxText};
-use crate::vcs::version_control_system::VersionControlSystem;
+use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::repositories::Repositories};
 
 pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
-    let branches = VersionControlSystem::get_branches()?;
+    let branches = VersionControlSystem::branch(BranchOptions::GetBranches)?;
     draw_branches(&branches, combo_box);
     Ok(())
 }
 
 pub fn repositories(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
     
-    let repositories = VersionControlSystem::read_bdd_of_repositories()?;
+    let repositories = Repositories::read()?;
     draw_repositories(&repositories, combo_box);
     Ok(())
 }
@@ -101,8 +100,8 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
                 rc_grid.remove(widget);
                 rc_grid.remove(&path_label);
                 rc_grid.remove(&state_label);
-                rc_add.add(&path_label);
-                rc_add.add(&reset_button);
+                rc_add.attach(&path_label, 0, index as i32, 1, 1);
+                rc_add.attach(&reset_button, 1, index as i32, 1, 1);
         }});
 
         let reset_button = reset_button.clone();

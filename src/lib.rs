@@ -13,6 +13,13 @@ pub mod handlers{
     pub mod checkout;
     pub mod log;
     pub mod commit;
+    pub mod merge;
+    pub mod ls_files;
+    pub mod ls_tree;
+}
+
+pub mod proxy{
+    pub mod proxy;
 }
 
 pub mod interface{
@@ -22,6 +29,7 @@ pub mod interface{
     pub mod css;
     pub mod handler_button;
 }
+
 pub mod types{
     pub mod types;
 }
@@ -49,7 +57,9 @@ pub mod vcs{
         pub mod vcs_file;
         pub mod index;
         pub mod repository;
+        pub mod current_repository;
         pub mod commits_table;
+        pub mod repositories;
     }
 
     pub mod commands{
@@ -66,6 +76,8 @@ pub mod vcs{
         pub mod merge;
         pub mod diff;
         pub mod reset;
+        pub mod ls_files;
+        pub mod ls_tree;
     }
 
     pub mod sets{
@@ -73,7 +85,11 @@ pub mod vcs{
     }
 
     pub mod entities{
-        pub mod commit_entry;
+        pub mod entity;
+        pub mod commit_table_entry;
+        pub mod commit_entity;
+        pub mod tree_entity;
+        pub mod blob_entity;
         pub mod change;
         pub mod conflict;
     }
