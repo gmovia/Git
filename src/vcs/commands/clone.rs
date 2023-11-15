@@ -308,15 +308,16 @@ impl Clone{
 
     fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
         let signature_pack_msg = &pack[0..4];
-        println!("SIGNATURE: {:?} - {:?}", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
+        println!("SIGNATURE: {:?} - {:?}\n", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
         let version = &pack[4..8];
-        println!("VERSION: {:?} - {:?}", version, Self::parse_number(version)?);
+        println!("VERSION: {:?} - {:?}\n", version, Self::parse_number(version)?);
         let object_number = Self::parse_number(&pack[8..12])?;
-        println!("CANTIDAD DE OBJETOS: {}", object_number);
-        
+        println!("CANTIDAD DE OBJETOS: {}\n", object_number);
+        let object_numer_correctly: u8 = 0b00001011;
+
         let mut position: usize = 12;
         let mut objects = Vec::new();
-        for object in 0..object_number {
+        for object in 0..object_numer_correctly {
             let objet_type = Self::get_object_type(pack[position]);
             while Self::is_bit_set(pack[position]) {
                 position = position + 1;

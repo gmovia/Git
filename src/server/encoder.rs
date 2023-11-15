@@ -27,9 +27,33 @@ impl Encoder {
         Ok(packfile)
     }
     
+    fn get_objects_number(path: &Path) -> Result<usize, std::io::Error> {
+        let objects_path = path.join(".rust_git").join("objects");
+        let mut total_files = 0;
+    
+        if let Ok(entries) = fs::read_dir(objects_path) {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    if entry.file_type()?.is_dir() {
+                        if let Ok(subdir_entries) = fs::read_dir(entry.path()) {
+                            let mut files = 0;
+                            for subdir_entry in subdir_entries {
+                                if let Ok(subdir_entry) = subdir_entry {
+                                    if subdir_entry.file_type()?.is_file() {
+                                        files += 1;
+                                    }
+                                }
+                            }
+                            total_files += files;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(total_files)
+    }
 
-
-    fn get_objects_number(path: &PathBuf) -> Result<usize, std::io::Error> {
+/*     fn get_objects_number(path: &PathBuf) -> Result<usize, std::io::Error> {
         let objects_path = path.join(".rust_git").join("objects");
         let mut objects = 0;
         let entries = fs::read_dir(objects_path)?;
@@ -40,8 +64,9 @@ impl Encoder {
                 objects += 1;
             }
         }
+        println!("CANTIDADDDD DE OBJETOSSSS ESSSS -------____________________----> {:?}", objects);
         Ok(objects)
-    }
+    } */
 
     fn create_packfile(path: &PathBuf) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile: Vec<u8> = Vec::new();
@@ -49,16 +74,18 @@ impl Encoder {
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-        println!("OBJECTS DATA: {:?}", objects_data);
+        println!("PROCESSS DIRECTORY MANDA {:?}\n", objects_data.len());
+        println!("OBJECTS DATA: {:?}\n", objects_data);
 
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
                 packfile.push(object);
             }
-
             let path = Path::new(&objects.0);
+            //Objects hasta aca esta completo!!!
             
+            //Compress data puede no tirarmelo todo en ok!!! D:
             let compress_data = Self::compress_object((&path).to_path_buf(), objects.1)?;
             for byte in compress_data {
                 packfile.push(byte);    
@@ -236,7 +263,7 @@ impl Encoder {
         
         file.read_to_string(&mut content)?;
 
-        println!("CONTENT: {:?}\n", content);
+       // println!("CONTENT: {:?}\n", content);
         if !(content.contains("100644") || content.contains("40000")) && content.contains("tree") {
             return Ok((file_path.to_string_lossy().to_string(),1 as usize,metadata.len() as usize))
         } else if content.contains("100644") || content.contains("40000"){
@@ -253,14 +280,13 @@ impl Encoder {
             let entry_path = entrada.path();
             if entry_path.is_file() {
                 let data = Self::process_file(&entry_path)?;
-                println!("LA DATA QUE SE VA PROCesando y agregando a objects_data es: {:?}\n", data);
-
                 objects_data.push(data);
             }
             else {
                 Self::process_directory(&entry_path, objects_data)?;
             }
         }
+        //println!("PROCESSS DIRECTORY MANDA {:?}\n", objects_data.len());
         Ok(objects_data.to_vec())
     }
 
@@ -278,15 +304,14 @@ impl Encoder {
 
     fn compress_object(archivo_entrada: PathBuf, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
         let mut entrada = File::open(archivo_entrada)?;
-        
+        let temp_dir = TempDir::new("my_temp_dir")?;
+
         if object_type == 2 {
             let mut buf = String::new();
             let _ = entrada.read_to_string(&mut buf);  
 
             buf = Self::modify_entry_tree(&buf.clone());
     
-            println!("CONTENT compress_object ---->: {}", buf); 
-
             let temp_dir = TempDir::new("my_temp_dir")?;
             let temp_file_path = temp_dir.path().join("temp_file.txt");
             let mut temp_file = File::create(&temp_file_path)?;
@@ -297,7 +322,8 @@ impl Encoder {
         let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
         io::copy(&mut entrada, &mut encoder)?;
         let datos_comprimidos = encoder.finish()?;
-        
+        let _ = fs::remove_file(temp_dir);
+
         Ok(datos_comprimidos)
     } 
 }
