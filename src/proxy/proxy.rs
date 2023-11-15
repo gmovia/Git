@@ -1,5 +1,5 @@
-use std::path::PathBuf;
-use crate::vcs::entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity};
+use std::{path::{PathBuf, Path}, fs::{OpenOptions, self}, io::Write};
+use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::random::random::Random, constants::constants::TREE_CODE};
 
 pub struct Proxy;
 
@@ -13,8 +13,29 @@ impl Proxy{
         Ok(CommitEntity::read(&repo_path, &commit_hash)?)
     }
 
-    pub fn write_tree(repo_path: PathBuf, entities: Vec<Entity>) -> Result<String, std::io::Error>{
-        Ok(TreeEntity::write(&repo_path, &entities)?)
+    pub fn write_tree(repo_path: PathBuf, content: &String) -> Result<String, std::io::Error>{
+
+        let entity_strings: Vec<&str> = content.split('\n').collect();
+
+        let tree_path = Path::new(&repo_path).join(Random::random());
+        let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&tree_path)?; 
+    
+
+        for entries in entity_strings {
+            let parts: Vec<&str> = entries.split('-').collect();
+            if parts[0] == "40000"{
+                let content = format!("{} tree {} {}\n", parts[0], parts[2], parts[1]);
+                tree_file.write_all(content.as_bytes())?;
+            }else{
+                let content = format!("{} blob {} {}\n", parts[0], parts[2], parts[1]);
+                tree_file.write_all(content.as_bytes())?;
+            }
+        }
+
+        let hash_tree = HashObject::hash_object(&tree_path, Init::get_object_path(&repo_path)?, WriteOption::Write, TREE_CODE)?;
+        let _ = fs::remove_file(tree_path);
+
+        Ok(hash_tree)
     } 
 
     pub fn read_tree(repo_path: PathBuf, tree_hash: String) -> Result<Vec<Entity>, std::io::Error>{
