@@ -6,7 +6,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_ls_files, handle_ls_tree};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -79,7 +79,9 @@ pub struct RustInterface {
     pub tree_box: gtk::Box,
     pub close_tree: gtk::Button,
     pub apply_tree: gtk::Button,
-
+    pub other_commands: gtk::Button,
+    pub others_dialog: gtk::Dialog,
+    pub others_close: gtk::Button,
 }
 
 impl RustInterface {
@@ -165,6 +167,9 @@ impl RustInterface {
             tree_box: builder.object("ls-tree-box").unwrap(),
             close_tree: builder.object("close-tree").unwrap(),
             apply_tree: builder.object("apply-tree").unwrap(),
+            other_commands: builder.object("other-commands").unwrap(),
+            others_close: builder.object("others-close").unwrap(),
+            others_dialog: builder.object("others-dialog").unwrap(),
         }
     }
     
@@ -184,8 +189,7 @@ impl RustInterface {
         handle_rm(&self);
         handle_merge(&self);
         handle_repository(&self);
-        handle_ls_files(&self);
-        handle_ls_tree(&self);
+        handle_other_commands(&self);
 
         self.window.show_all();   
         gtk::main();

@@ -5,6 +5,29 @@ use crate::{vcs::{version_control_system::VersionControlSystem, entities::{confl
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons}, draw::changes_and_staging_area};
 use gtk::{prelude::*, Button};
 
+pub fn handle_other_commands(interface: &RustInterface) {
+
+    let dialog = interface.others_dialog.clone();
+
+    interface.other_commands.connect_clicked({
+        move |_| {
+            dialog.run();
+            dialog.hide();
+        }
+    });
+
+    handle_ls_files(interface);
+    handle_ls_tree(interface);
+
+    interface.others_close.connect_clicked({
+       let dialog2 = interface.others_dialog.clone(); 
+       move |_| {
+            dialog2.hide();
+       } 
+    });
+    
+}
+
 pub fn handle_repository(interface: &RustInterface) {
     let dialog = interface.repository_dialog.clone();
 
