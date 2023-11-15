@@ -2,7 +2,7 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository},
+    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, client::client::Client,
 };
 
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
@@ -75,6 +75,12 @@ impl VersionControlSystem {
 
     pub fn resolve_conflicts(branch: &str, conflicts: HashMap<String, Conflict>) -> Result<HashMap<String, Conflict>,std::io::Error> {
         Merge::merge(branch, conflicts)
+    }
+
+    pub fn git_clone(message: String)-> Result<(), std::io::Error>{
+        let current = CurrentRepository::read()?;
+        let _ = Client::client(message, &current);
+        Ok(())
     }
 
     pub fn ls_files(option: LsFilesOptions) -> Result<Vec<String>,std::io::Error>{

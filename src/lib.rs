@@ -14,12 +14,27 @@ pub mod handlers{
     pub mod log;
     pub mod commit;
     pub mod merge;
+    pub mod clone;
     pub mod ls_files;
     pub mod ls_tree;
 }
 
 pub mod proxy{
     pub mod proxy;
+}
+
+pub mod client{
+    pub mod client;
+}
+
+pub mod server{
+    pub mod server;
+    pub mod upload_pack;
+    pub mod encoder;
+}
+
+pub mod packfile{
+    pub mod packfile;
 }
 
 pub mod interface{
@@ -76,6 +91,7 @@ pub mod vcs{
         pub mod merge;
         pub mod diff;
         pub mod reset;
+        pub mod clone;
         pub mod ls_files;
         pub mod ls_tree;
     }

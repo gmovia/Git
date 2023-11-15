@@ -13,7 +13,6 @@ impl Repository{
         let mut local_repository: HashMap<String, String>  = HashMap::new();
         
         let commits_file = OpenOptions::new().read(true).open(Init::get_commits_path(&current_path)?)?;
-
         let reader = io::BufReader::new(commits_file);
         
         if let Some(last_commit) = reader.lines().filter_map(Result::ok).last(){
