@@ -178,14 +178,6 @@ impl Clone{
                 parent_hash: partes[1].trim_end_matches("\n").trim_start_matches("\n").trim_start_matches("parent ").to_string(),
             };
         }
-        println!("Content Type: {}", commit_entity.content_type);
-        println!("Tree Hash: {}", commit_entity.tree_hash);
-        println!("Author: {}", commit_entity.author);
-        println!("Committer: {}", commit_entity.committer);
-        println!("Message: {}", commit_entity.message);
-        println!("PARENT: {}", commit_entity.parent_hash);
-
-
         let hash_commit = Proxy::write_commit(repo.clone(), &commit_entity)?;
 
         Ok((hash_commit, commit_entity))
@@ -328,9 +320,6 @@ impl Clone{
                 println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
                 position = position + data.1 as usize; 
                 objects.push((objet_type, data.0))   
-            }
-            else {
-                println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&pack[position..]));
             }
         }
         objects.sort_by(|a, b| a.0.cmp(&b.0));
