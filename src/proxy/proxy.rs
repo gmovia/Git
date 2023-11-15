@@ -15,12 +15,13 @@ impl Proxy{
 
     pub fn write_tree(repo_path: PathBuf, content: &String) -> Result<String, std::io::Error>{
 
-        let entity_strings: Vec<&str> = content.split('\n').collect();
-
+        let entity_strings: Vec<&str> = content.split('\n')
+        .filter(|&s| !s.is_empty())
+        .collect();
+    
         let tree_path = Path::new(&repo_path).join(Random::random());
         let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&tree_path)?; 
     
-
         for entries in entity_strings {
             let parts: Vec<&str> = entries.split('-').collect();
             if parts[0] == "40000"{
