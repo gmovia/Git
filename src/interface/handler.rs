@@ -116,7 +116,7 @@ pub fn handle_log(interface: &RustInterface) {
                 log_box.remove(child);
             });
             if let Ok(log) = VersionControlSystem::log() {
-                add_message(&log_box, &log);
+                add_message(&log_box, &log, 0.5);
             }
             
             dialog.run();
@@ -215,11 +215,11 @@ pub fn handle_merge(interface: &RustInterface) {
             });
             if let Ok(conflicts) = VersionControlSystem::merge(&m_entry.text()){
                 if conflicts.len() == 0 {
-                    add_message(&m_changes, &"Merged successfully".to_string());
+                    add_message(&m_changes, &"Merged successfully".to_string(), 0.5);
                     button_resolve.set_sensitive(false);
                 }
                 else{
-                    add_message(&m_changes, &"Conflicts need to be resolve".to_string());
+                    add_message(&m_changes, &"Conflicts need to be resolve".to_string(), 0.5);
                     button_resolve.set_visible(true);
                     button_resolve.set_sensitive(true);
                     button_resolve.connect_clicked({
@@ -287,7 +287,7 @@ pub fn handle_merge(interface: &RustInterface) {
                             m_box.foreach(|child| {
                                 m_box.remove(child);
                             });
-                            add_message(&m_box, &"Merged successfully".to_string());
+                            add_message(&m_box, &"Merged successfully".to_string(), 0.5);
                             button.set_sensitive(false);
                         }
                     });   
@@ -403,11 +403,64 @@ pub fn handle_ls_files(interface: &RustInterface) {
 
 }
 
-pub fn add_message(m_changes: &gtk::Box, message: &String) {
+pub fn handle_ls_tree(interface: &RustInterface) {
+    let tree_dialog = interface.ls_tree_dialog.clone();
+    let rc_box = interface.tree_box.clone();
+    let rc_entry = interface.tree_branch_entry.clone();
+
+    interface.tree_box.set_visible(false);
+
+    let apply = interface.apply_tree.clone();
+
+    interface.apply_tree.set_sensitive(false);
+
+    interface.tree_branch_entry.connect_changed({  
+        move |e| {
+        apply.set_sensitive(!e.text().is_empty());
+    }});
+
+    interface.ls_tree.connect_clicked({
+        let rc_box = rc_box.clone();
+        let rc_entry = rc_entry.clone();
+        move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            tree_dialog.run();
+            tree_dialog.hide();
+            rc_entry.set_text("");
+        }
+    });
+
+    interface.apply_tree.connect_clicked({
+        let rc_box = rc_box.clone();
+        move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            if let Ok(information) = VersionControlSystem::ls_tree(&rc_entry.text().to_string()) {
+                for entry in information {
+                    let message = format!("{}\n",entry);
+                    add_message(&rc_box, &message, 0.0);
+                }
+            }
+            rc_box.set_visible(true);
+            rc_entry.set_text("");
+        }
+    });
+
+    interface.close_tree.connect_clicked({
+        let dialog_2 = interface.ls_tree_dialog.clone();
+        move |_| {
+            dialog_2.hide();
+    }});
+}
+
+pub fn add_message(m_changes: &gtk::Box, message: &String, align: f32) {
     let label = gtk::Label::new(Some(message));
     label.set_visible(true);
-    label.set_xalign(0.5);
-    label.set_yalign(0.5);
+    label.set_xalign(align);
+    label.set_yalign(align);
     m_changes.add(&label);
 }
 

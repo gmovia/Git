@@ -18,19 +18,19 @@ impl Log {
 
         let mut log = String::new();
         for line in lines.iter().rev() {
-            let parts: Vec<&str> = line.splitn(4, '-').collect();
-            let (_ , hash, message, date_str) = (parts[0], parts[1], parts[2], parts[3].trim_matches(|c| c == '[' || c == ']'));
+            let parts: Vec<&str> = line.splitn(5, '-').collect();
+            let (_ , tree_hash, message, date_str) = (parts[0], parts[2], parts[3], parts[4].trim_matches(|c| c == '[' || c == ']'));
             let date_time = date_str.split('.').next().unwrap();
 
             if let Ok(parsed_date_time) = chrono::NaiveDateTime::parse_from_str(date_time, "%Y-%m-%d %H:%M:%S") {
                 let formatted_date = parsed_date_time.format("%a %b %d %T %Y");
 
-                log.push_str(&format!(" {} {} ","\n commit:",hash));
+                log.push_str(&format!(" {} {} ","\n commit:",tree_hash));
                 log.push_str(&"\n Author: ldiazc <ldiazc@fi.uba.ar>");
                 log.push_str(&format!("\n {} {} ","Date:",formatted_date));
                 log.push_str(&format!("\n {} {} ","   message: ",message));
                 log.push_str("\n ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~");
-                println!("\n commit: {} ", hash);
+                println!("\n commit: {} ", tree_hash);
                 println!("Author: ldiazc <ldiazc@fi.uba.ar>");
                 println!("Date: {}", formatted_date);
                 println!("\n    {}", message);

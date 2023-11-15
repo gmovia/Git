@@ -5,7 +5,7 @@ use crate::{
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, client::client::Client,
 };
 
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
 use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
@@ -86,5 +86,10 @@ impl VersionControlSystem {
     pub fn ls_files(option: LsFilesOptions) -> Result<Vec<String>,std::io::Error>{
         let current = CurrentRepository::read()?;
         LsFiles::ls_files(option, &current)
+    }
+
+    pub fn ls_tree(branch: &str) -> Result<Vec<String>, std::io::Error>{
+        let current = CurrentRepository::read()?;
+        LsTree::ls_tree(branch, &current)
     }
 }

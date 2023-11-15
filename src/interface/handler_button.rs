@@ -157,32 +157,27 @@ pub fn handle_ls_files_buttons(interface: &RustInterface, button_file: &gtk::But
                     "all" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::EverythingInVCS) {
                                 for entry in files {
                                     let message = format!("{}\n",entry);
-                                    add_message(&rc_box, &message);
-                                    add_message(&rc_box, &"\n".to_string());
+                                    add_message(&rc_box, &message, 0.5);
                                 }}},
                     "-o" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::OnlyUntracked) {
                                 for entry in files {
                                     let message = format!("{}\n",entry);
-                                    add_message(&rc_box, &message);
-                                    add_message(&rc_box, &"\n".to_string());
+                                    add_message(&rc_box, &message, 0.5);
                                 }}},
                     "-m" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::OnlyModified) {
                                 for entry in files {
                                     let message = format!("{}\n",entry);
-                                    add_message(&rc_box, &message);
-                                    add_message(&rc_box, &"\n".to_string());
+                                    add_message(&rc_box, &message, 0.5);
                                 }}},
                     "-d" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::OnlyDeleted) {
                                 for entry in files {
                                     let message = format!("{}\n",entry);
-                                    add_message(&rc_box, &message);
-                                    add_message(&rc_box, &"\n".to_string());
+                                    add_message(&rc_box, &message, 0.5);
                                 }}},
                     "-c" => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::OnlyStaging) {
                                 for entry in files {
                                     let message = format!("{}\n",entry);
-                                    add_message(&rc_box, &message);
-                                    add_message(&rc_box, &"\n".to_string());
+                                    add_message(&rc_box, &message, 0.5);
                                 }}},
                     _ => {},
                 }

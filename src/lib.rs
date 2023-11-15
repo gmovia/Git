@@ -16,6 +16,7 @@ pub mod handlers{
     pub mod merge;
     pub mod clone;
     pub mod ls_files;
+    pub mod ls_tree;
 }
 
 pub mod proxy{
@@ -92,6 +93,7 @@ pub mod vcs{
         pub mod reset;
         pub mod clone;
         pub mod ls_files;
+        pub mod ls_tree;
     }
 
     pub mod sets{
