@@ -313,11 +313,10 @@ impl Clone{
         println!("VERSION: {:?} - {:?}\n", version, Self::parse_number(version)?);
         let object_number = Self::parse_number(&pack[8..12])?;
         println!("CANTIDAD DE OBJETOS: {}\n", object_number);
-        let object_numer_correctly: u8 = 0b00001011;
-
+        
         let mut position: usize = 12;
         let mut objects = Vec::new();
-        for object in 0..object_numer_correctly {
+        for object in 0..object_number {
             let objet_type = Self::get_object_type(pack[position]);
             while Self::is_bit_set(pack[position]) {
                 position = position + 1;
