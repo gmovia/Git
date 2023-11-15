@@ -24,8 +24,8 @@ impl Encoder {
             packfile = Self::create_packfile(&encoder.path)?;        
         }
         else {
-            println!("ENTRA BIEN");
-            //packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
+            println!("ENTRA BIEN. EL PATH ES: {:?}", path);
+            packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
         }
         Ok(packfile)
     }
@@ -69,107 +69,47 @@ impl Encoder {
         }
         Ok(packfile)
     }
-/* 
-    fn create_fetch_packfile(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
+ 
+    fn create_fetch_packfile(server_path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile = Vec::new();
-        Self::create_header(&mut packfile, path)?;        
-        let current = VersionControlSystem::read_current_repository()?;
-        let formatted_path = format!("test_folder/{}", current.display().to_string()); // Puede ser aca el error?
-        let path_server = Path::new(&formatted_path);
+        Self::create_header(&mut packfile, server_path)?;
+        let mut client_path = String::new();
+        if let Some(path) = server_path.file_name() {
+            client_path = path.to_string_lossy().to_string();
+        };
 
+        println!("PATH SERVER: {:?}, PATH CLINET: {:?}", server_path, client_path);
+        println!("MENSAJES: {:?}", messages);
         
-        let mut objects_to_send: Vec<(String,String)> = Vec::new();
-        objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages, &mut objects_to_send)?;
-        println!("DATA TO SEND: {:?}", objects_to_send);
-
-
-        let mut objects_to_encode: Vec<(String,usize,usize)> = Vec::new();
-        for objects in objects_to_send {
-            let path = format!("{}/.rust_git/objects", path_server.display());
-            let content = CatFile::cat_file(&objects.1, (&path).into())?;
-            let tree_path = format!("{}/{}/{}",path,  &objects.1[0..2], &objects.1[2..]);
-            objects_to_encode.push((tree_path, 2, content.len() as usize));
-            Self::get_blobs(content, &mut objects_to_encode, path_server)?;
-        }
-        println!("OBJECTS TO ENCODE: {:?}", objects_to_encode);
-
-        for objects in objects_to_encode.iter().rev() {
-            let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
-            for object in object_type {
-                packfile.push(object);
-            }
-            let path = Path::new(&objects.0);
-            let compress_data = Self::compress_object((&path).to_path_buf())?;
-            for byte in compress_data {
-                packfile.push(byte);    
-            }
-        }
+        let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
+        Self::fetch_process_directory(&server_path.join(".rust_git").join("objects"), &mut objects_data, messages)?;
+        println!("OBJECTS DATA: {:?}", objects_data);
 
         Ok(packfile)
     }
-*/
-    fn get_blobs(content: String, objects_to_encode: &mut Vec<(String,usize,usize)>, path: &Path) -> Result<(),std::io::Error> {
-        let mut blobs: Vec<&str> = content.split("\n").collect();
-        blobs.pop();
-        for blob in blobs {
-            let hash_blob: Vec<&str> = blob.split("-").collect();
-            let path_server = format!("{}/.rust_git/objects", path.display());
-            let blob_content = CatFile::cat_file(&hash_blob[1], (&path_server).into())?;
-            let blob_path = format!("{}/{}/{}",path_server,  &hash_blob[1][0..2], &hash_blob[1][2..]);
-            objects_to_encode.push((blob_path,3,blob_content.len() as usize));
-        }
-        Ok(())
-    }
 
-    fn process_logs(path: &PathBuf, messages: &(Vec<String>,Vec<String>), object_to_send_list: &mut Vec<(String, String)>) -> Result<Vec<(String,String)>, std::io::Error> {
-        let mut data_to_send = Vec::new();
+    fn fetch_process_directory(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+        // EN ESTA FUNCION TENGO QUE VALIDAR SI EL OBJETO VA O NO. NO SE ME OCURRE COMO. QUIZAS PUEDO RECORRER EL LOG Y VER EL COMMIT AHI
         for entrada in fs::read_dir(path)? {
             let entrada = entrada?;
             let entry_path = entrada.path();
+            println!("ENTRY PATH: {:?}", entry_path);
             if entry_path.is_file() {
-                data_to_send = Self::process_log_file(&entry_path, &messages, object_to_send_list)?;
+                println!("ES ARCHIVO");
+                let data = Self::process_file(&entry_path)?;
+                println!("LA DATA QUE SE VA PROCesando y agregando a objects_data es: {:?}\n", data);
+
+                objects_data.push(data);
+            }
+            else {
+                println!("NO ES ARCHIVO");
+                Self::process_directory(&entry_path, objects_data)?;
             }
         }
-        Ok(data_to_send)        
+        Ok(objects_data.to_vec())
     }
 
-    fn process_log_file(file_path: &PathBuf, messages: &(Vec<String>,Vec<String>), object_to_send_list: &mut Vec<(String, String)>) -> Result<Vec<(String,String)>,std::io::Error> {
-        println!("PROCESS LOG FILE: {:?}",file_path);
-        println!("{:?}-{:?}", &messages.0,&messages.1);
 
-        if let Some(branch) = file_path.file_name() {
-            let branch_as_string: String = branch.to_string_lossy().to_string();
-            let file = fs::File::open(file_path)?;
-            
-            let reader = io::BufReader::new(file);
-            let mut last_line = String::new();
-            for line in reader.lines() {
-                last_line = line?;
-            }
-            
-            let content_vec: Vec<&str> = last_line.split('-').collect();
-            println!("CONTENT VEC: {:?}", content_vec);
-            for message in &messages.0 {   
-                println!("ACA: {}-{}-{:?}", message, branch_as_string,&content_vec);
-                println!("COND 1: {}", message.contains(&branch_as_string));
-                println!("COND 2: {}", message.contains(&content_vec[1]));
-                if message.contains(&branch_as_string) && message.contains(&content_vec[1]) {
-                    object_to_send_list.push((file_path.to_string_lossy().to_string(), content_vec[1].to_owned()));
-                    println!("PUSH: {:?}", object_to_send_list);
-                }
-                else {
-                    println!("NO ENTRO");
-                }
-            }
-            println!("VECTOR: {:?}", object_to_send_list);
-        } else {
-            return Err(std::io::Error::new(io::ErrorKind::NotFound, "Branch name not found"));
-        }
-        println!("OBJECT TO SEND: {:?}", object_to_send_list);
-        Ok(object_to_send_list.to_vec())
-    }
-
-    
     fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
         if object_type > 7 {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid object type"));

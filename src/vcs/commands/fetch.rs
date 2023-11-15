@@ -135,7 +135,11 @@ impl Fetch {
         
         let mut position: usize = 12;
         let mut objects = Vec::new();
+        let pack_len = pack.len();
         for object in 0..object_number {
+            if pack_len <= position {
+                break;
+            }
             let objet_type = Self::get_object_type(pack[position]);
             while Self::is_bit_set(pack[position]) {
                 position = position + 1;
