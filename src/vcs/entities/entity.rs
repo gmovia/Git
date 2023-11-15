@@ -58,7 +58,7 @@ pub fn convert_to_entities(hash_map: &HashMap<String, String>, prefix: &str) -> 
                     content_type: "tree".to_string(),
                     path: format!("{}{}", prefix, path_parts[0]),
                     entities: tree_entities,
-                    tree_hash: "".to_string(), //COMO QUE TREE_HASH VACIO????
+                    tree_hash: "".to_string(),
                 };
 
                 entities.push(Entity::Tree(tree));

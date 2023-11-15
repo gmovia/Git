@@ -116,7 +116,7 @@ pub fn handle_log(interface: &RustInterface) {
                 log_box.remove(child);
             });
             if let Ok(log) = VersionControlSystem::log() {
-                add_message(&log_box, &log);
+                add_message(&log_box, &log, 0.5);
             }
             
             dialog.run();
@@ -215,11 +215,11 @@ pub fn handle_merge(interface: &RustInterface) {
             });
             if let Ok(conflicts) = VersionControlSystem::merge(&m_entry.text()){
                 if conflicts.len() == 0 {
-                    add_message(&m_changes, &"Merged successfully".to_string());
+                    add_message(&m_changes, &"Merged successfully".to_string(), 0.5);
                     button_resolve.set_sensitive(false);
                 }
                 else{
-                    add_message(&m_changes, &"Conflicts need to be resolve".to_string());
+                    add_message(&m_changes, &"Conflicts need to be resolve".to_string(), 0.5);
                     button_resolve.set_visible(true);
                     button_resolve.set_sensitive(true);
                     button_resolve.connect_clicked({
@@ -287,7 +287,7 @@ pub fn handle_merge(interface: &RustInterface) {
                             m_box.foreach(|child| {
                                 m_box.remove(child);
                             });
-                            add_message(&m_box, &"Merged successfully".to_string());
+                            add_message(&m_box, &"Merged successfully".to_string(), 0.5);
                             button.set_sensitive(false);
                         }
                     });   
@@ -441,8 +441,7 @@ pub fn handle_ls_tree(interface: &RustInterface) {
             if let Ok(information) = VersionControlSystem::ls_tree(&rc_entry.text().to_string()) {
                 for entry in information {
                     let message = format!("{}\n",entry);
-                    add_message(&rc_box, &message);
-                    add_message(&rc_box, &"\n".to_string());
+                    add_message(&rc_box, &message, 0.0);
                 }
             }
             rc_box.set_visible(true);
@@ -457,11 +456,11 @@ pub fn handle_ls_tree(interface: &RustInterface) {
     }});
 }
 
-pub fn add_message(m_changes: &gtk::Box, message: &String) {
+pub fn add_message(m_changes: &gtk::Box, message: &String, align: f32) {
     let label = gtk::Label::new(Some(message));
     label.set_visible(true);
-    label.set_xalign(0.5);
-    label.set_yalign(0.5);
+    label.set_xalign(align);
+    label.set_yalign(align);
     m_changes.add(&label);
 }
 

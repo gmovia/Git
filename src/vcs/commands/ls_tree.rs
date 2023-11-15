@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::vcs::{files::commits_table::CommitsTable, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::{Entity, convert_to_repository, convert_to_entities}}};
+use crate::vcs::{files::commits_table::CommitsTable, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}};
 
 
 
@@ -29,21 +29,35 @@ impl LsTree {
         if let Some(last_commit) = commits.last() {
             let commit = CommitEntity::read(path, &last_commit.hash.clone())?;
             let entities = TreeEntity::read(path, commit.tree_hash.clone())?;
-            let repository = convert_to_repository(&entities, path.to_path_buf()); //NECESITO METER TAMBIEN EL HASH DEL TREE
-            let content = convert_to_entities(&repository, &format!("{}/", &path.display().to_string()));
-            Self::read_entities(content, information);
+            Self::read_entities(entities, information, 0);
         }
         Ok(information.to_vec())
     }
 
-    pub fn read_entities(content: Vec<Entity>, information: &mut Vec<String>) {
+    pub fn read_entities(content: Vec<Entity>, information: &mut Vec<String>, depth: usize) {
         for entity in content {
             match entity {
-                Entity::Blob(blob) => {information.push(format!("{} {} {}",blob.content_type, blob.blob_hash, blob.path));},
-                Entity::Tree(tree) => {information.push(format!("{} {} {}",tree.content_type, tree.tree_hash, tree.path));
-                                                    Self::read_entities(tree.entities, information);
-                                                    },
+                Entity::Blob(blob) => {
+                    information.push(format!(
+                        "{} - {} {} {}",
+                        "    ".repeat(depth),
+                        blob.content_type,
+                        blob.blob_hash,
+                        blob.path
+                    ));
+                }
+                Entity::Tree(tree) => {
+                    information.push(format!(
+                        "{} - {} {} {}",
+                        "    ".repeat(depth),
+                        tree.content_type,
+                        tree.tree_hash,
+                        tree.path
+                    ));
+                    Self::read_entities(tree.entities, information, depth + 3);
+                }
             }
         }
     }
+    
 }
