@@ -29,9 +29,7 @@ impl LsTree {
         if let Some(last_commit) = commits.last() {
             let commit = CommitEntity::read(path, &last_commit.hash.clone())?;
             let entities = TreeEntity::read(path, commit.tree_hash.clone())?;
-            let repository = convert_to_repository(&entities, path.to_path_buf()); //NECESITO METER TAMBIEN EL HASH DEL TREE
-            let content = convert_to_entities(&repository, &format!("{}/", &path.display().to_string()));
-            Self::read_entities(content, information);
+            Self::read_entities(entities, information);
         }
         Ok(information.to_vec())
     }
