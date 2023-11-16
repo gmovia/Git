@@ -488,7 +488,7 @@ pub fn add_message(m_changes: &gtk::Box, message: &String, align: f32) {
 }
 
 
-/* 
+ 
 pub fn handle_clone(interface: &RustInterface) {
     
     let c_entry = interface.clone_entry.clone();
@@ -520,27 +520,26 @@ pub fn handle_clone(interface: &RustInterface) {
                 let close = Button::builder()
                 .label("close")
                 .build();
-            close.set_visible(true);
-            fix_clone.add(&label);
-            info.add(&close);
-            info.add(&fix_clone);
-            info.set_visible(true);
-            close.connect_clicked({
-                let info = info.clone();
-                move |_| {
-                    info.foreach({|child|{
-                        info.remove(child);
-                    }});
-                }
-            });
+                close.set_visible(true);
+                fix_clone.add(&label);
+                info.add(&close);
+                info.add(&fix_clone);
+                info.set_visible(true);
+                close.connect_clicked({
+                    let info = info.clone();
+                    move |_| {
+                        info.foreach({|child|{
+                            info.remove(child);
+                        }});
+                    }
+                });
+            }
+            c_entry.set_text("");
+            button.set_sensitive(false);
         }
-        c_entry.set_text("");
-        button.set_sensitive(false);
-    }
-    
-});
+    });
 }
-*/
+
 
 /* 
 pub fn handle_fetch(interface: &RustInterface) {

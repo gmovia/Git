@@ -6,7 +6,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -190,6 +190,7 @@ impl RustInterface {
         handle_merge(&self);
         handle_repository(&self);
         handle_other_commands(&self);
+        handle_clone(&self);
 
         self.window.show_all();   
         gtk::main();
