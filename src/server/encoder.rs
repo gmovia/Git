@@ -174,29 +174,14 @@ impl Encoder {
                     }
                 }
                 Entity::Tree(tree) => { 
-                    println!("---------------------------------------> ENTRA AL TREEE");
                     let tree_path = server_path.join(".rust_git").join("objects").join(&tree.tree_hash[..2]).join(&tree.tree_hash[2..]);
                     if let Ok(metadata) = fs::metadata(&tree_path) {
-                    
-                    }
-                    
-                    
-                    
-                    Self::process_fetch_blobs(server_path, objects_data, tree.entities.clone())?;
-                    
-                    //let tree_entity = TreeEntity::read(path, tree.tree_hash.clone())?;
-                    //println!("TREEE PATH: {} - PATH NORMAL: {:?}", tree.path, path);
-                    /* 
-                    if let Ok(metadata) = fs::metadata(&tree.path) {
                         objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
-                        Self::process_fetch_blobs(server_path, objects_data, tree_entity)?;
-                        if commit_entity.parent_hash != "".to_string() && !Self::have_object(&commit_entity.parent_hash, haves) {
-                            Self::fetch_process_directory(server_path, objects_data, &commit_entity.parent_hash, haves)?;
-                        }     
-                    } else {
+                    }
+                    else {
                         std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
                     }
-                    */
+                    Self::process_fetch_blobs(server_path, objects_data, tree.entities.clone())?;
                 }
             };
         };
