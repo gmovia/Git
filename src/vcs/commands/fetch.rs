@@ -85,11 +85,11 @@ impl Fetch {
         let mut want_list: Vec<String> = Vec::new();
         let mut have_list: Vec<String> = Vec::new();
         for packet in &last_branch_commit_recieve {
-        match File::open(&repo.join(".rust_git").join("logs").join(packet.0.to_string())) { 
-            Ok(file) => {
-                    let file = File::open(&repo.join(".rust_git").join("logs").join(packet.0.to_string()))?;
+            println!("PACKET HASH: {}", packet.0);
+            match File::open(&repo.join(".rust_git").join("logs").join(packet.0.to_string())) { 
+                Ok(file) => {
                     let reader = io::BufReader::new(file);
-        
+            
                     let mut last_line = String::new();
                     for line in reader.lines() {
                         last_line = line?;
@@ -101,13 +101,13 @@ impl Fetch {
                     }
                     else {
                         want_list.push(to_pkt_line(&format!("want {} refs/heads/{}", packet.1, &packet.0)));
+                        have_list.push(to_pkt_line(&format!("have {} refs/heads/{}", parts[2], &packet.0)));
                     }
                 }
                 Err(_) => {
                     want_list.push(to_pkt_line(&format!("want {} refs/heads/{}", packet.1, &packet.0)));    
                 }
-            }
-            
+            }            
         }
         Ok((want_list,have_list))
     }

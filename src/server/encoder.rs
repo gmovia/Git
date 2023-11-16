@@ -9,6 +9,7 @@ use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, BufRead, Write};
 use crate::vcs::commands::cat_file::CatFile;
+use crate::vcs::entities::blob_entity::BlobEntity;
 use crate::vcs::entities::commit_entity::{CommitEntity, self};
 use crate::vcs::entities::entity::{Entity, convert_to_repository};
 use crate::vcs::entities::tree_entity::{self, TreeEntity};
@@ -76,7 +77,6 @@ impl Encoder {
  
     fn create_fetch_packfile(server_path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile = Vec::new();
-        Self::create_header(&mut packfile, server_path)?;
         let mut client_path = String::new();
         if let Some(path) = server_path.file_name() {
             client_path = path.to_string_lossy().to_string();
@@ -91,7 +91,9 @@ impl Encoder {
             println!("PARTS: {:?}", parts);
             let commit_hash = parts[1];
             println!("{}", commit_hash);
-            Self::fetch_process_directory(&server_path, &mut objects_data, commit_hash)?;
+            if !Self::have_object(commit_hash, &messages.1) {
+                Self::fetch_process_directory(&server_path, &mut objects_data, commit_hash, &messages.1)?;
+            }
         }
 
         objects_data.sort_by(|a, b| a.1.cmp(&b.1));
@@ -107,6 +109,7 @@ impl Encoder {
             println!("OBJECT: {:?}", object);
         }
         println!("OBJECTS DATA: {:?}", unique_objects_data);
+        Self::create_fetch_header(&mut packfile, server_path, unique_objects_data.len())?;
         for objects in unique_objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -124,27 +127,36 @@ impl Encoder {
         Ok(packfile)
     }
 
-    fn fetch_process_directory(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
-        let objects_path = path.join(".rust_git").join("objects");
+    fn have_object(commit_hash: &str, haves: &Vec<String>) -> bool {
+        for have in haves {
+            if have.contains(&commit_hash) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn fetch_process_directory(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str, haves: &Vec<String>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+        let objects_path = server_path.join(".rust_git").join("objects");
         let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
         if want_path.exists() {
-            let commit_entity = CommitEntity::read(&path, commit_hash)?;
+            let commit_entity = CommitEntity::read(&server_path, commit_hash)?;
             if let Ok(metadata) = fs::metadata(&want_path) {
                 objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
-                Self::process_fetch_tree(&path, objects_data, commit_entity)?;
+                Self::process_fetch_tree(&server_path, objects_data, commit_entity, haves)?;
             }
         }        
         Ok(objects_data.to_vec())
     }
 
-    fn process_fetch_tree(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity) -> Result<(), std::io::Error> {
-        let tree_path = path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
-        let tree_entity = TreeEntity::read(path, commit_entity.tree_hash)?;
+    fn process_fetch_tree(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity, haves: &Vec<String>) -> Result<(), std::io::Error> {
+        let tree_path = server_path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
+        let tree_entity = TreeEntity::read(server_path, commit_entity.tree_hash)?;
         if let Ok(metadata) = fs::metadata(&tree_path) {
             objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
-            Self::process_fetch_blobs(path, objects_data, tree_entity)?;
-            if commit_entity.parent_hash != "".to_string()  {
-                Self::fetch_process_directory(path, objects_data, &commit_entity.parent_hash)?;
+            Self::process_fetch_blobs(server_path, objects_data, tree_entity)?;
+            if commit_entity.parent_hash != "".to_string() && !Self::have_object(&commit_entity.parent_hash, haves) {
+                Self::fetch_process_directory(server_path, objects_data, &commit_entity.parent_hash, haves)?;
             }     
         } else {
             std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
@@ -152,14 +164,42 @@ impl Encoder {
         Ok(())
     }
 
-    fn process_fetch_blobs(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, blobs: Vec<Entity>) -> Result<(), std::io::Error> {
-        let hashmap_blobs = convert_to_repository(&blobs, path.to_path_buf());
-        for (_, blob_hash) in hashmap_blobs {
-            let blob_path = path.join(".rust_git").join("objects").join(&blob_hash[..2]).join(&blob_hash[2..]);
-            if let Ok(metadata) = fs::metadata(&blob_path) {
-                objects_data.push((blob_path.to_string_lossy().to_string(),3,metadata.len() as usize));
-            }
-        }
+    fn process_fetch_blobs(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, entities: Vec<Entity>) -> Result<(), std::io::Error> {
+        for entity in &entities {
+            match entity {
+                Entity::Blob(blob) => { 
+                    let blob_path = server_path.join(".rust_git").join("objects").join(&blob.blob_hash[..2]).join(&blob.blob_hash[2..]);
+                    if let Ok(metadata) = fs::metadata(&blob_path) {
+                        objects_data.push((blob_path.to_string_lossy().to_string(),3,metadata.len() as usize));
+                    }
+                }
+                Entity::Tree(tree) => { 
+                    println!("---------------------------------------> ENTRA AL TREEE");
+                    let tree_path = server_path.join(".rust_git").join("objects").join(&tree.tree_hash[..2]).join(&tree.tree_hash[2..]);
+                    if let Ok(metadata) = fs::metadata(&tree_path) {
+                    
+                    }
+                    
+                    
+                    
+                    Self::process_fetch_blobs(server_path, objects_data, tree.entities.clone())?;
+                    
+                    //let tree_entity = TreeEntity::read(path, tree.tree_hash.clone())?;
+                    //println!("TREEE PATH: {} - PATH NORMAL: {:?}", tree.path, path);
+                    /* 
+                    if let Ok(metadata) = fs::metadata(&tree.path) {
+                        objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+                        Self::process_fetch_blobs(server_path, objects_data, tree_entity)?;
+                        if commit_entity.parent_hash != "".to_string() && !Self::have_object(&commit_entity.parent_hash, haves) {
+                            Self::fetch_process_directory(server_path, objects_data, &commit_entity.parent_hash, haves)?;
+                        }     
+                    } else {
+                        std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
+                    }
+                    */
+                }
+            };
+        };
         Ok(())
     }
 
@@ -208,6 +248,15 @@ impl Encoder {
         let objects = Self::get_objects_number(path)?;
         Self::add_number_to_packfile(objects as u32, &mut packfile);
         Ok(objects)
+    }
+
+    fn create_fetch_header(mut packfile: &mut Vec<u8>, path: &PathBuf, objects: usize) -> Result<(),std::io::Error>{
+        for &byte in b"0008NAK\nPACK" {
+            packfile.push(byte);
+        }
+        Self::add_number_to_packfile(2, &mut packfile);
+        Self::add_number_to_packfile(objects as u32, &mut packfile);
+        Ok(())
     }
 
     fn add_number_to_packfile(number: u32, packfile: &mut Vec<u8>) {
