@@ -154,7 +154,9 @@ impl Fetch {
             }
         }
         objects.sort_by(|a, b| a.0.cmp(&b.0));
-        
+        for object in &objects {
+            println!("------> TYPE: {}, CONTENT: {:?}", object.0, String::from_utf8_lossy(&object.1));
+        }
         Ok(objects)
     }
 

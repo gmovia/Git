@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::File;
 use tempdir::TempDir;
 use std::path::Path;
@@ -8,6 +9,9 @@ use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, BufRead, Write};
 use crate::vcs::commands::cat_file::CatFile;
+use crate::vcs::entities::commit_entity::{CommitEntity, self};
+use crate::vcs::entities::entity::{Entity, convert_to_repository};
+use crate::vcs::entities::tree_entity::{self, TreeEntity};
 
 pub struct Encoder {
     pub path: PathBuf
@@ -82,33 +86,82 @@ impl Encoder {
         println!("MENSAJES: {:?}", messages);
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
-        Self::fetch_process_directory(&server_path.join(".rust_git").join("objects"), &mut objects_data, messages)?;
-        println!("OBJECTS DATA: {:?}", objects_data);
+        for want in &messages.0 {
+            let parts: Vec<&str> = want.split(" ").collect();
+            println!("PARTS: {:?}", parts);
+            let commit_hash = parts[1];
+            println!("{}", commit_hash);
+            Self::fetch_process_directory(&server_path, &mut objects_data, commit_hash)?;
+        }
+
+        objects_data.sort_by(|a, b| a.1.cmp(&b.1));
+        
+        let mut unique_set = HashSet::new();
+
+        let unique_objects_data: Vec<_> = objects_data.clone()
+            .into_iter()
+            .filter(|obj| unique_set.insert(obj.clone()))
+            .collect();
+        
+        for object in &unique_objects_data {
+            println!("OBJECT: {:?}", object);
+        }
+        println!("OBJECTS DATA: {:?}", unique_objects_data);
+        for objects in unique_objects_data.iter().rev() {
+            let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
+            for object in object_type {
+                packfile.push(object);
+            }
+
+            let path = Path::new(&objects.0);
+            
+            let compress_data = Self::compress_object((&path).to_path_buf(), objects.1)?;
+            for byte in compress_data {
+                packfile.push(byte);    
+            }
+        }
 
         Ok(packfile)
     }
 
-    fn fetch_process_directory(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
-        // EN ESTA FUNCION TENGO QUE VALIDAR SI EL OBJETO VA O NO. NO SE ME OCURRE COMO. QUIZAS PUEDO RECORRER EL LOG Y VER EL COMMIT AHI
-        for entrada in fs::read_dir(path)? {
-            let entrada = entrada?;
-            let entry_path = entrada.path();
-            println!("ENTRY PATH: {:?}", entry_path);
-            if entry_path.is_file() {
-                println!("ES ARCHIVO");
-                let data = Self::process_file(&entry_path)?;
-                println!("LA DATA QUE SE VA PROCesando y agregando a objects_data es: {:?}\n", data);
-
-                objects_data.push(data);
+    fn fetch_process_directory(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+        let objects_path = path.join(".rust_git").join("objects");
+        let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
+        if want_path.exists() {
+            let commit_entity = CommitEntity::read(&path, commit_hash)?;
+            if let Ok(metadata) = fs::metadata(&want_path) {
+                objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
+                Self::process_fetch_tree(&path, objects_data, commit_entity)?;
             }
-            else {
-                println!("NO ES ARCHIVO");
-                Self::process_directory(&entry_path, objects_data)?;
-            }
-        }
+        }        
         Ok(objects_data.to_vec())
     }
 
+    fn process_fetch_tree(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity) -> Result<(), std::io::Error> {
+        let tree_path = path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
+        let tree_entity = TreeEntity::read(path, commit_entity.tree_hash)?;
+        if let Ok(metadata) = fs::metadata(&tree_path) {
+            objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+            Self::process_fetch_blobs(path, objects_data, tree_entity)?;
+            if commit_entity.parent_hash != "".to_string()  {
+                Self::fetch_process_directory(path, objects_data, &commit_entity.parent_hash)?;
+            }     
+        } else {
+            std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
+        }
+        Ok(())
+    }
+
+    fn process_fetch_blobs(path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, blobs: Vec<Entity>) -> Result<(), std::io::Error> {
+        let hashmap_blobs = convert_to_repository(&blobs, path.to_path_buf());
+        for (_, blob_hash) in hashmap_blobs {
+            let blob_path = path.join(".rust_git").join("objects").join(&blob_hash[..2]).join(&blob_hash[2..]);
+            if let Ok(metadata) = fs::metadata(&blob_path) {
+                objects_data.push((blob_path.to_string_lossy().to_string(),3,metadata.len() as usize));
+            }
+        }
+        Ok(())
+    }
 
     fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
         if object_type > 7 {

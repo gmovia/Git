@@ -37,7 +37,7 @@ impl CommitEntity{
         let tree_info: Vec<&str> = commit_lines[0].split_whitespace().collect();
 
         let second_line: Vec<&str> = commit_lines[1].split_whitespace().collect();
-        if second_line[0] == "parent"{
+        if !(second_line[0] == "parent"){
             return Ok(CommitEntity{content_type: tree_info[0].to_string(), tree_hash: tree_info[1].to_string(), parent_hash: "".to_string(), author: commit_lines[2].to_string(), committer: commit_lines[3].to_string(),  message: commit_lines[5].to_string() })
         }
         return Ok(CommitEntity{content_type: tree_info[0].to_string(), tree_hash: tree_info[1].to_string(), parent_hash: second_line[1].to_string(), author: commit_lines[2].to_string(), committer: commit_lines[3].to_string(),  message: commit_lines[5].to_string() })
