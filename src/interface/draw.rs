@@ -100,8 +100,8 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
                 rc_grid.remove(widget);
                 rc_grid.remove(&path_label);
                 rc_grid.remove(&state_label);
-                rc_add.add(&path_label);
-                rc_add.add(&reset_button);
+                rc_add.attach(&path_label, 0, index as i32, 1, 1);
+                rc_add.attach(&reset_button, 1, index as i32, 1, 1);
         }});
 
         let reset_button = reset_button.clone();
