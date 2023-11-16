@@ -87,4 +87,11 @@ impl VersionControlSystem {
         let current = CurrentRepository::read()?;
         LsFiles::ls_files(option, &current)
     }
+
+    pub fn push(message: String)-> Result<(), std::io::Error>{
+        let current = CurrentRepository::read()?;
+        let _ = Client::client(message, &current);
+        Ok(())
+    }
+
 }

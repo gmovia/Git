@@ -178,13 +178,6 @@ impl Clone{
                 parent_hash: partes[1].trim_end_matches("\n").trim_start_matches("\n").trim_start_matches("parent ").to_string(),
             };
         }
-        println!("Content Type: {}", commit_entity.content_type);
-        println!("Tree Hash: {}", commit_entity.tree_hash);
-        println!("Author: {}", commit_entity.author);
-        println!("Committer: {}", commit_entity.committer);
-        println!("Message: {}", commit_entity.message);
-        println!("PARENT: {}", commit_entity.parent_hash);
-
 
         let hash_commit = Proxy::write_commit(repo.clone(), &commit_entity)?;
 

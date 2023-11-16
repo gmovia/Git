@@ -16,6 +16,7 @@ pub mod handlers{
     pub mod merge;
     pub mod clone;
     pub mod ls_files;
+    pub mod push;
 }
 
 pub mod proxy{
@@ -42,6 +43,10 @@ pub mod interface{
     pub mod handler;
     pub mod css;
     pub mod handler_button;
+}
+
+pub mod protocol{
+    pub mod send_pack;
 }
 
 pub mod types{
@@ -92,6 +97,7 @@ pub mod vcs{
         pub mod reset;
         pub mod clone;
         pub mod ls_files;
+        pub mod push;
     }
 
     pub mod sets{
