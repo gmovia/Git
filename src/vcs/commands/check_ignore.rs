@@ -1,26 +1,20 @@
-use std::{path::Path, fs};
-
-
+use std::{path::Path, fs::{self, OpenOptions}, io::{Read, self, Write}};
 
 pub struct CheckIgnore;
 
 impl CheckIgnore {
 
-    // Ver si matchea con {}/
-    // Ver si matchea con {}/{}..
-    // Ver si matchea con algun comodin
     pub fn check_ignore(current_path: &Path, path: &Path) -> Result<bool,std::io::Error>{
         let ignore_path = current_path.join(".gitignore");
-        let content = fs::read_to_string(ignore_path)?;
-        let lines: Vec<&str> = content.split("\n").collect();
-        println!("{:?}",lines);
+        
+        let content = fs::read_to_string(&ignore_path)?;
+        let lines: Vec<&str> = content.lines().collect();
+                
         if Self::rule_full_path(path, &lines)? == true{
-            println!("ENTRE AL PRIMERO");
             return Ok(true);
         }
-
+        
         if Self::rule_dir(path, &lines)? == true{
-            println!("ENTRE AL SEGUNDO");
             return Ok(true);
         }
 

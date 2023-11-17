@@ -20,14 +20,13 @@ pub fn is_excluded_directory(entry: &std::fs::DirEntry) -> bool {
 }
 
 fn read_files(path: &Path, files: &mut HashMap<String, String>) -> Result<(), std::io::Error>{
-    //println!("{:?}",VersionControlSystem::check_ignore(path)?);
-    if path.is_file(){
+    if path.is_file() && !VersionControlSystem::check_ignore(path)?{
         let value = fs::read_to_string(path)?;
         let hash = HashObject::hash(&value, BLOB_CODE)?;
         files.insert(path.display().to_string(), hash);
     }
 
-    if path.is_dir() {
+    if path.is_dir() && !VersionControlSystem::check_ignore(path)? {
         if let Ok(entries) = fs::read_dir(path) {
             for entry in entries {
                 if let Ok(entry) = entry {
