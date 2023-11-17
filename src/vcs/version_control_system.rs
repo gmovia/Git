@@ -87,8 +87,10 @@ impl VersionControlSystem {
         LsTree::ls_tree(branch, &current)
     }
 
-    pub fn check_ignore(path: &Path) -> Result<bool, std::io::Error> {
-        let current = CurrentRepository::read()?;
-        CheckIgnore::check_ignore(&current, path)
+    pub fn check_ignore(path: &Path) -> Result<String, std::io::Error> {
+        if CheckIgnore::check_ignore(&path)?{
+            return Ok(path.display().to_string());
+        }
+        return Ok("".to_string());
     }
 }
