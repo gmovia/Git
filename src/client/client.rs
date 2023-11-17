@@ -1,7 +1,6 @@
 use std::io::Write;
 use std::net::TcpStream;
 use std::path::PathBuf;
-use crate::handlers::fetch;
 use crate::vcs::commands::clone;
 use crate::packfile::packfile::to_pkt_line;
 use crate::constants::constants::{PUERTO, HOST};

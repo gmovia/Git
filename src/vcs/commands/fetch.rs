@@ -2,7 +2,7 @@ use std::{net::TcpStream, path::{PathBuf, Path}, io::{Read, Write, self, BufRead
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, client, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}, entities::commit_entity::CommitEntity}, constants::constants::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxy::proxy::Proxy};
+use crate::{packfile::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, entities::commit_entity::CommitEntity}, constants::constants::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxy::proxy::Proxy};
 
 use super::{cat_file::CatFile, init::Init};
 

@@ -7,12 +7,10 @@ use std::{path::PathBuf, io, fs};
 extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
-use std::io::{Read, BufRead, Write};
-use crate::vcs::commands::cat_file::CatFile;
-use crate::vcs::entities::blob_entity::BlobEntity;
-use crate::vcs::entities::commit_entity::{CommitEntity, self};
-use crate::vcs::entities::entity::{Entity, convert_to_repository};
-use crate::vcs::entities::tree_entity::{self, TreeEntity};
+use std::io::{Read, Write};
+use crate::vcs::entities::commit_entity::CommitEntity;
+use crate::vcs::entities::entity::Entity;
+use crate::vcs::entities::tree_entity::TreeEntity;
 
 
 pub struct Encoder {
@@ -123,7 +121,7 @@ impl Encoder {
             println!("OBJECT: {:?}", object);
         }
         println!("OBJECTS DATA: {:?}", unique_objects_data);
-        Self::create_fetch_header(&mut packfile, server_path, unique_objects_data.len())?;
+        Self::create_fetch_header(&mut packfile, unique_objects_data.len())?;
         for objects in unique_objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -249,7 +247,7 @@ impl Encoder {
         Ok(objects)
     }
 
-    fn create_fetch_header(mut packfile: &mut Vec<u8>, path: &PathBuf, objects: usize) -> Result<(),std::io::Error>{
+    fn create_fetch_header(mut packfile: &mut Vec<u8>, objects: usize) -> Result<(),std::io::Error>{
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
         }
