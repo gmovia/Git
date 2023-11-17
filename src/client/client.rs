@@ -58,7 +58,7 @@ impl Client {
                 return Ok(format!("git-upload-pack /{}", current_repository.display()));
             },
             _ if input.contains("git push") => {
-                return Ok(format!("git-receive-pack /Server\0host=127.0.0.1:9418\0\0version=2\0"));
+                return Ok(format!("git-receive-pack /{}\0host={}:{}\0\0version=2\0", current_repository.display(), HOST, PUERTO));
             },
             _ => Ok(input.to_string()),
         }

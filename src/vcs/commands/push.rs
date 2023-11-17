@@ -7,54 +7,80 @@ pub struct Push;
 impl Push{
     pub fn push(stream: &mut TcpStream, current_repo: PathBuf) -> Result<(),std::io::Error> {
         println!("ESTOY EN PUSHHHHHH\n\n");
-        let mut path_buf = PathBuf::new();
 
-        // Agregar componentes a la ruta (en este caso, un nombre de carpeta)
-        path_buf.push("Server");
-        let logs_path = path_buf.join(".git").join("logs");
-        //let log_entries = Self::get_commits_branch(&logs_path)?;
+        let logs_path = current_repo.join(".rust_git").join("logs");
+        let log_entries = Self::get_commits_branch(&logs_path)?;
+        //ae4b707a82b30fd995cc41987cf8664a99f58a33 46320944874a54ae4ca0fb29de41cb94bfac3b5f refs/heads/master
+
+        println!("LOG entries -----> {:?}\n", log_entries);
+
 
         let mut ref_string: Vec<String> = Vec::new();
-        ref_string.push("397df39557e5c26d2f3206fb5efbd7237e0c92d4 192c5a5175cd72b058f6f86aed23574d56ab5393 refs/heads/master".to_string());
+        ref_string.push("0000000000000000000000000000000000000000 63f878d93e5d3b12dc6c496a9aef12740439eac0 refs/heads/ran".to_string());
         
         for entries in &ref_string{
             let ref_to_pkt = to_pkt_line(entries);
             stream.write_all(ref_to_pkt.as_bytes())?;
         }
-        println!("LOG entries -----> {:?}\n", ref_string);
 
         println!("Hasta aca desde el cliente le mande las refs que tengo \n");
         handle_send_pack(stream, &current_repo)?;
         Ok(())
     }
+
+    fn extract_old_new_commit(line: String) -> String{
+        let parts: Vec<&str> = line.split("-").collect();
+        let old_hash = parts[1];
+        let new_hash = parts[2];
+        let hashes = format!("{} {}", old_hash, new_hash);
+        hashes
+    }
+
+    fn process_file(file_path: &Path) -> Result<String, std::io::Error> {
+        let file = fs::File::open(file_path)?;
+        let reader = io::BufReader::new(file);
+        let mut last_line = String::new();
+    
+        for line in reader.lines() {
+            last_line = line?;
+        }
+    
+        Ok(last_line)
+    }
+    
     fn get_commits_branch(path: &Path) -> Result<Vec<String>, std::io::Error> {
         if path.is_dir() {
             let mut refs = Vec::new();
+    
             for entry in fs::read_dir(path)? {
                 let entry = entry?;
                 let file_path = entry.path();
-                    if file_path.is_file() {
-                    let file = fs::File::open(&file_path)?;
-                        let reader = io::BufReader::new(file);
-                        let mut last_line = String::new();
-                    for line in reader.lines() {
-                        last_line = line?;
-                    }
-                    if !last_line.contains('-') {
-                        eprintln!("La línea del archivo {} no tiene el formato esperado", file_path.display());
-                        continue;
-                    }
-                    let hash = last_line.split('-').nth(1).unwrap();
-                    let file_name = file_path.file_name().unwrap().to_str().unwrap();
-                    let branch = format!("{} refs/heads/{}", hash, file_name);
+    
+                if file_path.is_file() {
+                    let last_line = Self::process_file(&file_path)?;
+                    let hashes = Self::extract_old_new_commit(last_line);
+                    println!("ESTOS SON LOS HASHES old new --> {} \n", hashes);
+                    let file_name = file_path
+                        .file_stem()
+                        .and_then(|stem| stem.to_str())
+                        .ok_or_else(|| {
+                            std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "Invalid file name",
+                            )
+                        })?;
+                    let branch = format!("{} refs/heads/{}", hashes, file_name);
                     refs.push(branch);
                 }
             }
             Ok(refs)
         } else {
             eprintln!("La carpeta de logs no existe en la ubicación especificada.");
-            Err(std::io::Error::new(std::io::ErrorKind::NotFound, "La carpeta de logs no existe"))
+            Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "La carpeta de logs no existe",
+            ))
         }
     }
-
+    
 }
