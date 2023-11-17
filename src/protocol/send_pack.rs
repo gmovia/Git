@@ -1,8 +1,8 @@
 
 use std::{net::TcpStream, path::{Path, PathBuf}, io::{Write, self, BufRead}, fs::OpenOptions};
-use crate::{packfile::packfile::process_line, server::encoder::Encoder, vcs::commands::{branch::Branch, init::Init}};
+use crate::{packfile::packfile::{process_line, to_pkt_line}, server::encoder::Encoder, vcs::commands::{branch::Branch, init::Init}};
 
-pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf) -> Result<(), std::io::Error> {
+pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_entries: &Vec<String>) -> Result<(), std::io::Error> {
     // aca leo lo que me responde el servidor 
     //por lo que son una lista de referencias de lo que puede actualizar 
 
@@ -39,7 +39,7 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf) -> Resu
     
     let packfile = init_packfile(last_commit, current_repo)?;
 
-    send_pack(packfile, stream)?;
+    send_pack(packfile, stream, log_entries)?;
     //tengo mi vector de lo que quiere actualizar el server
    // init_send_pack(refs, stream, path)?;
     let msg_done = "0000";
@@ -105,8 +105,15 @@ fn reformatted_hash_commit(send_ref: Vec<String>, current_repo: &PathBuf)-> Resu
 }
 
 
-fn send_pack(packfile: Vec<u8>, stream: &mut TcpStream) -> Result<String, std::io::Error> {
-    stream.write(&packfile)?;
+fn send_pack(packfile: Vec<u8>, stream: &mut TcpStream, log_entries: &Vec<String>) -> Result<String, std::io::Error> {
+    let entry_hash = format!("{}\n", log_entries[0]);
+    stream.write(to_pkt_line(&entry_hash).as_bytes())?;
+    println!("el mensaje de old y new antes del packfile --> {}\n", to_pkt_line(&log_entries[0]));
+
+    let msg_done = "0000";
+    stream.write(msg_done.as_bytes())?;
+
+    stream.write_all(&packfile)?;
     println!("PAQUETE ENVIADO CON EXITO\n");
     Ok("0000".to_string())
 }

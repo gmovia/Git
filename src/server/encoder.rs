@@ -337,6 +337,7 @@ impl Encoder {
         let datos_comprimidos = encoder.finish()?;
         let _ = fs::remove_file(temp_dir);
 
+        println!("DATOS COMPRIMIDSO {:?}", datos_comprimidos);
         Ok(datos_comprimidos)
     } 
 

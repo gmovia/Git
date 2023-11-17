@@ -1,6 +1,6 @@
-use std::{net::TcpStream, path::{Path, PathBuf}, io::{Write, self, BufRead}, fs};
+use std::{net::TcpStream, path::{Path, PathBuf}, io::{Write, self, BufRead, Read}, fs};
 
-use crate::{ packfile::packfile::to_pkt_line, protocol::send_pack::handle_send_pack};
+use crate::{ packfile::packfile::{to_pkt_line, send_done_msg}, protocol::send_pack::handle_send_pack};
 
 pub struct Push;
 
@@ -19,7 +19,16 @@ impl Push{
         }
 
         println!("Hasta aca desde el cliente le mande las refs que tengo \n");
-        handle_send_pack(stream, &current_repo)?;
+        handle_send_pack(stream, &current_repo, &log_entries)?;
+        
+        //send_done_msg(stream)?;
+
+        let mut buffer = vec![0; 10]; // Tamaño del buffer: 1024 bytes
+        stream.read_exact(&mut buffer)?;
+        println!("Datos recibidos: {}", String::from_utf8_lossy(&buffer));
+       
+ 
+
         Ok(())
     }
 
