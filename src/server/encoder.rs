@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::File;
 use tempdir::TempDir;
 use std::path::Path;
@@ -6,8 +7,11 @@ use std::{path::PathBuf, io, fs};
 extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
-use std::io::{Read, BufRead, Write};
-use crate::vcs::commands::cat_file::CatFile;
+use std::io::{Read, Write};
+use crate::vcs::entities::commit_entity::CommitEntity;
+use crate::vcs::entities::entity::Entity;
+use crate::vcs::entities::tree_entity::TreeEntity;
+
 
 pub struct Encoder {
     pub path: PathBuf
@@ -16,13 +20,19 @@ pub struct Encoder {
 impl Encoder {
     
     pub fn init_encoder(path: PathBuf, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
-        let encoder = Encoder { path: path };
+        let encoder = Encoder { path: path.clone() };
         let mut packfile= Vec::new();
-        if messages.1.is_empty() || messages.1[0] == "0" {
+        println!("MENSAJES: {:?} - PATH: {:?}", messages, path.clone());
+        
+        if messages.0.is_empty() {
+            println!("Already up to date")
+        }
+        else if messages.1.is_empty() || messages.1[0] == "0" {
             packfile = Self::create_packfile(&encoder.path)?;        
         }
         else {
-            //packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
+            println!("ENTRA BIEN. EL PATH ES: {:?}", path);
+            packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
         }
         Ok(packfile)
     }
@@ -53,21 +63,6 @@ impl Encoder {
         Ok(total_files)
     }
 
-/*     fn get_objects_number(path: &PathBuf) -> Result<usize, std::io::Error> {
-        let objects_path = path.join(".rust_git").join("objects");
-        let mut objects = 0;
-        let entries = fs::read_dir(objects_path)?;
-    
-        for entry in entries {
-            let entry = entry?;
-            if entry.file_type()?.is_dir() {
-                objects += 1;
-            }
-        }
-        println!("CANTIDADDDD DE OBJETOSSSS ESSSS -------____________________----> {:?}", objects);
-        Ok(objects)
-    } */
-
     fn create_packfile(path: &PathBuf) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile: Vec<u8> = Vec::new();
         Self::create_header(&mut packfile, path)?;
@@ -83,9 +78,7 @@ impl Encoder {
                 packfile.push(object);
             }
             let path = Path::new(&objects.0);
-            //Objects hasta aca esta completo!!!
             
-            //Compress data puede no tirarmelo todo en ok!!! D:
             let compress_data = Self::compress_object((&path).to_path_buf(), objects.1)?;
             for byte in compress_data {
                 packfile.push(byte);    
@@ -93,37 +86,51 @@ impl Encoder {
         }
         Ok(packfile)
     }
-/* 
-    fn create_fetch_packfile(path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
+ 
+    fn create_fetch_packfile(server_path: &PathBuf, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile = Vec::new();
-        Self::create_header(&mut packfile, path)?;        
-        let current = VersionControlSystem::read_current_repository()?;
-        let formatted_path = format!("test_folder/{}", current.display().to_string()); // Puede ser aca el error?
-        let path_server = Path::new(&formatted_path);
+        let mut client_path = String::new();
+        if let Some(path) = server_path.file_name() {
+            client_path = path.to_string_lossy().to_string();
+        };
 
+        println!("PATH SERVER: {:?}, PATH CLINET: {:?}", server_path, client_path);
+        println!("MENSAJES: {:?}", messages);
         
-        let mut objects_to_send: Vec<(String,String)> = Vec::new();
-        objects_to_send = Self::process_logs(&path.join(".rust_git").join("logs"), &messages, &mut objects_to_send)?;
-        println!("DATA TO SEND: {:?}", objects_to_send);
-
-
-        let mut objects_to_encode: Vec<(String,usize,usize)> = Vec::new();
-        for objects in objects_to_send {
-            let path = format!("{}/.rust_git/objects", path_server.display());
-            let content = CatFile::cat_file(&objects.1, (&path).into())?;
-            let tree_path = format!("{}/{}/{}",path,  &objects.1[0..2], &objects.1[2..]);
-            objects_to_encode.push((tree_path, 2, content.len() as usize));
-            Self::get_blobs(content, &mut objects_to_encode, path_server)?;
+        let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
+        for want in &messages.0 {
+            let parts: Vec<&str> = want.split(" ").collect();
+            println!("PARTS: {:?}", parts);
+            let commit_hash = parts[1];
+            println!("{}", commit_hash);
+            if !Self::have_object(commit_hash, &messages.1) {
+                Self::fetch_process_directory(&server_path, &mut objects_data, commit_hash, &messages.1)?;
+            }
         }
-        println!("OBJECTS TO ENCODE: {:?}", objects_to_encode);
 
-        for objects in objects_to_encode.iter().rev() {
+        objects_data.sort_by(|a, b| a.1.cmp(&b.1));
+        
+        let mut unique_set = HashSet::new();
+
+        let unique_objects_data: Vec<_> = objects_data.clone()
+            .into_iter()
+            .filter(|obj| unique_set.insert(obj.clone()))
+            .collect();
+        
+        for object in &unique_objects_data {
+            println!("OBJECT: {:?}", object);
+        }
+        println!("OBJECTS DATA: {:?}", unique_objects_data);
+        Self::create_size_header(&mut packfile, server_path, unique_objects_data.len())?;
+        for objects in unique_objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
                 packfile.push(object);
             }
+
             let path = Path::new(&objects.0);
-            let compress_data = Self::compress_object((&path).to_path_buf())?;
+            
+            let compress_data = Self::compress_object((&path).to_path_buf(), objects.1)?;
             for byte in compress_data {
                 packfile.push(byte);    
             }
@@ -131,70 +138,69 @@ impl Encoder {
 
         Ok(packfile)
     }
-*/
-    fn get_blobs(content: String, objects_to_encode: &mut Vec<(String,usize,usize)>, path: &Path) -> Result<(),std::io::Error> {
-        let mut blobs: Vec<&str> = content.split("\n").collect();
-        blobs.pop();
-        for blob in blobs {
-            let hash_blob: Vec<&str> = blob.split("-").collect();
-            let path_server = format!("{}/.rust_git/objects", path.display());
-            let blob_content = CatFile::cat_file(&hash_blob[1], (&path_server).into())?;
-            let blob_path = format!("{}/{}/{}",path_server,  &hash_blob[1][0..2], &hash_blob[1][2..]);
-            objects_to_encode.push((blob_path,3,blob_content.len() as usize));
+
+    fn have_object(commit_hash: &str, haves: &Vec<String>) -> bool {
+        for have in haves {
+            if have.contains(&commit_hash) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn fetch_process_directory(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str, haves: &Vec<String>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+        let objects_path = server_path.join(".rust_git").join("objects");
+        let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
+        if want_path.exists() {
+            let commit_entity = CommitEntity::read(&server_path, commit_hash)?;
+            if let Ok(metadata) = fs::metadata(&want_path) {
+                objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
+                Self::process_fetch_tree(&server_path, objects_data, commit_entity, haves)?;
+            }
+        }        
+        Ok(objects_data.to_vec())
+    }
+
+    fn process_fetch_tree(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity, haves: &Vec<String>) -> Result<(), std::io::Error> {
+        let tree_path = server_path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
+        let tree_entity = TreeEntity::read(server_path, commit_entity.tree_hash)?;
+        if let Ok(metadata) = fs::metadata(&tree_path) {
+            objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+            Self::process_fetch_blobs(server_path, objects_data, tree_entity)?;
+            if commit_entity.parent_hash != "".to_string() && !Self::have_object(&commit_entity.parent_hash, haves) {
+                Self::fetch_process_directory(server_path, objects_data, &commit_entity.parent_hash, haves)?;
+            }     
+        } else {
+            std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
         }
         Ok(())
     }
 
-    fn process_logs(path: &PathBuf, messages: &(Vec<String>,Vec<String>), object_to_send_list: &mut Vec<(String, String)>) -> Result<Vec<(String,String)>, std::io::Error> {
-        let mut data_to_send = Vec::new();
-        for entrada in fs::read_dir(path)? {
-            let entrada = entrada?;
-            let entry_path = entrada.path();
-            if entry_path.is_file() {
-                data_to_send = Self::process_log_file(&entry_path, &messages, object_to_send_list)?;
-            }
-        }
-        Ok(data_to_send)        
+    fn process_fetch_blobs(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, entities: Vec<Entity>) -> Result<(), std::io::Error> {
+        for entity in &entities {
+            match entity {
+                Entity::Blob(blob) => { 
+                    let blob_path = server_path.join(".rust_git").join("objects").join(&blob.blob_hash[..2]).join(&blob.blob_hash[2..]);
+                    if let Ok(metadata) = fs::metadata(&blob_path) {
+                        objects_data.push((blob_path.to_string_lossy().to_string(),3,metadata.len() as usize));
+                    }
+                }
+                Entity::Tree(tree) => { 
+                    let tree_path = server_path.join(".rust_git").join("objects").join(&tree.tree_hash[..2]).join(&tree.tree_hash[2..]);
+                    if let Ok(metadata) = fs::metadata(&tree_path) {
+                        objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+                    }
+                    else {
+                        std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
+                    }
+                    Self::process_fetch_blobs(server_path, objects_data, tree.entities.clone())?;
+                }
+            };
+        };
+        Ok(())
     }
 
-    fn process_log_file(file_path: &PathBuf, messages: &(Vec<String>,Vec<String>), object_to_send_list: &mut Vec<(String, String)>) -> Result<Vec<(String,String)>,std::io::Error> {
-        println!("PROCESS LOG FILE: {:?}",file_path);
-        println!("{:?}-{:?}", &messages.0,&messages.1);
-
-        if let Some(branch) = file_path.file_name() {
-            let branch_as_string: String = branch.to_string_lossy().to_string();
-            let file = fs::File::open(file_path)?;
-            
-            let reader = io::BufReader::new(file);
-            let mut last_line = String::new();
-            for line in reader.lines() {
-                last_line = line?;
-            }
-            
-            let content_vec: Vec<&str> = last_line.split('-').collect();
-            println!("CONTENT VEC: {:?}", content_vec);
-            for message in &messages.0 {   
-                println!("ACA: {}-{}-{:?}", message, branch_as_string,&content_vec);
-                println!("COND 1: {}", message.contains(&branch_as_string));
-                println!("COND 2: {}", message.contains(&content_vec[1]));
-                if message.contains(&branch_as_string) && message.contains(&content_vec[1]) {
-                    object_to_send_list.push((file_path.to_string_lossy().to_string(), content_vec[1].to_owned()));
-                    println!("PUSH: {:?}", object_to_send_list);
-                }
-                else {
-                    println!("NO ENTRO");
-                }
-            }
-            println!("VECTOR: {:?}", object_to_send_list);
-        } else {
-            return Err(std::io::Error::new(io::ErrorKind::NotFound, "Branch name not found"));
-        }
-        println!("OBJECT TO SEND: {:?}", object_to_send_list);
-        Ok(object_to_send_list.to_vec())
-    }
-
-    
-    fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
+    pub fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
         if object_type > 7 {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid object type"));
         }
@@ -231,7 +237,7 @@ impl Encoder {
         retun as u8
     }
 
-    fn create_header(mut packfile: &mut Vec<u8>, path: &PathBuf) -> Result<usize,std::io::Error>{
+    pub fn create_header(mut packfile: &mut Vec<u8>, path: &PathBuf) -> Result<usize,std::io::Error>{
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
         }
@@ -239,6 +245,15 @@ impl Encoder {
         let objects = Self::get_objects_number(path)?;
         Self::add_number_to_packfile(objects as u32, &mut packfile);
         Ok(objects)
+    }
+
+    pub fn create_size_header(mut packfile: &mut Vec<u8>, path: &PathBuf, objects: usize) -> Result<(),std::io::Error>{
+        for &byte in b"0008NAK\nPACK" {
+            packfile.push(byte);
+        }
+        Self::add_number_to_packfile(2, &mut packfile);
+        Self::add_number_to_packfile(objects as u32, &mut packfile);
+        Ok(())
     }
 
     fn add_number_to_packfile(number: u32, packfile: &mut Vec<u8>) {
@@ -263,7 +278,6 @@ impl Encoder {
         
         file.read_to_string(&mut content)?;
 
-       // println!("CONTENT: {:?}\n", content);
         if !(content.contains("100644") || content.contains("40000")) && content.contains("tree") {
             return Ok((file_path.to_string_lossy().to_string(),1 as usize,metadata.len() as usize))
         } else if content.contains("100644") || content.contains("40000"){
@@ -286,7 +300,6 @@ impl Encoder {
                 Self::process_directory(&entry_path, objects_data)?;
             }
         }
-        //println!("PROCESSS DIRECTORY MANDA {:?}\n", objects_data.len());
         Ok(objects_data.to_vec())
     }
 
@@ -302,7 +315,7 @@ impl Encoder {
     }
 
 
-    fn compress_object(archivo_entrada: PathBuf, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
+    pub fn compress_object(archivo_entrada: PathBuf, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
         let mut entrada = File::open(archivo_entrada)?;
         let temp_dir = TempDir::new("my_temp_dir")?;
 
@@ -326,4 +339,69 @@ impl Encoder {
 
         Ok(datos_comprimidos)
     } 
+
+
+
+    pub fn get_object_for_commit(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+        let objects_path = server_path.join(".rust_git").join("objects");
+        let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
+        println!(" WANT PATH{:?}\n", want_path);
+
+        if want_path.exists() {
+            println!(" WANT PATH exist\n");
+            let commit_entity = CommitEntity::read(&server_path, commit_hash)?;
+            if let Ok(metadata) = fs::metadata(&want_path) {
+                objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
+                Self::get_objects_tree(&server_path, objects_data, commit_entity)?;
+            }
+        }
+        objects_data.sort_by(|a, b| a.1.cmp(&b.1));
+        
+        let mut unique_set = HashSet::new();
+
+        let unique_objects_data: Vec<_> = objects_data.clone()
+            .into_iter()
+            .filter(|obj| unique_set.insert(obj.clone()))
+            .collect();        
+        Ok(unique_objects_data)
+    }
+
+    fn get_objects_tree(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity) -> Result<(), std::io::Error> {
+        let tree_path = server_path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
+        let tree_entity = TreeEntity::read(server_path, commit_entity.tree_hash)?;
+        if let Ok(metadata) = fs::metadata(&tree_path) {
+            objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+            Self::get_objects_blobs(server_path, objects_data, tree_entity)?;
+            if commit_entity.parent_hash != "".to_string() {
+                Self::get_object_for_commit(server_path, objects_data, &commit_entity.parent_hash)?;
+            }     
+        } else {
+            std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
+        }
+        Ok(())
+    }
+
+    fn get_objects_blobs(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, entities: Vec<Entity>) -> Result<(), std::io::Error> {
+        for entity in &entities {
+            match entity {
+                Entity::Blob(blob) => { 
+                    let blob_path = server_path.join(".rust_git").join("objects").join(&blob.blob_hash[..2]).join(&blob.blob_hash[2..]);
+                    if let Ok(metadata) = fs::metadata(&blob_path) {
+                        objects_data.push((blob_path.to_string_lossy().to_string(),3,metadata.len() as usize));
+                    }
+                }
+                Entity::Tree(tree) => { 
+                    let tree_path = server_path.join(".rust_git").join("objects").join(&tree.tree_hash[..2]).join(&tree.tree_hash[2..]);
+                    if let Ok(metadata) = fs::metadata(&tree_path) {
+                        objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+                    }
+                    else {
+                        std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
+                    }
+                    Self::get_objects_blobs(server_path, objects_data, tree.entities.clone())?;
+                }
+            };
+        };
+        Ok(())
+    }
 }

@@ -1,24 +1,19 @@
-use std::{net::TcpStream, path::{Path, PathBuf}, io::{BufReader, BufWriter, Write, self, BufRead}, fs};
+use std::{net::TcpStream, path::{Path, PathBuf}, io::{Write, self, BufRead}, fs};
 
-use crate::{ packfile::packfile::{to_pkt_line, send_done_msg}, protocol::send_pack::handle_send_pack};
+use crate::{ packfile::packfile::to_pkt_line, protocol::send_pack::handle_send_pack};
 
 pub struct Push;
 
 impl Push{
     pub fn push(stream: &mut TcpStream, current_repo: PathBuf) -> Result<(),std::io::Error> {
-        println!("ESTOY EN PUSHHHHHH\n\n");
+        println!("ESTOY EN PUSH\n\n");
 
         let logs_path = current_repo.join(".rust_git").join("logs");
         let log_entries = Self::get_commits_branch(&logs_path)?;
-        //ae4b707a82b30fd995cc41987cf8664a99f58a33 46320944874a54ae4ca0fb29de41cb94bfac3b5f refs/heads/master
 
         println!("LOG entries -----> {:?}\n", log_entries);
 
-
-        let mut ref_string: Vec<String> = Vec::new();
-        ref_string.push("0000000000000000000000000000000000000000 63f878d93e5d3b12dc6c496a9aef12740439eac0 refs/heads/ran".to_string());
-        
-        for entries in &ref_string{
+        for entries in &log_entries{
             let ref_to_pkt = to_pkt_line(entries);
             stream.write_all(ref_to_pkt.as_bytes())?;
         }
