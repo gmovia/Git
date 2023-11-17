@@ -1,6 +1,8 @@
 use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::{Path, PathBuf}};
 
-use crate::{constants::constants::{HOST, PUERTO}, packfile::packfile::process_line};
+use gtk::gio::DBusMessage;
+
+use crate::{constants::constants::{HOST, PUERTO}, packfile::packfile::process_line, vcs::commands::push::Push};
 
 use super::upload_pack::start_handler_upload;
 
@@ -42,10 +44,9 @@ impl Server {
             match process_line(&mut reader) {
                 Ok(message) => {
                     println!("Received message from client: {}", &message);
-                    let client_path = message.trim_start_matches("git-upload-pack ");
-                    let aux = format!("{}/{}",path.display().to_string(), client_path);
-                    let server_path = Path::new(&aux);
-                    if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, &server_path.to_path_buf()) {
+
+                    let server_path = Self::extract_path(&message, path)?;
+                    if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, &server_path) {
                         println!("Error parsing response: {}",e)
                     }
                     Server::shutdown_server(&reader)?;
@@ -58,6 +59,18 @@ impl Server {
         }
     
         Ok(())
+    }
+
+    fn extract_path(message: &str, path: &Path) -> Result<PathBuf, std::io::Error> {
+        let client_path = match message {
+            s if s.contains("git-upload-pack") => message.trim_start_matches("git-upload-pack ").to_string(),
+            s if s.contains("git-receive-pack") => Push::parse_query_to_extract_path(message)?.to_string(),
+            _ => return Err(std::io::Error::new(std::io::ErrorKind::Other, "No entiendo tu mensaje")),
+        };
+        let aux = format!("{}/{}",path.display().to_string(), client_path);
+        let server_path = Path::new(&aux).to_path_buf();
+    
+        Ok(server_path)
     }
 
     /// Esta funcion se encarga de responder al mensaje recibido por parte del cliente

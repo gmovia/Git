@@ -86,5 +86,17 @@ impl Push{
             ))
         }
     }
+
+    pub fn parse_query_to_extract_path(message: &str) -> Result<&str, std::io::Error> {
+        let parts: Vec<&str> = message.split('\0').collect();
+        let mut current_repository = "";
+        for part in parts {
+            if part.starts_with("git-receive-pack /") {
+                current_repository = part.trim_start_matches("git-receive-pack /");
+                break;
+            }
+        }
+        Ok(current_repository)
+    }
     
 }
