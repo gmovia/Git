@@ -341,4 +341,58 @@ impl Encoder {
 
         Ok(datos_comprimidos)
     } 
+
+
+
+    pub fn get_object_for_commit(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+        let objects_path = server_path.join(".rust_git").join("objects");
+        let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
+        if want_path.exists() {
+            let commit_entity = CommitEntity::read(&server_path, commit_hash)?;
+            if let Ok(metadata) = fs::metadata(&want_path) {
+                objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
+                Self::get_objects_tree(&server_path, objects_data, commit_entity)?;
+            }
+        }        
+        Ok(objects_data.to_vec())
+    }
+
+    fn get_objects_tree(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity) -> Result<(), std::io::Error> {
+        let tree_path = server_path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
+        let tree_entity = TreeEntity::read(server_path, commit_entity.tree_hash)?;
+        if let Ok(metadata) = fs::metadata(&tree_path) {
+            objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+            Self::get_objects_blobs(server_path, objects_data, tree_entity)?;
+            if commit_entity.parent_hash != "".to_string() {
+                Self::get_object_for_commit(server_path, objects_data, &commit_entity.parent_hash)?;
+            }     
+        } else {
+            std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
+        }
+        Ok(())
+    }
+
+    fn get_objects_blobs(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, entities: Vec<Entity>) -> Result<(), std::io::Error> {
+        for entity in &entities {
+            match entity {
+                Entity::Blob(blob) => { 
+                    let blob_path = server_path.join(".rust_git").join("objects").join(&blob.blob_hash[..2]).join(&blob.blob_hash[2..]);
+                    if let Ok(metadata) = fs::metadata(&blob_path) {
+                        objects_data.push((blob_path.to_string_lossy().to_string(),3,metadata.len() as usize));
+                    }
+                }
+                Entity::Tree(tree) => { 
+                    let tree_path = server_path.join(".rust_git").join("objects").join(&tree.tree_hash[..2]).join(&tree.tree_hash[2..]);
+                    if let Ok(metadata) = fs::metadata(&tree_path) {
+                        objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+                    }
+                    else {
+                        std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
+                    }
+                    Self::get_objects_blobs(server_path, objects_data, tree.entities.clone())?;
+                }
+            };
+        };
+        Ok(())
+    }
 }
