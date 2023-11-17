@@ -1,6 +1,6 @@
 use std::{net::TcpStream, path::PathBuf, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::File};
 
-use crate::packfile::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data};
+use crate::{packfile::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, client, vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::Checkout}}};
 
 pub struct Fetch;
 
@@ -33,16 +33,24 @@ impl Fetch {
 
         let last_commit_per_branch = Self::format_packet(&packets)?;
         println!("LAST COMMIT: {:?}",last_commit_per_branch);
-        let message_to_send = Self::packet_manager(last_commit_per_branch, repo)?;
+        let message_to_send = Self::packet_manager(last_commit_per_branch, &repo)?;
         println!("Message to send: {:?}", message_to_send);
 
         Self::send_messages(socket, message_to_send)?;
 
         let objects = Self::get_socket_response(socket)?;
         println!("OBJETOS: {:?}", objects);
-        //Self::init_commits(&packets , &objects, repo)?;
+        Self::create_objects(&packets , &objects, &repo)?;
         Ok(()) 
     }
+
+    fn create_objects(packets: &Vec<String> , objects: &Vec<(u8, Vec<u8>)>, clinet_path: &PathBuf) -> Result<(),std::io::Error> {
+            
+        Ok(())
+    }
+
+
+
 
     /// Esta funcion se encarga de parsear la respuesta del servidor al upload pack. Devuelve la rama y el ultimo commit
     fn format_packet(packets: &Vec<String>) -> Result<Vec<(String,String)>,std::io::Error> {
@@ -81,7 +89,7 @@ impl Fetch {
         Ok(())
     }
 
-    fn packet_manager(last_branch_commit_recieve: Vec<(String,String)>, repo: PathBuf) -> Result<(Vec<String>,Vec<String>), std::io::Error>{
+    fn packet_manager(last_branch_commit_recieve: Vec<(String,String)>, repo: &PathBuf) -> Result<(Vec<String>,Vec<String>), std::io::Error>{
         let mut want_list: Vec<String> = Vec::new();
         let mut have_list: Vec<String> = Vec::new();
         for packet in &last_branch_commit_recieve {
@@ -116,7 +124,14 @@ impl Fetch {
         let mut buffer = Vec::new();
             match socket.read_to_end(&mut buffer) {
                 Ok(_) => {
-                    return Self::manage_pack(&buffer[8..]);
+                    if buffer.is_empty() {
+                        println!("\nAlready up to date\n");
+                        return Ok(Vec::new());
+                    }
+                    else {
+                        return Self::manage_pack(&buffer[8..]);    
+                    }
+                    
                 }
                 Err(e) => {
                     println!("Failed to receive data: {}\n", e);

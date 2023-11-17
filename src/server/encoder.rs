@@ -26,7 +26,10 @@ impl Encoder {
         let mut packfile= Vec::new();
         println!("MENSAJES: {:?} - PATH: {:?}", messages, path.clone());
         
-        if messages.1.is_empty() || messages.1[0] == "0" {
+        if messages.0.is_empty() {
+            println!("Already up to date")
+        }
+        else if messages.1.is_empty() || messages.1[0] == "0" {
             packfile = Self::create_packfile(&encoder.path)?;        
         }
         else {

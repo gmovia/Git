@@ -77,17 +77,17 @@ fn get_log_entries(logs_path: &Path) -> Result<Vec<String>, std::io::Error>{
         
         let mut reader = BufReader::new(file);
         let mut last_line = String::new();
-
+        let mut format_last_line = String::new();
         for line in reader.by_ref().lines() {
             if let Ok(line) = line {
                 last_line = line.clone(); 
                 let last_commit: Vec<&str> = line.split("-").collect();
                 let log_file_name = log_file.file_name().to_string_lossy().to_string();
-                let format = format!("{} refs/heads/{}", last_commit[2], log_file_name);
-                log_entries.push(format);
- 
+                format_last_line = format!("{} refs/heads/{}", last_commit[2], log_file_name);
             }
         }
+        log_entries.push(format_last_line);
+
         if let Some(hash) = parse_log_line(&last_line) {
             let filename = log_file.file_name().to_string_lossy().to_string();
             log_entries.push(format!("{} refs/heads/{}\n", hash, filename));
