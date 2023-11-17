@@ -234,13 +234,13 @@ impl Fetch {
         Ok(Proxy::write_tree(repo.to_path_buf(), content)?)
     }
 
-    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+    fn write_commit_log( client_path: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
         println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
         for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
 
             if commits_created.contains_key(hash_commit_branch) {
-                let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
+                let logs_path = client_path.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
                 let file = OpenOptions::new()
                     .create(true)
                     .write(true)
@@ -256,7 +256,7 @@ impl Fetch {
                     println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
                     let mut a: Vec<(String, String)> = Vec::new();
                     a.push((branch_name.to_string(), hash_commit_branch.to_string()));
-                    let _ = Self::complete_commit_table(repo, a, commits_created);
+                    let _ = Self::complete_commit_table(client_path, a, commits_created);
                 }
             }
         }

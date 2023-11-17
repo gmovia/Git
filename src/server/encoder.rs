@@ -353,8 +353,16 @@ impl Encoder {
                 objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
                 Self::get_objects_tree(&server_path, objects_data, commit_entity)?;
             }
-        }        
-        Ok(objects_data.to_vec())
+        }
+        objects_data.sort_by(|a, b| a.1.cmp(&b.1));
+        
+        let mut unique_set = HashSet::new();
+
+        let unique_objects_data: Vec<_> = objects_data.clone()
+            .into_iter()
+            .filter(|obj| unique_set.insert(obj.clone()))
+            .collect();        
+        Ok(unique_objects_data)
     }
 
     fn get_objects_tree(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity) -> Result<(), std::io::Error> {
