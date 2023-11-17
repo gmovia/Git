@@ -169,7 +169,7 @@ impl Encoder {
         if let Ok(metadata) = fs::metadata(&tree_path) {
             objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
             Self::process_fetch_blobs(server_path, objects_data, tree_entity)?;
-            if commit_entity.parent_hash != "".to_string() && !Self::have_object(&commit_entity.parent_hash, haves) {
+            if commit_entity.parent_hash != "0000000000000000000000000000000000000000".to_string() && !Self::have_object(&commit_entity.parent_hash, haves) {
                 Self::fetch_process_directory(server_path, objects_data, &commit_entity.parent_hash, haves)?;
             }     
         } else {
