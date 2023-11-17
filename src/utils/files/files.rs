@@ -1,5 +1,5 @@
 use std::{collections::HashMap, fs, path::Path, io::Write};
-use crate::{vcs::{commands::{hash_object::HashObject, check_ignore::CheckIgnore}, version_control_system::VersionControlSystem, files::current_repository::CurrentRepository}, constants::constants::BLOB_CODE};
+use crate::{vcs::commands::{hash_object::HashObject, check_ignore::CheckIgnore}, constants::constants::BLOB_CODE};
 
 /// Recibe un string que representa una ruta.
 /// Devuelve los archivos y carpetas que esta contiene en formato HashMap. La clave representa la ruta al archivo y el valor su contenido.
