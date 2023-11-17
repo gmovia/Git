@@ -1,9 +1,7 @@
 #[cfg(test)]
 mod tests {
     use std::{fs::File, path::Path};
-
     use rust_git::utils::files::files::read;
-    use tempdir::TempDir;
     use crate::tests_functions::{create_file, set_up};
 
     #[test]

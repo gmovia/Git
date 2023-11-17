@@ -1,4 +1,4 @@
-use std::{path::Path, fs::{self, OpenOptions}, io::{Read, self, Write}};
+use std::{path::Path, fs::{self}};
 
 pub struct CheckIgnore;
 
