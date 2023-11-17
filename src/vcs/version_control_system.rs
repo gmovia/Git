@@ -94,8 +94,15 @@ impl VersionControlSystem {
         LsFiles::ls_files(option, &current)
     }
 
-    pub fn ls_tree(branch: &str) -> Result<Vec<String>, std::io::Error>{
+    pub fn ls_tree(branch: &str) -> Result<Vec<String>, std::io::Error> {
         let current = CurrentRepository::read()?;
         LsTree::ls_tree(branch, &current)
+    }
+
+    pub fn git_pull(input: String) -> Result<(), std::io::Error> {
+        let current = CurrentRepository::read()?;
+        Self::fetch("git fetch".to_string())?;
+        Self::merge(&Init::get_current_branch(&current)?)?;
+        Ok(())
     }
 }

@@ -55,6 +55,7 @@ pub const RESPONSE_OK_COMMIT: &str = "Commit created succesfully.";
 pub const RESPONSE_OK_MERGE: &str = "Merged successfully";
 pub const RESPONSE_OK_CLONE: &str = "Clone successfully";
 pub const RESPONSE_OK_FETCH: &str = "Fetched successfully";
+pub const RESPONSE_OK_PULL: &str = "Pull successfully";
 
 // ERRORS
 pub const ERR_INVALID_PARAMETERS: &str = "Invalid parameters.";
