@@ -7,12 +7,13 @@ mod tests {
     use crate::tests_functions::create_file;
 
     #[test]
-    fn test_01_contain_file_1() {
+    fn test_01_contain_file_1() -> Result<(),std::io::Error>{
         let temp_dir = TempDir::new("test_version_control_system").expect("Failed to create temp directory");
         let file = create_file(&temp_dir, "file1.txt");
-        assert!(
-            matches!(read(temp_dir.path()), Ok(files) if files.contains_key(&file.display().to_string()))
-        );
+        let files = read(temp_dir.path())?;
+
+        assert_eq!(true,files.contains_key(&file.display().to_string()));
+        Ok(())
     }
 
     #[test]

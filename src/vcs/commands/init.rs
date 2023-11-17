@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, fs::{self, File}, io::{Write, Read, self}};
 
-use crate::constants::constants::RUST_PATH;
+use crate::{constants::constants::RUST_PATH, vcs::files::current_repository::CurrentRepository};
 
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
@@ -49,7 +49,8 @@ impl Init {
         self.create_git_refs_folder(&path, branch_name)?;
         self.create_git_config_file(&path)?;
         self.create_head_file(&path, branch_name)?;
-        self.create_index(&path)?;        
+        self.create_index(&path)?;    
+        //self.create_git_ignore()?;    
         Ok(())
     }
 
@@ -137,6 +138,14 @@ impl Init {
             let mut file = File::create(head_path)?;
             file.write_all(format!("refs/heads/{}", branch_name).as_bytes())?;
         }            
+        Ok(())
+    }
+
+    fn create_git_ignore(&self) -> Result<(),std::io::Error> {
+        let current = CurrentRepository::read()?;
+        let ignore_path = current.join(".gitignore");
+
+        let _ = File::create(ignore_path)?;
         Ok(())
     }
 
