@@ -1,4 +1,3 @@
-
 use std::path::Path;
 
 use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions, ls_files::LsFilesOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}};
@@ -137,7 +136,18 @@ pub fn handle_rm_button(interface: &RustInterface) {
             else{
                 let _ = handler_rm(format!("git rm {}",rm_entry1.text()));
             }
-            
+            // TRATAR EL ERROR 
+            // else {
+            //     err_box.foreach(|child| {
+            //         err_box.remove(child);
+            //     });
+            //     add_message(&err_box, &"    ERROR! BRANCH NOT FOUND...  ".to_string(), 2.0);
+            //     err_dialog.run();
+            //     err_dialog.hide();
+
+            //     m_entry.set_text("");
+            //     button.set_sensitive(false);
+            // }
             rm_entry1.set_text("");
             button.set_sensitive(false);
         }
