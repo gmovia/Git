@@ -3,7 +3,7 @@ use std::path::Path;
 
 use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions, ls_files::LsFilesOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}};
 
-use super::{interface::RustInterface, draw::{branches, repositories, draw_message}};
+use super::{interface::RustInterface, draw::{branches, repositories, draw_message, draw_error}};
 
 use gtk::prelude::*;
 
@@ -184,5 +184,60 @@ pub fn handle_ls_files_buttons(interface: &RustInterface, button_file: &gtk::But
             }
             rc_box.set_visible(true);
        } 
+    });
+}
+
+pub fn handle_ls_tree_button(interface: &RustInterface) {
+    let rc_box = interface.tree_box.clone();
+    let rc_entry = interface.tree_branch_entry.clone();
+
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+
+    let rc_tuple = errors_tuple.clone();
+    interface.apply_tree.connect_clicked({
+        let rc_box = rc_box.clone();
+        move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            if let Ok(information) = VersionControlSystem::ls_tree(&rc_entry.text().to_string()) {
+                for entry in information {
+                    let message = format!("{}\n",entry);
+                    draw_message(&rc_box, &message, 0.0);
+                }
+                rc_box.set_visible(true);
+                rc_entry.set_text("");
+            }else {
+                draw_error(rc_tuple.clone(), &"    ERROR! BRANCH NOT FOUND...  ".to_string(), &rc_entry);
+            }
+        }
+    });
+
+    interface.error_close.connect_clicked({
+        let err_dialog_2 = errors_tuple.0.clone();
+        move |_| {
+            err_dialog_2.hide();
+        }
+    });
+}
+
+pub fn handle_check_ignore_button(interface: &RustInterface) {
+
+    let ig_entry = interface.check_ignore_entry.clone();
+    let ch_box = interface.check_ignore_box.clone();
+    
+    interface.check_button.connect_clicked({
+        let ch_box = ch_box.clone();
+        move |button| {
+            ch_box.foreach(|child| {
+                ch_box.remove(child);
+            });
+            if let Ok(response) = VersionControlSystem::check_ignore(Path::new(&ig_entry.text().to_string())){
+                draw_message(&ch_box, &response, 0.5);
+            }
+
+            ig_entry.set_text("");
+            button.set_sensitive(false);
+        }
     });
 }

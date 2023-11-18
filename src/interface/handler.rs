@@ -1,7 +1,7 @@
-use std::{fs::{OpenOptions, self}, io::Write, path::Path};
+use std::{fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{CURRENT, INCOMING, BOTH, BLOB_CODE}};
 
-use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons}, draw::{changes_and_staging_area, draw_message, draw_error}};
+use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
 use gtk::{prelude::*, Button};
 
 pub fn handle_other_commands(interface: &RustInterface) {
@@ -448,10 +448,6 @@ pub fn handle_ls_tree(interface: &RustInterface) {
     let rc_box = interface.tree_box.clone();
     let rc_entry = interface.tree_branch_entry.clone();
 
-    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
-
-    let rc_tuple = errors_tuple.clone();
-
     interface.tree_box.set_visible(false);
 
     let apply = interface.apply_tree.clone();
@@ -475,25 +471,7 @@ pub fn handle_ls_tree(interface: &RustInterface) {
             rc_entry.set_text("");
         }
     });
-
-    interface.apply_tree.connect_clicked({
-        let rc_box = rc_box.clone();
-        move |_| {
-            rc_box.foreach(|child| {
-                rc_box.remove(child);
-            });
-            if let Ok(information) = VersionControlSystem::ls_tree(&rc_entry.text().to_string()) {
-                for entry in information {
-                    let message = format!("{}\n",entry);
-                    draw_message(&rc_box, &message, 0.0);
-                }
-                rc_box.set_visible(true);
-                rc_entry.set_text("");
-            }else {
-                draw_error(rc_tuple.clone(), &"    ERROR! BRANCH NOT FOUND...  ".to_string(), &rc_entry);
-            }
-        }
-    });
+    handle_ls_tree_button(interface);
 
     interface.close_tree.connect_clicked({
         let dialog_2 = interface.ls_tree_dialog.clone();
@@ -501,18 +479,11 @@ pub fn handle_ls_tree(interface: &RustInterface) {
             dialog_2.hide();
     }});
 
-    interface.error_close.connect_clicked({
-        let err_dialog_2 = errors_tuple.0.clone();
-        move |_| {
-            err_dialog_2.hide();
-        }
-    });
-
 }
 
 pub fn handle_check_ignore(interface: &RustInterface) {
     let dialog = interface.ignore_dialog.clone();
-    let ig_entry = interface.check_ignore_entry.clone();
+
     let ch_button = interface.check_button.clone();
     let ch_box = interface.check_ignore_box.clone();
 
@@ -525,25 +496,16 @@ pub fn handle_check_ignore(interface: &RustInterface) {
     });
 
     interface.check_ignore.connect_clicked({
+        let ch_box = ch_box.clone();
         move |_| {
+            ch_box.foreach(|child| {
+                ch_box.remove(child);
+            });
             dialog.run();
             dialog.hide();
         }
     });
-
-    interface.check_button.connect_clicked({
-        move |button| {
-            ch_box.foreach(|child| {
-                ch_box.remove(child);
-            });
-            if let Ok(response) = VersionControlSystem::check_ignore(Path::new(&ig_entry.text().to_string())){
-                draw_message(&ch_box, &response, 0.5);
-            }
-
-            ig_entry.set_text("");
-            button.set_sensitive(false);
-        }
-    });
+    handle_check_ignore_button(interface);
 
     interface.close_ignore.connect_clicked({
         let dialog2 = interface.ignore_dialog.clone();
