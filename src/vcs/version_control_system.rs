@@ -2,7 +2,7 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository},
+    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constants::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE},
 };
 
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
@@ -89,8 +89,8 @@ impl VersionControlSystem {
 
     pub fn check_ignore(path: &Path) -> Result<String, std::io::Error> {
         if CheckIgnore::check_ignore(&path)?{
-            return Ok(path.display().to_string());
+            return Ok(RESPONSE_OK_IGNORE.to_string());
         }
-        return Ok("".to_string());
+        return Ok(RESPONSE_NOK_GIT_IGNORE.to_string());
     }
 }
