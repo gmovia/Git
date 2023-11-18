@@ -21,8 +21,9 @@ button {
 }
 
 dialog {
-    border:2px solid rgba(100, 100, 100, 0.2);
-    background: grey;
+    background: linear-gradient(to bottom, grey, #222222);
+    border: solid rgba(100, 100, 100, 0.2);
+    border-radius: 2px;
 
 }
 
@@ -72,4 +73,17 @@ button:hover{
 .custom-changes-label-deleted{
     color: rgba(182, 18, 18, 0.697);
     font-weight: bold;
+}
+
+.custom-error-dialog {
+    color: rgba(182, 18, 18, 0.697);
+    background: linear-gradient(to bottom, grey, #222222);
+    border: solid rgba(100, 100, 100, 0.2);
+    border-radius: 2px;
+}
+
+.custom-label-message {
+    padding-top: 20px;
+    color: white;
+    font: bold 20px 'Poppins', sans-serif;
 }

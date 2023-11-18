@@ -218,7 +218,7 @@ pub fn handle_merge(interface: &RustInterface) {
     let b_box = interface.both_box.clone();
     let b_text = interface.both_text.clone();
 
-    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone(),interface.error_close.clone());
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
 
     let rc_tuple = errors_tuple.clone();
     //let err_dialog = interface.error_dialog.clone();
@@ -333,6 +333,13 @@ pub fn handle_merge(interface: &RustInterface) {
         }
     });
 
+    interface.error_close.connect_clicked({
+        let err_dialog_2 = errors_tuple.0.clone();
+        move |_| {
+            err_dialog_2.hide();
+        }
+    });
+
 }
 
 
@@ -440,7 +447,7 @@ pub fn handle_ls_tree(interface: &RustInterface) {
     let rc_box = interface.tree_box.clone();
     let rc_entry = interface.tree_branch_entry.clone();
 
-    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone(),interface.error_close.clone());
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
 
     let rc_tuple = errors_tuple.clone();
 
@@ -492,6 +499,13 @@ pub fn handle_ls_tree(interface: &RustInterface) {
         move |_| {
             dialog_2.hide();
     }});
+
+    interface.error_close.connect_clicked({
+        let err_dialog_2 = errors_tuple.0.clone();
+        move |_| {
+            err_dialog_2.hide();
+        }
+    });
 
 }
 
