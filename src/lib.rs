@@ -16,7 +16,9 @@ pub mod handlers{
     pub mod merge;
     pub mod clone;
     pub mod ls_files;
-    pub mod push;
+    pub mod fetch;
+    pub mod ls_tree;
+    pub mod pull;
 }
 
 pub mod proxy{
@@ -78,6 +80,7 @@ pub mod vcs{
         pub mod index;
         pub mod repository;
         pub mod current_repository;
+        pub mod current_commit;
         pub mod commits_table;
         pub mod repositories;
     }
@@ -99,6 +102,9 @@ pub mod vcs{
         pub mod clone;
         pub mod ls_files;
         pub mod push;
+        pub mod fetch;
+        pub mod ls_tree;
+        pub mod check_ignore;
     }
 
     pub mod sets{

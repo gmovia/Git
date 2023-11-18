@@ -2,10 +2,11 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, client::client::Client,
+
+    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constants::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE}, client::client::Client,
 };
 
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
 use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
@@ -83,6 +84,12 @@ impl VersionControlSystem {
         Ok(())
     }
 
+    pub fn fetch(message: String)-> Result<(), std::io::Error>{
+        let current = CurrentRepository::read()?;
+        let _ = Client::client(message, &current);
+        Ok(())
+    }
+
     pub fn ls_files(option: LsFilesOptions) -> Result<Vec<String>,std::io::Error>{
         let current = CurrentRepository::read()?;
         LsFiles::ls_files(option, &current)
@@ -94,4 +101,24 @@ impl VersionControlSystem {
         Ok(())
     }
 
+    pub fn ls_tree(branch: &str) -> Result<Vec<String>, std::io::Error> {
+        let current = CurrentRepository::read()?;
+        LsTree::ls_tree(branch, &current)
+    }
+
+
+    pub fn check_ignore(path: &Path) -> Result<String, std::io::Error> {
+        if CheckIgnore::check_ignore(&path)?{
+            return Ok(RESPONSE_OK_IGNORE.to_string());
+        }
+        return Ok(RESPONSE_NOK_GIT_IGNORE.to_string());
+    }
+    
+    pub fn git_pull(input: String) -> Result<(), std::io::Error> {
+        let current = CurrentRepository::read()?;
+        Self::fetch("git fetch".to_string())?;
+        Self::merge(&Init::get_current_branch(&current)?)?;
+        Ok(())
+
+    }
 }

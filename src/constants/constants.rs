@@ -53,9 +53,15 @@ pub const RESPONSE_OK_CREATE_BRANCH: &str = "Created successfully.";
 pub const RESPONSE_OK_DELETED_BRANCH: &str = "Deleted successfully.";
 pub const RESPONSE_OK_COMMIT: &str = "Commit created succesfully.";
 pub const RESPONSE_OK_MERGE: &str = "Merged successfully";
+
+pub const RESPONSE_OK_IGNORE: &str = "The path is ignored as per the rules in the .gitignore file.";
+pub const RESPONSE_NOK_GIT_IGNORE: &str = "The path is not ignored or is not listed in the .gitignore file.";
+
 pub const RESPONSE_OK_CLONE: &str = "Clone successfully";
 pub const RESPONSE_OK_PUSH: &str = "Push successfully";
 
+pub const RESPONSE_OK_FETCH: &str = "Fetched successfully";
+pub const RESPONSE_OK_PULL: &str = "Pull successfully";
 
 // ERRORS
 pub const ERR_INVALID_PARAMETERS: &str = "Invalid parameters.";

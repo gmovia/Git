@@ -1,4 +1,3 @@
-
 use std::path::Path;
 
 use gtk::prelude::*;
@@ -6,7 +5,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_ls_files};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone};
 
 pub struct RustInterface {
     pub window: gtk::Window,
@@ -73,6 +72,18 @@ pub struct RustInterface {
     pub d: gtk::Button,
     pub selection_box: gtk::Box,
     pub close_files: gtk::Button,
+    pub ls_tree: gtk::Button,
+    pub tree_branch_entry: gtk::Entry,
+    pub ls_tree_dialog: gtk::Dialog,
+    pub tree_box: gtk::Box,
+    pub close_tree: gtk::Button,
+    pub apply_tree: gtk::Button,
+    pub other_commands: gtk::Button,
+    pub others_dialog: gtk::Dialog,
+    pub others_close: gtk::Button,
+    pub error_dialog: gtk::MessageDialog,
+    pub error_box: gtk::Box,
+    pub error_close: gtk::Button,
 }
 
 impl RustInterface {
@@ -152,6 +163,18 @@ impl RustInterface {
             d: builder.object("-d").unwrap(),
             selection_box: builder.object("ls-files-box").unwrap(),
             close_files: builder.object("close-files").unwrap(),
+            ls_tree: builder.object("ls-tree").unwrap(),
+            tree_branch_entry: builder.object("tree-branch-entry").unwrap(),
+            ls_tree_dialog: builder.object("tree-dialog").unwrap(),
+            tree_box: builder.object("ls-tree-box").unwrap(),
+            close_tree: builder.object("close-tree").unwrap(),
+            apply_tree: builder.object("apply-tree").unwrap(),
+            other_commands: builder.object("other-commands").unwrap(),
+            others_close: builder.object("others-close").unwrap(),
+            others_dialog: builder.object("others-dialog").unwrap(),
+            error_dialog: builder.object("error-dialog").unwrap(),
+            error_box: builder.object("error-box").unwrap(),
+            error_close: builder.object("close-error-dialog").unwrap(),
         }
     }
     
@@ -171,7 +194,8 @@ impl RustInterface {
         handle_rm(&self);
         handle_merge(&self);
         handle_repository(&self);
-        handle_ls_files(&self);
+        handle_other_commands(&self);
+        handle_clone(&self);
 
         self.window.show_all();   
         gtk::main();
