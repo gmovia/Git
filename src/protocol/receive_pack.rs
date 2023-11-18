@@ -1,4 +1,5 @@
-use std::io::Write;
+use std::fs::{OpenOptions, self};
+use std::io::{Write, self, BufRead};
 use std::net::Shutdown;
 use std::path::Path;
 use std::{net::TcpStream, path::PathBuf};
@@ -7,6 +8,7 @@ use crate::packfile::packfile::{process_line, to_pkt_line};
 
 use crate::proxy::proxy::Proxy;
 use crate::vcs::commands::clone::Clone;
+use crate::vcs::commands::init::Init;
 use crate::vcs::files::current_commit::CurrentCommit;
 
 
@@ -19,14 +21,25 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
 
     println!("Received from packet: ---> {:?}", old_new_hash_commit); //lo recibe porque lo manda el cliente, pero daemon no hace nada con eso
     //ni crea la rama si no la tiene, pero eso si lo tenems que hacer almenos 
-    let last_commit = CurrentCommit::read()?; //si esto lo corro del server me da entonces test_folder/clone ? y su ultimo commit?
+    let last_commit = get_last_commit(&server_client_path)?; //si esto lo corro del server me da entonces test_folder/clone ? y su ultimo commit?
     //porque quiero el ultimo commit pero de la repo del server
     println!("MI LAST COMMIT DEL SERVER ES ---> {}\n", last_commit);
     select_update(writer,last_commit, server_client_path.clone())?;
+    
     writer.shutdown(Shutdown::Both)?;
     Ok("Respuesta desde start_handler_receive".to_string())
 }
 
+fn get_last_commit(server_client_path: &PathBuf) -> Result<String, io::Error> {
+    println!("ESTOY en last commit");
+    let current_log = Init::get_current_log(server_client_path)?;
+    let log_content = fs::read_to_string(current_log)?;
+    let last_line = log_content.lines().last().ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log file is empty"))?;
+    let line_parts: Vec<&str> = last_line.split("-").collect();
+    println!("LINEPARTS {:?}", line_parts);
+    let last_commit = line_parts.get(2).ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log line is malformed"))?;
+    Ok(last_commit.to_string())
+}
 
 fn select_update(writer: &mut TcpStream,last_commit: String, server_client_path: PathBuf) -> Result<(), std::io::Error>{
 
