@@ -58,6 +58,7 @@ pub mod vcs{
         pub mod index;
         pub mod repository;
         pub mod current_repository;
+        pub mod current_commit;
         pub mod commits_table;
         pub mod repositories;
     }

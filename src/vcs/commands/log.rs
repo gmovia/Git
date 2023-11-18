@@ -8,7 +8,7 @@ impl Log {
 
     pub fn log() -> Result<String, std::io::Error> {
         let current = CurrentRepository::read()?;
-        let commits_file = File::open(Init::get_commits_path(&current)?)?;
+        let commits_file = File::open(Init::get_current_log(&current)?)?;
         let reader = BufReader::new(commits_file);
         let mut lines: Vec<String> = Vec::new();
         
