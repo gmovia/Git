@@ -1,4 +1,4 @@
-use std::{net::TcpStream, path::{PathBuf, Path}, io::{Read, Write, self, BufRead, BufWriter}, str::from_utf8, collections::{HashMap, HashSet}, fs::{File, OpenOptions, self}};
+use std::{net::TcpStream, path::{PathBuf, Path}, io::{Read, Write, self, BufRead, BufWriter, BufReader}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
 
 use rand::Rng;
 
@@ -48,19 +48,19 @@ impl Fetch {
         Ok(()) 
     }
 
-    fn create_objects(packets: &Vec<String> , objects: &Vec<(u8, Vec<u8>)>, client_path: &PathBuf) -> Result<(),std::io::Error> {
+    fn create_objects(packets: &Vec<String> , objects: &Vec<(u8, Vec<u8>)>, clinet_path: &PathBuf) -> Result<(),std::io::Error> {
         println!("PACKETS: {:?}", packets);
         println!("OBJECTS: {:?}", objects);
-        println!("CLIENT PATH: {:?}", client_path);
+        println!("CLIENT PATH: {:?}", clinet_path);
         
-        let mut branchs: HashSet<String> = HashSet::new();
+        let mut branchs: HashMap<String, String> = HashMap::new();
         println!("--------------------LIST REFERENCESSSS ---> {:?}\n", packets);
 
         let objects_processed = Self::process_folder(objects.to_vec());
         for obj in &objects_processed{
             println!("-->{:?}", obj);
         }
-        let commits_created = Self::create_folders(objects_processed.clone(), &client_path)?;
+        let commits_created = Self::create_folders(objects_processed.clone(), &clinet_path)?;
         
 
         for item in packets {
@@ -73,17 +73,14 @@ impl Fetch {
                 let ref_part = parts[1];
                     if ref_part.starts_with("refs/") {
                         let branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
-                        let _ = Branch::create_new_branch_with_hash(&client_path, &branch_name.trim_end_matches('\n'), commit);
-                        branchs.insert(branch_name.clone());
+                        //let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.clone().trim_end_matches('\n')));
+                        let _ = Branch::create_new_branch_with_hash(&clinet_path, &branch_name.trim_end_matches('\n'), commit);
                         println!("Commit: {}, Branch: {}", commit, branch_name);
+                        branchs.insert(branch_name, commit.to_owned());
                 }
             }
         }
-        for branch in branchs{
-            println!("LA BRANCH QUE HAY ES ESTA {:?}", branch);
-            println!("COMMITS CREATED {:?}", commits_created);
-            let _ = Self::write_commit_log(&branch, &client_path, &commits_created);
-        }
+        let _ = Self::write_commit_log(&clinet_path, branchs.clone(), &commits_created, objects_processed.clone());
         Ok(())
     }
 
@@ -174,15 +171,15 @@ impl Fetch {
         Ok(String::from_utf8_lossy(&buffer).to_string())
     }
 
-    fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
-        let mut commits_created: Vec<(String, CommitEntity)> = Self::add_commits(&repo)?;
+    fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<HashMap<String, CommitEntity>, std::io::Error>{
+        let mut commits_created: HashMap<String, CommitEntity> = Self::add_commits(&repo)?;
 
         for (index, content) in objects.iter() {
             match *index {
                 1 => {
                     match Self::create_commit_folder(&content, repo) {
                         Ok((hash, commit_entity)) => {
-                            commits_created.push((hash.clone(), commit_entity));
+                            commits_created.insert(hash.clone(), commit_entity);
                         },
                         Err(e) => {
                             println!("Error creating commit: {}", e);
@@ -201,8 +198,8 @@ impl Fetch {
         Ok(commits_created)
     }
     
-    fn add_commits(client_path: &PathBuf) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
-        let mut commits: Vec<(String, CommitEntity)> = Vec::new();
+    fn add_commits(client_path: &PathBuf) -> Result<HashMap<String, CommitEntity>, std::io::Error> {
+        let mut commits: HashMap<String, CommitEntity> = HashMap::new();
         let logs_path = client_path.join(".rust_git").join("logs");
 
         if let Ok(entries) = fs::read_dir(&logs_path) {
@@ -216,7 +213,7 @@ impl Fetch {
                                 let parts: Vec<&str> = line.split("-").collect();
                                 let commit_hash = parts[2];
                                 let commit_entity = CommitEntity::read(client_path, commit_hash)?;
-                                commits.push((commit_hash.to_string(), commit_entity));
+                                commits.insert(commit_hash.to_string(), commit_entity);
                             }
                         }
                     }
@@ -225,7 +222,6 @@ impl Fetch {
         } else {
             return Err(std::io::Error::new(io::ErrorKind::NotFound, "Directory not found"));
         }
-        
         Ok(commits)
     }
 
@@ -267,20 +263,47 @@ impl Fetch {
         Ok(Proxy::write_tree(repo.to_path_buf(), content)?)
     }
 
+    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+        println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
+        println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
+        for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
+            if commits_created.contains_key(hash_commit_branch) {
+                let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
+                let mut file = OpenOptions::new().create(true).write(true).append(true).open(&logs_path)?;
+                file.set_len(0)?;
+                let _ = Self::complete_commit_table(repo, &branch_name.to_string(), &hash_commit_branch.to_string(), commits_created);
+            }
+        }
+        Ok(())
+    }
 
-    fn write_commit_log(branch: &str, client_path: &PathBuf, commits_created:  &Vec<(String, CommitEntity)>) -> Result<(), std::io::Error> {
-        let logs_path = client_path.join(".rust_git").join("logs").join(branch.trim_end_matches("\n"));
-        let mut file = OpenOptions::new().create(true).write(true).append(false).open(&logs_path)?;
+    fn complete_commit_table(repo: &PathBuf, branch_name: &String, hash_commit_branch: &String, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
+        //branch_name, hash
+        let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
+        let mut file = OpenOptions::new().create(true).write(true).append(true).open(&logs_path)?;
+        
 
-        println!("COMITS CREATED: {:?}", commits_created);
+        let content = CatFile::cat_file(&hash_commit_branch, Init::get_object_path(&repo)?)?;
+        let id = Random::random();
 
-        for (hash, commit) in commits_created {
-            let id = Random::random();
-            let date = Self::get_date(&commit.author);
-            let format_commit = format!("{}-{}-{}-{}-{}\n", id, commit.parent_hash, hash, commit.message, date);
-            println!("TITULO {:?}", format_commit);
-            file.write_all(format_commit.as_bytes())?;
-        }        
+        if content.contains("parent"){
+            let part:Vec<&str> = content.split("\n").collect();
+            let hash_parent = part[1].trim_start_matches("parent ");
+            if let Some(commit_entity) = commits_created.get(hash_commit_branch){
+                let date = Self::get_date(&commit_entity.author);
+                let format_commit = format!("{}-{}-{}-{}-{}\n", id, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
+                let _ = Self::complete_commit_table(repo, branch_name, &hash_parent.to_string(), commits_created);
+                println!("FORMAT COMMIT PARENT: {}", &format_commit);
+                file.write(format_commit.as_bytes())?;
+            }
+        }else{
+            if let Some(commit_entity) = commits_created.get(hash_commit_branch){
+                let date = Self::get_date(&commit_entity.author);
+                let format_commit = format!("{}-{}-{}-{}-{}\n", id, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
+                println!("FORMAT COMMIT: {}", &format_commit);
+                file.write(format_commit.as_bytes())?;
+            }
+        }
         Ok(())
     }
 
@@ -291,6 +314,7 @@ impl Fetch {
         };
         &line[start..] 
     }
+
 
     /// Esta funcion se encarga de parsear la respuesta del servidor al upload pack. Devuelve la rama y el ultimo commit
     fn format_packet(packets: &Vec<String>) -> Result<Vec<(String,String)>,std::io::Error> {
