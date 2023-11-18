@@ -1,4 +1,3 @@
-
 use std::path::Path;
 
 use gtk::prelude::*;
@@ -82,6 +81,9 @@ pub struct RustInterface {
     pub other_commands: gtk::Button,
     pub others_dialog: gtk::Dialog,
     pub others_close: gtk::Button,
+    pub error_dialog: gtk::MessageDialog,
+    pub error_box: gtk::Box,
+    pub error_close: gtk::Button,
 }
 
 impl RustInterface {
@@ -170,6 +172,9 @@ impl RustInterface {
             other_commands: builder.object("other-commands").unwrap(),
             others_close: builder.object("others-close").unwrap(),
             others_dialog: builder.object("others-dialog").unwrap(),
+            error_dialog: builder.object("error-dialog").unwrap(),
+            error_box: builder.object("error-box").unwrap(),
+            error_close: builder.object("close-error-dialog").unwrap(),
         }
     }
     

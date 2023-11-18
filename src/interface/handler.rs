@@ -1,4 +1,3 @@
-
 use std::{fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{CURRENT, INCOMING, BOTH, BLOB_CODE}};
 
@@ -182,8 +181,10 @@ pub fn handle_command(interface: &RustInterface) {
 
 pub fn handle_rm(interface: &RustInterface) {
     let rm_dialog = interface.rm_dialog.clone();
-
     let rm_enter = interface.rm_enter.clone();
+
+    let _err_dialog = interface.error_dialog.clone();
+    let _err_box = interface.error_box.clone();
 
     interface.rm_enter.set_sensitive(false);
 
@@ -201,6 +202,13 @@ pub fn handle_rm(interface: &RustInterface) {
 
     handle_rm_button(interface);
 
+    interface.error_close.connect_clicked({
+        let err_dialog_2 = interface.error_dialog.clone();
+        move |_| {
+            err_dialog_2.hide();
+        }
+    });
+
 }
 
 pub fn handle_merge(interface: &RustInterface) {
@@ -216,6 +224,8 @@ pub fn handle_merge(interface: &RustInterface) {
     let ok = interface.both_ok.clone();
     let b_box = interface.both_box.clone();
     let b_text = interface.both_text.clone();
+    let err_dialog = interface.error_dialog.clone();
+    let err_box = interface.error_box.clone();
 
     interface.merge.set_sensitive(false);
     interface.apply_merge.set_visible(false);
@@ -315,12 +325,29 @@ pub fn handle_merge(interface: &RustInterface) {
                         }
                     });   
                 }
-            }
-            merge_dialog.run();
-            merge_dialog.hide();
+                merge_dialog.run();
+                merge_dialog.hide();
 
-            m_entry.set_text("");
-            button.set_sensitive(false);
+                m_entry.set_text("");
+                button.set_sensitive(false);
+            }else {
+                err_box.foreach(|child| {
+                    err_box.remove(child);
+                });
+                add_message(&err_box, &"    ERROR! BRANCH NOT FOUND...  ".to_string(), 2.0);
+                err_dialog.run();
+                err_dialog.hide();
+
+                m_entry.set_text("");
+                button.set_sensitive(false);
+            }
+        }
+    });
+
+    interface.error_close.connect_clicked({
+        let err_dialog_2 = interface.error_dialog.clone();
+        move |_| {
+            err_dialog_2.hide();
         }
     });
 
@@ -430,6 +457,8 @@ pub fn handle_ls_tree(interface: &RustInterface) {
     let tree_dialog = interface.ls_tree_dialog.clone();
     let rc_box = interface.tree_box.clone();
     let rc_entry = interface.tree_branch_entry.clone();
+    let err_dialog = interface.error_dialog.clone();
+    let err_box = interface.error_box.clone();
 
     interface.tree_box.set_visible(false);
 
@@ -466,9 +495,18 @@ pub fn handle_ls_tree(interface: &RustInterface) {
                     let message = format!("{}\n",entry);
                     add_message(&rc_box, &message, 0.0);
                 }
+                rc_box.set_visible(true);
+                rc_entry.set_text("");
+            }else {
+                err_box.foreach(|child| {
+                    err_box.remove(child);
+                });
+                add_message(&err_box, &"    ERROR! BRANCH NOT FOUND...  ".to_string(), 2.0);
+                err_dialog.run();
+                err_dialog.hide();
+
+                rc_entry.set_text("");
             }
-            rc_box.set_visible(true);
-            rc_entry.set_text("");
         }
     });
 
@@ -477,6 +515,13 @@ pub fn handle_ls_tree(interface: &RustInterface) {
         move |_| {
             dialog_2.hide();
     }});
+
+    interface.error_close.connect_clicked({
+        let err_dialog_2 = interface.error_dialog.clone();
+        move |_| {
+            err_dialog_2.hide();
+        }
+    });
 }
 
 pub fn add_message(m_changes: &gtk::Box, message: &String, align: f32) {

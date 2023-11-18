@@ -4,6 +4,7 @@ use crate::vcs::entities::change::add_changes;
 use crate::vcs::entities::conflict::{Conflict, resolve_conflicts, conflicts_search};
 use crate::vcs::files::commits_table::CommitsTable;
 use crate::vcs::commands::branch::Branch;
+use crate::vcs::files::current_commit::CurrentCommit;
 use crate::vcs::files::current_repository::CurrentRepository;
 use crate::vcs::files::repository::Repository;
 use super::checkout::Checkout;
@@ -22,9 +23,12 @@ impl Merge {
 
         let mut conflicts: HashMap<String, Conflict> = HashMap::new();
 
-        if let (Some(last_commit_of_current_commits_table), Some(last_commit_of_branch_commits_table), Some(parent_commit)) = (current_commits_table.last(), branch_commits_table.last(), CommitsTable::get_parent_commit(&current_commits_table, &branch_commits_table)){
-            let current_repository = Repository::read_repository_of_commit(current.clone(), &current_branch, &last_commit_of_current_commits_table.hash)?;
-            let branch_repository = Repository::read_repository_of_commit(current.clone(), branch, &last_commit_of_branch_commits_table.hash)?;
+        let current_commit_of_current_commits_table = CurrentCommit::read_for_branch(&current, &current_branch)?;
+        let current_commit_of_branch_commits_table = CurrentCommit::read_for_branch(&current, branch)?;
+
+        if let Some(parent_commit) = CommitsTable::get_parent_commit(&current_commits_table, &branch_commits_table){
+            let current_repository = Repository::read_repository_of_commit(current.clone(), &current_branch, &current_commit_of_current_commits_table)?;
+            let branch_repository = Repository::read_repository_of_commit(current.clone(), branch, &current_commit_of_branch_commits_table)?;
             let parent_repository = Repository::read_repository_of_commit(current.clone(), &current_branch, &parent_commit.hash)?;
 
             let mut changes_current_repository = Diff::diff(&parent_repository, &current_repository);

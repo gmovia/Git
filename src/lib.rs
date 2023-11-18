@@ -75,6 +75,7 @@ pub mod vcs{
         pub mod index;
         pub mod repository;
         pub mod current_repository;
+        pub mod current_commit;
         pub mod commits_table;
         pub mod repositories;
     }
@@ -97,6 +98,7 @@ pub mod vcs{
         pub mod ls_files;
         pub mod fetch;
         pub mod ls_tree;
+        pub mod check_ignore;
     }
 
     pub mod sets{
