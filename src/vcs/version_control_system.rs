@@ -3,7 +3,7 @@ use crate::{
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
 
-    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constants::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE},
+    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constants::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE}, client::client::Client,
 };
 
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
@@ -106,7 +106,8 @@ impl VersionControlSystem {
             return Ok(RESPONSE_OK_IGNORE.to_string());
         }
         return Ok(RESPONSE_NOK_GIT_IGNORE.to_string());
-
+    }
+    
     pub fn git_pull(input: String) -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
         Self::fetch("git fetch".to_string())?;
