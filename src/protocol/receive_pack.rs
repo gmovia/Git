@@ -9,7 +9,6 @@ use crate::packfile::packfile::{process_line, to_pkt_line};
 use crate::proxy::proxy::Proxy;
 use crate::vcs::commands::clone::Clone;
 use crate::vcs::commands::init::Init;
-use crate::vcs::files::current_commit::CurrentCommit;
 
 
 
@@ -50,7 +49,29 @@ fn select_update(writer: &mut TcpStream,last_commit: String, server_client_path:
 
     let msg_done = "0000";
     writer.write(msg_done.as_bytes())?;
-    
+
+    let mut refs = Vec::new();
+    let mut send_refs = Vec::new(); // Cambiado a Vec<String>
+    loop {
+        let value = process_line(writer);
+        match value {
+            Ok(value) => {
+                if value == "0" {
+                    break;
+                } else {
+                    refs.push(value.clone());
+                    send_refs.push(value);
+                }                
+            }
+            Err(e) => {
+                println!("Error al procesar la línea: {:?}", e);
+                return Err(e);
+            }
+        }
+    }
+    println!("Mi lista que recibo de refs a enviar es:  --->{:?}\n" , send_refs);    
+
+    // aca espero la PACKDATA
     let objects = Clone::get_socket_response(writer)?;
     updating_repo( objects, server_client_path)?;
     writer.flush()?;
