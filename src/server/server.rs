@@ -45,6 +45,7 @@ impl Server {
                     println!("Received message from client: {}", &message);
 
                     let server_path = Self::extract_path(&message, path)?;
+                    println!("SERVER PATH DE extract path es  {:?}\n", server_path);
                     if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, &server_path) {
                         println!("Error parsing response: {}",e)
                     }
@@ -73,10 +74,11 @@ impl Server {
     }
 
     /// Esta funcion se encarga de responder al mensaje recibido por parte del cliente
-    fn parse_response( message: &String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {       
+    fn parse_response(message: &String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {  
+        println!("MESSAGE qeue entra a parse_response {:?}", message);    
         let response = match message.as_str() {
             s if s.contains("git-upload-pack") => start_handler_upload(reader, path)?,
-            s if s.contains("git-receive_pack") => start_handler_receive(reader, path)?,
+            s if s.contains("git-receive-pack") => start_handler_receive(reader, path.to_path_buf())?,
             _ => "No entiendo tu mensaje".to_string(),
         };
         Ok(response)

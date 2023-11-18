@@ -19,6 +19,7 @@ pub mod handlers{
     pub mod fetch;
     pub mod ls_tree;
     pub mod pull;
+    pub mod push;
 }
 
 pub mod proxy{

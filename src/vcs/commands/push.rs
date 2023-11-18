@@ -22,12 +22,10 @@ impl Push{
         handle_send_pack(stream, &current_repo, &log_entries)?;
         
         //send_done_msg(stream)?;
-
+/* 
         let mut buffer = vec![0; 10]; // Tamaño del buffer: 1024 bytes
         stream.read_exact(&mut buffer)?;
-        println!("Datos recibidos: {}", String::from_utf8_lossy(&buffer));
-       
- 
+        println!("Datos recibidos: {}", String::from_utf8_lossy(&buffer)); */
 
         Ok(())
     }

@@ -121,7 +121,7 @@ impl Encoder {
             println!("OBJECT: {:?}", object);
         }
         println!("OBJECTS DATA: {:?}", unique_objects_data);
-        Self::create_size_header(&mut packfile, server_path, unique_objects_data.len())?;
+        Self::create_size_header(&mut packfile, unique_objects_data.len())?;
         for objects in unique_objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -247,7 +247,7 @@ impl Encoder {
         Ok(objects)
     }
 
-    fn create_fetch_header(mut packfile: &mut Vec<u8>, objects: usize) -> Result<(),std::io::Error>{
+    pub fn create_size_header(mut packfile: &mut Vec<u8>, objects: usize) -> Result<(),std::io::Error>{
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
         }

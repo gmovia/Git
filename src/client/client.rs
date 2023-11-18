@@ -40,7 +40,7 @@ impl Client {
         let pkt_line = to_pkt_line(&query_to_send);
         print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
         stream.write(pkt_line.as_bytes())?;
-        let _ = Self::handler_query(&query_to_send, &mut stream, &current_repository, "clone");
+        let _ = Self::handler_query(&query_to_send, &mut stream, &current_repository);
         Ok(())
     }
 
@@ -50,7 +50,7 @@ impl Client {
         let pkt_line = to_pkt_line(&query_to_send);
         print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
         stream.write(pkt_line.as_bytes())?;
-        let _ = Self::handler_query(&query_to_send, &mut stream, &current_repository, "fetch");
+        let _ = Self::handler_query(&query_to_send, &mut stream, &current_repository);
         Ok(())
     }
 
@@ -75,7 +75,7 @@ impl Client {
         }
     }
 
-    fn handler_query(query: &str, socket: &mut TcpStream, current_repository: &PathBuf, command_type: &str) -> Result<(),std::io::Error> {
+    fn handler_query(query: &str, socket: &mut TcpStream, current_repository: &PathBuf) -> Result<(),std::io::Error> {
             match query {
             command_str if command_str.contains("git-upload-pack") => clone::Clone::git_clone(socket, (&current_repository).to_path_buf()),
             command_str if command_str.contains("git-receive-pack ") =>  push::Push::push(socket, (&current_repository).to_path_buf()),

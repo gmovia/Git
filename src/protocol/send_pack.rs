@@ -1,6 +1,6 @@
 
-use std::{net::TcpStream, path::{Path, PathBuf}, io::{Write, self, BufRead}, fs::OpenOptions};
-use crate::{packfile::packfile::{process_line, to_pkt_line}, server::encoder::Encoder, vcs::commands::{branch::Branch, init::Init}};
+use std::{net::TcpStream, path::{Path, PathBuf}, io::Write};
+use crate::{packfile::packfile::{process_line, to_pkt_line}, server::encoder::Encoder, vcs::{commands::branch::Branch, files::current_commit::CurrentCommit}};
 
 pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_entries: &Vec<String>) -> Result<(), std::io::Error> {
     // aca leo lo que me responde el servidor 
@@ -35,7 +35,7 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_ent
     println!("Mi lista que recibo de refs a enviar es:  --->{:?}\n" , send_refs);
 
     //let vec = reformatted_hash_commit(send_refs, current_repo)?;
-    let last_commit = get_last_commit(current_repo)?;
+    let last_commit = CurrentCommit::read()?;
     
     let packfile = init_packfile(last_commit, current_repo)?;
 
@@ -59,7 +59,7 @@ fn init_packfile(last_commit: String, current_repo: &PathBuf) -> Result<Vec<u8>,
     println!("LEN OBJECTS {:?}\n", objects_data.len());
     println!("OBJECTS DATA: {:?}\n", objects_data);
 
-    Encoder::create_size_header(&mut packfile, current_repo, objects_data.len())?;
+    Encoder::create_size_header(&mut packfile, objects_data.len())?;
 
     for objects in objects_data.iter().rev() {
         let object_type = Encoder::set_bits(objects.1 as u8, objects.2)?;
@@ -75,18 +75,6 @@ fn init_packfile(last_commit: String, current_repo: &PathBuf) -> Result<Vec<u8>,
     }
     Ok(packfile)
 }
-
-fn get_last_commit(current_repo: &PathBuf) -> Result<String, io::Error> {
-    let commits_file = OpenOptions::new().read(true).open(Init::get_commits_path(&current_repo)?)?;
-    let reader = io::BufReader::new(commits_file);
-    let result = reader.lines().last().map_or(Ok(String::new()), |line| {
-        let binding = line?;
-        let parts: Vec<&str> = binding.split("-").collect();
-        Ok(parts[2].to_string())
-    });
-    result
-}
-
 
 fn reformatted_hash_commit(send_ref: Vec<String>, current_repo: &PathBuf)-> Result<Vec<String>, std::io::Error> {
     let mut result = Vec::new();

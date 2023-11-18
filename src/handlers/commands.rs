@@ -7,11 +7,11 @@ use crate::handlers::branch::handler_branch;
 use crate::handlers::checkout::handler_checkout;
 use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
+use crate::handlers::push::handler_push;
 use super::clone::handler_clone;
 use super::fetch::handler_fetch;
 use super::merge::handler_merge;
 use super::ls_files::handler_ls_files;
-use super::push::handler_push;
 use super::ls_tree::handler_ls_tree;
 use super::pull::handler_pull;
 
