@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, fs::{File, self, OpenOptions}, io::{self, Write}};
+use std::{path::{Path, PathBuf}, fs::{self, OpenOptions}, io::{self, Write}};
 use crate::vcs::files::current_commit::CurrentCommit;
 
 use super::init::Init;

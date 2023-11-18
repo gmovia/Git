@@ -1,6 +1,6 @@
 use crate::{vcs::version_control_system::VersionControlSystem, constants::constants::RESPONSE_OK_PULL};
 
-pub fn handler_pull(input: String) -> String {    
-    let _ =  VersionControlSystem::git_pull(input);
+pub fn handler_pull() -> String {    
+    let _ =  VersionControlSystem::git_pull();
     RESPONSE_OK_PULL.to_string()
 }

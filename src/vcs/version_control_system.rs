@@ -108,7 +108,7 @@ impl VersionControlSystem {
         return Ok(RESPONSE_NOK_GIT_IGNORE.to_string());
     }
     
-    pub fn git_pull(input: String) -> Result<(), std::io::Error> {
+    pub fn git_pull() -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
         Self::fetch("git fetch".to_string())?;
         Self::merge(&Init::get_current_branch(&current)?)?;

@@ -1,13 +1,11 @@
 use std::{fs, io};
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::net::TcpStream;
 use crate::packfile::packfile::{to_pkt_line, process_line};
 use crate::server::encoder::Encoder;
 use crate::vcs::files::current_commit::CurrentCommit;
 
-
-/// Esta funcion se encarga de procesar la respuesta que el server le entregara al cliente al mensaje de upload pack
 pub fn start_handler_upload(stream: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {
     let first_response = handler_upload_pack(path)?;
 
@@ -77,55 +75,16 @@ fn get_log_entries(path: &Path) -> Result<Vec<String>, std::io::Error>{
         let log_file = entry?;
         let _ = fs::File::open(log_file.path())?;
         
-        //let reader = BufReader::new(file);
         if let Some(branch_name) = log_file.path().file_name() {
             let current_hash  = CurrentCommit::read_for_branch(path, &branch_name.to_string_lossy())?;
             let format = format!("{} refs/heads/{}", current_hash, branch_name.to_string_lossy().to_string());
             log_entries.push(format);
 
         }
-        
-        //let mut last_line = String::new();
-        //let mut format_last_line = String::new(); 
-        
-        
-        //for line in reader.by_ref().lines() {
-        //    if let Ok(line) = line {
-        //        last_line = line.clone(); 
-        //        let last_commit: Vec<&str> = line.split("-").collect();
-        //        let log_file_name = log_file.file_name().to_string_lossy().to_string();
-        //        format_last_line = format!("{} refs/heads/{}", last_commit[2], log_file_name);
-        //    }
-        //}
-        //   log_entries.push(format_last_line);
-
-        //if let Some(hash) = parse_log_line(&last_line) {
-        //    let filename = log_file.file_name().to_string_lossy().to_string();
-        //    log_entries.push(format!("{} refs/heads/{}\n", hash, filename));
-        //}
     }
     Ok(log_entries)
 }
 
-
-fn parse_log_line(line: &str) -> Option<String> {
-    let parts: Vec<&str> = line.split_whitespace().collect();
-    match parts.get(0) {
-        Some(part) => {
-            let part = part.replace("--m", "");
-            let hash_parts: Vec<&str> = part.splitn(2, '-').collect(); 
-
-            match hash_parts.as_slice() {
-                [_, hash] if hash.len() == 40 => {
-                    let hash = hash_parts[0..2].join("");
-                    Some(hash)
-                }
-                _ => None,
-            }
-        }
-        None => None,
-    }
-}
 
 
 fn send_response(response: Vec<String>, writer: &mut TcpStream) -> Result<(), std::io::Error> {

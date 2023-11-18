@@ -33,7 +33,7 @@ pub fn handler_command<'a>(input: &str) -> String{
         x if x.contains("git ls-files") => handler_ls_files(x.to_string()),
         x if x.contains("git fetch") => handler_fetch(x.to_string()),
         x if x.contains("git ls-tree") => handler_ls_tree(x.to_string()),
-        x if x.contains("git pull") => handler_pull(x.to_string()),
+        x if x.contains("git pull") => handler_pull(),
          _ => "Failed or Panicked.".to_string()
      }
 }

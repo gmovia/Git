@@ -1,9 +1,5 @@
-use std::{net::TcpStream, path::{PathBuf, Path}, io::{Read, Write, self, BufRead, BufWriter, BufReader}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
-
-use rand::Rng;
-
-use crate::{packfile::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::branch::{BranchOptions, Branch}, entities::commit_entity::CommitEntity}, constants::constants::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxy::proxy::Proxy, utils::random::random::Random};
-
+use std::{net::TcpStream, path::{PathBuf, Path}, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
+use crate::{packfile::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{commands::branch::Branch, entities::commit_entity::CommitEntity}, constants::constants::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxy::proxy::Proxy, utils::random::random::Random};
 use super::{cat_file::CatFile, init::Init};
 
 pub struct Fetch;
@@ -269,7 +265,7 @@ impl Fetch {
         for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
             if commits_created.contains_key(hash_commit_branch) {
                 let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
-                let mut file = OpenOptions::new().create(true).write(true).append(true).open(&logs_path)?;
+                let file = OpenOptions::new().create(true).write(true).append(true).open(&logs_path)?;
                 file.set_len(0)?;
                 let _ = Self::complete_commit_table(repo, &branch_name.to_string(), &hash_commit_branch.to_string(), commits_created);
             }
