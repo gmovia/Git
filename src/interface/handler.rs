@@ -533,7 +533,9 @@ pub fn handle_check_ignore(interface: &RustInterface) {
 
     interface.check_button.connect_clicked({
         move |button| {
-
+            ch_box.foreach(|child| {
+                ch_box.remove(child);
+            });
             if let Ok(response) = VersionControlSystem::check_ignore(Path::new(&ig_entry.text().to_string())){
                 draw_message(&ch_box, &response, 0.5);
             }
@@ -541,6 +543,13 @@ pub fn handle_check_ignore(interface: &RustInterface) {
             ig_entry.set_text("");
             button.set_sensitive(false);
         }
+    });
+
+    interface.close_ignore.connect_clicked({
+        let dialog2 = interface.ignore_dialog.clone();
+        move |_| {
+            dialog2.hide();
+        } 
     });
 }
 

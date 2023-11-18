@@ -181,7 +181,7 @@ impl RustInterface {
             error_dialog: builder.object("error-dialog").unwrap(),
             error_box: builder.object("error-box").unwrap(),
             error_close: builder.object("close-error-dialog").unwrap(),
-            check_ignore: builder.object("close-error-dialog").unwrap(),
+            check_ignore: builder.object("check-ignore").unwrap(),
             check_ignore_entry: builder.object("check-ignore-entry").unwrap(),
             ignore_dialog: builder.object("check-ignore-dialog").unwrap(),
             check_ignore_box: builder.object("check-ignore-box").unwrap(),
