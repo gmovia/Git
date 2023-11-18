@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, fs::{self, File}, io::{Write, Read, self}};
+use std::{path::{Path, PathBuf}, fs::{self, File, OpenOptions}, io::{Write, Read, self}};
 
 use crate::{constants::constants::{RUST_PATH, COMMIT_INIT_HASH}, vcs::files::current_repository::CurrentRepository};
 
@@ -100,10 +100,16 @@ impl Init {
         fs::create_dir_all(&refs_path)?;
         fs::create_dir_all(&heads_path)?;
         
-        let mut branch_file = File::create(&branch_path)?;
-        
-        branch_file.write_all(COMMIT_INIT_HASH.as_bytes())?;
-            
+        if !branch_path.exists() {
+            let mut branch_file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .append(false)
+                .open(&branch_path)?;
+    
+            branch_file.write_all(COMMIT_INIT_HASH.as_bytes())?;
+        }
+
         fs::create_dir_all(refs_path.join("tags"))?;
             
         Ok(())
