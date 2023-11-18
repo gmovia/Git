@@ -2,7 +2,7 @@ use std::{net::TcpStream, path::{PathBuf, Path}, io::{Read, Write, self, BufRead
 
 use rand::Rng;
 
-use crate::{packfile::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, entities::commit_entity::CommitEntity}, constants::constants::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxy::proxy::Proxy};
+use crate::{packfile::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{version_control_system::VersionControlSystem, commands::branch::{BranchOptions, Branch}, entities::commit_entity::CommitEntity}, constants::constants::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxy::proxy::Proxy};
 
 use super::{cat_file::CatFile, init::Init};
 
@@ -73,7 +73,8 @@ impl Fetch {
                 let ref_part = parts[1];
                     if ref_part.starts_with("refs/") {
                         let branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
-                        let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.clone().trim_end_matches('\n')));
+                        //let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.clone().trim_end_matches('\n')));
+                        let _ = Branch::create_new_branch_with_hash(&clinet_path, &branch_name.trim_end_matches('\n'), commit);
                         println!("Commit: {}, Branch: {}", commit, branch_name);
                         branchs.insert(branch_name, commit.to_owned());
                 }
@@ -266,12 +267,13 @@ impl Fetch {
         println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
         println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
         for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
+            println!("BRANCH NAME: {} - HASH: {}", branch_name, hash_commit_branch);
             if commits_created.contains_key(hash_commit_branch) {
                 let logs_path = client_path.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
                 let file = OpenOptions::new()
                     .create(true)
                     .write(true)
-                    .append(true)
+                    .append(false)
                     .open(&logs_path)?;
 
                 let _writer = BufWriter::new(file);
