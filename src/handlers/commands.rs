@@ -7,9 +7,12 @@ use crate::handlers::branch::handler_branch;
 use crate::handlers::checkout::handler_checkout;
 use crate::handlers::commit::handler_commit;
 use crate::handlers::rm::handler_rm;
-use crate::handlers::merge::handler_merge;
+use super::clone::handler_clone;
+use super::fetch::handler_fetch;
+use super::merge::handler_merge;
 use super::ls_files::handler_ls_files;
 use super::ls_tree::handler_ls_tree;
+use super::pull::handler_pull;
 
 pub fn handler_command<'a>(input: &str) -> String{
     let input = input.trim(); 
@@ -26,8 +29,11 @@ pub fn handler_command<'a>(input: &str) -> String{
         x if x.contains("git commit") => handler_commit(x.to_string()),
         x if x.contains("git branch") => handler_branch(x.to_string()),
         x if x.contains("git checkout") => handler_checkout(x.to_string()),
+        x if x.contains("git clone") => handler_clone(x.to_string()),
         x if x.contains("git ls-files") => handler_ls_files(x.to_string()),
+        x if x.contains("git fetch") => handler_fetch(x.to_string()),
         x if x.contains("git ls-tree") => handler_ls_tree(x.to_string()),
+        x if x.contains("git pull") => handler_pull(x.to_string()),
          _ => "Failed or Panicked.".to_string()
      }
 }
