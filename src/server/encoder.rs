@@ -247,7 +247,7 @@ impl Encoder {
         Ok(objects)
     }
 
-    pub fn create_size_header(mut packfile: &mut Vec<u8>, path: &PathBuf, objects: usize) -> Result<(),std::io::Error>{
+    pub fn create_size_header(mut packfile: &mut Vec<u8>, _path: &PathBuf, objects: usize) -> Result<(),std::io::Error>{
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
         }
