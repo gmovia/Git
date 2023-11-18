@@ -84,6 +84,12 @@ pub struct RustInterface {
     pub error_dialog: gtk::MessageDialog,
     pub error_box: gtk::Box,
     pub error_close: gtk::Button,
+    pub check_ignore: gtk::Button,
+    pub check_ignore_entry: gtk::Entry,
+    pub ignore_dialog: gtk::Dialog,
+    pub check_ignore_box: gtk::Box,
+    pub close_ignore: gtk::Button,
+    pub check_button: gtk::Button,
 }
 
 impl RustInterface {
@@ -175,6 +181,12 @@ impl RustInterface {
             error_dialog: builder.object("error-dialog").unwrap(),
             error_box: builder.object("error-box").unwrap(),
             error_close: builder.object("close-error-dialog").unwrap(),
+            check_ignore: builder.object("close-error-dialog").unwrap(),
+            check_ignore_entry: builder.object("check-ignore-entry").unwrap(),
+            ignore_dialog: builder.object("check-ignore-dialog").unwrap(),
+            check_ignore_box: builder.object("check-ignore-box").unwrap(),
+            close_ignore: builder.object("close-ignore").unwrap(),
+            check_button: builder.object("check-ignore-button").unwrap(),
         }
     }
     
