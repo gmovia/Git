@@ -174,15 +174,15 @@ impl Fetch {
         Ok(String::from_utf8_lossy(&buffer).to_string())
     }
 
-    fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<HashMap<String, CommitEntity>, std::io::Error>{
-        let mut commits_created: HashMap<String, CommitEntity> = Self::add_commits(&repo)?;
+    fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
+        let mut commits_created: Vec<(String, CommitEntity)> = Self::add_commits(&repo)?;
 
         for (index, content) in objects.iter() {
             match *index {
                 1 => {
                     match Self::create_commit_folder(&content, repo) {
                         Ok((hash, commit_entity)) => {
-                            commits_created.insert(hash.clone(), commit_entity);
+                            commits_created.push((hash.clone(), commit_entity));
                         },
                         Err(e) => {
                             println!("Error creating commit: {}", e);
@@ -201,8 +201,8 @@ impl Fetch {
         Ok(commits_created)
     }
     
-    fn add_commits(client_path: &PathBuf) -> Result<HashMap<String, CommitEntity>, std::io::Error> {
-        let mut commits: HashMap<String, CommitEntity> = HashMap::new();
+    fn add_commits(client_path: &PathBuf) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
+        let mut commits: Vec<(String, CommitEntity)> = Vec::new();
         let logs_path = client_path.join(".rust_git").join("logs");
 
         if let Ok(entries) = fs::read_dir(&logs_path) {
@@ -216,7 +216,7 @@ impl Fetch {
                                 let parts: Vec<&str> = line.split("-").collect();
                                 let commit_hash = parts[2];
                                 let commit_entity = CommitEntity::read(client_path, commit_hash)?;
-                                commits.insert(commit_hash.to_string(), commit_entity);
+                                commits.push((commit_hash.to_string(), commit_entity));
                             }
                         }
                     }
@@ -225,16 +225,8 @@ impl Fetch {
         } else {
             return Err(std::io::Error::new(io::ErrorKind::NotFound, "Directory not found"));
         }
-        let mut order: Vec<String> = commits.keys().cloned().collect();
-        order.reverse();
-
-        let mut new_commits: HashMap<String, CommitEntity> = HashMap::new();
-        for key in order {
-            if let Some(value) = commits.remove(&key) {
-                new_commits.insert(key, value);
-            }
-        }
-        Ok(new_commits)
+        
+        Ok(commits)
     }
 
 
@@ -275,11 +267,14 @@ impl Fetch {
         Ok(Proxy::write_tree(repo.to_path_buf(), content)?)
     }
 
-    fn write_commit_log(branch: &str, client_path: &PathBuf, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
+
+    fn write_commit_log(branch: &str, client_path: &PathBuf, commits_created:  &Vec<(String, CommitEntity)>) -> Result<(), std::io::Error> {
         let logs_path = client_path.join(".rust_git").join("logs").join(branch.trim_end_matches("\n"));
         let mut file = OpenOptions::new().create(true).write(true).append(false).open(&logs_path)?;
 
-        for (hash, commit) in commits_created{
+        println!("COMITS CREATED: {:?}", commits_created);
+
+        for (hash, commit) in commits_created {
             let id = Random::random();
             let date = Self::get_date(&commit.author);
             let format_commit = format!("{}-{}-{}-{}-{}\n", id, commit.parent_hash, hash, commit.message, date);
