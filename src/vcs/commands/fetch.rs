@@ -225,7 +225,16 @@ impl Fetch {
         } else {
             return Err(std::io::Error::new(io::ErrorKind::NotFound, "Directory not found"));
         }
-        Ok(commits)
+        let mut order: Vec<String> = commits.keys().cloned().collect();
+        order.reverse();
+
+        let mut new_commits: HashMap<String, CommitEntity> = HashMap::new();
+        for key in order {
+            if let Some(value) = commits.remove(&key) {
+                new_commits.insert(key, value);
+            }
+        }
+        Ok(new_commits)
     }
 
 
