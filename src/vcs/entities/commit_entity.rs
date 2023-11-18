@@ -1,5 +1,6 @@
 use std::{path::{PathBuf, Path}, fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, utils::random::random::Random, constants::constants::{COMMIT_CODE, COMMIT_INIT_HASH}};
+#[derive(Debug, Clone)]
 
 pub struct CommitEntity{
     pub content_type: String,
