@@ -8,9 +8,14 @@ extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, Write};
+use crate::handlers::hash_object;
+use crate::vcs::commands::branch::Branch;
+use crate::vcs::commands::init::Init;
 use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::entities::entity::Entity;
 use crate::vcs::entities::tree_entity::TreeEntity;
+use crate::vcs::files::commits_table::CommitsTable;
+use crate::vcs::files::current_repository::CurrentRepository;
 
 
 pub struct Encoder {
@@ -343,7 +348,7 @@ impl Encoder {
 
 
 
-    pub fn get_object_for_commit(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+    pub fn get_object_for_commit(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str , last_commit_server: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
         let objects_path = server_path.join(".rust_git").join("objects");
         let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
         println!(" WANT PATH{:?}\n", want_path);
@@ -352,8 +357,11 @@ impl Encoder {
             println!(" WANT PATH exist\n");
             let commit_entity = CommitEntity::read(&server_path, commit_hash)?;
             if let Ok(metadata) = fs::metadata(&want_path) {
-                objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
-                Self::get_objects_tree(&server_path, objects_data, commit_entity)?;
+                println!("::::::::::OBJECT DATA    {:?}",objects_data);
+                
+                Self::get_objects_tree(&server_path, objects_data, commit_entity, last_commit_server, &want_path)?;
+                //objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
+                
             }
         }
         objects_data.sort_by(|a, b| a.1.cmp(&b.1));
@@ -367,15 +375,25 @@ impl Encoder {
         Ok(unique_objects_data)
     }
 
-    fn get_objects_tree(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity) -> Result<(), std::io::Error> {
+    fn get_objects_tree(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity, last_commit_server: &str, want_path: &Path) -> Result<(), std::io::Error> {
         let tree_path = server_path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
         let tree_entity = TreeEntity::read(server_path, commit_entity.tree_hash)?;
         if let Ok(metadata) = fs::metadata(&tree_path) {
+            if let Some(commit)  = CommitsTable::get_commit(commit_entity.parent_hash.clone(), &Branch::get_current_branch(&CurrentRepository::read()?)?)?{
+                println!("HOLALUZ LAST COMMIT SERVER----------> {}\n", last_commit_server);
+                
+                println!("HOLALUZ COMMIT ENTITY PARENT HASH---------> {}\n", commit.hash);
+                if commit.hash.as_str().trim_end_matches("\n") == last_commit_server.trim_end_matches("\n") {
+                    println!("ENTRELAU\n");
+                    return Ok(()); 
+                }     
+            }
             objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+            println!("GUIDOBJECTDATA {:?}", objects_data);
             Self::get_objects_blobs(server_path, objects_data, tree_entity)?;
-            if commit_entity.parent_hash != "".to_string() {
-                Self::get_object_for_commit(server_path, objects_data, &commit_entity.parent_hash)?;
-            }     
+            objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
+
+            Self::get_object_for_commit(server_path, objects_data, &commit_entity.parent_hash,last_commit_server)?;
         } else {
             std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
         }

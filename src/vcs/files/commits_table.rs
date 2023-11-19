@@ -24,15 +24,26 @@ impl CommitsTable{
         Ok(commits)
     } 
 
+    pub fn get_commit(parent_hash: String, branch: &str) -> Result<Option<CommitTableEntry>, std::io::Error> {
+        let commits = Self::read(CurrentRepository::read()?, branch)?;
+        for commit in commits {
+            if commit.last_hash == parent_hash {
+                return Ok(Some(commit));
+            }
+        }
+        Ok(None)
+    }
+    
+
     /// Recibe un mensaje y el conjunto de blobs que va a almacenar el commits
     /// Escribe la tabla de commits, crea el tree y los blobs relacionados al commit
     pub fn write(message: &String, repository: &HashMap<String, String>) -> Result<(),std::io::Error>{
         let id = Random::random();
-        let current_time: DateTime<Local> = Local::now();
         let last_commit_hash = CurrentCommit::read()?;
-        let _ = current_time.to_rfc2822();
-        let author = "author gmovia <gmovia@fi.uba.ar> 1699842870 -0300";
-        let committer = "committer gmovia <gmovia@fi.uba.ar> 1699842870 -0300";
+        let current_timestamp = Local::now().timestamp();
+
+        let author = format!( "author gmovia <gmovia@fi.uba.ar> {} -0300" , current_timestamp );
+        let committer = format!("committer gmovia <gmovia@fi.uba.ar> {} -0300", current_timestamp);
         
         let current = CurrentRepository::read()?;
         let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_current_log(&current)?)?; //abro la tabla de commits para escribir - si no existe, la creo
@@ -42,7 +53,7 @@ impl CommitsTable{
         
         let commit_entity =  CommitEntity{content_type: "commit".to_string(), tree_hash: tree_hash.clone(), parent_hash: last_commit_hash.clone(), author: author.to_string(), committer: committer.to_string(), message: message.clone()};
         let commit_hash = CommitEntity::write(&current, &commit_entity)?;
-        let commit = format!("{}-{}-{}-{}-{}\n", id, last_commit_hash, commit_hash, message, current_time); 
+        let commit = format!("{}-{}-{}-{}-{} -300\n", id, last_commit_hash, commit_hash, message, current_timestamp); 
         
         commits_file.write_all(commit.as_bytes())?;
         CurrentCommit::write(commit_hash)?;

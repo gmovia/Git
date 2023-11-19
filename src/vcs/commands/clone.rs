@@ -233,7 +233,7 @@ impl Clone{
         Ok(())
     }
 
-    fn get_date(line: &str) -> &str {
+    pub fn get_date(line: &str) -> &str {
         let start = match line.find('>') {
             Some(pos) => pos + 2, 
             None => 0, 

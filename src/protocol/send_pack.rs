@@ -33,11 +33,11 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_ent
         }
     }
     println!("Mi lista que recibo de refs a enviar es:  --->{:?}\n" , send_refs);
-
+    let last_commit_server = &send_refs[0]; //handlear despues para mas ramas
     //let vec = reformatted_hash_commit(send_refs, current_repo)?;
     let last_commit = CurrentCommit::read()?;
     
-    let packfile = init_packfile(last_commit, current_repo)?;
+    let packfile = init_packfile(last_commit, current_repo, &last_commit_server)?;
 
     send_pack(packfile, stream, log_entries)?;
     //tengo mi vector de lo que quiere actualizar el server
@@ -48,13 +48,13 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_ent
 }
 
 
-fn init_packfile(last_commit: String, current_repo: &PathBuf) -> Result<Vec<u8>,std::io::Error>{
+fn init_packfile(last_commit: String, current_repo: &PathBuf, last_commit_server: &String) -> Result<Vec<u8>,std::io::Error>{
     let mut packfile: Vec<u8> = Vec::new();
 
     let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
     println!("CURREN REPO ---> {:?}\n", current_repo);
     println!("LAS COMMIT ---> {}\n", last_commit);
-    Encoder::get_object_for_commit(&current_repo, &mut objects_data, &last_commit)?;
+    Encoder::get_object_for_commit(&current_repo, &mut objects_data, &last_commit, &last_commit_server)?;
     
     println!("LEN OBJECTS {:?}\n", objects_data.len());
     println!("OBJECTS DATA: {:?}\n", objects_data);
