@@ -1,21 +1,21 @@
 use std::collections::HashMap;
 use std::fs::{OpenOptions, self};
-use std::io::{Write, self, BufRead};
+use std::io::{Write, self};
 use std::net::Shutdown;
 use std::path::Path;
+use std::time::{UNIX_EPOCH, Duration};
 use std::{net::TcpStream, path::PathBuf};
 
-use crate::handlers::branch;
+use chrono::{DateTime, Utc, NaiveDateTime};
+
 use crate::packfile::packfile::{process_line, to_pkt_line};
 
-use crate::proxy::proxy::Proxy;
 use crate::utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders};
 use crate::utils::random::random::Random;
 use crate::vcs::commands::cat_file::CatFile;
-use crate::vcs::commands::checkout::Checkout;
 use crate::vcs::commands::clone::Clone;
 use crate::vcs::commands::init::Init;
-use crate::vcs::entities::commit_entity::{self, CommitEntity};
+use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::files::current_commit::CurrentCommit;
 use crate::vcs::files::repository::Repository;
 
@@ -106,55 +106,43 @@ pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &PathBuf,
     for obj in &objects_prcessed{
         println!("------> {:?}", obj);
     }
+
     let commits_created = Clone::create_folders(objects_prcessed.clone(), &repo_server_client);
-    
-    //let (commit_hash, commit_entitiy) = commits_created.iter().next().unwrap();
-    
-    //println!("commit_hash hash {}\n", commit_hash);
-    //Proxy::write_commit(repo_server_client.to_path_buf(), commit_entitiy)?;
-    //falta escribir al log
-    //
+    println!("COMMITS CREATEDDDD ---> {:?}\n", commits_created);
 
     let hashes_sorted = sort_hashes(&commits_created);
 
-    println!("HASH SORTED ---> {:?}", hashes_sorted);
+    println!("HASH SORTED ---> {:?}\n", hashes_sorted);
     for(commit_hash, commit_entity ) in &hashes_sorted{
-
         write_commit_log_push(&commit_entity.parent_hash, &commit_hash, &commit_entity, repo_server_client.to_path_buf())?;
     }
 
-    println!("REPO SERVER CLIENTE ---> {:?}\n", repo_server_client); //"test_folder/test1"
     update_cd(&repo_server_client.clone())?;
 
     Ok(())
 }
 
-
-
 fn sort_hashes(commits_created: &HashMap<String, CommitEntity>) -> Vec<(String, CommitEntity)> {
-    let mut commits_vec: Vec<(String, CommitEntity)> = commits_created.iter().map(|(key, value)| (key.clone(), value.clone())).collect();
+    let mut commits_vec: Vec<(String, CommitEntity)> = commits_created.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
-    commits_vec.sort_by(|a, b| {
-        let date_num_a = a.1
-            .author
-            .split_whitespace()
-            .last()
-            .and_then(|date_str| date_str.parse::<i64>().ok())
-            .unwrap_or(0);
+    // Ordenar el Vector basado en la fecha Unix en el campo author
+    commits_vec.sort_by_key(|(_, commit)| {
+        // Extraer la fecha Unix de la cadena author
+        let date_str = commit.author.split_whitespace().nth(3).unwrap_or("");
+        println!("Fecha extraída: {}", date_str);
 
-        let date_num_b = b.1
-            .author
-            .split_whitespace()
-            .last()
-            .and_then(|date_str| date_str.parse::<i64>().ok())
-            .unwrap_or(0);
-
-        // Compare in regular order for sorting from smaller to greater
-        date_num_a.cmp(&date_num_b)
+        // Convertir la fecha a un número
+        let date_num = date_str.parse::<i64>().unwrap_or(0);
+        // Convertir el timestamp Unix a un objeto DateTime
+        let date_time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(date_num, 0), Utc);
+        
+        println!("DATE .> {:?}", date_time);
+        date_time
     });
 
     commits_vec
 }
+
 
 
 fn write_commit_log_push(last_commit_hash: &String, new_commit_hash: &String, commit_entity: &CommitEntity, repo_server_client: PathBuf)  -> Result<(),std::io::Error>{

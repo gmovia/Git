@@ -45,7 +45,6 @@ impl Server {
                     println!("Received message from client: {}", &message);
 
                     let server_path = Self::extract_path(&message, path)?;
-                    println!("SERVER PATH DE extract path es  {:?}\n", server_path);
                     if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, &server_path) {
                         println!("Error parsing response: {}",e)
                     }

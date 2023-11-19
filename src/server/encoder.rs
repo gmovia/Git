@@ -27,7 +27,6 @@ impl Encoder {
     pub fn init_encoder(path: PathBuf, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let encoder = Encoder { path: path.clone() };
         let mut packfile= Vec::new();
-        println!("MENSAJES: {:?} - PATH: {:?}", messages, path.clone());
         
         if messages.0.is_empty() {
             println!("Already up to date")
@@ -36,7 +35,6 @@ impl Encoder {
             packfile = Self::create_packfile(&encoder.path)?;        
         }
         else {
-            println!("ENTRA BIEN. EL PATH ES: {:?}", path);
             packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
         }
         Ok(packfile)
@@ -74,8 +72,6 @@ impl Encoder {
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-        println!("PROCESSS DIRECTORY MANDA {:?}\n", objects_data.len());
-        println!("OBJECTS DATA: {:?}\n", objects_data);
 
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
@@ -121,11 +117,7 @@ impl Encoder {
             .into_iter()
             .filter(|obj| unique_set.insert(obj.clone()))
             .collect();
-        
-        for object in &unique_objects_data {
-            println!("OBJECT: {:?}", object);
-        }
-        println!("OBJECTS DATA: {:?}", unique_objects_data);
+
         Self::create_size_header(&mut packfile, unique_objects_data.len())?;
         for objects in unique_objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
@@ -351,7 +343,6 @@ impl Encoder {
     pub fn get_object_for_commit(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str , last_commit_server: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
         let objects_path = server_path.join(".rust_git").join("objects");
         let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
-        println!(" WANT PATH{:?}\n", want_path);
 
         if want_path.exists() {
             println!(" WANT PATH exist\n");
@@ -380,11 +371,8 @@ impl Encoder {
         let tree_entity = TreeEntity::read(server_path, commit_entity.tree_hash)?;
         if let Ok(metadata) = fs::metadata(&tree_path) {
             if let Some(commit)  = CommitsTable::get_commit(commit_entity.parent_hash.clone(), &Branch::get_current_branch(&CurrentRepository::read()?)?)?{
-                println!("HOLALUZ LAST COMMIT SERVER----------> {}\n", last_commit_server);
                 
-                println!("HOLALUZ COMMIT ENTITY PARENT HASH---------> {}\n", commit.hash);
                 if commit.hash.as_str().trim_end_matches("\n") == last_commit_server.trim_end_matches("\n") {
-                    println!("ENTRELAU\n");
                     return Ok(()); 
                 }     
             }

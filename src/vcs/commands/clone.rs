@@ -24,16 +24,12 @@ impl Clone{
                 if len == 0 {
                     break;
                 }
-                println!("LEN del packet ---> {:?} \n", len);
 
                 let packet = read_packet(socket, len);
-                println!("ACA PACKETTT ---> {:?} \n", packet);
                 packets.push(packet);
             }
         }
-        for packet in &packets {
-            println!("Paquete: {:?}", packet);
-        }
+
         for want in Self::get_want_msgs(&packets) {
             socket.write(want.as_bytes())?;
         }
@@ -196,8 +192,6 @@ impl Clone{
     
 
     fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
-        println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
-        println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
         for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
             if commits_created.contains_key(hash_commit_branch) {
                 let _ = Self::complete_commit_table(repo, &branch_name.to_string(), &hash_commit_branch.to_string(), commits_created);
@@ -252,7 +246,6 @@ impl Clone{
             }
             want_msgs.push(pkt_commit);
         }
-        println!("WANTS MESSAGE --> {:?} \n", want_msgs);
         want_msgs
     }
 
