@@ -3,7 +3,6 @@ use std::fs::{OpenOptions, self};
 use std::io::{Write, self};
 use std::net::Shutdown;
 use std::path::Path;
-use std::time::{UNIX_EPOCH, Duration};
 use std::{net::TcpStream, path::PathBuf};
 
 use chrono::{DateTime, Utc, NaiveDateTime};
@@ -125,17 +124,11 @@ pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &PathBuf,
 fn sort_hashes(commits_created: &HashMap<String, CommitEntity>) -> Vec<(String, CommitEntity)> {
     let mut commits_vec: Vec<(String, CommitEntity)> = commits_created.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
-    // Ordenar el Vector basado en la fecha Unix en el campo author
     commits_vec.sort_by_key(|(_, commit)| {
-        // Extraer la fecha Unix de la cadena author
         let date_str = commit.author.split_whitespace().nth(3).unwrap_or("");
         println!("Fecha extraída: {}", date_str);
-
-        // Convertir la fecha a un número
         let date_num = date_str.parse::<i64>().unwrap_or(0);
-        // Convertir el timestamp Unix a un objeto DateTime
         let date_time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(date_num, 0), Utc);
-        
         println!("DATE .> {:?}", date_time);
         date_time
     });

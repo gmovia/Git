@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf, fs::OpenOptions, io::{self, BufRead}};
+use std::{collections::HashMap, path::PathBuf};
 use crate::vcs::{commands::init::Init, entities::entity::convert_to_repository};
 use crate::vcs::entities::{commit_entity::CommitEntity, tree_entity::TreeEntity};
 use super::{commits_table::CommitsTable, current_repository::CurrentRepository, current_commit::CurrentCommit};

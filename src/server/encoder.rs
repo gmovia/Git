@@ -8,9 +8,7 @@ extern crate flate2;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, Write};
-use crate::handlers::hash_object;
 use crate::vcs::commands::branch::Branch;
-use crate::vcs::commands::init::Init;
 use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::entities::entity::Entity;
 use crate::vcs::entities::tree_entity::TreeEntity;
@@ -334,7 +332,6 @@ impl Encoder {
         let datos_comprimidos = encoder.finish()?;
         let _ = fs::remove_file(temp_dir);
 
-        println!("DATOS COMPRIMIDSO {:?}", datos_comprimidos);
         Ok(datos_comprimidos)
     } 
 
@@ -347,7 +344,7 @@ impl Encoder {
         if want_path.exists() {
             println!(" WANT PATH exist\n");
             let commit_entity = CommitEntity::read(&server_path, commit_hash)?;
-            if let Ok(metadata) = fs::metadata(&want_path) {
+            if let Ok(_metadata) = fs::metadata(&want_path) {
                 println!("::::::::::OBJECT DATA    {:?}",objects_data);
                 
                 Self::get_objects_tree(&server_path, objects_data, commit_entity, last_commit_server, &want_path)?;
