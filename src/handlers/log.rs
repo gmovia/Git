@@ -1,4 +1,4 @@
-use crate::constants::constants::ERR_COMMIT_IS_NOT_EXIST;
+use crate::constants::constant::ERR_COMMIT_IS_NOT_EXIST;
 use crate::vcs::commands::init::Init;
 use crate::vcs::files::current_repository::CurrentRepository;
 use crate::vcs::version_control_system::VersionControlSystem;

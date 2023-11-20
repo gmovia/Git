@@ -1,4 +1,4 @@
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{ERR_PATH_IS_NOT_DIRECTORY_OR_NO_SUCH_OR_DIRECTORY, BLOB_CODE}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constant::{ERR_PATH_IS_NOT_DIRECTORY_OR_NO_SUCH_OR_DIRECTORY, BLOB_CODE}};
 
 pub fn handler_hash_object(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
-use crate::types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles};
+use crate::types::set_type::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles};
 use crate::vcs::files::vcs_file::VCSFile;
-use crate::vcs::sets::sets::{get_changes_not_staged_for_commit, get_untracked_files, get_changes_to_be_commited, transform_to_string_hashmap};
+use crate::vcs::sets::set::{get_changes_not_staged_for_commit, get_untracked_files, get_changes_to_be_commited, transform_to_string_hashmap};
 
 pub struct Status;
 

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{vcs::{version_control_system::VersionControlSystem, files::repository::Repository}, constants::constants::{STATE_DELETED, STATE_MODIFIED}};
+use crate::{vcs::{version_control_system::VersionControlSystem, files::repository::Repository}, constants::constant::{STATE_DELETED, STATE_MODIFIED}};
 
 
 

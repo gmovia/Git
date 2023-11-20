@@ -1,5 +1,5 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::{Write, self, BufRead}};
-use crate::constants::constants::{BDD_PATH, CURRENT_REPOSITORY_PATH};
+use crate::constants::constant::{BDD_PATH, CURRENT_REPOSITORY_PATH};
 
 pub struct Repositories;
 

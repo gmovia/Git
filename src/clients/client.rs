@@ -2,8 +2,8 @@ use std::io::Write;
 use std::net::TcpStream;
 use std::path::Path;
 use crate::vcs::commands::clone;
-use crate::packfile::packfile::to_pkt_line;
-use crate::constants::constants::{PUERTO, HOST};
+use crate::packfiles::packfile::to_pkt_line;
+use crate::constants::constant::{PUERTO, HOST};
 
 //comando para levantar el git daemon --> git daemon --base-path=. --export-all --reuseaddr --informative-errors --verbose --verbose
 pub struct Client;

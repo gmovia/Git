@@ -1,4 +1,4 @@
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::rm::RemoveOption, files::current_repository::CurrentRepository}, constants::constants::{RESPONSE_OK_RM, ERR_NO_SUCH_OR_DIRECTORY}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::rm::RemoveOption, files::current_repository::CurrentRepository}, constants::constant::{RESPONSE_OK_RM, ERR_NO_SUCH_OR_DIRECTORY}};
 
 pub fn handler_rm(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();

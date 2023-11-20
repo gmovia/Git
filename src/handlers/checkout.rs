@@ -1,6 +1,6 @@
 use std::{ path::Path, fs};
 
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::checkout::CheckoutOptions, files::current_repository::CurrentRepository}, constants::constants::ERR_INVALID_PARAMETERS};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::checkout::CheckoutOptions, files::current_repository::CurrentRepository}, constants::constant::ERR_INVALID_PARAMETERS};
 
 pub fn handler_checkout(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();

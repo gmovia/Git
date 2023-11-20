@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, fs::{self, File, OpenOptions}, io::{Write, Read, self}};
 
-use crate::{constants::constants::{RUST_PATH, COMMIT_INIT_HASH}, vcs::files::current_repository::CurrentRepository};
+use crate::{constants::constant::{RUST_PATH, COMMIT_INIT_HASH}, vcs::files::current_repository::CurrentRepository};
 
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {

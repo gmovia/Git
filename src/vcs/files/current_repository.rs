@@ -1,5 +1,5 @@
 use std::{path::{PathBuf, Path}, fs::OpenOptions, io::{self, BufRead}};
-use crate::constants::constants::CURRENT_REPOSITORY_PATH;
+use crate::constants::constant::CURRENT_REPOSITORY_PATH;
 
 pub struct CurrentRepository;
 

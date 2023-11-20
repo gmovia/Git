@@ -1,5 +1,5 @@
 use std::{collections::HashMap, fs::{File, OpenOptions, self}, io::{Write, self, BufRead}};
-use crate::{constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED}, vcs::files::current_repository::CurrentRepository};
+use crate::{constants::constant::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED}, vcs::files::current_repository::CurrentRepository};
 use super::conflict::Conflict;
 
 #[derive(Debug, Clone)]

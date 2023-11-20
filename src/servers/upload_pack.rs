@@ -2,8 +2,8 @@ use std::{fs, io};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::Path;
 use std::net::TcpStream;
-use crate::packfile::packfile::{to_pkt_line, process_line};
-use crate::server::encoder::Encoder;
+use crate::packfiles::packfile::{to_pkt_line, process_line};
+use crate::servers::encoder::Encoder;
 
 
 /// Esta funcion se encarga de procesar la respuesta que el server le entregara al cliente al mensaje de upload pack

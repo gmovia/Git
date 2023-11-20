@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{vcs::{version_control_system::VersionControlSystem, files::current_repository::CurrentRepository}, constants::constants::{FULL_ADD, RESPONSE_OK_ADD}};
+use crate::{vcs::{version_control_system::VersionControlSystem, files::current_repository::CurrentRepository}, constants::constant::{FULL_ADD, RESPONSE_OK_ADD}};
 
 pub fn handler_add(input: String) -> String{
     let mut paths: Vec<String> = Vec::new();

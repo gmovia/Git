@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::constants::constants::MERGE;
+use crate::constants::constant::MERGE;
 use crate::vcs::entities::change::add_changes;
 use crate::vcs::entities::conflict::{Conflict, resolve_conflicts, conflicts_search};
 use crate::vcs::files::commits_table::CommitsTable;

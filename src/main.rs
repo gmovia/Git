@@ -1,4 +1,4 @@
-use rust_git::interface::interface::RustInterface;
+use rust_git::interfaces::interface::RustInterface;
 
 fn main() -> Result<(), std::io::Error>{
     let interface = RustInterface::new();
