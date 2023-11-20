@@ -3,6 +3,7 @@ use std::{path::Path, collections::HashMap};
 use gtk::{prelude::*, Button, ComboBoxText};
 use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::repositories::Repositories};
 
+
 pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
     let branches = VersionControlSystem::branch(BranchOptions::GetBranches)?;
     draw_branches(&branches, combo_box);
@@ -45,6 +46,8 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
         path_label.set_visible(true);
         path_label.set_xalign(2.0); 
         path_label.set_yalign(0.5); 
+
+        path_label.style_context().add_class("custom-label-message");
 
         let state_label = gtk::Label::new(Some(state));
         state_label.set_visible(true);
@@ -129,6 +132,8 @@ pub fn draw_staging_area(staging_area: &Vec<String>, grid: &gtk::Grid){
         label.set_xalign(2.0);
         label.set_yalign(0.5);
 
+        label.style_context().add_class("custom-label-message");
+
         let reset_button = Button::builder()
         .margin_start(10)
         .label("-")
@@ -166,4 +171,28 @@ pub fn draw_branches(branches: &Vec<String>, combo_box: &ComboBoxText){
         label.set_visible(true);
         combo_box.append_text(&label.text().to_string());
     }
+}
+
+pub fn draw_message(m_changes: &gtk::Box, message: &String, align: f32) {
+    let label = gtk::Label::new(Some(message));
+    label.set_visible(true);
+    label.set_xalign(align);
+    label.set_yalign(align);
+    label.style_context().add_class("custom-label-message");
+    m_changes.add(&label);
+}
+
+pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_entry: &gtk::Entry) {
+    errors.1.foreach(|child| {
+        errors.1.remove(child);
+    });
+    draw_message(&errors.1, &message, 2.0);
+
+    errors.0.style_context().add_class("custom-error-dialog");
+
+    errors.0.run();
+    errors.0.hide();
+
+    c_entry.set_text("");
+
 }

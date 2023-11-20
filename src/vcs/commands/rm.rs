@@ -43,6 +43,9 @@ impl Rm{
         let mut staging_area = Index::read_index()?;
         
         if let Ok(files) = read(path){
+            if files.len() == 0 {
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: pathspec '{:?}' did not match any files", path)));
+            }
             for key in files.keys(){
                 if Repository::read_repository()?.contains_key(key){
                     Rm::remove_from_workspace(&key)?;
@@ -65,6 +68,9 @@ impl Rm{
     pub fn rm_r(dir_path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         let mut result = HashMap::new();
         if let Ok(files) = read(dir_path) {
+            if files.len() == 0 {
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: pathspec '{:?}' did not match any files", dir_path)));
+            }
             for (key, _) in &files {
                 let file_path = Path::new(key);
                 result = Rm::rm_(file_path)?;
@@ -73,3 +79,7 @@ impl Rm{
         Ok(result)
     }
 }
+
+
+
+

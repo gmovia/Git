@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::vcs::{files::commits_table::CommitsTable, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}};
+use crate::{vcs::{files::current_commit::CurrentCommit, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}}, constants::constants::COMMIT_INIT_HASH};
 
 
 
@@ -25,9 +25,9 @@ impl LsTree {
 
     /// RECIBE UNA BRANCH Y DEVUELVE INFORMACION SOBRE SU ARBOL TREE
     pub fn get_information_branch(branch: &str, path: &PathBuf, information: &mut Vec<String>) -> Result<Vec<String>, std::io::Error>{
-        let commits = CommitsTable::read(path.to_path_buf(), branch)?;
-        if let Some(last_commit) = commits.last() {
-            let commit = CommitEntity::read(path, &last_commit.hash.clone())?;
+        let commit_hash = CurrentCommit::read_for_branch(path, branch)?;
+        if commit_hash != COMMIT_INIT_HASH{
+            let commit = CommitEntity::read(path, &commit_hash)?;
             let entities = TreeEntity::read(path, commit.tree_hash.clone())?;
             Self::read_entities(entities, information, 0);
         }

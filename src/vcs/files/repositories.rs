@@ -32,8 +32,12 @@ impl Repositories{
     }
 
     pub fn remove(path: &Path) -> Result<(), std::io::Error>{
-        let _ = fs::remove_dir_all(&path);
         let mut repositories = Self::read()?;
+        if !repositories.contains(&path.display().to_string()) {
+            return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the repository"));
+        }
+        let _ = fs::remove_dir_all(&path);
+        
         if let Some(index) = repositories.iter().position(|item| item == &path.display().to_string()) {
             repositories.remove(index);
         }
