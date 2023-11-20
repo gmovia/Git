@@ -1,4 +1,3 @@
-
 use std::path::Path;
 
 use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions, ls_files::LsFilesOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}, constants::constant::{RESPONSE_OK_RM, ERR_NO_SUCH_OR_DIRECTORY}};

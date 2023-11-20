@@ -48,6 +48,21 @@ impl Branch{
         Self::get_branches(path)
     }
 
+    pub fn create_new_branch_with_hash(path: &PathBuf, branch_name: &str, hash: &str) -> Result<Vec<String>,std::io::Error> { 
+        let branch_head_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);        
+        let mut branch_head = OpenOptions::new().write(true).create(true).append(false).open(&branch_head_path)?;
+
+        let branch_log_path = path.join(".rust_git").join("logs").join(branch_name);
+        let mut branch_log = OpenOptions::new().write(true).create(true).append(true).open(&branch_log_path)?;
+        
+        let current_log = Init::get_current_log(&path)?;
+        let table = fs::read_to_string(current_log)?;
+        
+        branch_head.write_all(hash.as_bytes())?;
+        branch_log.write_all(table.as_bytes())?;
+
+        Ok(Self::get_branches(path)?)
+    }
 
     /// matcheo el archivo branch_name en /refs/heads/ y en /logs/
     /// si no estoy parada en esa rama, entonces lo elimino de los dos directorios

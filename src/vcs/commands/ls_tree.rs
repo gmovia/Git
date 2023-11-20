@@ -3,14 +3,7 @@ use std::path::PathBuf;
 use crate::{vcs::{files::current_commit::CurrentCommit, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}}, constants::constant::COMMIT_INIT_HASH};
 
 
-
-
 pub struct LsTree;
-
-// pub enum LsTreeOptions {
-//     TreeBranch,
-//     TreeBranchDirectory,
-// }
 
 impl LsTree {
 

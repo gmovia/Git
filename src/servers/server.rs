@@ -1,6 +1,6 @@
-use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::Path};
+use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::{Path, PathBuf}, io::Write};
 
-use crate::{constants::constant::{HOST, PUERTO}, packfiles::packfile::process_line};
+use crate::{constants::constant::{HOST, PUERTO}, packfiles::packfile::{process_line, to_pkt_line}};
 
 use super::upload_pack::start_handler_upload;
 
@@ -28,8 +28,9 @@ impl Server {
                         }
                     });
                 }
-                Err(e) => {
-                    eprintln!("Error: {}", e);
+                Err(_) => {
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
+                    //eprintln!("Error: {}", e);
                 }
             }
         }
@@ -37,7 +38,7 @@ impl Server {
     }
 
     /// Esta funcion se queda loopeando constantemente esperando por posibles mensajes que le lleguen desde el cliente.
-    fn handle_client( mut reader: TcpStream, mut _writer: TcpStream, path: &Path) -> Result<(),std::io::Error> {
+    fn handle_client(mut reader: TcpStream, mut writer: TcpStream, path: &Path) -> Result<(),std::io::Error> {
         loop {
             match process_line(&mut reader) {
                 Ok(message) => {
@@ -45,7 +46,15 @@ impl Server {
                     let client_path = message.trim_start_matches("git-upload-pack ");
                     let aux = format!("{}/{}",path.display(), client_path);
                     let server_path = Path::new(&aux);
-                    if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, server_path) {
+
+                    if !server_path.exists(){
+                        let message_error = "fatal error: the path is not correct";
+                        let _ = writer.write(to_pkt_line(&message_error).as_bytes());
+                        return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
+                    }
+
+
+                    if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, &server_path.to_path_buf()) {
                         println!("Error parsing response: {}",e)
                     }
                     Server::shutdown_server(&reader)?;
