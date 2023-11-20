@@ -1,6 +1,6 @@
 
 use std::{net::TcpStream, path::{Path, PathBuf}, io::Write};
-use crate::{packfile::packfile::{process_line, to_pkt_line}, server::encoder::Encoder, vcs::{commands::branch::Branch, files::current_commit::CurrentCommit}};
+use crate::{packfile::packfile::{process_line, to_pkt_line}, server::encoder::Encoder, vcs::{commands::{branch::Branch, init::Init}, files::current_commit::CurrentCommit}};
 
 pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_entries: &Vec<String>) -> Result<(), std::io::Error> {
     // aca leo lo que me responde el servidor 
@@ -33,11 +33,12 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_ent
         }
     }
     println!("Mi lista que recibo de refs a enviar es:  --->{:?}\n" , send_refs);
-    let last_commit_server = &send_refs[0]; //handlear despues para mas ramas
+    let last_commit_server = process_hash_server(&send_refs, (&current_repo).to_path_buf())?; //handlear despues para mas ramas
+    println!("LULILAS COMMIT SERVER ---> {}", last_commit_server);
     //let vec = reformatted_hash_commit(send_refs, current_repo)?;
-    let last_commit = CurrentCommit::read()?;
-    
-    let packfile = init_packfile(last_commit, current_repo, &last_commit_server)?;
+    let last_commit_current = CurrentCommit::read()?;
+
+    let packfile = init_packfile(last_commit_current, current_repo, &last_commit_server)?;
 
     send_pack(packfile, stream, log_entries)?;
     //tengo mi vector de lo que quiere actualizar el server
@@ -48,13 +49,31 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_ent
 }
 
 
-fn init_packfile(last_commit: String, current_repo: &PathBuf, last_commit_server: &String) -> Result<Vec<u8>,std::io::Error>{
+fn process_hash_server(send_ref: &Vec<String>, current_repo: PathBuf) -> Result<String, std::io::Error>{
+    //primero necesito el ultimo commit d ela current branch en la que estoy parada 
+    let mut exist_branch_in_server = false;
+    let mut last_commit_server= String::new();
+
+    for refs in send_ref{
+        if refs.contains(&Init::get_current_branch(&current_repo)?){
+            exist_branch_in_server = true;
+            let parts: Vec<&str>  = refs.split_ascii_whitespace().collect();
+            //branch_match = parts[1].trim_start_matches("refs/heads/").to_string();
+            last_commit_server = parts[0].to_string();
+            break;
+        }
+    }
+    Ok(last_commit_server)
+}
+
+
+fn init_packfile(last_commit_current: String, current_repo: &PathBuf, last_commit_server: &String) -> Result<Vec<u8>,std::io::Error>{
     let mut packfile: Vec<u8> = Vec::new();
 
     let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
     println!("CURREN REPO ---> {:?}\n", current_repo);
-    println!("LAS COMMIT ---> {}\n", last_commit);
-    Encoder::get_object_for_commit(&current_repo, &mut objects_data, &last_commit, &last_commit_server)?;
+    println!("LAS COMMIT ---> {}\n", last_commit_current);
+    Encoder::get_object_for_commit(&current_repo, &mut objects_data, &last_commit_current, &last_commit_server)?;
     
     println!("LEN OBJECTS {:?}\n", objects_data.len());
     println!("OBJECTS DATA: {:?}\n", objects_data);

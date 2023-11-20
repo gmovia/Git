@@ -1,3 +1,4 @@
+use crate::vcs::commands::cat_file::CatFile;
 use std::collections::HashMap;
 use std::fs::{OpenOptions, self};
 use std::io::{Write, self};
@@ -11,13 +12,11 @@ use crate::packfile::packfile::{process_line, to_pkt_line};
 
 use crate::utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders};
 use crate::utils::random::random::Random;
-use crate::vcs::commands::cat_file::CatFile;
 use crate::vcs::commands::clone::Clone;
 use crate::vcs::commands::init::Init;
 use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::files::current_commit::CurrentCommit;
 use crate::vcs::files::repository::Repository;
-
 
 
 pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<String, std::io::Error> {
@@ -30,16 +29,13 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
     
     println!("Received from packet: ---> {:?}", old_new_hash_commit); //lo recibe porque lo manda el cliente, pero daemon no hace nada con eso
     //ni crea la rama si no la tiene, pero eso si lo tenems que hacer almenos 
-    let last_commit = get_last_commit(&server_client_path)?; 
-    println!("MI LAST COMMIT DEL SERVER ES ---> {}\n", last_commit);
 
-    select_update(writer,last_commit, server_client_path.clone())?;
+    select_update(writer, server_client_path.clone())?;
     
     CurrentCommit::write_for_branch(&server_client_path, &branch_name, last_commit_client)?;
     writer.shutdown(Shutdown::Both)?;
     Ok("Respuesta desde start_handler_receive".to_string())
 }
-
 
 fn extract_branch_name(old_new_hash_commit: String) ->  Result<(String, String), std::io::Error> {
     let parts: Vec<&str> = old_new_hash_commit.split_whitespace().collect();
@@ -48,29 +44,55 @@ fn extract_branch_name(old_new_hash_commit: String) ->  Result<(String, String),
     Ok((branch_name.to_owned(), last_commit_client.to_string()))
 }
 
-fn get_last_commit(server_client_path: &PathBuf) -> Result<String, io::Error> {
-    println!("ESTOY en last commit");
-    let current_log = Init::get_current_log(server_client_path)?;
-    let log_content = fs::read_to_string(current_log)?;
+fn recovery_last_commit_for_each_branch(server_client_path: &PathBuf) -> Result<Vec<(String, String)>, io::Error> {
+    let logs_path = server_client_path.join(".rust_git").join("logs");
+
+    let mut branch_commits = Vec::new();
+    for entry in fs::read_dir(logs_path)? {
+        let entry = entry?;
+
+        if let Some(file_name) = entry.file_name().to_str() {
+            let branch_name = file_name.to_string();
+            let file_path = entry.path();
+            let file_content = fs::read_to_string(&file_path)?;
+
+            let last_commit = extract_last_commit(&file_content)?;
+
+            branch_commits.push((last_commit, branch_name));
+        }
+    }
+
+    Ok(branch_commits)
+}
+
+fn extract_last_commit(log_content: &str) -> Result<String, io::Error> {
     let last_line = log_content.lines().last().ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log file is empty"))?;
     let line_parts: Vec<&str> = last_line.split("-").collect();
-    println!("LINEPARTS {:?}", line_parts);
     let last_commit = line_parts.get(2).ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log line is malformed"))?;
     Ok(last_commit.to_string())
 }
 
-fn select_update(writer: &mut TcpStream,last_commit: String, server_client_path: PathBuf) -> Result<(), std::io::Error>{
-
-    let update_info = format!("{}\n",last_commit);
-    let info_to_pkt_line = to_pkt_line(&update_info);
-    println!("Mi pedido del server al cliente {:?}\n\n", info_to_pkt_line);
-    writer.write(info_to_pkt_line.as_bytes())?;
+fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: &PathBuf) -> Result<(), std::io::Error>{
+    let last_commit_and_branch = recovery_last_commit_for_each_branch(server_client_path)?;
+    
+    for (last_commit, branch_server_name) in last_commit_and_branch{
+        let update_info = format!("{} refs/heads/{}\n",last_commit, branch_server_name);
+        let info_to_pkt_line = to_pkt_line(&update_info);
+        println!("Mi pedido del server al cliente {:?}\n\n", info_to_pkt_line);
+        writer.write(info_to_pkt_line.as_bytes())?;
+    }
 
     let msg_done = "0000";
     writer.write(msg_done.as_bytes())?;
+    Ok(())
+}
 
+fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<(), std::io::Error>{
+
+    send_repo_last_commit_for_branch(writer, &server_client_path)?;
+    //
     let mut refs = Vec::new();
-    let mut send_refs = Vec::new(); // Cambiado a Vec<String>
+    let mut receive_refs = Vec::new(); // Cambiado a Vec<String>
     loop {
         let value = process_line(writer);
         match value {
@@ -79,7 +101,7 @@ fn select_update(writer: &mut TcpStream,last_commit: String, server_client_path:
                     break;
                 } else {
                     refs.push(value.clone());
-                    send_refs.push(value);
+                    receive_refs.push(value);
                 }                
             }
             Err(e) => {
@@ -89,12 +111,16 @@ fn select_update(writer: &mut TcpStream,last_commit: String, server_client_path:
         }
     }
     
-    println!("Mi lista que recibo de refs a enviar es:  --->{:?}\n" , send_refs);    
+    //Este contiene el old new name_branch del cliente,
+    // 1. puede pasar que el sea master y los doslos tienen se pushea normal
+    // 2. puede pasar que el que pushee sea nueva_rama y el server lo tenga, se guarda normal
+    // 3. puede pasar que el server no lo tenga por lo tanto tendra que crear nueva_rama, checkout a esa rama, y guardar datos ahi!
+
+    println!("Mi lista de refs que recibo es :  --->{:?}\n" , receive_refs);    
 
     // aca espero la PACKDATA
     let objects = Clone::get_socket_response(writer)?;
-
-    updating_repo( objects, &server_client_path, last_commit)?;
+    updating_repo( objects, &server_client_path, "asd".to_string())?;
     writer.flush()?;
     Ok(())
 }
