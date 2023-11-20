@@ -1,7 +1,7 @@
 
 use std::path::Path;
 
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions, ls_files::LsFilesOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions, ls_files::LsFilesOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}, constants::constants::{RESPONSE_OK_RM, ERR_NO_SUCH_OR_DIRECTORY}};
 
 use super::{interface::RustInterface, draw::{branches, repositories, draw_message, draw_error}};
 
@@ -125,19 +125,39 @@ pub fn handle_terminal(interface: &RustInterface) {
 
 pub fn handle_rm_button(interface: &RustInterface) {
     let rm_entry = interface.rm_entry.clone();
+    let rc_box = interface.rm_box.clone();
+
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+    let rc_tuple = errors_tuple.clone();
+
     interface.rm_enter.connect_clicked({
         let rm_entry1 = rm_entry.clone();
         move |button| {
-            
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
             let binding = rm_entry1.text();
 
             if binding.ends_with("/"){
-                let _ = handler_rm(format!("git rm -r {}",rm_entry1.text()));
+                let response = handler_rm(format!("git rm -r {}",rm_entry1.text()));
+                if response == RESPONSE_OK_RM.to_string() {
+                    draw_message(&rc_box, &"     DELETE SUCCESSFULLY!    ".to_string(), 0.5);
+                    rm_entry.set_text("");
+                    button.set_sensitive(false);
+                }else if response == ERR_NO_SUCH_OR_DIRECTORY.to_string() {
+                    draw_error(rc_tuple.clone(), &"      NO SUCH FILE OR DIRECTORY ...     ".to_string(), &rm_entry);
+                }
             }
             else{
-                let _ = handler_rm(format!("git rm {}",rm_entry1.text()));
+                let response = handler_rm(format!("git rm {}",rm_entry1.text()));
+                if response == RESPONSE_OK_RM.to_string() {
+                    draw_message(&rc_box, &"     DELETE SUCCESSFULLY!    ".to_string(), 0.5);
+                    rm_entry.set_text("");
+                    button.set_sensitive(false);
+                }else if response == ERR_NO_SUCH_OR_DIRECTORY.to_string() {
+                    draw_error(rc_tuple.clone(), &"      NO SUCH FILE OR DIRECTORY ...     ".to_string(), &rm_entry);
+                }
             }
-            
             rm_entry1.set_text("");
             button.set_sensitive(false);
         }

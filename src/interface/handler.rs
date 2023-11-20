@@ -4,30 +4,6 @@ use crate::{vcs::{version_control_system::VersionControlSystem, entities::{confl
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
 use gtk::{prelude::*, Button};
 
-pub fn handle_other_commands(interface: &RustInterface) {
-
-    let dialog = interface.others_dialog.clone();
-
-    interface.other_commands.connect_clicked({
-        move |_| {
-            dialog.run();
-            dialog.hide();
-        }
-    });
-
-    handle_ls_files(interface);
-    handle_ls_tree(interface);
-    handle_check_ignore(interface);
-
-    interface.others_close.connect_clicked({
-       let dialog2 = interface.others_dialog.clone(); 
-       move |_| {
-            dialog2.hide();
-       } 
-    });
-    
-}
-
 pub fn handle_repository(interface: &RustInterface) {
     let dialog = interface.repository_dialog.clone();
 
@@ -183,10 +159,7 @@ pub fn handle_command(interface: &RustInterface) {
 pub fn handle_rm(interface: &RustInterface) {
     let rm_dialog = interface.rm_dialog.clone();
     let rm_enter = interface.rm_enter.clone();
-
-    let _err_dialog = interface.error_dialog.clone();
-    let _err_box = interface.error_box.clone();
-
+    let rc_box = interface.rm_box.clone();
     interface.rm_enter.set_sensitive(false);
 
     interface.rm_entry.connect_changed({  
@@ -196,6 +169,9 @@ pub fn handle_rm(interface: &RustInterface) {
 
     interface.rm.connect_clicked({
         move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
             rm_dialog.run();
             rm_dialog.hide();
         }
@@ -222,8 +198,6 @@ pub fn handle_merge(interface: &RustInterface) {
     let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
 
     let rc_tuple = errors_tuple.clone();
-    //let err_dialog = interface.error_dialog.clone();
-    //let err_box = interface.error_box.clone();
 
     interface.merge.set_sensitive(false);
     interface.apply_merge.set_visible(false);
@@ -409,6 +383,30 @@ pub fn add_both(button: &gtk::Button, conflict: &Conflict, dialog: &gtk::Dialog,
             dialog.run();
             dialog.hide();
     }});
+    
+}
+
+pub fn handle_other_commands(interface: &RustInterface) {
+
+    let dialog = interface.others_dialog.clone();
+
+    interface.other_commands.connect_clicked({
+        move |_| {
+            dialog.run();
+            dialog.hide();
+        }
+    });
+
+    handle_ls_files(interface);
+    handle_ls_tree(interface);
+    handle_check_ignore(interface);
+
+    interface.others_close.connect_clicked({
+       let dialog2 = interface.others_dialog.clone(); 
+       move |_| {
+            dialog2.hide();
+       } 
+    });
     
 }
 

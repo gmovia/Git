@@ -8,13 +8,19 @@ pub fn handler_rm(input: String) -> String{
         option = RemoveOption::Directory;
         if let Ok(current) = CurrentRepository::read() {
             if let Ok(_) = VersionControlSystem::rm(&current.join(args[3]), option.clone()){
+                println!("ENTRE PRIMER IF");
                 return RESPONSE_OK_RM.to_string();
+            }else{
+                return ERR_NO_SUCH_OR_DIRECTORY.to_string();
             }
         }
     }
     if let Ok(current) = CurrentRepository::read() {
         if let Ok(_) = VersionControlSystem::rm(&current.join(args[2]), option){
+            println!("ENTRE SEGUNDO IF");
             return RESPONSE_OK_RM.to_string();
+        }else{
+            return ERR_NO_SUCH_OR_DIRECTORY.to_string();
         }
     }
     

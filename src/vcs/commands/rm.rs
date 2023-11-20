@@ -1,4 +1,4 @@
-use std::{path::Path, fs, collections::HashMap};
+use std::{path::Path, fs, collections::HashMap, io};
 use crate::{vcs::files::{vcs_file::VCSFile, repository::Repository, index::Index}, utils::files::files::read, constants::constants::{STATE_DELETED, NULL}};
 pub struct Rm;
 
@@ -37,12 +37,15 @@ impl Rm{
     pub fn rm_(path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {   
 
         if path.is_dir(){
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: not removing '{:?}' recursively without -r", path)));
+            return Err(std::io::Error::new(io::ErrorKind::NotFound, format!("fatal: not removing '{:?}' recursively without -r", path)));
         }
 
         let mut staging_area = Index::read_index()?;
         
         if let Ok(files) = read(path){
+            if files.len() == 0 {
+                return Err(std::io::Error::new(io::ErrorKind::NotFound, format!("fatal: pathspec '{:?}' did not match any files", path)));
+            }
             for key in files.keys(){
                 if Repository::read_repository()?.contains_key(key){
                     Rm::remove_from_workspace(&key)?;
@@ -52,9 +55,11 @@ impl Rm{
                     return Ok(staging_area.clone());
                 }
                 else{
-                    println!("fatal: pathspec '{}' did not match any files", key);                
+                    return Err(std::io::Error::new(io::ErrorKind::NotFound, format!("fatal: pathspec '{}' did not match any files", key)));         
                 }
             }
+        }else{
+            return Err(std::io::Error::new(io::ErrorKind::NotFound, format!("fatal: pathspec '{:?}' did not match any path", path)));
         }
         Ok(staging_area.clone())
     }
@@ -65,10 +70,15 @@ impl Rm{
     pub fn rm_r(dir_path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         let mut result = HashMap::new();
         if let Ok(files) = read(dir_path) {
+            if files.len() == 0 {
+                return Err(std::io::Error::new(io::ErrorKind::NotFound, format!("fatal: pathspec '{:?}' did not match any files", dir_path)));
+            }
             for (key, _) in &files {
                 let file_path = Path::new(key);
                 result = Rm::rm_(file_path)?;
             }
+        }else{
+            return Err(std::io::Error::new(io::ErrorKind::NotFound, format!("fatal: pathspec '{:?}' did not match any path", dir_path)));
         }
         Ok(result)
     }
