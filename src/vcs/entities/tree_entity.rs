@@ -1,5 +1,5 @@
 use std::{path::{PathBuf, Path}, fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, constants::constants::{END_OF_LINE, BLOB_CODE, TREE_CODE}, utils::random::random::Random};
+use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, constants::constant::{END_OF_LINE, BLOB_CODE, TREE_CODE}, utils::randoms::random::Random};
 
 use super::{blob_entity::BlobEntity, entity::Entity};
 

@@ -2,8 +2,8 @@ use std::{fs, io};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::net::TcpStream;
-use crate::packfile::packfile::{to_pkt_line, process_line};
-use crate::server::encoder::Encoder;
+use crate::packfiles::packfile::{to_pkt_line, process_line};
+use crate::servers::encoder::Encoder;
 use crate::vcs::files::current_commit::CurrentCommit;
 
 pub fn start_handler_upload(stream: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {

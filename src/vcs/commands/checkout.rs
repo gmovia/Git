@@ -1,5 +1,5 @@
 use std::{path::{Path, PathBuf}, fs::File, io::{Write, self}};
-use crate::{vcs::files::{repository::Repository, index::Index}, utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders}};
+use crate::{vcs::files::{repository::Repository, index::Index}, utils::files::file::{delete_all_files_and_folders, create_file_and_their_folders}};
 use super::{branch::Branch, cat_file::CatFile, init::Init};
 
 pub struct Checkout;

@@ -1,4 +1,4 @@
-use crate::{vcs::version_control_system::VersionControlSystem, constants::constants::{RESPONSE_OK_MERGE, ERR_MERGE}};
+use crate::{vcs::version_control_system::VersionControlSystem, constants::constant::{RESPONSE_OK_MERGE, ERR_MERGE}};
 
 pub fn handler_merge(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();

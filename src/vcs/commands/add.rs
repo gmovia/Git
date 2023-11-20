@@ -1,6 +1,6 @@
 use crate::{
     vcs::{files::{vcs_file::VCSFile, repository::Repository, index::Index}, version_control_system::VersionControlSystem},
-    utils::files::files::read, constants::constants::{STATE_CREATED, STATE_DELETED, NULL, BLOB_CODE},
+    utils::files::file::read, constants::constant::{STATE_CREATED, STATE_DELETED, NULL, BLOB_CODE},
 };
 
 use std::{collections::HashMap, path::Path};

@@ -1,6 +1,6 @@
-use crate::constants::constants::{STATE_CREATED, STATE_DELETED, STATE_MODIFIED};
-use crate::types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles};
-use crate::utils::sets::sets::{difference, idem_set_different_content};
+use crate::constants::constant::{STATE_CREATED, STATE_DELETED, STATE_MODIFIED};
+use crate::types::set_type::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles};
+use crate::utils::sets::set::{difference, idem_set_different_content};
 use crate::vcs::files::vcs_file::VCSFile;
 use std::collections::HashMap;
 

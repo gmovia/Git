@@ -2,7 +2,7 @@
 mod tests {
     use std::path::Path;
 
-    use rust_git::{vcs::{commands::hash_object::WriteOption, version_control_system::VersionControlSystem}, constants::constants::BLOB_CODE};
+    use rust_git::{vcs::{commands::hash_object::WriteOption, version_control_system::VersionControlSystem}, constants::constant::BLOB_CODE};
     use crate::tests_functions::{create_file, set_up};
 
     #[test]

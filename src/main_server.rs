@@ -1,4 +1,4 @@
-use rust_git::server::server::Server;
+use rust_git::servers::server::Server;
 
 fn main() -> Result<(), std::io::Error> {
 

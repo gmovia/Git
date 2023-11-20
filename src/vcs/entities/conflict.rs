@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::constants::constants::{NONE, CURRENT, INCOMING, BOTH};
+use crate::constants::constant::{NONE, CURRENT, INCOMING, BOTH};
 use super::change::Change;
 
 #[derive(Debug, Clone)]

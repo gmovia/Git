@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, fs::{OpenOptions, self}, io::Write};
 
-use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, utils::random::random::Random, constants::constants::BLOB_CODE};
+use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, utils::randoms::random::Random, constants::constant::BLOB_CODE};
 
 #[derive(Debug, Clone)]
 

@@ -1,4 +1,4 @@
-use crate::{vcs::version_control_system::VersionControlSystem, constants::constants::{ERR_STATUS, CHANGES_NOT_BE_COMMITED, UNTRACKED_FILES, CHANGES_TO_BE_COMMITED}};
+use crate::{vcs::version_control_system::VersionControlSystem, constants::constant::{ERR_STATUS, CHANGES_NOT_BE_COMMITED, UNTRACKED_FILES, CHANGES_TO_BE_COMMITED}};
 
 pub fn handler_status() -> String {
     let mut result = String::new();

@@ -3,7 +3,7 @@ use std::path::Path;
 use gtk::prelude::*;
 
 use crate::vcs::version_control_system::VersionControlSystem;
-use crate::interface::draw::{repositories, branches, changes_and_staging_area};
+use crate::interfaces::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
 use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch, handle_pull};
 

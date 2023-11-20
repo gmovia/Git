@@ -1,5 +1,5 @@
 use std::{fs::{self, File}, path::{Path, PathBuf}, io::Write};
-use crate::{utils::hasher::hasher::Hasher, constants::constants::{TREE_CODE, COMMIT_CODE}};
+use crate::{utils::hashers::hasher::Hasher, constants::constant::{TREE_CODE, COMMIT_CODE}};
 use std::num::ParseIntError;
 
 pub enum WriteOption {

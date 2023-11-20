@@ -1,5 +1,5 @@
 use std::{net::TcpStream, path::{PathBuf, Path}, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
-use crate::{packfile::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{commands::branch::Branch, entities::commit_entity::CommitEntity}, constants::constants::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxy::proxy::Proxy, utils::random::random::Random};
+use crate::{packfiles::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{commands::branch::Branch, entities::commit_entity::CommitEntity}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxies::proxy::Proxy, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 
 pub struct Fetch;
