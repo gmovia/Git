@@ -551,7 +551,6 @@ pub fn handle_clone(interface: &RustInterface) {
             info.foreach({|child|{
                 info.remove(child);
             }});
-            //if let Ok(_) = VersionControlSystem::git_clone("git clone".to_string(), &Path::new(&c_entry.text().to_string()).to_path_buf()) {
             if handler_clone(format!("git clone {}",&c_entry.text().to_string())) == RESPONSE_OK_CLONE {
                 let close = Button::builder()
                 .label("close")

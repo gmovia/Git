@@ -1,11 +1,6 @@
 use std::{fs, io};
-use std::io::{BufRead, BufReader, Read, Write};
-use std::path::Path;
-use std::net::TcpStream;
-use crate::packfiles::packfile::{to_pkt_line, process_line};
-use crate::servers::encoder::Encoder;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::net::TcpStream;
 use crate::packfiles::packfile::{to_pkt_line, process_line};
 use crate::servers::encoder::Encoder;
@@ -65,7 +60,7 @@ pub fn process_messages(messages: Vec<String>) -> Result<(Vec<String>,Vec<String
 
 
 
-pub fn handler_upload_pack(path: &PathBuf) -> Result<Vec<String>, std::io::Error> {
+pub fn handler_upload_pack(path: &Path) -> Result<Vec<String>, std::io::Error> {
     let log_entries = get_log_entries(&path)?;
     Ok(log_entries)
 }
