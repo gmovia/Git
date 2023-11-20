@@ -9,6 +9,7 @@ pub fn handle_repository(interface: &RustInterface) {
 
     let rc_create = interface.create_repository.clone();
     let rc_delete = interface.delete_repository.clone();
+    let rc_box = interface.repository_box.clone();
 
     interface.create_repository.set_sensitive(false);
     interface.delete_repository.set_sensitive(false);
@@ -21,6 +22,9 @@ pub fn handle_repository(interface: &RustInterface) {
 
     interface.repository_button.connect_clicked(
         move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
             dialog.run();
             dialog.hide();
         }

@@ -62,14 +62,26 @@ pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::B
     let rc_repo = interface.select_repository.clone();
     let rc_entry = interface.repository_entry.clone();
     let rc_branch = interface.select_branch.clone();
+    let rc_box = interface.repository_box.clone();
+
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+    let rc_tuple = errors_tuple.clone();
+
     button_repo.connect_clicked({
         let rc_repo = rc_repo.clone();
         let rc_entry = rc_entry.clone();
         move |button| {
             if let Some(label) = button.label() {
                 match label.as_str() {
-                    "Create" => {let _ = Repositories::write(Path::new(&rc_entry.text().to_string()));},
-                    "Delete" => {let _ = Repositories::remove(Path::new(&rc_entry.text().to_string()));},
+                    "Create" => {let _ = Repositories::write(Path::new(&rc_entry.text().to_string()));
+                                 draw_message(&rc_box, &"     CREATED SUCCESSFULLY!    ".to_string(), 0.5);
+                    },
+                    "Delete" => {if let Ok(_) = Repositories::remove(Path::new(&rc_entry.text().to_string())){
+                                    draw_message(&rc_box, &"     DELETED SUCCESSFULLY!    ".to_string(), 0.5);
+                                }else{
+                                    draw_error(rc_tuple.clone(), &"     CANNOT FOUND THE REPOSITORY...    ".to_string(), &rc_entry);
+                                }
+                    },
                     _ => {},
                 }
             }
