@@ -5,8 +5,9 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands};
 
+#[derive(Debug, Default)]
 pub struct RustInterface {
     pub window: gtk::Window,
     pub title: gtk::Label,
@@ -17,17 +18,20 @@ pub struct RustInterface {
     pub repository_button: gtk::Button,
     pub repository_dialog: gtk::Dialog,
     pub repository_entry: gtk::Entry,
+    pub repository_box: gtk::Box,
     pub delete_repository: gtk::Button,
     pub create_repository: gtk::Button,
     pub select_branch: gtk::ComboBoxText,
     pub grid_staging: gtk::Grid,
     pub branch_button: gtk::Button,
     pub branch_dialog: gtk::Dialog,
+    pub branch_box: gtk::Box,
     pub dialog_entry: gtk::Entry,
     pub create_branch: gtk::Button,
     pub delete_branch: gtk::Button,
     pub status: gtk::Button,
     pub commit_dialog: gtk::Dialog,
+    pub commit_box: gtk::Box,
     pub message: gtk::Entry,
     pub message_ok: gtk::Button,
     pub log: gtk::Button,
@@ -45,6 +49,7 @@ pub struct RustInterface {
     pub rm_dialog: gtk::Dialog,
     pub rm_entry: gtk::Entry,
     pub rm_enter: gtk::Button,
+    pub rm_box: gtk::Box,
     pub merge: gtk::Button,
     pub merge_entry: gtk::Entry,
     pub merge_dialog: gtk::Dialog,
@@ -84,9 +89,16 @@ pub struct RustInterface {
     pub error_dialog: gtk::MessageDialog,
     pub error_box: gtk::Box,
     pub error_close: gtk::Button,
+    pub check_ignore: gtk::Button,
+    pub check_ignore_entry: gtk::Entry,
+    pub ignore_dialog: gtk::Dialog,
+    pub check_ignore_box: gtk::Box,
+    pub close_ignore: gtk::Button,
+    pub check_button: gtk::Button,
 }
 
 impl RustInterface {
+
 
     pub fn new() -> RustInterface {
         if gtk::init().is_err() {
@@ -108,17 +120,20 @@ impl RustInterface {
             repository_button: builder.object("repository").unwrap(),
             repository_dialog: builder.object("repository-dialog").unwrap(),
             repository_entry: builder.object("dialog-entry-repo").unwrap(),
+            repository_box: builder.object("repo-box").unwrap(),
             delete_repository: builder.object("delete-repo").unwrap(),
             create_repository: builder.object("create-repo").unwrap(),
             select_branch: builder.object("select-branch").unwrap(),
             grid_staging: builder.object("grid-staging").unwrap(),
             branch_button: builder.object("branch").unwrap(),
             branch_dialog: builder.object("branch-dialog").unwrap(),
+            branch_box: builder.object("branch-box").unwrap(),
             dialog_entry: builder.object("dialog-entry").unwrap(),
             create_branch: builder.object("create").unwrap(),
             delete_branch: builder.object("delete").unwrap(),
             status: builder.object("status").unwrap(),
             commit_dialog: builder.object("commit-dialog").unwrap(),
+            commit_box: builder.object("commit-box").unwrap(),
             message: builder.object("message-entry").unwrap(),
             message_ok: builder.object("message-ok").unwrap(),
             log: builder.object("log").unwrap(),
@@ -136,6 +151,7 @@ impl RustInterface {
             rm_dialog: builder.object("rm-dialog").unwrap(),
             rm_entry: builder.object("rm-entry").unwrap(),
             rm_enter: builder.object("rm-enter").unwrap(),
+            rm_box: builder.object("rm-box").unwrap(),
             merge: builder.object("merge").unwrap(),
             merge_dialog: builder.object("merge-dialog").unwrap(),
             merge_entry: builder.object("merge-entry").unwrap(),
@@ -175,6 +191,12 @@ impl RustInterface {
             error_dialog: builder.object("error-dialog").unwrap(),
             error_box: builder.object("error-box").unwrap(),
             error_close: builder.object("close-error-dialog").unwrap(),
+            check_ignore: builder.object("check-ignore").unwrap(),
+            check_ignore_entry: builder.object("check-ignore-entry").unwrap(),
+            ignore_dialog: builder.object("check-ignore-dialog").unwrap(),
+            check_ignore_box: builder.object("check-ignore-box").unwrap(),
+            close_ignore: builder.object("close-ignore").unwrap(),
+            check_button: builder.object("check-ignore-button").unwrap(),
         }
     }
     
@@ -186,16 +208,15 @@ impl RustInterface {
         let _ = changes_and_staging_area(&self.grid, &self.grid_staging);
         repositories( &self.select_repository)?;
         branches( &self.select_branch)?;
-        handle_branch(&self);
-        handle_commit(&self);
-        handle_status(&self);
-        handle_log(&self);
-        handle_command(&self);
-        handle_rm(&self);
-        handle_merge(&self);
-        handle_repository(&self);
-        handle_other_commands(&self);
-        handle_clone(&self);
+        handle_branch(self);
+        handle_commit(self);
+        handle_status(self);
+        handle_log(self);
+        handle_command(self);
+        handle_rm(self);
+        handle_merge(self);
+        handle_repository(self);
+        handle_other_commands(self);
 
         self.window.show_all();   
         gtk::main();
