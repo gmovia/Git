@@ -1,4 +1,4 @@
-use std::{fs::{OpenOptions, self}, io::Write, path::Path};
+use std::{fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE}, handlers::clone::handler_clone};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
@@ -605,22 +605,64 @@ pub fn handle_fetch(interface: &RustInterface) {
         }
     });
 }
-/*
-pub fn handle_push(interface: &RustInterface) {
-    interface.push.connect_clicked({
+
+pub fn handle_pull(interface: &RustInterface) {
+    let info = interface.info_pull_push.clone();
+
+    interface.info_pull_push.set_visible(false);
+
+    interface.pull.connect_clicked({
         move |_| {
-            if let Ok(current) = VersionControlSystem::read_current_repository() {
-                let _ = VersionControlSystem::push();
-            }
+            info.foreach({|child|{
+                info.remove(child);
+            }});
+            let _ = VersionControlSystem::git_pull();
+            let close = Button::builder()
+                .label("close")
+                .build();
+                close.set_visible(true);
+                draw_message(&info, &"    PULL SUCCESSFULLY!     ".to_string(), 0.5);
+                info.add(&close);
+                info.set_visible(true);
+                close.connect_clicked({
+                    let info = info.clone();
+                    move |_| {
+                        info.foreach({|child|{
+                            info.remove(child);
+                        }});
+                    }
+                });
         } 
     });
 }
 
-pub fn handle_pull(interface: &RustInterface) {
-    
+/*
+pub fn handle_push(interface: &RustInterface) {
+    let info = interface.info_pull_push.clone();
+
+    interface.info_pull_push.set_visible(false);
+
     interface.push.connect_clicked({
         move |_| {
-            let _ = VersionControlSystem::pull();
+            info.foreach({|child|{
+                info.remove(child);
+            }});
+            let _ = VersionControlSystem::git_push();
+            let close = Button::builder()
+                .label("close")
+                .build();
+                close.set_visible(true);
+                draw_message(&info, &"    PUSH SUCCESSFULLY!     ".to_string(), 0.5);
+                info.add(&close);
+                info.set_visible(true);
+                close.connect_clicked({
+                    let info = info.clone();
+                    move |_| {
+                        info.foreach({|child|{
+                            info.remove(child);
+                        }});
+                    }
+                });
         } 
     });
 }

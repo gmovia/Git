@@ -5,7 +5,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch, handle_pull};
 
 #[derive(Debug, Default)]
 pub struct RustInterface {
@@ -70,6 +70,7 @@ pub struct RustInterface {
     pub fetch_close: gtk::Button,
     pub push: gtk::Button,
     pub pull: gtk::Button,
+    pub info_pull_push: gtk::Box,
     pub files: gtk::Button,
     pub ls_files_dialog: gtk::Dialog,
     pub all: gtk::Button,
@@ -174,6 +175,7 @@ impl RustInterface {
             fetch_close: builder.object("fetch-close").unwrap(),
             push: builder.object("pull").unwrap(),
             pull: builder.object("pull").unwrap(),
+            info_pull_push: builder.object("info-pull-push").unwrap(),
             files: builder.object("ls-files").unwrap(),
             ls_files_dialog: builder.object("ls-files-dialog").unwrap(),
             all: builder.object("all-files").unwrap(),
@@ -223,6 +225,8 @@ impl RustInterface {
         handle_other_commands(self);
         handle_clone(self);
         handle_fetch(self);
+        handle_pull(self);
+        //handle_push(self);
 
         self.window.show_all();   
         gtk::main();
