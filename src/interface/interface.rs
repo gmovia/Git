@@ -7,6 +7,7 @@ use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
 use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands};
 
+#[derive(Debug, Default)]
 pub struct RustInterface {
     pub window: gtk::Window,
     pub title: gtk::Label,
@@ -97,6 +98,7 @@ pub struct RustInterface {
 }
 
 impl RustInterface {
+
 
     pub fn new() -> RustInterface {
         if gtk::init().is_err() {
@@ -206,15 +208,15 @@ impl RustInterface {
         let _ = changes_and_staging_area(&self.grid, &self.grid_staging);
         repositories( &self.select_repository)?;
         branches( &self.select_branch)?;
-        handle_branch(&self);
-        handle_commit(&self);
-        handle_status(&self);
-        handle_log(&self);
-        handle_command(&self);
-        handle_rm(&self);
-        handle_merge(&self);
-        handle_repository(&self);
-        handle_other_commands(&self);
+        handle_branch(self);
+        handle_commit(self);
+        handle_status(self);
+        handle_log(self);
+        handle_command(self);
+        handle_rm(self);
+        handle_merge(self);
+        handle_repository(self);
+        handle_other_commands(self);
 
         self.window.show_all();   
         gtk::main();

@@ -4,7 +4,7 @@ use std::{io::{Read, Write}, net::TcpStream, str::from_utf8};
 
 pub fn decompress_data(compressed_data: &[u8]) -> Result<(Vec<u8>,u64), std::io::Error> {
     let mut decompressed_data = Vec::new();
-    let mut decoder = ZlibDecoder::new(&compressed_data[..]);
+    let mut decoder = ZlibDecoder::new(compressed_data);
     decoder.read_to_end(&mut decompressed_data)?;
     Ok((decompressed_data, decoder.total_in()))
 }
@@ -16,7 +16,6 @@ pub fn to_pkt_line(msg: &str) -> String {
 }
 
 pub fn read_packet(stream: &mut TcpStream, len: usize) -> String {
-    print!("MI LENNNN {:?}\n", len);
     if len == 0 {
         return "0".to_string();
     }
@@ -43,9 +42,9 @@ pub fn process_line(stream: &mut TcpStream) -> Result<String, std::io::Error> {
 
 pub fn send_done_msg(socket: &mut TcpStream) -> Result<(), std::io::Error> {
     let msg_done = "0000";
-    socket.write(msg_done.as_bytes())?;
+    let _ = socket.write(msg_done.as_bytes());
 
     let msg_done2 = "0009done\n";
-    socket.write(msg_done2.as_bytes())?;
+    let _ =socket.write(msg_done2.as_bytes());
     Ok(())
 }

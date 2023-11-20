@@ -11,12 +11,10 @@ impl Diff{
                 let change = Change {file: path.to_string(), state: STATE_CREATED.to_string(), hash: hash.to_string()};
                 diff.insert(change.file.clone(), change);
             }
-            else{
-                if let Some(hash_parent) = parent.get(path){
-                    if hash != hash_parent{
-                        let change = Change {file: path.to_string(), state: STATE_MODIFIED.to_string(), hash: hash.to_string()};
-                        diff.insert(change.file.clone(), change);
-                    }
+            else if let Some(hash_parent) = parent.get(path){
+                if hash != hash_parent{
+                    let change = Change {file: path.to_string(), state: STATE_MODIFIED.to_string(), hash: hash.to_string()};
+                    diff.insert(change.file.clone(), change);
                 }
             }
         }

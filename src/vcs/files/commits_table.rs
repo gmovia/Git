@@ -16,8 +16,8 @@ impl CommitsTable{
         let commits_file = OpenOptions::new().read(true).open(path)?;
 
         let reader = io::BufReader::new(commits_file);
-        for line in reader.lines().filter_map(Result::ok) {
-            let parts: Vec<&str> = line.split("-").collect();
+        for line in reader.lines().map_while(Result::ok) {
+            let parts: Vec<&str> = line.split('-').collect();
             let commit = CommitTableEntry{id: parts[0].to_string(), last_hash: parts[1].to_string(), hash: parts[2].to_string(), message: parts[3].to_string(), date: parts[4].to_string()};
             commits.push(commit);
         }

@@ -23,7 +23,7 @@ impl Index{
         let mut index_file = OpenOptions::new().read(true).write(true).open(Self::index_path()?)?;
         index_file.set_len(0)?;
         for value in staging_area.values(){
-            let _ = Self::add(&mut index_file,&value);
+            let _ = Self::add(&mut index_file,value);
         }
         Ok(())
     }
@@ -35,8 +35,8 @@ impl Index{
         let mut staging_area:HashMap<String, VCSFile>  = HashMap::new();
         let index_file = OpenOptions::new().read(true).open(Self::index_path()?)?;
         let reader = io::BufReader::new(index_file);
-        for line in reader.lines().filter_map(Result::ok){
-            let parts: Vec<&str> = line.split("-").collect();
+        for line in reader.lines().map_while(Result::ok){
+            let parts: Vec<&str> = line.split('-').collect();
             let file = VCSFile::new(parts[0].to_string(), parts[2].to_string(), parts[1].to_string());
             staging_area.insert(parts[0].to_string(), file);
         }

@@ -10,35 +10,31 @@ pub struct Init {
 impl Init {
     
     /// Esta funcion es el constructor de init. Se crean los directorios y archivos necesarios.
-    pub fn git_init(path: &PathBuf, args: Vec<String>){
+    pub fn git_init(path: &Path, args: Vec<String>){
         let init = { Init { example_text: "hola".to_string() } };
 
         if args.len() < 4 {
-            if let Err(e) = init.create_initial_folders(path, "master") {
+            if let Err(e) = init.create_initial_folders(path.to_path_buf(), "master") {
                 println!("Error: {}",e);
             }   
         }
-        else {
-            if args.contains(&"-b".to_string()) {
-                if let Some(index) = args.iter().position(|s| s == &"-b"){
-                    if let Err(e) = init.create_initial_folders(path, args[index+1].as_str()) {
-                        println!("Error: {}",e);
-                    }
-                }
-                else {
-                    println!("Error creating git folder")
-                }
-            }
-            else {
-                if let Err(e) = init.create_initial_folders(path, "master") {
+        else if args.contains(&"-b".to_string()) {
+            if let Some(index) = args.iter().position(|s| s == "-b"){
+                if let Err(e) = init.create_initial_folders(path.to_path_buf(), args[index+1].as_str()) {
                     println!("Error: {}",e);
                 }
             }
+            else {
+                println!("Error creating git folder")
+            }
+        }
+        else if let Err(e) = init.create_initial_folders(path.to_path_buf(), "master") {
+            println!("Error: {}",e);
         }
     }
 
     /// Esta funcion es la encargada de crear todsas las carpetas y archivos necesarios luego de ejecutar git init.
-    fn create_initial_folders(&self, path: &PathBuf, branch_name: &str) -> Result<(),std::io::Error> {
+    fn create_initial_folders(&self, path: PathBuf, branch_name: &str) -> Result<(),std::io::Error> {
         let path = path.join(".rust_git");
         fs::create_dir_all(&path)?;
 
@@ -57,7 +53,7 @@ impl Init {
     // Crea el archivo index
     fn create_index(&self, git_path: &Path) -> Result<(),std::io::Error>{
         let index_path = git_path.join("index");
-        fs::OpenOptions::new().create(true).append(true).open(&index_path)?;
+        fs::OpenOptions::new().create(true).append(true).open(index_path)?;
         Ok(())
     }
 
@@ -80,7 +76,7 @@ impl Init {
         let logs_path = git_path.join("logs");
         let commits_path = logs_path.join(branch_name);
         fs::create_dir_all(logs_path)?;
-        fs::OpenOptions::new().create(true).append(true).open(&commits_path)?;
+        fs::OpenOptions::new().create(true).append(true).open(commits_path)?;
         Ok(())
     }
 
@@ -120,14 +116,14 @@ impl Init {
     fn create_git_config_file(&self, git_path: &Path) -> Result<(),std::io::Error> {
         let config_path = git_path.join("config");
         
-        if let Ok(_) = fs::File::open(&config_path) {
+        if fs::File::open(&config_path).is_ok() {
 
         } else {
             let mut file = File::create(config_path)?;
-            file.write_all(format!("[core]\n").as_bytes())?;
-            file.write_all(format!("    repostiryformatversion = 0\n").as_bytes())?;
-            file.write_all(format!("    filemode = false\n").as_bytes())?;
-            file.write_all(format!("    bare = false\n").as_bytes())?;
+            file.write_all("[core]\n".to_string().as_bytes())?;
+            file.write_all("    repostiryformatversion = 0\n".to_string().as_bytes())?;
+            file.write_all("    filemode = false\n".to_string().as_bytes())?;
+            file.write_all("    bare = false\n".to_string().as_bytes())?;
         }
 
         Ok(())
@@ -137,11 +133,11 @@ impl Init {
     fn create_head_file(&self, git_path: &Path, branch_name: &str) -> Result<(),std::io::Error> {
         let head_path = git_path.join("HEAD");
 
-        if let Ok(_) = fs::File::open(&head_path) {
+        if fs::File::open(&head_path).is_ok() {
             println!("warning: re-init: ignored --initial-branch={}", branch_name);
         } else {
             let mut file = File::create(head_path)?;
-            file.write_all(format!("refs/heads/{}", branch_name).as_bytes())?;
+            file.write_all(format!("refs/heads/{:?}", branch_name).as_bytes())?;
         }            
         Ok(())
     }
@@ -150,7 +146,7 @@ impl Init {
         let current = CurrentRepository::read()?;
         let ignore_path = current.join(".gitignore");
 
-        fs::OpenOptions::new().create(true).append(true).open(&ignore_path)?;
+        fs::OpenOptions::new().create(true).append(true).open(ignore_path)?;
         Ok(())
     }
 
@@ -180,9 +176,9 @@ impl Init {
         
         let mut content = String::new();
         head_file.read_to_string(&mut content)?;
-        if let Some(actual_branch) = content.clone().split("/").last(){
+        if let Some(actual_branch) = content.clone().split('/').last(){
             return Ok(actual_branch.to_string());
         }
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't find the branch"));
+        Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't find the branch"))
     }
 }

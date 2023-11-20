@@ -39,8 +39,8 @@ pub fn changes_and_staging_area(grid: &gtk::Grid, grid_staging: &gtk::Grid) -> R
 
 pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_staging: &gtk::Grid){
 
-    let mut index = 0;
-    for (path, state) in changes {
+    //let mut index = 0;
+    for (index,(path, state)) in changes.iter().enumerate() {
         let path_label = gtk::Label::new(Some(path));
         path_label.set_visible(true);
         path_label.set_xalign(2.0); 
@@ -86,7 +86,7 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
         grid.attach(&state_label, 1, index as i32, 1, 1);
         grid.attach(&add_button, 2, index as i32, 1, 1);
         
-        index += 1;
+        //index += 1;
 
         let path_clone = path.clone(); 
         let reset_button = reset_button.clone();
@@ -122,10 +122,10 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
     }
 }
 
-pub fn draw_staging_area(staging_area: &Vec<String>, grid: &gtk::Grid){
+pub fn draw_staging_area(staging_area: &[String], grid: &gtk::Grid){
 
-    let mut index = 0;
-    for path in staging_area {
+    //let mut index = 0;
+    for (index,path) in staging_area.iter().enumerate() {
         let label = gtk::Label::new(Some(path));
         label.set_visible(true);
         label.set_xalign(2.0);
@@ -144,7 +144,7 @@ pub fn draw_staging_area(staging_area: &Vec<String>, grid: &gtk::Grid){
         grid.attach(&label, 0, index as i32, 1, 1);
         grid.attach(&reset_button, 1, index as i32, 1, 1);
         
-        index += 1;
+        //index += 1;
         let path_clone = path.clone(); 
         reset_button.connect_clicked({
             let rc_grid = grid.clone();
@@ -160,7 +160,7 @@ pub fn draw_repositories(repositories: &Vec<String>, combo_box: &ComboBoxText){
     for repository in repositories {
         let label = gtk::Label::new(Some(repository));
         label.set_visible(true);
-        combo_box.append_text(&label.text().to_string());
+        combo_box.append_text(label.text().as_ref());
     }
 }
 
@@ -168,7 +168,7 @@ pub fn draw_branches(branches: &Vec<String>, combo_box: &ComboBoxText){
     for branch in branches {
         let label = gtk::Label::new(Some(branch));
         label.set_visible(true);
-        combo_box.append_text(&label.text().to_string());
+        combo_box.append_text(label.text().as_ref());
     }
 }
 
@@ -185,7 +185,7 @@ pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_en
     errors.1.foreach(|child| {
         errors.1.remove(child);
     });
-    draw_message(&errors.1, &message, 2.0);
+    draw_message(&errors.1, message, 2.0);
 
     errors.0.style_context().add_class("custom-error-dialog");
 

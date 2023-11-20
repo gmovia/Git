@@ -15,7 +15,7 @@ impl VersionControlSystem {
 
     pub fn init(path: &Path, args: Vec<String>){
         let _ = Repositories::write(path);
-        let _ = Init::git_init(&path.to_path_buf(), args);
+        Init::git_init(path, args);
     }
     
     pub fn status() -> Result<(UntrackedFiles, ChangesNotStagedForCommit, ChangesToBeCommited), std::io::Error> {
@@ -93,9 +93,9 @@ impl VersionControlSystem {
     }
 
     pub fn check_ignore(path: &Path) -> Result<String, std::io::Error> {
-        if CheckIgnore::check_ignore(&path)?{
+        if CheckIgnore::check_ignore(path)?{
             return Ok(RESPONSE_OK_IGNORE.to_string());
         }
-        return Ok(RESPONSE_NOK_GIT_IGNORE.to_string());
+        Ok(RESPONSE_NOK_GIT_IGNORE.to_string())
     }
 }

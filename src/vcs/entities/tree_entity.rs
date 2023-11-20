@@ -21,28 +21,28 @@ impl TreeEntity{
             match entity{
                 Entity::Blob(blob) => {
                     if let Some(filename) = Path::new(&blob.path).file_name(){
-                        let entry = format!("100644 {} {} {}\n", blob.content_type, blob.blob_hash, filename.to_string_lossy().to_string());
+                        let entry = format!("100644 {} {} {}\n", blob.content_type, blob.blob_hash, filename.to_string_lossy());
                         tree_file.write_all(entry.as_bytes())?;
                     }
                 },
                 Entity::Tree(tree) => {
                     let tree_hash = TreeEntity::write(repo_path, &tree.entities)?;
                     if let Some(filename) = Path::new(&tree.path).file_name(){
-                        let entry = format!("40000 {} {} {}\n", tree.content_type, tree_hash, filename.to_string_lossy().to_string());
+                        let entry = format!("40000 {} {} {}\n", tree.content_type, tree_hash, filename.to_string_lossy());
                         tree_file.write_all(entry.as_bytes())?;
                     }
                 }
             }
         } 
-        let tree_hash = HashObject::hash_object(&tree_path, Init::get_object_path(&repo_path)?, WriteOption::Write, TREE_CODE)?;
+        let tree_hash = HashObject::hash_object(&tree_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?;
         let _ = fs::remove_file(tree_path);
         Ok(tree_hash)
     }
     
     pub fn read(repo_path: &PathBuf, tree_hash: String) -> Result<Vec<Entity>, std::io::Error>{
         let mut entities: Vec<Entity> = Vec::new();
-        let content = CatFile::cat_file(&tree_hash, Init::get_object_path(&repo_path)?)?;
-        let lines: Vec<&str> = content.split("\n").collect();
+        let content = CatFile::cat_file(&tree_hash, Init::get_object_path(repo_path)?)?;
+        let lines: Vec<&str> = content.split('\n').collect();
 
         for line in lines{
             if line != END_OF_LINE{

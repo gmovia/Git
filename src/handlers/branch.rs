@@ -19,7 +19,7 @@ pub fn handler_branch(input: String) -> String{
                     for r in &result{
                         content.push_str(&format!("{}\n",r));
                     }
-                    return content;
+                    content
                 }else{
                     ERR_INVALID_PARAMETERS.to_string()
                 }

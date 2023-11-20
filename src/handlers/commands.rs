@@ -12,7 +12,7 @@ use super::merge::handler_merge;
 use super::ls_files::handler_ls_files;
 use super::ls_tree::handler_ls_tree;
 
-pub fn handler_command<'a>(input: &str) -> String{
+pub fn handler_command(input: &str) -> String{
     let input = input.trim(); 
     let _: Vec<String> = input.to_string().split_whitespace().map(|s| s.to_string()).collect();
 

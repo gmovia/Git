@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::{vcs::{version_control_system::VersionControlSystem, files::repository::Repository}, constants::constants::{STATE_DELETED, STATE_MODIFIED}};
 
@@ -16,7 +16,7 @@ pub enum LsFilesOptions {
 
 impl LsFiles {
 
-    pub fn ls_files(option: LsFilesOptions, path: &PathBuf) -> Result<Vec<String>, std::io::Error> {
+    pub fn ls_files(option: LsFilesOptions, path: &Path) -> Result<Vec<String>, std::io::Error> {
         let mut files: Vec<String> = Vec::new();
         match option {
             LsFilesOptions::EverythingInVCS => {Ok(Self::get_everything(path,&mut files)?)},
@@ -27,7 +27,7 @@ impl LsFiles {
         }
     }
 
-    pub fn get_everything(_path: &PathBuf, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error>{
+    pub fn get_everything(_path: &Path, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error>{
         let local_repository = Repository::read_repository()?;
         let (_, changes_not_staged_for_commit, changes_to_be_commited) = VersionControlSystem::status()?;
         for (key,_) in changes_to_be_commited {
@@ -49,7 +49,7 @@ impl LsFiles {
         Ok(files.to_vec())
     }
 
-    pub fn get_modified(_path: &PathBuf, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error> {
+    pub fn get_modified(_path: &Path, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error> {
         let (_, changes_not_staged_for_commit, _) = VersionControlSystem::status()?;
         for (key,value) in changes_not_staged_for_commit {
             if value == STATE_MODIFIED || value == STATE_DELETED{
@@ -59,7 +59,7 @@ impl LsFiles {
         Ok(files.to_vec())
     }
 
-    pub fn get_staging(_path: &PathBuf, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error> {
+    pub fn get_staging(_path: &Path, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error> {
         let (_, _, changes_to_be_commited) = VersionControlSystem::status()?;
         for (key,_) in changes_to_be_commited {
             files.push(key);
@@ -67,7 +67,7 @@ impl LsFiles {
         Ok(files.to_vec())
     }
 
-    pub fn get_deleted(_path: &PathBuf, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error> {
+    pub fn get_deleted(_path: &Path, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error> {
         let (_, changes_not_staged_for_commit, _) = VersionControlSystem::status()?;
         for (key,value) in changes_not_staged_for_commit {
             if value == STATE_DELETED {
@@ -77,7 +77,7 @@ impl LsFiles {
         Ok(files.to_vec())
     }
 
-    pub fn get_untracked(_path: &PathBuf, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error> {
+    pub fn get_untracked(_path: &Path, files: &mut Vec<String>) -> Result<Vec<String>,std::io::Error> {
         let (untracked_files, _, _) = VersionControlSystem::status()?;
         for (key,_) in untracked_files {
             files.push(key);

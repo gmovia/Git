@@ -1,6 +1,6 @@
 use std::io::Write;
 use std::net::TcpStream;
-use std::path::PathBuf;
+use std::path::Path;
 use crate::vcs::commands::clone;
 use crate::packfile::packfile::to_pkt_line;
 use crate::constants::constants::{PUERTO, HOST};
@@ -10,49 +10,48 @@ pub struct Client;
 
 impl Client {
 
-    pub fn client(command: String, current_repository: &PathBuf) -> Result<(), ()> {
+    pub fn client(command: String, current_repository: &Path) -> Result<(), std::io::Error> {
         let address = format!("{}:{}", HOST, PUERTO);
 
-        if let Err(e) = Self::run_client(&address,  &command , &current_repository) {
+        if let Err(e) = Self::run_client(&address,  &command , current_repository) {
             println!("Error: {}",e);
         }
         Ok(())
     }
 
-    pub fn run_client(address: &str, command: &String, current_repository: &PathBuf) -> Result<(),std::io::Error> {
+    pub fn run_client(address: &str, command: &str, current_repository: &Path) -> Result<(),std::io::Error> {
         println!("rust_client");
         let stream = TcpStream::connect(address)?;
-        let _ = stream.try_clone()?;
+        stream.try_clone()?;
 
-        let _ = match command.as_str() {
-        command_str if command_str.contains("git clone") => Self::handler_clone(stream, command, &current_repository),
+        let _ = match command {
+        command_str if command_str.contains("git clone") => Self::handler_clone(stream, command, current_repository),
         _ => Ok(()),
 
     };
        Ok(())
    }
 
-    pub fn handler_clone(mut stream: TcpStream, command: &String, current_repository: &PathBuf) -> Result<(),std::io::Error>{
-        let query_to_send = Self::handler_input(&command, &current_repository)?;
+    pub fn handler_clone(mut stream: TcpStream, command: &str, current_repository: &Path) -> Result<(),std::io::Error>{
+        let query_to_send = Self::handler_input(command, current_repository)?;
         let pkt_line = to_pkt_line(&query_to_send);
-        print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
-        stream.write(pkt_line.as_bytes())?;
-        let _ = Self::handler_query(&query_to_send, &mut stream, &current_repository);
+        let _ =stream.write(pkt_line.as_bytes())?;
+        let _ = Self::handler_query(&query_to_send, &mut stream, current_repository);
         Ok(())
     }
 
-    fn handler_input(input: &str, current_repository: &PathBuf) -> Result<String,std::io::Error> {
+    fn handler_input(input: &str, current_repository: &Path) -> Result<String,std::io::Error> {
         match input {
             _ if input.contains("git clone") => {
-                return Ok(format!("git-upload-pack /{}", current_repository.display()));
+                Ok(format!("git-upload-pack /{}", current_repository.display()))
             },
             _ => Ok(input.to_string()),
         }
     }
 
-    fn handler_query(query: &str, socket: &mut TcpStream, current_repository: &PathBuf) -> Result<(),std::io::Error> {
+    fn handler_query(query: &str, socket: &mut TcpStream, current_repository: &Path) -> Result<(),std::io::Error> {
             match query {
-            command_str if command_str.contains("git-upload-pack") => clone::Clone::git_clone(socket, (&current_repository).to_path_buf()),
+            command_str if command_str.contains("git-upload-pack") => clone::Clone::git_clone(socket, current_repository.to_path_buf()),
             _ => Ok(()),
         }
     }

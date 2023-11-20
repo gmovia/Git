@@ -118,7 +118,7 @@ mod tests {
 
         let _ = VersionControlSystem::add(&path);
         assert!(matches!(VersionControlSystem::status(), Ok((_, _, changes_to_be_commited)) if status_contains(changes_to_be_commited.clone(), "CREATED", &path)));
-        assert!(matches!(VersionControlSystem::status(), Ok((untracked_file, _, _)) if untracked_file.len() == 0));
+        assert!(matches!(VersionControlSystem::status(), Ok((untracked_file, _, _)) if untracked_file.is_empty()));
     }
 
 

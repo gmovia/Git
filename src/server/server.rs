@@ -43,7 +43,7 @@ impl Server {
                 Ok(message) => {
                     println!("Received message from client: {}", &message);
                     let client_path = message.trim_start_matches("git-upload-pack ");
-                    let aux = format!("{}/{}",path.display().to_string(), client_path);
+                    let aux = format!("{}/{}",path.display(), client_path);
                     let server_path = Path::new(&aux);
                     if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, &server_path.to_path_buf()) {
                         println!("Error parsing response: {}",e)
@@ -61,8 +61,8 @@ impl Server {
     }
 
     /// Esta funcion se encarga de responder al mensaje recibido por parte del cliente
-    fn parse_response( message: &String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {       
-        let response = match message.as_str() {
+    fn parse_response( message: &str, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {       
+        let response = match message {
             s if s.contains("git-upload-pack") => start_handler_upload(reader, path)?,
             _ => "No entiendo tu mensaje".to_string(),
         };

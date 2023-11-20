@@ -23,8 +23,8 @@ impl Commit{
             }
         }
 
-        let _ = CommitsTable::write(&message, &repository)?;
-        let _ = Index::clear();
+        CommitsTable::write(&message, &repository)?;
+        Index::clear()?;
         Ok(repository)
     }
 }

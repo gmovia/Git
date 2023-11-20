@@ -15,7 +15,7 @@ impl Clone{
     
     pub fn receive_pack(socket: &mut TcpStream, repo: PathBuf) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
-        print!("Entro a receive packs ---------------\n");
+        println!("Entro a receive packs ---------------\n");
         loop {
             let mut len_buf = [0; 4]; 
             if socket.read_exact(&mut len_buf).is_ok() {
@@ -35,7 +35,7 @@ impl Clone{
             println!("Paquete: {:?}", packet);
         }
         for want in Self::get_want_msgs(&packets) {
-            socket.write(want.as_bytes())?;
+            socket.write_all(want.as_bytes())?;
         }
         send_done_msg(socket)?;
         let objects = Self::get_socket_response(socket)?;
@@ -43,7 +43,7 @@ impl Clone{
         Ok(()) 
     }
 
-    fn init_commits(list_refs: &Vec<String>, objects: &Vec<(u8,Vec<u8>)>, repo: PathBuf) -> Result<(), std::io::Error>  {
+    fn init_commits(list_refs: &Vec<String>, objects: &[(u8,Vec<u8>)], repo: PathBuf) -> Result<(), std::io::Error>  {
         let mut branchs: HashMap<String, String> = HashMap::new();
         println!("--------------------LIST REFERENCESSSS ---> {:?}\n", list_refs);
 
@@ -74,17 +74,17 @@ impl Clone{
         Ok(())
     }
 
-    fn process_non_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
+    fn process_non_tree_object(number: u8, inner_vec: &[u8]) -> (u8, String) {
         println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
         (number, String::from_utf8_lossy(inner_vec).to_string())
     }
 
     fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
-        if let Ok(_) = std::str::from_utf8(inner_vec) {
-            let blobs: Vec<String> = String::from_utf8_lossy(inner_vec).split("\n").map(String::from).collect();
+        if std::str::from_utf8(inner_vec).is_ok() {
+            let blobs: Vec<String> = String::from_utf8_lossy(inner_vec).split('\n').map(String::from).collect();
             let mut string_to_send = String::new();
             for blob in &blobs {
-                let blob_parts: Vec<&str> = blob.split(" ").collect();
+                let blob_parts: Vec<&str> = blob.split(' ').collect();
                 if blob_parts.len() == 3 {
                     let path = Path::new(blob_parts[1]);
                     if let Some(file_name) = path.file_name() {
@@ -127,13 +127,13 @@ impl Clone{
 
 
 
-     fn create_folders(objects: Vec<(u8, String)>, repo: &PathBuf) -> HashMap<String, CommitEntity>{
+     fn create_folders(objects: Vec<(u8, String)>, repo: &Path) -> HashMap<String, CommitEntity>{
         let mut commits_created: HashMap<String, CommitEntity> = HashMap::new();
 
         for (index, content) in objects.iter() {
             match *index {
                 COMMIT_CODE_NUMBER => {
-                    match Self::create_commit_folder(&content, repo) {
+                    match Self::create_commit_folder(content, repo) {
                         Ok((hash, commit_entity)) => {
                             commits_created.insert(hash.clone(), commit_entity);
                         },
@@ -143,53 +143,53 @@ impl Clone{
                     }
                 }
                 TREE_CODE_NUMBER => {
-                    if let Err(e) = Self::create_tree_folder(&content, repo) {
+                    if let Err(e) = Self::create_tree_folder(content, repo) {
                         println!("Error creating tree {}", e);
                     }
                 },
-                BLOB_CODE_NUMBER => Self::create_blob_folder(&content, repo),
+                BLOB_CODE_NUMBER => Self::create_blob_folder(content, repo),
                 _ => println!("Type not identify {}", index),
             }
         }
         commits_created
     }
     
-    fn create_commit_folder(content: &String, repo: &PathBuf) -> Result<(String, CommitEntity), std::io::Error>{
-        let partes: Vec<&str> = content.split("\n").collect();
+    fn create_commit_folder(content: &str, repo: &Path) -> Result<(String, CommitEntity), std::io::Error>{
+        let partes: Vec<&str> = content.split('\n').collect();
         let commit_entity: CommitEntity;
         
         if !content.contains("parent"){
                 println!("----> ENTRA No parent\n");
                 commit_entity = CommitEntity{
-                content_type: "commit".trim_end_matches("\n").to_string(),
-                tree_hash: partes[0].trim_end_matches("\n").trim_start_matches("tree ").to_string(),
-                message: partes[4..].join("\n").trim_start_matches("\n").trim_end_matches("\n").to_string(), 
-                author: partes[1].trim_end_matches("\n").trim_start_matches("\n").to_string(), 
-                committer: partes[2].trim_end_matches("\n").to_string(),
+                content_type: "commit".trim_end_matches('\n').to_string(),
+                tree_hash: partes[0].trim_end_matches('\n').trim_start_matches("tree ").to_string(),
+                message: partes[4..].join("\n").trim_start_matches('\n').trim_end_matches('\n').to_string(), 
+                author: partes[1].trim_end_matches('\n').trim_start_matches('\n').to_string(), 
+                committer: partes[2].trim_end_matches('\n').to_string(),
                 parent_hash: COMMIT_INIT_HASH.to_string(),
             };
         }else{
                 commit_entity = CommitEntity{
                 content_type: "commit".to_string(),
-                tree_hash: partes[0].trim_end_matches("\n").trim_start_matches("tree ").to_string(),
-                message: partes[5..].join("\n").trim_start_matches("\n").trim_end_matches("\n").to_string(), 
-                author: partes[2].trim_end_matches("\n").trim_start_matches("\n").to_string(), 
-                committer: partes[3].trim_end_matches("\n").to_string(),
-                parent_hash: partes[1].trim_end_matches("\n").trim_start_matches("\n").trim_start_matches("parent ").to_string(),
+                tree_hash: partes[0].trim_end_matches('\n').trim_start_matches("tree ").to_string(),
+                message: partes[5..].join("\n").trim_start_matches('\n').trim_end_matches('\n').to_string(), 
+                author: partes[2].trim_end_matches('\n').trim_start_matches('\n').to_string(), 
+                committer: partes[3].trim_end_matches('\n').to_string(),
+                parent_hash: partes[1].trim_end_matches('\n').trim_start_matches('\n').trim_start_matches("parent ").to_string(),
             };
         }
-        let hash_commit = Proxy::write_commit(repo.clone(), &commit_entity)?;
+        let hash_commit = Proxy::write_commit(repo.to_path_buf(), &commit_entity)?;
 
         Ok((hash_commit, commit_entity))
     }
     
 
-    fn create_blob_folder(content: &String, repo: &PathBuf){
-        let _ = Proxy::write_blob(repo.clone(),content);
+    fn create_blob_folder(content: &String, repo: &Path){
+        let _ = Proxy::write_blob(repo.to_path_buf(),content);
     }
 
-    fn create_tree_folder(content: &String, repo: &PathBuf) -> Result<String, std::io::Error> {
-        Ok(Proxy::write_tree(repo.to_path_buf(), content)?)
+    fn create_tree_folder(content: &str, repo: &Path) -> Result<String, std::io::Error> {
+        Proxy::write_tree(repo.to_path_buf(), content)
     }
     
 
@@ -199,7 +199,7 @@ impl Clone{
         for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
 
             if commits_created.contains_key(hash_commit_branch) {
-                let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
+                let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches('\n'));
                 let file = OpenOptions::new()
                     .create(true)
                     .write(true)
@@ -225,16 +225,16 @@ impl Clone{
     fn complete_commit_table(repo: &PathBuf, branchs: Vec<(String, String)>, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
         //branch_name, hash
         for(branch_name, hash_commit_branch)in branchs {
-            let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
+            let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches('\n'));
             let mut file = OpenOptions::new()
                 .create(true)
                 .write(true)
                 .append(true)
                 .open(&logs_path)?;
-            let content = CatFile::cat_file(&hash_commit_branch, Init::get_object_path(&repo)?)?;
+            let content = CatFile::cat_file(&hash_commit_branch, Init::get_object_path(repo)?)?;
 
             if content.contains("parent"){
-                let part:Vec<&str> = content.split("\n").collect();
+                let part:Vec<&str> = content.split('\n').collect();
                 let hash_parent = part[1].trim_start_matches("parent ");
                 let mut a: Vec<(String, String)> = Vec::new();
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch){
@@ -246,7 +246,7 @@ impl Clone{
                     file.write_all(format_commit.as_bytes())?;
                 }
             }else{
-                let part:Vec<&str> = content.split("\n").collect();
+                let part:Vec<&str> = content.split('\n').collect();
                 let hash_parent = part[1].trim_start_matches("parent ");
                 let mut a: Vec<(String, String)> = Vec::new();
                 if let Some(commit_entity) = commits_created.get(&hash_commit_branch){
@@ -289,11 +289,11 @@ impl Clone{
         let mut buffer = Vec::new();
             match socket.read_to_end(&mut buffer) {
                 Ok(_) => {
-                    return Self::manage_pack(&buffer[8..]);
+                    Self::manage_pack(&buffer[8..])
                 }
                 Err(e) => {
                     println!("Failed to receive data: {}\n", e);
-                    return Err(e)
+                    Err(e)
                 }
             } 
     }
@@ -311,14 +311,14 @@ impl Clone{
         for object in 0..object_number {
             let objet_type = Self::get_object_type(pack[position]);
             while Self::is_bit_set(pack[position]) {
-                position = position + 1;
+                position += 1;
             }
-            position = position + 1;
+            position += 1;
 
             if let Ok(data) = decompress_data(&pack[position..]) {
                 println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
                 println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                position = position + data.1 as usize; 
+                position += data.1 as usize; 
                 objects.push((objet_type, data.0))   
             }
         }
@@ -361,8 +361,8 @@ impl Clone{
     fn parse_number(bytes: &[u8]) -> Result<u8, std::io::Error> {
         let texto: String = bytes.iter().map(|&b| b.to_string()).collect();
         match texto.parse() {
-            Ok(numero) => return Ok(numero),
-            Err(_) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Can not parse number")),
+            Ok(numero) => Ok(numero),
+            Err(_) => Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Can not parse number")),
         }
     }
 

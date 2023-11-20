@@ -16,7 +16,7 @@ impl LsTree {
 
     pub fn ls_tree(branch: &str, path: &PathBuf) -> Result<Vec<String>, std::io::Error>{
         let mut information = Vec::new();
-        Ok(Self::get_information_branch(branch, path, &mut information)?)
+        Self::get_information_branch(branch, path, &mut information)
         // match option {
         //     LsTreeOptions::TreeBranch => {Ok(Self::get_information_branch(branch, path, &mut information)?)},
         //     LsTreeOptions::TreeBranchDirectory => todo!(),

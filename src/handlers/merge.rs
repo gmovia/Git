@@ -2,8 +2,8 @@ use crate::{vcs::version_control_system::VersionControlSystem, constants::consta
 
 pub fn handler_merge(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();
-    if let Ok(_) = VersionControlSystem::merge(args[2]){
+    if VersionControlSystem::merge(args[2]).is_ok(){
         return RESPONSE_OK_MERGE.to_string();
     }
-    return ERR_MERGE.to_string();
+    ERR_MERGE.to_string()
 }
