@@ -1,5 +1,5 @@
-use std::{path::{Path, PathBuf}, fs::File, io::{Write, self}};
-use crate::{vcs::files::{repository::Repository, index::Index}, utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders}};
+use std::{path::Path, fs::File, io::{Write, self}};
+use crate::{vcs::files::{repository::Repository, index::Index}, utils::files::file::{delete_all_files_and_folders, create_file_and_their_folders}};
 use super::{branch::Branch, cat_file::CatFile, init::Init};
 
 pub struct Checkout;
@@ -12,7 +12,7 @@ pub enum CheckoutOptions<'a>{
 
 impl Checkout{
 
-    pub fn checkout(path: &PathBuf, option: CheckoutOptions) -> Result<(), std::io::Error>{
+    pub fn checkout(path: &Path, option: CheckoutOptions) -> Result<(), std::io::Error>{
         match option {
             CheckoutOptions::ChangeBranch(branch_name) => {Self::change_branch(path, branch_name)?;},
             CheckoutOptions::CreateAndChangeBranch(branch_name) => {Self::create_and_change_branch(path, branch_name)?;},
@@ -20,7 +20,7 @@ impl Checkout{
         Ok(())
     }
 
-    pub fn change_branch(path: &PathBuf, branch_name: &str) -> Result<(), std::io::Error>{
+    pub fn change_branch(path: &Path, branch_name: &str) -> Result<(), std::io::Error>{
         if !Index::read_index()?.is_empty(){
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't change branch if you have changes to be commited"));
         }
@@ -33,7 +33,7 @@ impl Checkout{
     }
 
 
-    pub fn update_cd(path: &PathBuf) -> Result<(), std::io::Error>{
+    pub fn update_cd(path: &Path) -> Result<(), std::io::Error>{
         let repository_hashmap = Repository::read_repository()?;
 
         delete_all_files_and_folders(path)?;
@@ -45,7 +45,7 @@ impl Checkout{
         Ok(())
     }
 
-    pub fn create_and_change_branch(path: &PathBuf, branch_name: &str) -> Result<(), std::io::Error>{
+    pub fn create_and_change_branch(path: &Path, branch_name: &str) -> Result<(), std::io::Error>{
         Branch::create_new_branch(path, branch_name)?;
         Self::change_branch(path, branch_name)?;
         Ok(())

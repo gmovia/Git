@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::constants::constants::MERGE;
+use crate::constants::constant::MERGE;
 use crate::vcs::entities::change::add_changes;
 use crate::vcs::entities::conflict::{Conflict, resolve_conflicts, conflicts_search};
 use crate::vcs::files::commits_table::CommitsTable;
@@ -18,8 +18,8 @@ impl Merge {
         let current = CurrentRepository::read()?;
         let current_branch = Branch::get_current_branch(&current)?;
 
-        let current_commits_table = CommitsTable::read(current.clone().to_path_buf(), &current_branch)?;
-        let branch_commits_table = CommitsTable::read(current.clone().to_path_buf(), branch)?;
+        let current_commits_table = CommitsTable::read(current.clone(), &current_branch)?;
+        let branch_commits_table = CommitsTable::read(current.clone(), branch)?;
 
         let mut conflicts: HashMap<String, Conflict> = HashMap::new();
 
@@ -38,7 +38,7 @@ impl Merge {
 
             conflicts = conflicts_search(&changes_current_repository, &changes_branch_repository);
 
-            if conflicts.len() == 0 { // FUSION AUTOMATICA
+            if conflicts.is_empty() { // FUSION AUTOMATICA
                 add_changes(&mut repository, &changes_current_repository);
                 add_changes(&mut repository, &changes_branch_repository);
                 CommitsTable::write( &MERGE.to_string(), &repository)?;

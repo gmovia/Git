@@ -1,6 +1,6 @@
 use std::{ path::Path, fs};
 
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::checkout::CheckoutOptions, files::current_repository::CurrentRepository}, constants::constants::ERR_INVALID_PARAMETERS};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::checkout::CheckoutOptions, files::current_repository::CurrentRepository}, constants::constant::ERR_INVALID_PARAMETERS};
 
 pub fn handler_checkout(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();
@@ -16,14 +16,12 @@ pub fn handler_checkout(input: String) -> String{
             }},
             3 => {if let Ok(entries) = fs::read_dir(branchs_dir_path) {
                 let mut _branch_matched = false;
-                for entry in entries {
-                    if let Ok(entry) = entry {
-                        if let Some(file_name) = entry.path().file_name() {
-                            if file_name.to_string_lossy().to_string() == args[2].to_string() {
-                                let _ = VersionControlSystem::checkout(CheckoutOptions::ChangeBranch(&args[2].to_string()));
-                                _branch_matched = true;
-                                break;
-                            }
+                for entry in entries.flatten() {
+                    if let Some(file_name) = entry.path().file_name() {
+                        if file_name.to_string_lossy() == args[2] {
+                            let _ = VersionControlSystem::checkout(CheckoutOptions::ChangeBranch(args[2]));
+                            _branch_matched = true;
+                            break;
                         }
                     }
                 }

@@ -1,7 +1,6 @@
-use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::{Path, PathBuf}};
+use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::Path, io::Write};
 
-
-use crate::{constants::constants::{HOST, PUERTO}, packfile::packfile::process_line, vcs::commands::push::Push, protocol::receive_pack::start_handler_receive};
+use crate::{constants::constant::{HOST, PUERTO}, packfiles::packfile::{process_line, to_pkt_line}};
 
 use super::upload_pack::start_handler_upload;
 
@@ -29,8 +28,9 @@ impl Server {
                         }
                     });
                 }
-                Err(e) => {
-                    eprintln!("Error: {}", e);
+                Err(_) => {
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
+                    //eprintln!("Error: {}", e);
                 }
             }
         }
@@ -38,7 +38,7 @@ impl Server {
     }
 
     /// Esta funcion se queda loopeando constantemente esperando por posibles mensajes que le lleguen desde el cliente.
-    fn handle_client( mut reader: TcpStream, mut _writer: TcpStream, path: &Path) -> Result<(),std::io::Error> {
+    fn handle_client(mut reader: TcpStream, mut writer: TcpStream, path: &Path) -> Result<(),std::io::Error> {
         loop {
             match process_line(&mut reader) {
                 Ok(message) => {
@@ -73,9 +73,8 @@ impl Server {
     }
 
     /// Esta funcion se encarga de responder al mensaje recibido por parte del cliente
-    fn parse_response(message: &String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {  
-        println!("MESSAGE qeue entra a parse_response {:?}", message);    
-        let response = match message.as_str() {
+    fn parse_response( message: &str, reader: &mut TcpStream, path: &Path) -> Result<String, std::io::Error> {       
+        let response = match message {
             s if s.contains("git-upload-pack") => start_handler_upload(reader, path)?,
             s if s.contains("git-receive-pack") => start_handler_receive(reader, path.to_path_buf())?,
             _ => "No entiendo tu mensaje".to_string(),

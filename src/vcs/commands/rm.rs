@@ -1,5 +1,5 @@
 use std::{path::Path, fs, collections::HashMap};
-use crate::{vcs::files::{vcs_file::VCSFile, repository::Repository, index::Index}, utils::files::files::read, constants::constants::{STATE_DELETED, NULL}};
+use crate::{vcs::files::{vcs_file::VCSFile, repository::Repository, index::Index}, utils::files::file::read, constants::constant::{STATE_DELETED, NULL}};
 pub struct Rm;
 
 #[derive(Debug,Clone)]
@@ -43,9 +43,12 @@ impl Rm{
         let mut staging_area = Index::read_index()?;
         
         if let Ok(files) = read(path){
+            if files.is_empty(){
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: pathspec '{:?}' did not match any files", path)));
+            }
             for key in files.keys(){
                 if Repository::read_repository()?.contains_key(key){
-                    Rm::remove_from_workspace(&key)?;
+                    Rm::remove_from_workspace(key)?;
                     let file = VCSFile::new(key.clone(), NULL.to_string(), STATE_DELETED.to_string());
                     staging_area.insert(key.to_owned(), file);
                     let _ = Index::write_index(&staging_area);
@@ -65,7 +68,10 @@ impl Rm{
     pub fn rm_r(dir_path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         let mut result = HashMap::new();
         if let Ok(files) = read(dir_path) {
-            for (key, _) in &files {
+            if files.is_empty() {
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("fatal: pathspec '{:?}' did not match any files", dir_path)));
+            }
+            for key in files.keys() {
                 let file_path = Path::new(key);
                 result = Rm::rm_(file_path)?;
             }
@@ -73,3 +79,7 @@ impl Rm{
         Ok(result)
     }
 }
+
+
+
+

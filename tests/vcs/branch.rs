@@ -13,7 +13,7 @@ mod tests {
 
         if let Ok(entries) = fs::read_dir(path) {
             for entry in entries {
-                if let Ok(_) = entry {
+                if entry.is_ok() {
                     file_count += 1;
                 }
             }

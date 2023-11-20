@@ -1,5 +1,5 @@
 pub mod constants{
-    pub mod constants;
+    pub mod constant;
 }
 
 pub mod handlers{
@@ -22,25 +22,25 @@ pub mod handlers{
     pub mod push;
 }
 
-pub mod proxy{
+pub mod proxies{
     pub mod proxy;
 }
 
-pub mod client{
+pub mod clients{
     pub mod client;
 }
 
-pub mod server{
+pub mod servers{
     pub mod server;
     pub mod upload_pack;
     pub mod encoder;
 }
 
-pub mod packfile{
+pub mod packfiles{
     pub mod packfile;
 }
 
-pub mod interface{
+pub mod interfaces{
     pub mod interface;
     pub mod draw;
     pub mod handler;
@@ -54,22 +54,22 @@ pub mod protocol{
 }
 
 pub mod types{
-    pub mod types;
+    pub mod set_type;
 }
 
 pub mod utils {
     pub mod files {
-        pub mod files;
+        pub mod file;
     }
 
     pub mod sets {
-        pub mod sets;
+        pub mod set;
     }
 
-    pub mod hasher{
+    pub mod hashers{
         pub mod hasher;
     }
-    pub mod random{
+    pub mod randoms{
         pub mod random;
     }
 
@@ -109,7 +109,7 @@ pub mod vcs{
     }
 
     pub mod sets{
-        pub mod sets;
+        pub mod set;
     }
 
     pub mod entities{

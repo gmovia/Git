@@ -1,22 +1,14 @@
-use std::path::PathBuf;
-
-use crate::{vcs::{files::{commits_table::CommitsTable, current_commit::CurrentCommit}, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}}, constants::constants::COMMIT_INIT_HASH};
-
-
+use std::path::Path;
+use crate::{vcs::{files::current_commit::CurrentCommit, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}}, constants::constant::COMMIT_INIT_HASH};
 
 
 pub struct LsTree;
 
-// pub enum LsTreeOptions {
-//     TreeBranch,
-//     TreeBranchDirectory,
-// }
-
 impl LsTree {
 
-    pub fn ls_tree(branch: &str, path: &PathBuf) -> Result<Vec<String>, std::io::Error>{
+    pub fn ls_tree(branch: &str, path: &Path) -> Result<Vec<String>, std::io::Error>{
         let mut information = Vec::new();
-        Ok(Self::get_information_branch(branch, path, &mut information)?)
+        Self::get_information_branch(branch, path, &mut information)
         // match option {
         //     LsTreeOptions::TreeBranch => {Ok(Self::get_information_branch(branch, path, &mut information)?)},
         //     LsTreeOptions::TreeBranchDirectory => todo!(),
@@ -24,7 +16,7 @@ impl LsTree {
     } 
 
     /// RECIBE UNA BRANCH Y DEVUELVE INFORMACION SOBRE SU ARBOL TREE
-    pub fn get_information_branch(branch: &str, path: &PathBuf, information: &mut Vec<String>) -> Result<Vec<String>, std::io::Error>{
+    pub fn get_information_branch(branch: &str, path: &Path, information: &mut Vec<String>) -> Result<Vec<String>, std::io::Error>{
         let commit_hash = CurrentCommit::read_for_branch(path, branch)?;
         if commit_hash != COMMIT_INIT_HASH{
             let commit = CommitEntity::read(path, &commit_hash)?;

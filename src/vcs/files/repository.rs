@@ -16,7 +16,7 @@ impl Repository{
         let current_branch = &Init::get_current_branch(&repo_path)?;
         
         let current_commit_hash = CurrentCommit::read()?;
-        
+
         let mut local_repository: HashMap<String, String>  = HashMap::new();
         local_repository.extend(Repository::read_repository_of_commit(repo_path.clone(), &current_branch, &current_commit_hash)?);
         Ok(local_repository)

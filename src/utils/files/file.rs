@@ -1,5 +1,5 @@
 use std::{collections::HashMap, fs, path::Path, io::Write};
-use crate::{vcs::commands::{hash_object::HashObject, check_ignore::CheckIgnore}, constants::constants::BLOB_CODE};
+use crate::{vcs::commands::{hash_object::HashObject, check_ignore::CheckIgnore}, constants::constant::BLOB_CODE};
 
 /// Recibe un string que representa una ruta.
 /// Devuelve los archivos y carpetas que esta contiene en formato HashMap. La clave representa la ruta al archivo y el valor su contenido.
@@ -28,14 +28,12 @@ fn read_files(path: &Path, files: &mut HashMap<String, String>) -> Result<(), st
 
     if path.is_dir() && !CheckIgnore::check_ignore(path)? {
         if let Ok(entries) = fs::read_dir(path) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    if !is_excluded_directory(&entry){
-                        let _ = read_files(&entry.path(), files);
-                    }
+            for entry in entries.flatten() {
+                if !is_excluded_directory(&entry){
+                    let _ = read_files(&entry.path(), files);
                 }
             }
-        }
+        }  
     }
     Ok(())
 }
@@ -53,16 +51,14 @@ pub fn create_file_and_their_folders(path: &Path, content: &str) -> Result<(), s
 
 pub fn delete_all_files_and_folders(path: &Path) -> Result<(), std::io::Error>{
     if let Ok(entries) = fs::read_dir(path){
-        for entry in entries{
-            if let Ok(entry) = entry{     
-                if !is_excluded_directory(&entry){
-                    let path = entry.path();
-                    if path.is_dir(){
-                        fs::remove_dir_all(path)?
-                    }
-                    else{
-                        fs::remove_file(path)?
-                    }
+        for entry in entries.flatten(){   
+            if !is_excluded_directory(&entry){
+                let path = entry.path();
+                if path.is_dir(){
+                    fs::remove_dir_all(path)?
+                }
+                else{
+                    fs::remove_file(path)?
                 }
             }
         }

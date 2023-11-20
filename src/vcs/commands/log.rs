@@ -26,7 +26,7 @@ impl Log {
                 let formatted_date = parsed_date_time.format("%a %b %d %T %Y");
 
                 log.push_str(&format!(" {} {} ","\n commit:",tree_hash));
-                log.push_str(&"\n Author: ldiazc <ldiazc@fi.uba.ar>");
+                log.push_str("\n Author: ldiazc <ldiazc@fi.uba.ar>");
                 log.push_str(&format!("\n {} {} ","Date:",formatted_date));
                 log.push_str(&format!("\n {} {} ","   message: ",message));
                 log.push_str("\n ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~");

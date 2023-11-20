@@ -60,6 +60,7 @@ pub const RESPONSE_NOK_GIT_IGNORE: &str = "The path is not ignored or is not lis
 pub const RESPONSE_OK_CLONE: &str = "Clone successfully";
 pub const RESPONSE_OK_PUSH: &str = "Push successfully";
 
+pub const RESPONSE_NOK_CLONE: &str = "The path is not correct";
 pub const RESPONSE_OK_FETCH: &str = "Fetched successfully";
 pub const RESPONSE_OK_PULL: &str = "Pull successfully";
 

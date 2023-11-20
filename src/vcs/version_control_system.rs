@@ -1,10 +1,8 @@
 use crate::{
     vcs::files::vcs_file::VCSFile,
-    utils::files::files::read,
-    types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-
-    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constants::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE}, client::client::Client,
-};
+    utils::files::file::read,
+    types::set_type::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
+    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constant::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE}, clients::client::Client,};
 
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
 use std::{collections::HashMap, path::Path};
@@ -17,7 +15,7 @@ impl VersionControlSystem {
 
     pub fn init(path: &Path, args: Vec<String>){
         let _ = Repositories::write(path);
-        let _ = Init::git_init(&path.to_path_buf(), args);
+        Init::git_init(path, args);
     }
     
     pub fn status() -> Result<(UntrackedFiles, ChangesNotStagedForCommit, ChangesToBeCommited), std::io::Error> {
@@ -25,6 +23,7 @@ impl VersionControlSystem {
         let files = read(&current)?;
         let staging_area = Index::read_index()?;
         let repository = Repository::read_repository()?;
+
         Ok(Status::status(&files, &staging_area, &repository))
     }
 
@@ -33,7 +32,7 @@ impl VersionControlSystem {
     }
 
     pub fn reset(path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error>{
-        Reset::reset(path.to_path_buf())
+        Reset::reset(path)
     }
 
     pub fn hash_object(path: &Path, option: WriteOption, _type: &str) -> Result<String, std::io::Error>{
@@ -78,10 +77,9 @@ impl VersionControlSystem {
         Merge::merge(branch, conflicts)
     }
 
-    pub fn git_clone(message: String)-> Result<(), std::io::Error>{
-        let current = CurrentRepository::read()?;
-        let _ = Client::client(message, &current);
-        Ok(())
+    pub fn git_clone(message: String, path_to_clone: &Path)-> Result<(), std::io::Error>{
+        Client::client(message, path_to_clone)
+        //Ok(())
     }
 
     pub fn fetch(message: String)-> Result<(), std::io::Error>{
@@ -108,13 +106,13 @@ impl VersionControlSystem {
 
 
     pub fn check_ignore(path: &Path) -> Result<String, std::io::Error> {
-        if CheckIgnore::check_ignore(&path)?{
+        if CheckIgnore::check_ignore(path)?{
             return Ok(RESPONSE_OK_IGNORE.to_string());
         }
-        return Ok(RESPONSE_NOK_GIT_IGNORE.to_string());
+        Ok(RESPONSE_NOK_GIT_IGNORE.to_string())
     }
     
-    pub fn git_pull(input: String) -> Result<(), std::io::Error> {
+    pub fn git_pull() -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
         Self::fetch("git fetch".to_string())?;
         Self::merge(&Init::get_current_branch(&current)?)?;

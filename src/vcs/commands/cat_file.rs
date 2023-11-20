@@ -12,7 +12,7 @@ impl CatFile{
         if !path.exists(){
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No such file or directory"));
         }
-        let data = fs::read(&path)?;
+        let data = fs::read(path)?;
         Ok(String::from_utf8_lossy(&data).to_string())
     }
 
@@ -23,7 +23,7 @@ impl CatFile{
         if !path.exists(){
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No such file or directory"));
         }
-        let data = fs::read(&path)?;
+        let data = fs::read(path)?;
         Ok(data)
     }
 
