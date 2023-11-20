@@ -2,7 +2,7 @@ use crate::{
     vcs::files::vcs_file::VCSFile,
     utils::files::files::read,
     types::types::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
-    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constants::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE},};
+    vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constants::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE}, client::client::Client,};
 
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
 use std::{collections::HashMap, path::Path};
