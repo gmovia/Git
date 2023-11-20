@@ -1,6 +1,6 @@
 
 use std::{net::TcpStream, path::{Path, PathBuf}, io::Write};
-use crate::{packfile::packfile::{process_line, to_pkt_line}, server::encoder::Encoder, vcs::{commands::{branch::Branch, init::Init}, files::current_commit::CurrentCommit}};
+use crate::{packfiles::packfile::{process_line, to_pkt_line}, servers::encoder::Encoder, vcs::{commands::{branch::Branch, init::Init}, files::current_commit::CurrentCommit}};
 
 pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_entries: &Vec<String>) -> Result<(), std::io::Error> {
     // aca leo lo que me responde el servidor 
@@ -87,7 +87,7 @@ fn init_packfile(last_commit_current: String, current_repo: &PathBuf, last_commi
         }
         let path = Path::new(&objects.0);
         
-        let compress_data = Encoder::compress_object((&path).to_path_buf(), objects.1)?;
+        let compress_data = Encoder::compress_object(path.clone(), objects.1)?;
         for byte in compress_data {
             packfile.push(byte);    
         }

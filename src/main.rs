@@ -2,7 +2,9 @@
 
 //use rust_git::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command};
 
-use rust_git::interfaces::interface::RustInterface;
+use std::path::Path;
+
+use rust_git::{interfaces::interface::RustInterface, vcs::version_control_system::VersionControlSystem};
 
 fn main() -> Result<(), std::io::Error>{
     let _ = VersionControlSystem::init(Path::new("test1"), Vec::new());

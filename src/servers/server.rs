@@ -1,6 +1,6 @@
-use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::Path, io::Write};
+use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::{Path, PathBuf}, io::Write};
 
-use crate::{constants::constant::{HOST, PUERTO}, packfiles::packfile::{process_line, to_pkt_line}};
+use crate::{constants::constant::{HOST, PUERTO}, packfiles::packfile::{process_line, to_pkt_line}, vcs::commands::push::Push, protocol::receive_pack::start_handler_receive};
 
 use super::upload_pack::start_handler_upload;
 
@@ -37,7 +37,6 @@ impl Server {
         Ok(())
     }
 
-    /// Esta funcion se queda loopeando constantemente esperando por posibles mensajes que le lleguen desde el cliente.
     fn handle_client(mut reader: TcpStream, mut writer: TcpStream, path: &Path) -> Result<(),std::io::Error> {
         loop {
             match process_line(&mut reader) {
@@ -45,6 +44,13 @@ impl Server {
                     println!("Received message from client: {}", &message);
 
                     let server_path = Self::extract_path(&message, path)?;
+                    if !server_path.exists(){
+                        let message_error = "fatal error: the path is not correct";
+                        let _ = writer.write(to_pkt_line(message_error).as_bytes());
+                        return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
+                    }
+
+
                     if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, &server_path) {
                         println!("Error parsing response: {}",e)
                     }

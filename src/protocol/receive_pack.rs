@@ -9,10 +9,10 @@ use std::{net::TcpStream, path::PathBuf};
 
 use chrono::{DateTime, Utc, NaiveDateTime};
 
-use crate::packfile::packfile::{process_line, to_pkt_line};
+use crate::packfiles::packfile::{process_line, to_pkt_line};
 
-use crate::utils::files::files::{delete_all_files_and_folders, create_file_and_their_folders};
-use crate::utils::random::random::Random;
+use crate::utils::files::file::{delete_all_files_and_folders, create_file_and_their_folders};
+use crate::utils::randoms::random::Random;
 use crate::vcs::commands::clone::Clone;
 use crate::vcs::commands::init::Init;
 use crate::vcs::entities::commit_entity::CommitEntity;

@@ -9,6 +9,7 @@ use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, Write};
 use crate::constants::constant::COMMIT_INIT_HASH;
+use crate::vcs::commands::branch::Branch;
 use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::entities::entity::Entity;
 use crate::vcs::entities::tree_entity::TreeEntity;
@@ -238,7 +239,7 @@ impl Encoder {
         Ok(objects)
     }
 
-    fn create_fetch_header(packfile: &mut Vec<u8>, objects: usize) -> Result<(),std::io::Error>{
+    pub fn create_size_header(packfile: &mut Vec<u8>, objects: usize) -> Result<(),std::io::Error>{
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
         }
@@ -306,7 +307,7 @@ impl Encoder {
     }
 
 
-    fn compress_object(archivo_entrada: &Path, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
+    pub fn compress_object(archivo_entrada: &Path, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
         let mut entrada = File::open(archivo_entrada)?;
         let temp_dir = TempDir::new("my_temp_dir")?;
 
@@ -333,7 +334,7 @@ impl Encoder {
 
 
 
-    pub fn get_object_for_commit(server_path: &Path, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+    pub fn get_object_for_commit(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str , last_commit_server: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
         let objects_path = server_path.join(".rust_git").join("objects");
         let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
 
@@ -359,7 +360,8 @@ impl Encoder {
         Ok(unique_objects_data)
     }
 
-    fn get_objects_tree(server_path: &Path, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity) -> Result<(), std::io::Error> {
+    
+    fn get_objects_tree(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity, last_commit_server: &str, want_path: &Path) -> Result<(), std::io::Error> {
         let tree_path = server_path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
         let tree_entity = TreeEntity::read(server_path, commit_entity.tree_hash)?;
         if let Ok(metadata) = fs::metadata(&tree_path) {
@@ -374,7 +376,7 @@ impl Encoder {
             Self::get_objects_blobs(server_path, objects_data, tree_entity)?;
             objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
 
-            Self::get_object_for_commit(server_path, objects_data, &commit_entity.parent_hash, last_commit_server)?;
+            Self::get_object_for_commit(server_path, objects_data, &commit_entity.parent_hash,last_commit_server)?;
         } else {
             std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
         }
