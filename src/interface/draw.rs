@@ -47,6 +47,8 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
         path_label.set_xalign(2.0); 
         path_label.set_yalign(0.5); 
 
+        path_label.style_context().add_class("custom-label-message");
+
         let state_label = gtk::Label::new(Some(state));
         state_label.set_visible(true);
         state_label.set_xalign(2.0); 
@@ -129,6 +131,8 @@ pub fn draw_staging_area(staging_area: &Vec<String>, grid: &gtk::Grid){
         label.set_visible(true);
         label.set_xalign(2.0);
         label.set_yalign(0.5);
+
+        label.style_context().add_class("custom-label-message");
 
         let reset_button = Button::builder()
         .margin_start(10)

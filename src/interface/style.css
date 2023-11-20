@@ -83,7 +83,7 @@ button:hover{
 }
 
 .custom-label-message {
-    padding-top: 20px;
+    padding-top: 3px;
     color: white;
-    font: bold 20px 'Poppins', sans-serif;
+    font: bold 15px 'Poppins', sans-serif;
 }

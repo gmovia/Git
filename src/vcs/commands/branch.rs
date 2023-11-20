@@ -53,6 +53,11 @@ impl Branch{
     /// si no estoy parada en esa rama, entonces lo elimino de los dos directorios
     pub fn delete_branch(path: &PathBuf, branch_name: &str) -> Result<Vec<String>,std::io::Error>{
         let p = Path::new(path);
+        if let Ok(branches) = Self::get_branches(&p.to_path_buf()) {
+            if !branches.contains(&branch_name.to_string()){
+                return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the branch"));
+            }
+        }
         let branch_path = p.join(".rust_git").join("refs").join("heads").join(branch_name);
         let logs_path = p.join(".rust_git").join("logs").join(branch_name);
         if logs_path == Init::get_current_log(path)?{

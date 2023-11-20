@@ -11,14 +11,29 @@ use gtk::prelude::*;
 pub fn handle_buttons_branch(interface: &RustInterface, button_branch: &gtk::Button) {
     let rc_branch = interface.select_branch.clone();
     let rc_entry = interface.dialog_entry.clone();
+    let rc_box = interface.branch_box.clone();
+
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+    let rc_tuple = errors_tuple.clone();
+
     button_branch.connect_clicked({
         let rc_branch = rc_branch.clone();
         let rc_entry = rc_entry.clone();
         move |button| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
             if let Some(label) = button.label() {
                 match label.as_str() {
-                    "Create" => {let _ = VersionControlSystem::branch(BranchOptions::NewBranch(&rc_entry.text()));},
-                    "Delete" => {let _ = VersionControlSystem::branch(BranchOptions::DeleteBranch(&rc_entry.text()));},
+                    "Create" => {let _ = VersionControlSystem::branch(BranchOptions::NewBranch(&rc_entry.text()));
+                                draw_message(&rc_box, &"     CREATED SUCCESSFULLY!    ".to_string(), 0.5);
+                    },
+                    "Delete" => {if let Ok(_) = VersionControlSystem::branch(BranchOptions::DeleteBranch(&rc_entry.text())){
+                                    draw_message(&rc_box, &"     DELETED SUCCESSFULLY!    ".to_string(), 0.5);
+                                }else{
+                                    draw_error(rc_tuple.clone(), &"     CANNOT FOUND THE BRANCH...    ".to_string(), &rc_entry);
+                                }
+                    },
                     _ => {},
                 }
             }

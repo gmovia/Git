@@ -62,6 +62,7 @@ pub fn handle_branch(interface: &RustInterface) {
 
     let rc_create = interface.create_branch.clone();
     let rc_delete = interface.delete_branch.clone();
+    let rc_box = interface.branch_box.clone();
 
     interface.create_branch.set_sensitive(false);
     interface.delete_branch.set_sensitive(false);
@@ -74,6 +75,9 @@ pub fn handle_branch(interface: &RustInterface) {
 
     interface.branch_button.connect_clicked(
         move |_| {
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
             dialog.run();
             dialog.hide();
         }
