@@ -9,8 +9,12 @@ edition = "2021"
 name = "main"
 path = "src/main.rs"
 
-[dependencies]
+[[bin]]
+name = "server"
+path = "src/main_server.rs"
 
+[dependencies]
+tempdir = "0.3.7"
 crypto = "0.5.1"
 rand = "0.8.5"
 sha1 = "0.10.6"

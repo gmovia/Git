@@ -6,7 +6,14 @@ pub const RUST_PATH: &str = ".rust_git";
 
 // CODES
 pub const TREE_CODE: &str = "tree";
+pub const TREE_CODE_NUMBER: u8 = 2;
+
+// BLOB
 pub const BLOB_CODE: &str = "blob";
+pub const BLOB_CODE_NUMBER: u8 = 3;
+
+//COMMIT
+pub const COMMIT_CODE_NUMBER: u8 = 1;
 pub const COMMIT_CODE: &str = "commit";
 
 pub const COMMIT_INIT_HASH: &str = "0000000000000000000000000000000000000000";
@@ -46,9 +53,11 @@ pub const RESPONSE_OK_CREATE_BRANCH: &str = "Created successfully.";
 pub const RESPONSE_OK_DELETED_BRANCH: &str = "Deleted successfully.";
 pub const RESPONSE_OK_COMMIT: &str = "Commit created succesfully.";
 pub const RESPONSE_OK_MERGE: &str = "Merged successfully";
+
 pub const RESPONSE_OK_IGNORE: &str = "The path is ignored as per the rules in the .gitignore file.";
 pub const RESPONSE_NOK_GIT_IGNORE: &str = "The path is not ignored or is not listed in the .gitignore file.";
 
+pub const RESPONSE_OK_CLONE: &str = "Clone successfully";
 
 // ERRORS
 pub const ERR_INVALID_PARAMETERS: &str = "Invalid parameters.";

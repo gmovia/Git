@@ -25,5 +25,6 @@ pub fn handler_status() -> String {
     } else {
         return ERR_STATUS.to_string();
     }
+    println!("{}", result);
     result
 }
