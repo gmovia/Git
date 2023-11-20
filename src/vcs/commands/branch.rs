@@ -25,7 +25,7 @@ impl Branch{
     }
 
     // Obtiene la rama actual
-    pub fn get_current_branch(path: &PathBuf) -> Result<String, std::io::Error> {
+    pub fn get_current_branch(path: &Path) -> Result<String, std::io::Error> {
         Init::get_current_branch(path)
     }
 

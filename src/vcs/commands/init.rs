@@ -156,7 +156,7 @@ impl Init {
         Ok(Path::new(&objects_path).to_path_buf())
     }
 
-    pub fn get_current_log(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
+    pub fn get_current_log(path: &Path) -> Result<PathBuf,std::io::Error>{
         let branch = Self::get_current_branch(path)?;
         let log_path = path.join(".rust_git").join("logs").join(branch);
         Ok(log_path)
@@ -176,7 +176,7 @@ impl Init {
         
         let mut content = String::new();
         head_file.read_to_string(&mut content)?;
-        if let Some(actual_branch) = content.clone().split("/").last(){
+        if let Some(actual_branch) = content.clone().split('/').last(){
             return Ok(actual_branch.to_string());
         }
         Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't find the branch"))

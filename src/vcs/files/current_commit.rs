@@ -10,7 +10,7 @@ impl CurrentCommit{
     pub fn read() -> Result<String, std::io::Error>{
         let current_repository = CurrentRepository::read()?;
         let head_path = Init::get_current_head(&current_repository)?;
-        let hash = fs::read_to_string(&head_path)?;
+        let hash = fs::read_to_string(head_path)?;
         Ok(hash)
     }
 

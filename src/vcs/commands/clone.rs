@@ -152,28 +152,26 @@ impl Clone{
     
     fn create_commit_folder(content: &str, repo: &Path) -> Result<(String, CommitEntity), std::io::Error>{
         let partes: Vec<&str> = content.split('\n').collect();
-        let commit_entity: CommitEntity;
         
-        if !content.contains("parent"){
-                println!("----> ENTRA No parent\n");
-                commit_entity = CommitEntity{
+        let commit_entity: CommitEntity = if !content.contains("parent"){
+                CommitEntity{
                 content_type: "commit".trim_end_matches('\n').to_string(),
                 tree_hash: partes[0].trim_end_matches('\n').trim_start_matches("tree ").to_string(),
                 message: partes[4..].join("\n").trim_start_matches('\n').trim_end_matches('\n').to_string(), 
                 author: partes[1].trim_end_matches('\n').trim_start_matches('\n').to_string(), 
                 committer: partes[2].trim_end_matches('\n').to_string(),
                 parent_hash: COMMIT_INIT_HASH.to_string(),
-            };
+            }
         }else{
-                commit_entity = CommitEntity{
+                CommitEntity{
                 content_type: "commit".to_string(),
                 tree_hash: partes[0].trim_end_matches('\n').trim_start_matches("tree ").to_string(),
                 message: partes[5..].join("\n").trim_start_matches('\n').trim_end_matches('\n').to_string(), 
                 author: partes[2].trim_end_matches('\n').trim_start_matches('\n').to_string(), 
                 committer: partes[3].trim_end_matches('\n').to_string(),
                 parent_hash: partes[1].trim_end_matches('\n').trim_start_matches('\n').trim_start_matches("parent ").to_string(),
-            };
-        }
+            }
+        };
         let hash_commit = Proxy::write_commit(repo.to_path_buf(), &commit_entity)?;
 
         Ok((hash_commit, commit_entity))
@@ -207,8 +205,7 @@ impl Clone{
                     let date = Self::get_date(&commit_entity.author);
                     let format_commit = format!("{}-{}-{}-{}-{}", random_number, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
                     println!("Format commit ------->{}  EN LA RAMA {} \n", format_commit, hash_commit_branch);
-                    let mut a: Vec<(String, String)> = Vec::new();
-                    a.push((branch_name.to_string(), hash_commit_branch.to_string()));
+                    let a: Vec<(String, String)> = vec![(branch_name.to_string(), hash_commit_branch.to_string())];
                     let _ = Self::complete_commit_table(repo, a, commits_created);
                 }
             }
