@@ -38,7 +38,7 @@ pub fn handle_repository(interface: &RustInterface) {
 pub fn handle_commit(interface: &RustInterface){
     let box_window = interface.grid_staging.clone();
     let dialog = interface.commit_dialog.clone();
-    
+    let rc_box = interface.commit_box.clone();
     let rc_ok = interface.message_ok.clone();
 
     interface.message_ok.set_sensitive(false);
@@ -50,6 +50,9 @@ pub fn handle_commit(interface: &RustInterface){
 
     interface.commit_button.connect_clicked({
         move |_| {        
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
             dialog.run();
             dialog.hide();
             box_window.foreach(|child| {

@@ -112,11 +112,13 @@ pub fn handle_button_select_repository(interface: &RustInterface) {
 
 pub fn handle_commit_button(interface: &RustInterface) {
     let rc_entry = interface.message.clone();
+    let rc_box = interface.commit_box.clone();
+
     interface.message_ok.connect_clicked({
         let rc_entry = rc_entry.clone();
         move |button| {
             let _ = VersionControlSystem::commit(rc_entry.text().to_string());
-
+            draw_message(&rc_box, &"     COMMITED SUCCESSFULLY!    ".to_string(), 0.5);  
             rc_entry.set_text("");
             button.set_sensitive(false);
         }
