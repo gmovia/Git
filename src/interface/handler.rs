@@ -231,7 +231,7 @@ pub fn handle_merge(interface: &RustInterface) {
             });
             if let Ok(conflicts) = VersionControlSystem::merge(&m_entry.text()){
                 if conflicts.len() == 0 {
-                    draw_message(&m_changes, &"Merged successfully".to_string(), 0.5);
+                    draw_message(&m_changes, &"MERGE SUCCESSFULLY!".to_string(), 0.5);
                     button_resolve.set_sensitive(false);
                 }
                 else{
@@ -280,9 +280,10 @@ pub fn handle_merge(interface: &RustInterface) {
                                     m_grid.attach(&current, 2, index as i32, 1, 1);
                                     m_grid.attach(&incoming, 3, index as i32, 1, 1);
                                     index += 1;
-                                    add_current(&current, &value);
-                                    add_incoming(&incoming, &value);
-                                    add_both(&both, &value,&b_dialog,&b_box,&b_text,&ok);
+                                    let buttons = (both.clone(),current.clone(),incoming.clone());
+                                    add_current( &value, buttons.clone());
+                                    add_incoming( &value, buttons.clone());
+                                    add_both( &value,&b_dialog,&b_box,&b_text,&ok,buttons.clone());
                                 } 
                                 m_box.add(&m_grid);
                             }
@@ -297,13 +298,13 @@ pub fn handle_merge(interface: &RustInterface) {
                         let m_entry1 = m_entry.clone();
                         let m_box = m_changes.clone();
                         move |button|{
-                            if let Ok(list_conflicts) = read_changes(){
-                                let _ = VersionControlSystem::resolve_conflicts(&m_entry1.text(), list_conflicts);
-                            }
                             m_box.foreach(|child| {
                                 m_box.remove(child);
                             });
-                            draw_message(&m_box, &"Merged successfully".to_string(), 0.5);
+                            if let Ok(list_conflicts) = read_changes(){
+                                let _ = VersionControlSystem::resolve_conflicts(&m_entry1.text(), list_conflicts);
+                            }
+                            draw_message(&m_box, &"MERGE SUCCESSFULLY!".to_string(), 0.5);
                             button.set_sensitive(false);
                         }
                     });   
@@ -316,6 +317,8 @@ pub fn handle_merge(interface: &RustInterface) {
             }else {
                 draw_error(rc_tuple.clone(), &"    ERROR! BRANCH NOT FOUND...  ".to_string(), &m_entry);
             }
+            m_entry.set_text("");
+            button.set_sensitive(false);
         }
     });
 
@@ -330,37 +333,35 @@ pub fn handle_merge(interface: &RustInterface) {
 
 
 
-pub fn add_current(button: &gtk::Button, conflict: &Conflict) {
+pub fn add_current(conflict: &Conflict, buttons: (gtk::Button, gtk::Button, gtk::Button)) {
     let conflict_c = conflict.clone();
-    button.connect_clicked({
+    buttons.1.connect_clicked({
         let conflict = conflict_c.clone();
         move |_| {
             let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: CURRENT.to_string() };
             let _ = write_changes( &conflict);
-
     }});
     
 }
 
-pub fn add_incoming( button: &gtk::Button, conflict: &Conflict) {
+pub fn add_incoming(conflict: &Conflict, buttons: (gtk::Button, gtk::Button, gtk::Button)) {
     let conflict_c = conflict.clone();
-    button.connect_clicked({
+    buttons.2.connect_clicked({
         let conflict = conflict_c.clone();
         move |_| {
             let conflict = Conflict { file: conflict.file.clone(), change_current: conflict.change_current.clone(), change_branch: conflict.change_branch.clone(), resolved: INCOMING.to_string() };
             let _ = write_changes(&conflict);
-
     }});
     
 }
 
-pub fn add_both(button: &gtk::Button, conflict: &Conflict, dialog: &gtk::Dialog, both_box: &gtk::Box, both_text: &gtk::TextView, both_ok: &gtk::Button) {
+pub fn add_both(conflict: &Conflict, dialog: &gtk::Dialog, both_box: &gtk::Box, both_text: &gtk::TextView, both_ok: &gtk::Button,buttons: (gtk::Button, gtk::Button, gtk::Button)) {
     let conflict_c = conflict.clone();
     let dialog = dialog.clone();
     let both_box = both_box.clone();
     let both_text = both_text.clone();
     let both_ok = both_ok.clone();
-    button.connect_clicked({
+    buttons.0.connect_clicked({
         let conflict_c = conflict_c.clone();
         let dialog = dialog.clone();
         let both_box = both_box.clone();
@@ -388,9 +389,8 @@ pub fn add_both(button: &gtk::Button, conflict: &Conflict, dialog: &gtk::Dialog,
                             }
                         }
                     }
-                }
+                } 
             });
-            
             dialog.run();
             dialog.hide();
     }});
