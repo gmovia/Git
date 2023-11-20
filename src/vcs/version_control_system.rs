@@ -5,7 +5,7 @@ use crate::{
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constant::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE}, clients::client::Client,};
 
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
 #[derive(Debug, Clone)]
@@ -32,7 +32,7 @@ impl VersionControlSystem {
     }
 
     pub fn reset(path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error>{
-        Reset::reset(path.to_path_buf())
+        Reset::reset(path)
     }
 
     pub fn hash_object(path: &Path, option: WriteOption, _type: &str) -> Result<String, std::io::Error>{
@@ -77,8 +77,8 @@ impl VersionControlSystem {
         Merge::merge(branch, conflicts)
     }
 
-    pub fn git_clone(message: String, path_to_clone: &PathBuf)-> Result<(), std::io::Error>{
-        Client::client(message, &path_to_clone)
+    pub fn git_clone(message: String, path_to_clone: &Path)-> Result<(), std::io::Error>{
+        Client::client(message, path_to_clone)
         //Ok(())
     }
 

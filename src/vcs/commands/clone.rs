@@ -1,17 +1,16 @@
-use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap};
+use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
 use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::commit_entity::CommitEntity}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH}, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
 
 impl Clone{
-    pub fn git_clone(stream: &mut TcpStream, repo: PathBuf) -> Result<(),std::io::Error> {
+    pub fn git_clone(stream: &mut TcpStream, repo: &Path) -> Result<(),std::io::Error> {
         Self::receive_pack(stream, repo)?;
         Ok(())
     }
     
-    pub fn receive_pack(socket: &mut TcpStream, repo: PathBuf) -> Result<(), std::io::Error> {
+    pub fn receive_pack(socket: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
-        print!("Entro a receive packs ---------------\n");
         
         loop {
             let mut len_buf = [0; 4]; 
@@ -35,7 +34,7 @@ impl Clone{
             println!("Paquete: {:?}", packet);
         }
         for want in Self::get_want_msgs(&packets) {
-            socket.write_all(want.as_bytes())?;
+            let _ = socket.write_all(want.as_bytes());
         }
         send_done_msg(socket)?;
         let objects = Self::get_socket_response(socket)?;
@@ -43,14 +42,14 @@ impl Clone{
         Ok(()) 
     }
 
-    fn init_commits(list_refs: &Vec<String>, objects: &[(u8,Vec<u8>)], repo: PathBuf) -> Result<(), std::io::Error>  {
+    fn init_commits(list_refs: &Vec<String>, objects: &[(u8,Vec<u8>)], repo: &Path) -> Result<(), std::io::Error>  {
         let mut branchs: HashMap<String, String> = HashMap::new();
 
         let objects_processed = Self::process_folder(objects.to_vec());
         for obj in &objects_processed{
             println!("-->{:?}", obj);
         }
-        let commits_created = Self::create_folders(objects_processed.clone(), &repo);
+        let commits_created = Self::create_folders(objects_processed.clone(), repo);
 
         for item in list_refs {
             if item.contains("HEAD") {
@@ -63,14 +62,14 @@ impl Clone{
                     if ref_part.starts_with("refs/") {
                         let branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
                         //let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.clone().trim_end_matches('\n')));
-                        let _ = Branch::create_new_branch_with_hash(&repo, &branch_name.trim_end_matches('\n'), commit);
+                        let _ = Branch::create_new_branch_with_hash(repo, branch_name.trim_end_matches('\n'), commit);
                         println!("Commit: {}, Branch: {}", commit, branch_name);
                         branchs.insert(branch_name, commit.to_owned());
                 }
             }
         }
-        let _ = Self::write_commit_log(&repo, branchs.clone(), &commits_created, objects_processed.clone());
-        Checkout::update_cd(&repo)?; //Esto recien me crea los files.txt en working directory si tiene en la tabla de commits lleno
+        let _ = Self::write_commit_log(repo, branchs.clone(), &commits_created, objects_processed.clone());
+        Checkout::update_cd(repo)?; //Esto recien me crea los files.txt en working directory si tiene en la tabla de commits lleno
         Ok(())
     }
 
@@ -175,22 +174,22 @@ impl Clone{
                 parent_hash: partes[1].trim_end_matches('\n').trim_start_matches('\n').trim_start_matches("parent ").to_string(),
             }
         };
-        let hash_commit = Proxy::write_commit(repo.to_path_buf(), &commit_entity)?;
+        let hash_commit = Proxy::write_commit(repo, &commit_entity)?;
 
         Ok((hash_commit, commit_entity))
     }
     
 
     fn create_blob_folder(content: &String, repo: &Path){
-        let _ = Proxy::write_blob(repo.to_path_buf(),content);
+        let _ = Proxy::write_blob(repo,content);
     }
 
     fn create_tree_folder(content: &str, repo: &Path) -> Result<String, std::io::Error> {
-        Proxy::write_tree(repo.to_path_buf(), content)
+        Proxy::write_tree(repo, content)
     }
     
 
-    fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
+    fn write_commit_log( repo: &Path, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
             if commits_created.contains_key(hash_commit_branch) {
                 let _ = Self::complete_commit_table(repo, &branch_name.to_string(), &hash_commit_branch.to_string(), commits_created);
@@ -199,16 +198,16 @@ impl Clone{
         Ok(())
     }
 
-    fn complete_commit_table(repo: &PathBuf, branch_name: &String, hash_commit_branch: &String, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
+    fn complete_commit_table(repo: &Path, branch_name: &String, hash_commit_branch: &String, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
         //branch_name, hash
-        let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches("\n"));
-        let mut file = OpenOptions::new().create(true).write(true).append(true).open(&logs_path)?;
+        let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches('\n'));
+        let mut file = OpenOptions::new().create(true).write(true).append(true).open(logs_path)?;
         
-        let content = CatFile::cat_file(&hash_commit_branch, Init::get_object_path(&repo)?)?;
+        let content = CatFile::cat_file(hash_commit_branch, Init::get_object_path(repo)?)?;
         let id = Random::random();
 
         if content.contains("parent"){
-            let part:Vec<&str> = content.split("\n").collect();
+            let part:Vec<&str> = content.split('\n').collect();
             let hash_parent = part[1].trim_start_matches("parent ");
             if let Some(commit_entity) = commits_created.get(hash_commit_branch){
                 let date = Self::get_date(&commit_entity.author);
@@ -216,12 +215,11 @@ impl Clone{
                 let _ = Self::complete_commit_table(repo, branch_name, &hash_parent.to_string(), commits_created);
                 file.write_all(format_commit.as_bytes())?;
             }
-        }else{
-            if let Some(commit_entity) = commits_created.get(hash_commit_branch){
+        }else if let Some(commit_entity) = commits_created.get(hash_commit_branch){
                 let date = Self::get_date(&commit_entity.author);
                 let format_commit = format!("{}-{}-{}-{}-{}\n", id, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
                 file.write_all(format_commit.as_bytes())?;
-            }
+            
         }
         Ok(())
     }

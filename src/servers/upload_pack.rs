@@ -14,7 +14,7 @@ pub fn start_handler_upload(stream: &mut TcpStream, path: &Path) -> Result<Strin
     send_response(first_response, stream)?;
     
     let query = receive_wants_and_have_message(stream)?;
-    let packfile_result = Encoder::init_encoder(path.to_path_buf(), query);
+    let packfile_result = Encoder::init_encoder(path, query);
 
     match packfile_result {
         Ok( packfile) => {
@@ -61,7 +61,7 @@ pub fn process_messages(messages: Vec<String>) -> Result<(Vec<String>,Vec<String
 
 
 pub fn handler_upload_pack(path: &Path) -> Result<Vec<String>, std::io::Error> {
-    let log_entries = get_log_entries(&path)?;
+    let log_entries = get_log_entries(path)?;
     Ok(log_entries)
 }
 
@@ -77,7 +77,7 @@ fn get_log_entries(path: &Path) -> Result<Vec<String>, std::io::Error>{
         
         if let Some(branch_name) = log_file.path().file_name() {
             let current_hash  = CurrentCommit::read_for_branch(path, &branch_name.to_string_lossy())?;
-            let format = format!("{} refs/heads/{}", current_hash, branch_name.to_string_lossy().to_string());
+            let format = format!("{} refs/heads/{}", current_hash, branch_name.to_string_lossy());
             log_entries.push(format);
 
         }

@@ -27,7 +27,7 @@ pub fn create_dir(temp_dir: &TempDir, dirname: &str) -> PathBuf {
     dir_path
 }
 
-pub fn status_contains(result: HashMap<String, String>, status: &str, file: &PathBuf) -> bool {
+pub fn status_contains(result: HashMap<String, String>, status: &str, file: &Path) -> bool {
     if let Some(value) = result.get(&file.display().to_string()) {
         return value.as_str() == status;
     }

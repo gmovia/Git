@@ -1,4 +1,4 @@
-use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::{Path, PathBuf}, io::Write};
+use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::Path, io::Write};
 
 use crate::{constants::constant::{HOST, PUERTO}, packfiles::packfile::{process_line, to_pkt_line}};
 
@@ -49,12 +49,12 @@ impl Server {
 
                     if !server_path.exists(){
                         let message_error = "fatal error: the path is not correct";
-                        let _ = writer.write(to_pkt_line(&message_error).as_bytes());
+                        let _ = writer.write(to_pkt_line(message_error).as_bytes());
                         return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
                     }
 
 
-                    if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, &server_path.to_path_buf()) {
+                    if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, server_path) {
                         println!("Error parsing response: {}",e)
                     }
                     Server::shutdown_server(&reader)?;

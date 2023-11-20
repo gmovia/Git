@@ -1,19 +1,19 @@
-use std::{path::{PathBuf, Path}, fs::{OpenOptions, self}, io::Write};
+use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::randoms::random::Random, constants::constant::TREE_CODE};
 
 pub struct Proxy;
 
 impl Proxy{
 
-    pub fn write_commit(repo_path: PathBuf, commit: &CommitEntity) -> Result<String, std::io::Error>{
-        CommitEntity::write(&repo_path, commit)
+    pub fn write_commit(repo_path: &Path, commit: &CommitEntity) -> Result<String, std::io::Error>{
+        CommitEntity::write(repo_path, commit)
     }
 
-    pub fn read_commit(repo_path: PathBuf, commit_hash: String) -> Result<CommitEntity, std::io::Error>{
-        CommitEntity::read(&repo_path, &commit_hash)
+    pub fn read_commit(repo_path: &Path, commit_hash: String) -> Result<CommitEntity, std::io::Error>{
+        CommitEntity::read(repo_path, &commit_hash)
     }
 
-    pub fn write_tree(repo_path: PathBuf, content: &str) -> Result<String, std::io::Error>{
+    pub fn write_tree(repo_path: &Path, content: &str) -> Result<String, std::io::Error>{
 
         let entity_strings: Vec<&str> = content.split('\n')
         .filter(|&s| !s.is_empty())
@@ -33,21 +33,21 @@ impl Proxy{
             }
         }
 
-        let hash_tree = HashObject::hash_object(&tree_path, Init::get_object_path(&repo_path)?, WriteOption::Write, TREE_CODE)?;
+        let hash_tree = HashObject::hash_object(&tree_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?;
         let _ = fs::remove_file(tree_path);
 
         Ok(hash_tree)
     } 
 
-    pub fn read_tree(repo_path: PathBuf, tree_hash: String) -> Result<Vec<Entity>, std::io::Error>{
-        TreeEntity::read(&repo_path, tree_hash)
+    pub fn read_tree(repo_path: &Path, tree_hash: String) -> Result<Vec<Entity>, std::io::Error>{
+        TreeEntity::read(repo_path, tree_hash)
     } 
     
-    pub fn write_blob(repo_path: PathBuf, content: &String) -> Result<String, std::io::Error>{
+    pub fn write_blob(repo_path: &Path, content: &String) -> Result<String, std::io::Error>{
         BlobEntity::write(repo_path, content)
     }
 
-    pub fn read_blob(repo_path: PathBuf, blob_hash: String) -> Result<String, std::io::Error>{
+    pub fn read_blob(repo_path: &Path, blob_hash: String) -> Result<String, std::io::Error>{
         BlobEntity::read(repo_path, blob_hash)
     } 
 }
