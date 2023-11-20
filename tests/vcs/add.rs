@@ -51,6 +51,7 @@ mod tests {
         let _ = file.write_all(b"hola");
 
         let staging_area = VersionControlSystem::add(&path)?;
+
         assert_eq!(equals(staging_area.clone(), &path, "MODIFIED"),true);
         Ok(())
     }

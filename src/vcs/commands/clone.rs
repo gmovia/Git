@@ -24,10 +24,8 @@ impl Clone{
                 if len == 0 {
                     break;
                 }
-                println!("LEN del packet ---> {:?} \n", len);
 
                 let packet = read_packet(socket, len);
-                println!("ACA PACKETTT ---> {:?} \n", packet);
                 packets.push(packet);
             }
         }
@@ -45,7 +43,6 @@ impl Clone{
 
     fn init_commits(list_refs: &Vec<String>, objects: &[(u8,Vec<u8>)], repo: PathBuf) -> Result<(), std::io::Error>  {
         let mut branchs: HashMap<String, String> = HashMap::new();
-        println!("--------------------LIST REFERENCESSSS ---> {:?}\n", list_refs);
 
         let objects_processed = Self::process_folder(objects.to_vec());
         for obj in &objects_processed{
@@ -75,7 +72,6 @@ impl Clone{
     }
 
     fn process_non_tree_object(number: u8, inner_vec: &[u8]) -> (u8, String) {
-        println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
         (number, String::from_utf8_lossy(inner_vec).to_string())
     }
 
@@ -194,8 +190,6 @@ impl Clone{
     
 
     fn write_commit_log( repo: &PathBuf, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
-        println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
-        println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
         for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
 
             if commits_created.contains_key(hash_commit_branch) {
@@ -299,12 +293,7 @@ impl Clone{
     }
 
     fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
-        let signature_pack_msg = &pack[0..4];
-        println!("SIGNATURE: {:?} - {:?}\n", signature_pack_msg, String::from_utf8_lossy(signature_pack_msg));
-        let version = &pack[4..8];
-        println!("VERSION: {:?} - {:?}\n", version, Self::parse_number(version)?);
         let object_number = Self::parse_number(&pack[8..12])?;
-        println!("CANTIDAD DE OBJETOS: {}\n", object_number);
         
         let mut position: usize = 12;
         let mut objects = Vec::new();

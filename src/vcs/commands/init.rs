@@ -137,7 +137,7 @@ impl Init {
             println!("warning: re-init: ignored --initial-branch={}", branch_name);
         } else {
             let mut file = File::create(head_path)?;
-            file.write_all(format!("refs/heads/{:?}", branch_name).as_bytes())?;
+            file.write_all(format!("refs/heads/{}", branch_name).as_bytes())?;
         }            
         Ok(())
     }
@@ -162,13 +162,13 @@ impl Init {
         Ok(log_path)
     }
 
-    pub fn get_current_head(path: &PathBuf) -> Result<PathBuf,std::io::Error>{
+    pub fn get_current_head(path: &Path) -> Result<PathBuf,std::io::Error>{
         let branch = Self::get_current_branch(path)?;
         let head_path = path.join(".rust_git").join("refs").join("heads").join(branch);
         Ok(head_path)
     }
 
-    pub fn get_current_branch(path: &PathBuf) -> Result<String, std::io::Error>{
+    pub fn get_current_branch(path: &Path) -> Result<String, std::io::Error>{
         let p = Path::new(path);
 
         let head_path = p.join(".rust_git").join("HEAD");
@@ -176,7 +176,7 @@ impl Init {
         
         let mut content = String::new();
         head_file.read_to_string(&mut content)?;
-        if let Some(actual_branch) = content.clone().split('/').last(){
+        if let Some(actual_branch) = content.clone().split("/").last(){
             return Ok(actual_branch.to_string());
         }
         Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't find the branch"))

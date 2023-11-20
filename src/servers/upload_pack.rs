@@ -13,7 +13,6 @@ pub fn start_handler_upload(stream: &mut TcpStream, path: &Path) -> Result<Strin
     send_response(first_response, stream)?;
     
     let query = receive_wants_and_have_message(stream)?;
-    println!("QUERYSSS: {:?}", query);
     let packfile_result = Encoder::init_encoder(path.to_path_buf(), query);
 
     match packfile_result {
@@ -34,7 +33,6 @@ pub fn receive_wants_and_have_message(reader: &mut TcpStream) -> Result<(Vec<Str
     let mut query = vec![];
     loop {
         let msg_received = process_line(reader)?;
-        println!("Mensaje recibido ------> {:?}", msg_received);
         if msg_received == "done\n" {
             break;
         }

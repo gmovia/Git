@@ -23,6 +23,7 @@ impl VersionControlSystem {
         let files = read(&current)?;
         let staging_area = Index::read_index()?;
         let repository = Repository::read_repository()?;
+
         Ok(Status::status(&files, &staging_area, &repository))
     }
 

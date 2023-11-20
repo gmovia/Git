@@ -52,8 +52,6 @@ impl Encoder {
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-        println!("PROCESSS DIRECTORY MANDA {:?}\n", objects_data.len());
-        println!("OBJECTS DATA: {:?}\n", objects_data);
 
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;

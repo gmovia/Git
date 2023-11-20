@@ -79,7 +79,7 @@ impl Branch{
                     branches.push(file_name.to_string_lossy().to_string());
                 }
 
-            }
+                }
         }
         Ok(branches)
     }        
