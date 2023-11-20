@@ -1,4 +1,5 @@
 use crate::vcs::commands::cat_file::CatFile;
+use crate::vcs::commands::checkout::Checkout;
 use std::collections::HashMap;
 use std::fs::{OpenOptions, self};
 use std::io::{Write, self};
@@ -28,11 +29,11 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
     let (branch_name, last_commit_client )= extract_branch_name(old_new_hash_commit.to_string())?;
     
     println!("Received from packet: ---> {:?}", old_new_hash_commit); //lo recibe porque lo manda el cliente, pero daemon no hace nada con eso
-    //ni crea la rama si no la tiene, pero eso si lo tenems que hacer almenos 
+    //ni crea la rama si no la tiene, pero eso si lo tenems que hacer almenos
 
+    send_repo_last_commit_for_branch(writer, &server_client_path)?;
     select_update(writer, server_client_path.clone())?;
     
-    CurrentCommit::write_for_branch(&server_client_path, &branch_name, last_commit_client)?;
     writer.shutdown(Shutdown::Both)?;
     Ok("Respuesta desde start_handler_receive".to_string())
 }
@@ -40,7 +41,7 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
 fn extract_branch_name(old_new_hash_commit: String) ->  Result<(String, String), std::io::Error> {
     let parts: Vec<&str> = old_new_hash_commit.split_whitespace().collect();
     let last_commit_client = parts[1];
-    let branch_name = parts[2].trim_start_matches("refs/heads/");
+    let branch_name = parts[2].trim_start_matches("refs/heads/").trim_end_matches("\n");
     Ok((branch_name.to_owned(), last_commit_client.to_string()))
 }
 
@@ -88,8 +89,6 @@ fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: 
 }
 
 fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<(), std::io::Error>{
-
-    send_repo_last_commit_for_branch(writer, &server_client_path)?;
     //
     let mut refs = Vec::new();
     let mut receive_refs = Vec::new(); // Cambiado a Vec<String>
@@ -118,10 +117,22 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
 
     println!("Mi lista de refs que recibo es :  --->{:?}\n" , receive_refs);    
 
+    change_current_branch(receive_refs,&server_client_path)?;
+
     // aca espero la PACKDATA
     let objects = Clone::get_socket_response(writer)?;
     updating_repo( objects, &server_client_path, "asd".to_string())?;
     writer.flush()?;
+    Ok(())
+}
+
+fn change_current_branch(receive_refs:Vec<String>, server_client_path: &PathBuf) -> Result<(), std::io::Error> {
+    let (branch_name, last_commit_client ) = extract_branch_name(receive_refs[0].to_string())?;
+    let current_branch = Init::get_current_branch(server_client_path)?;
+    if current_branch != branch_name {
+        Checkout::change_branch(server_client_path, branch_name.as_str())?;
+    }
+    CurrentCommit::write_for_branch(&server_client_path, &branch_name, last_commit_client)?;
     Ok(())
 }
 
