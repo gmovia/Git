@@ -11,11 +11,11 @@ impl Repository{
      pub fn read_repository() -> Result<HashMap<String,String>,std::io::Error>{
         let current_path = CurrentRepository::read()?;
         let current_branch = &Init::get_current_branch(&current_path)?;
-        
+
         let current_commit_hash = CurrentCommit::read()?;
-        
+
         let mut local_repository: HashMap<String, String>  = HashMap::new();
-        local_repository.extend(Repository::read_repository_of_commit(current_path.clone(), &current_branch, &current_commit_hash)?);
+        local_repository.extend(Repository::read_repository_of_commit(current_path.clone(), current_branch, &current_commit_hash)?);
         Ok(local_repository)
     }
 

@@ -1,4 +1,4 @@
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::rm::RemoveOption, files::current_repository::CurrentRepository}, constants::constants::{RESPONSE_OK_RM, ERR_NO_SUCH_OR_DIRECTORY}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::rm::RemoveOption, files::current_repository::CurrentRepository}, constants::constant::{RESPONSE_OK_RM, ERR_NO_SUCH_OR_DIRECTORY}};
 
 pub fn handler_rm(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();
@@ -7,8 +7,7 @@ pub fn handler_rm(input: String) -> String{
     if args.iter().any(|arg| arg.contains("-r")) {
         option = RemoveOption::Directory;
         if let Ok(current) = CurrentRepository::read() {
-            if let Ok(_) = VersionControlSystem::rm(&current.join(args[3]), option.clone()){
-                println!("ENTRE PRIMER IF");
+            if VersionControlSystem::rm(&current.join(args[3]), option.clone()).is_ok(){
                 return RESPONSE_OK_RM.to_string();
             }else{
                 return ERR_NO_SUCH_OR_DIRECTORY.to_string();
@@ -16,8 +15,7 @@ pub fn handler_rm(input: String) -> String{
         }
     }
     if let Ok(current) = CurrentRepository::read() {
-        if let Ok(_) = VersionControlSystem::rm(&current.join(args[2]), option){
-            println!("ENTRE SEGUNDO IF");
+        if VersionControlSystem::rm(&current.join(args[2]), option).is_ok(){
             return RESPONSE_OK_RM.to_string();
         }else{
             return ERR_NO_SUCH_OR_DIRECTORY.to_string();

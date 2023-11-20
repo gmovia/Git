@@ -1,5 +1,5 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::{Write, self, BufRead}};
-use crate::constants::constants::{BDD_PATH, CURRENT_REPOSITORY_PATH};
+use crate::constants::constant::{BDD_PATH, CURRENT_REPOSITORY_PATH};
 
 pub struct Repositories;
 
@@ -23,9 +23,9 @@ impl Repositories{
     pub fn read() -> Result<Vec<String>, std::io::Error>{
         let mut repositories = Vec::new();
         let bdd_path = Path::new(BDD_PATH);
-        let repo_file = OpenOptions::new().read(true).open(&bdd_path)?;
+        let repo_file = OpenOptions::new().read(true).open(bdd_path)?;
         let reader = io::BufReader::new(repo_file);
-        for line in reader.lines().filter_map(Result::ok) {
+        for line in reader.lines().map_while(Result::ok) {
             repositories.push(line);
         }
         Ok(repositories)
@@ -36,7 +36,7 @@ impl Repositories{
         if !repositories.contains(&path.display().to_string()) {
             return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the repository"));
         }
-        let _ = fs::remove_dir_all(&path);
+        let _ = fs::remove_dir_all(path);
         
         if let Some(index) = repositories.iter().position(|item| item == &path.display().to_string()) {
             repositories.remove(index);

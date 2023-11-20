@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::{vcs::{files::current_commit::CurrentCommit, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}}, constants::constants::COMMIT_INIT_HASH};
+use crate::{vcs::{files::current_commit::CurrentCommit, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}}, constants::constant::COMMIT_INIT_HASH};
 
 
 
@@ -16,7 +16,7 @@ impl LsTree {
 
     pub fn ls_tree(branch: &str, path: &PathBuf) -> Result<Vec<String>, std::io::Error>{
         let mut information = Vec::new();
-        Ok(Self::get_information_branch(branch, path, &mut information)?)
+        Self::get_information_branch(branch, path, &mut information)
         // match option {
         //     LsTreeOptions::TreeBranch => {Ok(Self::get_information_branch(branch, path, &mut information)?)},
         //     LsTreeOptions::TreeBranchDirectory => todo!(),

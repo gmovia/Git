@@ -1,6 +1,6 @@
-use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::{Path, PathBuf}};
+use std::{net::{TcpListener, TcpStream, Shutdown}, thread, path::Path};
 
-use crate::{constants::constants::{HOST, PUERTO}, packfile::packfile::process_line};
+use crate::{constants::constant::{HOST, PUERTO}, packfiles::packfile::process_line};
 
 use super::upload_pack::start_handler_upload;
 
@@ -43,9 +43,9 @@ impl Server {
                 Ok(message) => {
                     println!("Received message from client: {}", &message);
                     let client_path = message.trim_start_matches("git-upload-pack ");
-                    let aux = format!("{}/{}",path.display().to_string(), client_path);
+                    let aux = format!("{}/{}",path.display(), client_path);
                     let server_path = Path::new(&aux);
-                    if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, &server_path.to_path_buf()) {
+                    if let Err(e) = Server::parse_response(&message.to_string(), &mut reader, server_path) {
                         println!("Error parsing response: {}",e)
                     }
                     Server::shutdown_server(&reader)?;
@@ -61,8 +61,8 @@ impl Server {
     }
 
     /// Esta funcion se encarga de responder al mensaje recibido por parte del cliente
-    fn parse_response( message: &String, reader: &mut TcpStream, path: &PathBuf) -> Result<String, std::io::Error> {       
-        let response = match message.as_str() {
+    fn parse_response( message: &str, reader: &mut TcpStream, path: &Path) -> Result<String, std::io::Error> {       
+        let response = match message {
             s if s.contains("git-upload-pack") => start_handler_upload(reader, path)?,
             _ => "No entiendo tu mensaje".to_string(),
         };

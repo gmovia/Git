@@ -1,5 +1,5 @@
 
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions}, constants::constants::{RESPONSE_OK_DELETED_BRANCH, ERR_INVALID_PARAMETERS, RESPONSE_OK_CREATE_BRANCH, ERR_GET_BRANCHES}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions}, constants::constant::{RESPONSE_OK_DELETED_BRANCH, ERR_INVALID_PARAMETERS, RESPONSE_OK_CREATE_BRANCH, ERR_GET_BRANCHES}};
 
 pub fn handler_branch(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();
@@ -19,7 +19,7 @@ pub fn handler_branch(input: String) -> String{
                     for r in &result{
                         content.push_str(&format!("{}\n",r));
                     }
-                    return content;
+                    content
                 }else{
                     ERR_INVALID_PARAMETERS.to_string()
                 }

@@ -1,7 +1,7 @@
 
 use std::path::Path;
 
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions, ls_files::LsFilesOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}, constants::constants::{RESPONSE_OK_RM, ERR_NO_SUCH_OR_DIRECTORY}};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::{branch::BranchOptions, checkout::CheckoutOptions, ls_files::LsFilesOptions}, files::repositories::Repositories}, handlers::{rm::handler_rm, commands::handler_command}, constants::constant::{RESPONSE_OK_RM, ERR_NO_SUCH_OR_DIRECTORY}};
 
 use super::{interface::RustInterface, draw::{branches, repositories, draw_message, draw_error}};
 
@@ -28,7 +28,7 @@ pub fn handle_buttons_branch(interface: &RustInterface, button_branch: &gtk::But
                     "Create" => {let _ = VersionControlSystem::branch(BranchOptions::NewBranch(&rc_entry.text()));
                                 draw_message(&rc_box, &"     CREATED SUCCESSFULLY!    ".to_string(), 0.5);
                     },
-                    "Delete" => {if let Ok(_) = VersionControlSystem::branch(BranchOptions::DeleteBranch(&rc_entry.text())){
+                    "Delete" => {if VersionControlSystem::branch(BranchOptions::DeleteBranch(&rc_entry.text())).is_ok(){
                                     draw_message(&rc_box, &"     DELETED SUCCESSFULLY!    ".to_string(), 0.5);
                                 }else{
                                     draw_error(rc_tuple.clone(), &"     CANNOT FOUND THE BRANCH...    ".to_string(), &rc_entry);
@@ -52,7 +52,7 @@ pub fn handle_button_select_branch(interface: &RustInterface) {
     interface.select_branch.connect_changed({
         move |combo_box|{
             if let Some(branch) = combo_box.active_text(){
-                let _ = VersionControlSystem::checkout(CheckoutOptions::ChangeBranch(&branch.to_string()));
+                let _ = VersionControlSystem::checkout(CheckoutOptions::ChangeBranch(branch.as_ref()));
             }
         }
     });
@@ -76,7 +76,7 @@ pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::B
                     "Create" => {let _ = Repositories::write(Path::new(&rc_entry.text().to_string()));
                                  draw_message(&rc_box, &"     CREATED SUCCESSFULLY!    ".to_string(), 0.5);
                     },
-                    "Delete" => {if let Ok(_) = Repositories::remove(Path::new(&rc_entry.text().to_string())){
+                    "Delete" => {if Repositories::remove(Path::new(&rc_entry.text().to_string())).is_ok(){
                                     draw_message(&rc_box, &"     DELETED SUCCESSFULLY!    ".to_string(), 0.5);
                                 }else{
                                     draw_error(rc_tuple.clone(), &"     CANNOT FOUND THE REPOSITORY...    ".to_string(), &rc_entry);
@@ -102,7 +102,7 @@ pub fn handle_button_select_repository(interface: &RustInterface) {
     interface.select_repository.connect_changed({
         move |combo_box|{
             if let Some(repository) = combo_box.active_text(){
-                let _ = VersionControlSystem::init(Path::new(&repository.to_string()), Vec::new());
+                VersionControlSystem::init(Path::new(&repository.to_string()), Vec::new());
             }
             rc_branch.remove_all();
             let _ = branches(&rc_branch);
@@ -167,19 +167,19 @@ pub fn handle_rm_button(interface: &RustInterface) {
             });
             let binding = rm_entry1.text();
 
-            if binding.ends_with("/"){
+            if binding.ends_with('/'){
                 let response = handler_rm(format!("git rm -r {}",rm_entry1.text()));
-                if response == RESPONSE_OK_RM.to_string() {
+                if response == RESPONSE_OK_RM {
                     draw_message(&rc_box, &"     DELETE SUCCESSFULLY!    ".to_string(), 0.5);
-                }else if response == ERR_NO_SUCH_OR_DIRECTORY.to_string() {
+                }else if response == ERR_NO_SUCH_OR_DIRECTORY {
                     draw_error(rc_tuple.clone(), &"      NO SUCH FILE OR DIRECTORY ...     ".to_string(), &rm_entry);
                 }
             }
             else{
                 let response = handler_rm(format!("git rm {}",rm_entry1.text()));
-                if response == RESPONSE_OK_RM.to_string() {
+                if response == RESPONSE_OK_RM {
                     draw_message(&rc_box, &"     DELETE SUCCESSFULLY!    ".to_string(), 0.5);
-                }else if response == ERR_NO_SUCH_OR_DIRECTORY.to_string() {
+                }else if response == ERR_NO_SUCH_OR_DIRECTORY {
                     draw_error(rc_tuple.clone(), &"      NO SUCH FILE OR DIRECTORY ...     ".to_string(), &rm_entry);
                 }
             }
@@ -245,7 +245,7 @@ pub fn handle_ls_tree_button(interface: &RustInterface) {
             rc_box.foreach(|child| {
                 rc_box.remove(child);
             });
-            if let Ok(information) = VersionControlSystem::ls_tree(&rc_entry.text().to_string()) {
+            if let Ok(information) = VersionControlSystem::ls_tree(rc_entry.text().as_ref()) {
                 for entry in information {
                     let message = format!("{}\n",entry);
                     draw_message(&rc_box, &message, 0.0);

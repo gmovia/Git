@@ -5,7 +5,6 @@ pub struct Random;
 impl Random{
     pub fn random() -> String{
         let mut rng = rand::thread_rng();
-        let id = rng.gen_range(1000..=9000).to_string();
-        id
+        rng.gen_range(1000..=9000).to_string()
     }
 }

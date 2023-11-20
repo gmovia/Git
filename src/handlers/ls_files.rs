@@ -5,22 +5,22 @@ pub fn handler_ls_files(input: String) -> String{
     let args: Vec<&str> = input.split_whitespace().collect();
     match args.len() {
         2 => {if let Ok(files) = VersionControlSystem::ls_files(LsFilesOptions::EverythingInVCS) {
-            for entry in files {
+            if let Some(entry) = files.into_iter().next() {
                 return entry;
             }
                 
         }},
         3 => {match args[2] {
-            "-m" => {if let Ok(_) = VersionControlSystem::ls_files(LsFilesOptions::OnlyModified) {
+            "-m" => {if VersionControlSystem::ls_files(LsFilesOptions::OnlyModified).is_ok() {
                 return "OK".to_string();
             }},
-            "-c" => {if let Ok(_) = VersionControlSystem::ls_files(LsFilesOptions::OnlyStaging) {
+            "-c" => {if VersionControlSystem::ls_files(LsFilesOptions::OnlyStaging).is_ok() {
                 return "OK".to_string();
             }},
-            "-d" => {if let Ok(_) = VersionControlSystem::ls_files(LsFilesOptions::OnlyDeleted) {
+            "-d" => {if VersionControlSystem::ls_files(LsFilesOptions::OnlyDeleted).is_ok() {
                 return "OK".to_string();
             }},
-            "-o" => {if let Ok(_) = VersionControlSystem::ls_files(LsFilesOptions::OnlyUntracked) {
+            "-o" => {if VersionControlSystem::ls_files(LsFilesOptions::OnlyUntracked).is_ok() {
                 return "OK".to_string();
             }}
             _ => {},

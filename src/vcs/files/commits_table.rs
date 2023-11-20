@@ -1,6 +1,6 @@
 use std::{path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap, io::{Write, self, BufRead}};
 use chrono::{Local, DateTime};
-use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::random::random::Random};
+use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::randoms::random::Random};
 use super::{current_repository::CurrentRepository, current_commit::CurrentCommit};
 
 #[derive(Debug, Clone)]
@@ -16,8 +16,8 @@ impl CommitsTable{
         let commits_file = OpenOptions::new().read(true).open(path)?;
 
         let reader = io::BufReader::new(commits_file);
-        for line in reader.lines().filter_map(Result::ok) {
-            let parts: Vec<&str> = line.split("-").collect();
+        for line in reader.lines().map_while(Result::ok) {
+            let parts: Vec<&str> = line.split('-').collect();
             let commit = CommitTableEntry{id: parts[0].to_string(), last_hash: parts[1].to_string(), hash: parts[2].to_string(), message: parts[3].to_string(), date: parts[4].to_string()};
             commits.push(commit);
         }

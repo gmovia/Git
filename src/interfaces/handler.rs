@@ -1,5 +1,5 @@
 use std::{fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{CURRENT, INCOMING, BOTH, BLOB_CODE}};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
 use gtk::{prelude::*, Button};
@@ -230,7 +230,7 @@ pub fn handle_merge(interface: &RustInterface) {
                 m_changes.remove(child);
             });
             if let Ok(conflicts) = VersionControlSystem::merge(&m_entry.text()){
-                if conflicts.len() == 0 {
+                if conflicts.is_empty() {
                     draw_message(&m_changes, &"MERGE SUCCESSFULLY!".to_string(), 0.5);
                     button_resolve.set_sensitive(false);
                 }
@@ -276,15 +276,15 @@ pub fn handle_merge(interface: &RustInterface) {
                                     both.set_visible(true);
                                     current.set_visible(true);
                                     incoming.set_visible(true);
-                                    m_grid.attach(&labels, 0, index as i32, 1, 1);
-                                    m_grid.attach(&both, 1, index as i32, 1, 1);
-                                    m_grid.attach(&current, 2, index as i32, 1, 1);
-                                    m_grid.attach(&incoming, 3, index as i32, 1, 1);
+                                    m_grid.attach(&labels, 0, index, 1, 1);
+                                    m_grid.attach(&both, 1, index, 1, 1);
+                                    m_grid.attach(&current, 2, index, 1, 1);
+                                    m_grid.attach(&incoming, 3, index, 1, 1);
                                     index += 1;
                                     let buttons = (both.clone(),current.clone(),incoming.clone());
-                                    add_current( &value, buttons.clone());
-                                    add_incoming( &value, buttons.clone());
-                                    add_both( &value,&b_dialog,&b_box,&b_text,&ok,buttons.clone());
+                                    add_current(value, buttons.clone());
+                                    add_incoming(value, buttons.clone());
+                                    add_both(value,&b_dialog,&b_box,&b_text,&ok,buttons.clone());
                                 } 
                                 m_box.add(&m_grid);
                             }
@@ -383,7 +383,7 @@ pub fn add_both(conflict: &Conflict, dialog: &gtk::Dialog, both_box: &gtk::Box, 
                                         let _ = fs::remove_file(temp_path);
                                         let change_current = Change { file: conflict_c.file.to_string(), hash: hash.clone(), state: conflict_c.change_current.state.clone() };
                                         let change_branch = Change { file: conflict_c.file.to_string(), hash: hash.clone(), state: conflict_c.change_branch.state.clone() };
-                                        let conflict = Conflict { file: conflict_c.file.clone(), change_current: change_current, change_branch: change_branch, resolved: BOTH.to_string() };
+                                        let conflict = Conflict { file: conflict_c.file.clone(), change_current, change_branch, resolved: BOTH.to_string() };
                                         let _ = write_changes(&conflict);
                                     }
                                 }

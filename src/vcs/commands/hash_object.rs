@@ -1,5 +1,5 @@
 use std::{fs::{self, File}, path::{Path, PathBuf}, io::Write};
-use crate::{utils::hasher::hasher::Hasher, constants::constants::{TREE_CODE, COMMIT_CODE}};
+use crate::{utils::hashers::hasher::Hasher, constants::constant::{TREE_CODE, COMMIT_CODE}};
 use std::num::ParseIntError;
 
 pub enum WriteOption {
@@ -14,9 +14,9 @@ impl HashObject{
     /// Escribe el contenido dentro de un archivo cuya ruta depende del hash.
     pub fn write_object(hash: &str, object_path: PathBuf, data: &[u8]) -> Result<(), std::io::Error> {
         let folder_name = hash.chars().take(2).collect::<String>();
-        let object = object_path.join(format!("{}",folder_name));
+        let object = object_path.join(&folder_name);
 
-        fs::create_dir_all(&object)?;
+        fs::create_dir_all(object)?;
         let file_path = object_path.join(format!("{}/{}",folder_name,&hash[2..]).as_str());
 
         if !file_path.exists() {
@@ -35,7 +35,7 @@ impl HashObject{
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "The path is an directory"));
         }
         
-        if !fs::metadata(path).is_ok(){
+        if fs::metadata(path).is_err(){
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "No such file or directory"));
         }
 
@@ -43,7 +43,7 @@ impl HashObject{
         let hash = Self::hash(&content, entity_type)?;
 
         match option{
-            WriteOption::Write => HashObject::write_object(&hash, object_path, &content.as_bytes())?, // aca rompe
+            WriteOption::Write => HashObject::write_object(&hash, object_path, content.as_bytes())?, // aca rompe
             WriteOption::NoWrite => ()
         }
 
@@ -55,7 +55,7 @@ impl HashObject{
 
         for entry in entries{
             let entry_split: Vec<&str> = entry.split_whitespace().collect(); // modo tipo hash filename
-            if entry_split.len() > 0{
+            if !entry_split.is_empty(){
                 if let Ok(hash_bytes) = Self::decode_hex(entry_split[2]){
                     tree_entries.extend_from_slice(format!("{} {}\0", entry_split[0], entry_split[3]).as_bytes());
                     tree_entries.extend_from_slice(&hash_bytes);
@@ -76,7 +76,7 @@ impl HashObject{
     pub fn hash(content: &String, entity_type: &str) -> Result<String, std::io::Error>{
         let input: Vec<u8> = match entity_type {
             TREE_CODE => {    
-                let array: Vec<&str> = content.split("\n").collect();
+                let array: Vec<&str> = content.split('\n').collect();
                 let tree_entries: Vec<u8> = Self::parse_input(array)?;
 
                 let lenght = tree_entries.len();
@@ -86,11 +86,11 @@ impl HashObject{
                 git_content
             },
             COMMIT_CODE => {      
-                let input = ["commit ".as_bytes(), content.len().to_string().as_bytes(), b"\0", &content.as_bytes()].concat();
+                let input = ["commit ".as_bytes(), content.len().to_string().as_bytes(), b"\0", content.as_bytes()].concat();
                 input
             },
             _ => {
-                let input = ["blob ".as_bytes(), content.len().to_string().as_bytes(), b"\0", &content.as_bytes()].concat();
+                let input = ["blob ".as_bytes(), content.len().to_string().as_bytes(), b"\0", content.as_bytes()].concat();
                 input
             }
         };

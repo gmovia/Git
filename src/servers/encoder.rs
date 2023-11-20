@@ -15,7 +15,7 @@ pub struct Encoder {
 impl Encoder {
     
     pub fn init_encoder(path: PathBuf, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
-        let encoder = Encoder { path: path };
+        let encoder = Encoder { path };
         let mut packfile= Vec::new();
         if messages.1.is_empty() || messages.1[0] == "0" {
             packfile = Self::create_packfile(&encoder.path)?;        
@@ -29,20 +29,16 @@ impl Encoder {
         let mut total_files = 0;
     
         if let Ok(entries) = fs::read_dir(objects_path) {
-            for entry in entries {
-                if let Ok(entry) = entry {
-                    if entry.file_type()?.is_dir() {
-                        if let Ok(subdir_entries) = fs::read_dir(entry.path()) {
-                            let mut files = 0;
-                            for subdir_entry in subdir_entries {
-                                if let Ok(subdir_entry) = subdir_entry {
-                                    if subdir_entry.file_type()?.is_file() {
-                                        files += 1;
-                                    }
+            for entry in entries.flatten() {
+                if entry.file_type()?.is_dir() {
+                    if let Ok(subdir_entries) = fs::read_dir(entry.path()) {
+                        let mut files = 0;
+                        for subdir_entry in subdir_entries.flatten() {
+                                if subdir_entry.file_type()?.is_file() {
+                                    files += 1;
                                 }
-                            }
-                            total_files += files;
                         }
+                        total_files += files;
                     }
                 }
             }
@@ -50,14 +46,12 @@ impl Encoder {
         Ok(total_files)
     }
 
-    fn create_packfile(path: &PathBuf) -> Result<Vec<u8>,std::io::Error> {
+    fn create_packfile(path: &Path) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile: Vec<u8> = Vec::new();
         Self::create_header(&mut packfile, path)?;
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-        println!("PROCESSS DIRECTORY MANDA {:?}\n", objects_data.len());
-        println!("OBJECTS DATA: {:?}\n", objects_data);
 
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
@@ -66,7 +60,7 @@ impl Encoder {
             }
             let path = Path::new(&objects.0);
             
-            let compress_data = Self::compress_object((&path).to_path_buf(), objects.1)?;
+            let compress_data = Self::compress_object(path.to_path_buf(), objects.1)?;
             for byte in compress_data {
                 packfile.push(byte);    
             }
@@ -88,7 +82,7 @@ impl Encoder {
     
         let mut first_byte = res + less_significative_len_bits;
         if (less_significative_len_bits as usize) < object_len {
-            first_byte = 128 + first_byte;
+            first_byte += 128;
         }
         bytes.push(first_byte);
     
@@ -112,13 +106,13 @@ impl Encoder {
         retun as u8
     }
 
-    fn create_header(mut packfile: &mut Vec<u8>, path: &PathBuf) -> Result<usize,std::io::Error>{
+    fn create_header(packfile: &mut Vec<u8>, path: &Path) -> Result<usize,std::io::Error>{
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
         }
-        Self::add_number_to_packfile(2, &mut packfile);
+        Self::add_number_to_packfile(2, packfile);
         let objects = Self::get_objects_number(path)?;
-        Self::add_number_to_packfile(objects as u32, &mut packfile);
+        Self::add_number_to_packfile(objects as u32, packfile);
         Ok(objects)
     }
 
@@ -145,12 +139,12 @@ impl Encoder {
         file.read_to_string(&mut content)?;
 
         if !(content.contains("100644") || content.contains("40000")) && content.contains("tree") {
-            return Ok((file_path.to_string_lossy().to_string(),1 as usize,metadata.len() as usize))
+            return Ok((file_path.to_string_lossy().to_string(), 1_usize,metadata.len() as usize))
         } else if content.contains("100644") || content.contains("40000"){
-            return Ok((file_path.to_string_lossy().to_string(),2 as usize,metadata.len() as usize))
+            return Ok((file_path.to_string_lossy().to_string(), 2_usize,metadata.len() as usize))
         }
         else {
-            return Ok((file_path.to_string_lossy().to_string(),3 as usize,metadata.len() as usize))
+            return Ok((file_path.to_string_lossy().to_string(),3_usize,metadata.len() as usize))
         }
     }
     

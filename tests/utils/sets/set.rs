@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
-    use rust_git::utils::sets::sets::{difference, idem_set_different_content};
+    use rust_git::utils::sets::set::{difference, idem_set_different_content};
     
     #[test]
     fn test_01_difference_between_sets() {

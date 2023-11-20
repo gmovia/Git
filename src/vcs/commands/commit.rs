@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io;
 use crate::vcs::files::{repository::Repository, index::Index, commits_table::CommitsTable};
-use crate::constants::constants::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED};
+use crate::constants::constant::{STATE_CREATED, STATE_MODIFIED, STATE_DELETED};
 extern crate chrono;
 
 pub struct Commit;
@@ -23,8 +23,8 @@ impl Commit{
             }
         }
 
-        let _ = CommitsTable::write(&message, &repository)?;
-        let _ = Index::clear();
+        CommitsTable::write(&message, &repository)?;
+        Index::clear()?;
         Ok(repository)
     }
 }

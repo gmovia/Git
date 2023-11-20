@@ -25,7 +25,7 @@ impl Branch{
     }
 
     // Obtiene la rama actual
-    pub fn get_current_branch(path: &PathBuf) -> Result<String, std::io::Error> {
+    pub fn get_current_branch(path: &Path) -> Result<String, std::io::Error> {
         Init::get_current_branch(path)
     }
 
@@ -33,19 +33,19 @@ impl Branch{
     /// luego genero el archivo en /logs/ con copia de los commits que estaban en la rama anterior
     pub fn create_new_branch(path: &PathBuf, branch_name: &str) -> Result<Vec<String>,std::io::Error> { 
         let branch_head_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);        
-        let mut branch_head = OpenOptions::new().write(true).create(true).append(true).open(&branch_head_path)?;
+        let mut branch_head = OpenOptions::new().write(true).create(true).append(true).open(branch_head_path)?;
 
         let branch_log_path = path.join(".rust_git").join("logs").join(branch_name);
-        let mut branch_log = OpenOptions::new().write(true).create(true).append(true).open(&branch_log_path)?;
+        let mut branch_log = OpenOptions::new().write(true).create(true).append(true).open(branch_log_path)?;
         
-        let current_log = Init::get_current_log(&path)?;
+        let current_log = Init::get_current_log(path)?;
         let table = fs::read_to_string(current_log)?;
         
         let commit_hash = CurrentCommit::read()?;
         branch_head.write_all(commit_hash.as_bytes())?;
         branch_log.write_all(table.as_bytes())?;
 
-        Ok(Self::get_branches(path)?)
+        Self::get_branches(path)
     }
 
 
@@ -65,7 +65,7 @@ impl Branch{
         }
         fs::remove_file(branch_path)?;
         fs::remove_file(logs_path)?;
-        Ok(Self::get_branches(path)?)
+        Self::get_branches(path)
     }
 
     /// obtengo todas las entradas del directorio /refs/heads/ que serian todas las ramas que tenemos
@@ -74,14 +74,12 @@ impl Branch{
         let p = Path::new(path);
         let branchs_dir_path = p.join(".rust_git").join("refs").join("heads");
         if let Ok(entries) = fs::read_dir(branchs_dir_path){
-            for entry in entries{
-                if let Ok(entry) = entry{
-                    if let Some(file_name) = entry.path().file_name(){
-                        branches.push(file_name.to_string_lossy().to_string());
-                    }
+            for entry in entries.flatten(){
+                if let Some(file_name) = entry.path().file_name(){
+                    branches.push(file_name.to_string_lossy().to_string());
+                }
 
                 }
-            }
         }
         Ok(branches)
     }        
