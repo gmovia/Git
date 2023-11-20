@@ -16,7 +16,9 @@ pub mod handlers{
     pub mod merge;
     pub mod clone;
     pub mod ls_files;
+    pub mod fetch;
     pub mod ls_tree;
+    pub mod pull;
 }
 
 pub mod proxies{
@@ -94,6 +96,7 @@ pub mod vcs{
         pub mod reset;
         pub mod clone;
         pub mod ls_files;
+        pub mod fetch;
         pub mod ls_tree;
         pub mod check_ignore;
     }

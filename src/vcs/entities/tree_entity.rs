@@ -1,4 +1,4 @@
-use std::{path::{PathBuf, Path}, fs::{OpenOptions, self}, io::Write};
+use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, constants::constant::{END_OF_LINE, BLOB_CODE, TREE_CODE}, utils::randoms::random::Random};
 
 use super::{blob_entity::BlobEntity, entity::Entity};
@@ -14,7 +14,7 @@ pub struct TreeEntity{
 
 impl TreeEntity{
     
-    pub fn write(repo_path: &PathBuf, entities: &Vec<Entity>) -> Result<String, std::io::Error>{
+    pub fn write(repo_path: &Path, entities: &Vec<Entity>) -> Result<String, std::io::Error>{
         let tree_path = Path::new(&repo_path).join(Random::random());
         let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&tree_path)?; 
         for entity in entities {
@@ -39,7 +39,7 @@ impl TreeEntity{
         Ok(tree_hash)
     }
     
-    pub fn read(repo_path: &PathBuf, tree_hash: String) -> Result<Vec<Entity>, std::io::Error>{
+    pub fn read(repo_path: &Path, tree_hash: String) -> Result<Vec<Entity>, std::io::Error>{
         let mut entities: Vec<Entity> = Vec::new();
         let content = CatFile::cat_file(&tree_hash, Init::get_object_path(repo_path)?)?;
         let lines: Vec<&str> = content.split('\n').collect();

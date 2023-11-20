@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, fs::{self, OpenOptions}, io::{self, Write}};
+use std::{path::Path, fs::{self, OpenOptions}, io::{self, Write}};
 use crate::vcs::files::current_commit::CurrentCommit;
 
 use super::init::Init;
@@ -15,7 +15,7 @@ pub enum BranchOptions<'a>{
 impl Branch{
 
     /// Matcheo la opcion
-    pub fn branch(path: &PathBuf, option: BranchOptions) -> Result<Vec<String>, std::io::Error>{
+    pub fn branch(path: &Path, option: BranchOptions) -> Result<Vec<String>, std::io::Error>{
         match option{
             BranchOptions::NewBranch(branch_name) => {Ok(Self::create_new_branch(path, branch_name)?)},
             BranchOptions::DeleteBranch(branch_name) => {Ok(Self::delete_branch(path, branch_name)?)},
@@ -31,7 +31,7 @@ impl Branch{
 
     /// creo un archivo branch_name en el path /refs/heads/
     /// luego genero el archivo en /logs/ con copia de los commits que estaban en la rama anterior
-    pub fn create_new_branch(path: &PathBuf, branch_name: &str) -> Result<Vec<String>,std::io::Error> { 
+    pub fn create_new_branch(path: &Path, branch_name: &str) -> Result<Vec<String>,std::io::Error> { 
         let branch_head_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);        
         let mut branch_head = OpenOptions::new().write(true).create(true).append(true).open(branch_head_path)?;
 
@@ -48,12 +48,27 @@ impl Branch{
         Self::get_branches(path)
     }
 
+    pub fn create_new_branch_with_hash(path: &Path, branch_name: &str, hash: &str) -> Result<Vec<String>,std::io::Error> { 
+        let branch_head_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);        
+        let mut branch_head = OpenOptions::new().write(true).create(true).append(false).open(branch_head_path)?;
+
+        let branch_log_path = path.join(".rust_git").join("logs").join(branch_name);
+        let mut branch_log = OpenOptions::new().write(true).create(true).append(true).open(branch_log_path)?;
+        
+        let current_log = Init::get_current_log(path)?;
+        let table = fs::read_to_string(current_log)?;
+        
+        branch_head.write_all(hash.as_bytes())?;
+        branch_log.write_all(table.as_bytes())?;
+
+        Self::get_branches(path)
+    }
 
     /// matcheo el archivo branch_name en /refs/heads/ y en /logs/
     /// si no estoy parada en esa rama, entonces lo elimino de los dos directorios
-    pub fn delete_branch(path: &PathBuf, branch_name: &str) -> Result<Vec<String>,std::io::Error>{
+    pub fn delete_branch(path: &Path, branch_name: &str) -> Result<Vec<String>,std::io::Error>{
         let p = Path::new(path);
-        if let Ok(branches) = Self::get_branches(&p.to_path_buf()) {
+        if let Ok(branches) = Self::get_branches(p) {
             if !branches.contains(&branch_name.to_string()){
                 return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the branch"));
             }
@@ -69,7 +84,7 @@ impl Branch{
     }
 
     /// obtengo todas las entradas del directorio /refs/heads/ que serian todas las ramas que tenemos
-    pub fn get_branches(path: &PathBuf) -> Result<Vec<String>,std::io::Error>{
+    pub fn get_branches(path: &Path) -> Result<Vec<String>,std::io::Error>{
         let mut branches: Vec<String> = Vec::new();
         let p = Path::new(path);
         let branchs_dir_path = p.join(".rust_git").join("refs").join("heads");

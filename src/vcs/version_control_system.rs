@@ -32,7 +32,7 @@ impl VersionControlSystem {
     }
 
     pub fn reset(path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error>{
-        Reset::reset(path.to_path_buf())
+        Reset::reset(path)
     }
 
     pub fn hash_object(path: &Path, option: WriteOption, _type: &str) -> Result<String, std::io::Error>{
@@ -77,7 +77,12 @@ impl VersionControlSystem {
         Merge::merge(branch, conflicts)
     }
 
-    pub fn git_clone(message: String)-> Result<(), std::io::Error>{
+    pub fn git_clone(message: String, path_to_clone: &Path)-> Result<(), std::io::Error>{
+        Client::client(message, path_to_clone)
+        //Ok(())
+    }
+
+    pub fn fetch(message: String)-> Result<(), std::io::Error>{
         let current = CurrentRepository::read()?;
         let _ = Client::client(message, &current);
         Ok(())
@@ -88,15 +93,24 @@ impl VersionControlSystem {
         LsFiles::ls_files(option, &current)
     }
 
-    pub fn ls_tree(branch: &str) -> Result<Vec<String>, std::io::Error>{
+    pub fn ls_tree(branch: &str) -> Result<Vec<String>, std::io::Error> {
         let current = CurrentRepository::read()?;
         LsTree::ls_tree(branch, &current)
     }
+
 
     pub fn check_ignore(path: &Path) -> Result<String, std::io::Error> {
         if CheckIgnore::check_ignore(path)?{
             return Ok(RESPONSE_OK_IGNORE.to_string());
         }
         Ok(RESPONSE_NOK_GIT_IGNORE.to_string())
+    }
+    
+    pub fn git_pull() -> Result<(), std::io::Error> {
+        let current = CurrentRepository::read()?;
+        Self::fetch("git fetch".to_string())?;
+        Self::merge(&Init::get_current_branch(&current)?)?;
+        Ok(())
+
     }
 }

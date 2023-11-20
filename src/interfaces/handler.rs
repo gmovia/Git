@@ -1,5 +1,5 @@
 use std::{fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE}};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE}, handlers::clone::handler_clone};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
 use gtk::{prelude::*, Button};
@@ -525,20 +525,18 @@ pub fn handle_check_ignore(interface: &RustInterface) {
     });
 }
 
-
-
-
-/* 
+ 
 pub fn handle_clone(interface: &RustInterface) {
     
     let c_entry = interface.clone_entry.clone();
     let clone_button = interface.clone.clone();
     let info = interface.info_clone.clone();
-    let fix_clone = interface.fix.clone();
     
     interface.clone.set_sensitive(false);
     interface.info_clone.set_visible(false);
     
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+    let rc_tuple = errors_tuple.clone();
     
     interface.clone_entry.connect_changed({
         move |e| {
@@ -549,21 +547,17 @@ pub fn handle_clone(interface: &RustInterface) {
     interface.clone.connect_clicked({
         let info = info.clone();
         let c_entry = c_entry.clone();
-        let fix_clone = fix_clone.clone();
         move |button| {
-            
-            if let Ok(_) = VersionControlSystem::git_clone(format!("git clone {}",(&c_entry.text()).to_string())) {
-                let label = gtk::Label::new(Some(&c_entry.text()));
-                label.set_visible(true);
-                label.set_xalign(0.5);
-                label.set_yalign(0.5);
+            info.foreach({|child|{
+                info.remove(child);
+            }});
+            if handler_clone(format!("git clone {}",&c_entry.text().to_string())) == RESPONSE_OK_CLONE {
                 let close = Button::builder()
                 .label("close")
                 .build();
                 close.set_visible(true);
-                fix_clone.add(&label);
+                draw_message(&info, &"    CLONE SUCCESSFULLY!     ".to_string(), 0.5);
                 info.add(&close);
-                info.add(&fix_clone);
                 info.set_visible(true);
                 close.connect_clicked({
                     let info = info.clone();
@@ -573,40 +567,98 @@ pub fn handle_clone(interface: &RustInterface) {
                         }});
                     }
                 });
+            }else{
+                draw_error(rc_tuple.clone(), &"      ERROR! CAN'T CLONE THE REPOSITORY...      ".to_string(), &c_entry);
             }
             c_entry.set_text("");
             button.set_sensitive(false);
         }
     });
 }
-*/
 
-/* 
+
+ 
 pub fn handle_fetch(interface: &RustInterface) {
+    let dialog = interface.fetch_dialog.clone();
+    let rc_box = interface.fetch_box.clone();
+
     interface.fetch.connect_clicked({
         move |_| {
-            if let Ok(current) = VersionControlSystem::read_current_repository() {
-                let _ = VersionControlSystem::fetch(format!("git fetch {}",current.display().to_string()));
-            }
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            let _ = VersionControlSystem::fetch("git fetch".to_string());
+            draw_message(&rc_box, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
+            dialog.run();
+            dialog.hide();
+        }
+    });
+
+    interface.fetch_close.connect_clicked({
+        let dialog2 = interface.fetch_dialog.clone();
+        move |_| {
+            dialog2.hide();
         }
     });
 }
 
-pub fn handle_push(interface: &RustInterface) {
-    interface.push.connect_clicked({
+pub fn handle_pull(interface: &RustInterface) {
+    let info = interface.info_pull_push.clone();
+
+    interface.info_pull_push.set_visible(false);
+
+    interface.pull.connect_clicked({
         move |_| {
-            if let Ok(current) = VersionControlSystem::read_current_repository() {
-                let _ = VersionControlSystem::push();
-            }
+            info.foreach({|child|{
+                info.remove(child);
+            }});
+            let _ = VersionControlSystem::git_pull();
+            let close = Button::builder()
+                .label("close")
+                .build();
+                close.set_visible(true);
+                draw_message(&info, &"    PULL SUCCESSFULLY!     ".to_string(), 0.5);
+                info.add(&close);
+                info.set_visible(true);
+                close.connect_clicked({
+                    let info = info.clone();
+                    move |_| {
+                        info.foreach({|child|{
+                            info.remove(child);
+                        }});
+                    }
+                });
         } 
     });
 }
 
-pub fn handle_pull(interface: &RustInterface) {
-    
+/*
+pub fn handle_push(interface: &RustInterface) {
+    let info = interface.info_pull_push.clone();
+
+    interface.info_pull_push.set_visible(false);
+
     interface.push.connect_clicked({
         move |_| {
-            let _ = VersionControlSystem::pull();
+            info.foreach({|child|{
+                info.remove(child);
+            }});
+            let _ = VersionControlSystem::git_push();
+            let close = Button::builder()
+                .label("close")
+                .build();
+                close.set_visible(true);
+                draw_message(&info, &"    PUSH SUCCESSFULLY!     ".to_string(), 0.5);
+                info.add(&close);
+                info.set_visible(true);
+                close.connect_clicked({
+                    let info = info.clone();
+                    move |_| {
+                        info.foreach({|child|{
+                            info.remove(child);
+                        }});
+                    }
+                });
         } 
     });
 }

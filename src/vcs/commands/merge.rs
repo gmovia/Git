@@ -18,8 +18,8 @@ impl Merge {
         let current = CurrentRepository::read()?;
         let current_branch = Branch::get_current_branch(&current)?;
 
-        let current_commits_table = CommitsTable::read(current.clone().to_path_buf(), &current_branch)?;
-        let branch_commits_table = CommitsTable::read(current.clone().to_path_buf(), branch)?;
+        let current_commits_table = CommitsTable::read(current.clone(), &current_branch)?;
+        let branch_commits_table = CommitsTable::read(current.clone(), branch)?;
 
         let mut conflicts: HashMap<String, Conflict> = HashMap::new();
 

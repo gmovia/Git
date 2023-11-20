@@ -1,4 +1,3 @@
-
 use std::{path::Path, collections::HashMap};
 use gtk::{prelude::*, Button, ComboBoxText};
 use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::repositories::Repositories};
