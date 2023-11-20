@@ -28,7 +28,7 @@ impl Server {
                         }
                     });
                 }
-                Err(e) => {
+                Err(_) => {
                     return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
                     //eprintln!("Error: {}", e);
                 }

@@ -1,6 +1,8 @@
-use std::{path::Path, io::{self, Write}};
+//use std::{path::Path, io::{self, Write}};
 
-use rust_git::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command, interface::interface::RustInterface};
+//use rust_git::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command};
+
+use rust_git::interface::interface::RustInterface;
 
 fn main() -> Result<(), std::io::Error>{
     // //let _ = VersionControlSystem::init(Path::new("test_folder/clone"), Vec::new());

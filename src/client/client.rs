@@ -15,7 +15,7 @@ impl Client {
 
         let address = format!("{}:{}", HOST, PUERTO);
 
-        if let Err(e) = Self::run_client(&address,  &command , &current_repository) {
+        if let Err(_) = Self::run_client(&address,  &command , &current_repository) {
             return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: not a correct path"));
             //println!("Error: {}",e);
         }
