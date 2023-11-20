@@ -260,6 +260,7 @@ pub fn handle_merge(interface: &RustInterface) {
                                     labels.set_visible(true);
                                     labels.set_xalign(2.0);
                                     labels.set_yalign(2.0);
+                                    labels.style_context().add_class("custom-label-message");
                                     let both = Button::builder()
                                     .margin_start(10)
                                     .label("Accept both")

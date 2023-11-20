@@ -11,7 +11,6 @@ pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
 }
 
 pub fn repositories(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
-    
     let repositories = Repositories::read()?;
     draw_repositories(&repositories, combo_box);
     Ok(())
