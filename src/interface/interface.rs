@@ -5,7 +5,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interface::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone};
 
 #[derive(Debug, Default)]
 pub struct RustInterface {
@@ -60,7 +60,6 @@ pub struct RustInterface {
     pub clone: gtk::Button,
     pub clone_entry: gtk::Entry,
     pub info_clone: gtk::Box,
-    pub fix: gtk::Fixed,
     pub both_dialog: gtk::Dialog,
     pub both_ok: gtk::Button,
     pub both_box: gtk::Box,
@@ -162,7 +161,6 @@ impl RustInterface {
             clone: builder.object("clone").unwrap(),
             clone_entry: builder.object("clone-entry").unwrap(),
             info_clone: builder.object("info-clone").unwrap(),
-            fix: builder.object("fix").unwrap(),
             both_dialog: builder.object("both-dialog").unwrap(),
             both_ok: builder.object("both-ok").unwrap(),
             both_box: builder.object("both-box").unwrap(),
@@ -217,6 +215,7 @@ impl RustInterface {
         handle_merge(self);
         handle_repository(self);
         handle_other_commands(self);
+        handle_clone(self);
 
         self.window.show_all();   
         gtk::main();

@@ -528,17 +528,18 @@ pub fn handle_check_ignore(interface: &RustInterface) {
 
 
 
-/* 
+ 
 pub fn handle_clone(interface: &RustInterface) {
     
     let c_entry = interface.clone_entry.clone();
     let clone_button = interface.clone.clone();
     let info = interface.info_clone.clone();
-    let fix_clone = interface.fix.clone();
     
     interface.clone.set_sensitive(false);
     interface.info_clone.set_visible(false);
     
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+    let rc_tuple = errors_tuple.clone();
     
     interface.clone_entry.connect_changed({
         move |e| {
@@ -549,21 +550,17 @@ pub fn handle_clone(interface: &RustInterface) {
     interface.clone.connect_clicked({
         let info = info.clone();
         let c_entry = c_entry.clone();
-        let fix_clone = fix_clone.clone();
         move |button| {
-            
+            info.foreach({|child|{
+                info.remove(child);
+            }});
             if let Ok(_) = VersionControlSystem::git_clone(format!("git clone {}",(&c_entry.text()).to_string())) {
-                let label = gtk::Label::new(Some(&c_entry.text()));
-                label.set_visible(true);
-                label.set_xalign(0.5);
-                label.set_yalign(0.5);
                 let close = Button::builder()
                 .label("close")
                 .build();
                 close.set_visible(true);
-                fix_clone.add(&label);
+                draw_message(&info, &"    CLONE SUCCESSFULLY!     ".to_string(), 0.5);
                 info.add(&close);
-                info.add(&fix_clone);
                 info.set_visible(true);
                 close.connect_clicked({
                     let info = info.clone();
@@ -573,13 +570,15 @@ pub fn handle_clone(interface: &RustInterface) {
                         }});
                     }
                 });
+            }else{
+                draw_error(rc_tuple.clone(), &"      ERROR! CAN'T CLONE THE REPOSITORY...      ".to_string(), &c_entry);
             }
             c_entry.set_text("");
             button.set_sensitive(false);
         }
     });
 }
-*/
+
 
 /* 
 pub fn handle_fetch(interface: &RustInterface) {
