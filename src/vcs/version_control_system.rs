@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
 #[derive(Debug, Clone)]
@@ -78,10 +78,9 @@ impl VersionControlSystem {
         Merge::merge(branch, conflicts)
     }
 
-    pub fn git_clone(message: String)-> Result<(), std::io::Error>{
-        let current = CurrentRepository::read()?;
-        let _ = Client::client(message, &current);
-        Ok(())
+    pub fn git_clone(message: String, path_to_clone: &PathBuf)-> Result<(), std::io::Error>{
+        Client::client(message, &path_to_clone)
+        //Ok(())
     }
 
     pub fn fetch(message: String)-> Result<(), std::io::Error>{

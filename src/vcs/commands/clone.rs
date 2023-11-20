@@ -12,6 +12,7 @@ impl Clone{
     pub fn receive_pack(socket: &mut TcpStream, repo: PathBuf) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
         print!("Entro a receive packs ---------------\n");
+        
         loop {
             let mut len_buf = [0; 4]; 
             if socket.read_exact(&mut len_buf).is_ok() {
@@ -23,6 +24,10 @@ impl Clone{
                 println!("LEN del packet ---> {:?} \n", len);
 
                 let packet = read_packet(socket, len);
+                if packet.contains("fatal error") {
+                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
+                }
+                
                 println!("ACA PACKETTT ---> {:?} \n", packet);
                 packets.push(packet);
             }

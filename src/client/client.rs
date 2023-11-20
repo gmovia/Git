@@ -11,11 +11,13 @@ pub struct Client;
 
 impl Client {
 
-    pub fn client(command: String, current_repository: &PathBuf) -> Result<(), ()> {
+    pub fn client(command: String, current_repository: &PathBuf) -> Result<(), std::io::Error> {
+
         let address = format!("{}:{}", HOST, PUERTO);
 
         if let Err(e) = Self::run_client(&address,  &command , &current_repository) {
-            println!("Error: {}",e);
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: not a correct path"));
+            //println!("Error: {}",e);
         }
         Ok(())
     }
@@ -25,13 +27,11 @@ impl Client {
         let stream = TcpStream::connect(address)?;
         let _ = stream.try_clone()?;
 
-        let _ = match command.as_str() {
+        match command.as_str() {
         command_str if command_str.contains("git clone") => Self::handler_clone(stream, command, &current_repository),
         command_str if command_str.contains("git fetch") => Self::handler_fetch(stream, command, &current_repository),
-        _ => Ok(()),
-
-    };
-       Ok(())
+        _ => Ok(())
+    }
    }
 
     pub fn handler_clone(mut stream: TcpStream, command: &String, current_repository: &PathBuf) -> Result<(),std::io::Error>{
@@ -39,7 +39,7 @@ impl Client {
         let pkt_line = to_pkt_line(&query_to_send);
         print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
         stream.write(pkt_line.as_bytes())?;
-        let _ = Self::handler_query(&query_to_send, &mut stream, &current_repository, "clone");
+        Self::handler_query(&query_to_send, &mut stream, &current_repository, "clone")?;
         Ok(())
     }
 
@@ -47,6 +47,7 @@ impl Client {
         println!("CURRENT: {:?}", current_repository);
         let query_to_send = Self::handler_input(&command, &current_repository)?;
         let pkt_line = to_pkt_line(&query_to_send);
+
         print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
         stream.write(pkt_line.as_bytes())?;
         let _ = Self::handler_query(&query_to_send, &mut stream, &current_repository, "fetch");

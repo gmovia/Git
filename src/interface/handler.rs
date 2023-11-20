@@ -1,5 +1,5 @@
-use std::{fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{CURRENT, INCOMING, BOTH, BLOB_CODE}};
+use std::{fs::{OpenOptions, self}, io::Write, path::Path};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constants::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE}, handlers::clone::handler_clone};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
 use gtk::{prelude::*, Button};
@@ -554,7 +554,8 @@ pub fn handle_clone(interface: &RustInterface) {
             info.foreach({|child|{
                 info.remove(child);
             }});
-            if let Ok(_) = VersionControlSystem::git_clone(format!("git clone {}",(&c_entry.text()).to_string())) {
+            //if let Ok(_) = VersionControlSystem::git_clone("git clone".to_string(), &Path::new(&c_entry.text().to_string()).to_path_buf()) {
+            if handler_clone(format!("git clone {}",&c_entry.text().to_string())) == RESPONSE_OK_CLONE {
                 let close = Button::builder()
                 .label("close")
                 .build();
@@ -580,17 +581,31 @@ pub fn handle_clone(interface: &RustInterface) {
 }
 
 
-/* 
+ 
 pub fn handle_fetch(interface: &RustInterface) {
+    let dialog = interface.fetch_dialog.clone();
+    let rc_box = interface.fetch_box.clone();
+
     interface.fetch.connect_clicked({
         move |_| {
-            if let Ok(current) = VersionControlSystem::read_current_repository() {
-                let _ = VersionControlSystem::fetch(format!("git fetch {}",current.display().to_string()));
-            }
+            rc_box.foreach(|child| {
+                rc_box.remove(child);
+            });
+            let _ = VersionControlSystem::fetch("git fetch".to_string());
+            draw_message(&rc_box, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
+            dialog.run();
+            dialog.hide();
+        }
+    });
+
+    interface.fetch_close.connect_clicked({
+        let dialog2 = interface.fetch_dialog.clone();
+        move |_| {
+            dialog2.hide();
         }
     });
 }
-
+/*
 pub fn handle_push(interface: &RustInterface) {
     interface.push.connect_clicked({
         move |_| {
