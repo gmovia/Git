@@ -89,6 +89,10 @@ impl HashObject{
                 let input = ["commit ".as_bytes(), content.len().to_string().as_bytes(), b"\0", content.as_bytes()].concat();
                 input
             },
+            TAG_CODE => {      
+                let input = ["tag ".as_bytes(), content.len().to_string().as_bytes(), b"\0", content.as_bytes()].concat();
+                input
+            },
             _ => {
                 let input = ["blob ".as_bytes(), content.len().to_string().as_bytes(), b"\0", content.as_bytes()].concat();
                 input

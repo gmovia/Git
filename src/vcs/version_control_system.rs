@@ -4,7 +4,7 @@ use crate::{
     types::set_type::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constant::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE}, clients::client::Client,};
 
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore, tag::{TagOptions, Tag}}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
 use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
@@ -77,16 +77,6 @@ impl VersionControlSystem {
         Merge::merge(branch, conflicts)
     }
 
-    pub fn git_clone(message: String, path_to_clone: &Path)-> Result<(), std::io::Error>{
-        Client::client(message, path_to_clone)
-        //Ok(())
-    }
-
-    pub fn fetch(message: String)-> Result<(), std::io::Error>{
-        let current = CurrentRepository::read()?;
-        let _ = Client::client(message, &current);
-        Ok(())
-    }
 
     pub fn ls_files(option: LsFilesOptions) -> Result<Vec<String>,std::io::Error>{
         let current = CurrentRepository::read()?;
@@ -104,6 +94,22 @@ impl VersionControlSystem {
             return Ok(RESPONSE_OK_IGNORE.to_string());
         }
         Ok(RESPONSE_NOK_GIT_IGNORE.to_string())
+    }
+
+    pub fn tag(option: TagOptions) -> Result<Vec<String>, std::io::Error> {
+        let current = CurrentRepository::read()?;
+        Tag::tag(&current, option)
+    }
+
+    pub fn git_clone(message: String, path_to_clone: &Path)-> Result<(), std::io::Error>{
+        Client::client(message, path_to_clone)
+        //Ok(())
+    }
+
+    pub fn fetch(message: String)-> Result<(), std::io::Error>{
+        let current = CurrentRepository::read()?;
+        let _ = Client::client(message, &current);
+        Ok(())
     }
     
     pub fn git_pull() -> Result<(), std::io::Error> {

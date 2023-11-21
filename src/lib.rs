@@ -19,6 +19,7 @@ pub mod handlers{
     pub mod fetch;
     pub mod ls_tree;
     pub mod pull;
+    pub mod tag;
 }
 
 pub mod proxies{
@@ -99,6 +100,7 @@ pub mod vcs{
         pub mod fetch;
         pub mod ls_tree;
         pub mod check_ignore;
+        pub mod tag;
     }
 
     pub mod sets{
@@ -113,6 +115,7 @@ pub mod vcs{
         pub mod blob_entity;
         pub mod change;
         pub mod conflict;
+        pub mod tag_entity;
     }
   
     pub mod version_control_system;
