@@ -32,15 +32,12 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_ent
     }
     println!("Mi lista que recibo de refs a enviar es:  --->{:?}\n" , send_refs);
     let last_commit_server = process_hash_server(&send_refs, (&current_repo).to_path_buf())?; //handlear despues para mas ramas
-    println!("LULILAS COMMIT SERVER ---> {}", last_commit_server);
-    //let vec = reformatted_hash_commit(send_refs, current_repo)?;
     let last_commit_current = CurrentCommit::read()?;
 
     let packfile = init_packfile(last_commit_current, current_repo, &last_commit_server)?;
 
     send_pack(packfile, stream, log_entries)?;
-    //tengo mi vector de lo que quiere actualizar el server
-   // init_send_pack(refs, stream, path)?;
+
     let msg_done = "0000";
     stream.write(msg_done.as_bytes())?;
     Ok(())
@@ -48,7 +45,6 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_ent
 
 
 fn process_hash_server(send_ref: &Vec<String>, current_repo: PathBuf) -> Result<String, std::io::Error>{
-    //primero necesito el ultimo commit d ela current branch en la que estoy parada 
     let mut exist_branch_in_server = false;
     let mut last_commit_server= String::new();
 
@@ -56,7 +52,6 @@ fn process_hash_server(send_ref: &Vec<String>, current_repo: PathBuf) -> Result<
         if refs.contains(&Init::get_current_branch(&current_repo)?){
             exist_branch_in_server = true;
             let parts: Vec<&str>  = refs.split_ascii_whitespace().collect();
-            //branch_match = parts[1].trim_start_matches("refs/heads/").to_string();
             last_commit_server = parts[0].to_string();
             break;
         }
@@ -95,23 +90,6 @@ fn init_packfile(last_commit_current: String, current_repo: &PathBuf, last_commi
     }
     Ok(packfile)
 }
-
-fn reformatted_hash_commit(send_ref: Vec<String>, current_repo: &PathBuf)-> Result<Vec<String>, std::io::Error> {
-    let mut result = Vec::new();
-    let current_branch = Branch::get_current_branch(&current_repo)?;
-
-    let refs_branch = format!("refs/heads/{}", current_branch);
-
-    for ref_info in send_ref {
-        if let Some(null_index) = ref_info.find('\0') {
-            result.push(ref_info[..null_index].to_string());
-        } else if let Some(newline_index) = ref_info.find('\n') {
-            result.push(ref_info[..newline_index].to_string());
-        }
-    }
-    Ok(result)
-}
-
 
 fn send_pack(packfile: Vec<u8>, stream: &mut TcpStream, log_entries: &Vec<String>) -> Result<String, std::io::Error> {
     let entry_hash = format!("{}\n", log_entries[0]);

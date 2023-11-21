@@ -28,7 +28,7 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
 
     let old_new_hash_commit = handler_receive_pack(writer)?;
 
-    let (branch_name, last_commit_client )= extract_branch_name(old_new_hash_commit.to_string())?;
+    let (_, _ )= extract_branch_name(old_new_hash_commit.to_string())?;
     
     println!("Received from packet: ---> {:?}", old_new_hash_commit); //lo recibe porque lo manda el cliente, pero daemon no hace nada con eso
     //ni crea la rama si no la tiene, pero eso si lo tenems que hacer almenos
@@ -100,7 +100,6 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
                 if value == "0" {
                     break;
                 } else {
-                    println!("ENTROOOOOOMELIIIIIIIII\n");
                     receive_refs.push(value);
                 }                
             }
@@ -142,18 +141,14 @@ fn empty_log_file(server_client_path: &PathBuf, branch_name: &str) -> io::Result
 
 fn change_current_branch(receive_refs: Vec<String>, server_client_path: &PathBuf) -> Result<(), std::io::Error> {
     let (branch_name, last_commit_client) = extract_branch_name(receive_refs[0].to_string())?;
-    println!("BRANCH NAME {:?} last commit cliente : {:?}", branch_name, last_commit_client);
     let current_branch = Init::get_current_branch(server_client_path)?;
 
     if !branch_exist(&branch_name, &server_client_path)? {
-        println!("ENTRA pq branch exist es FALS --- \n");
         let _ = create_new_branch_with_hash(server_client_path, &branch_name, &last_commit_client)?;
         empty_log_file(server_client_path, branch_name.as_str())?;
-        println!("CERROOK\n\n");
     }
 
     if current_branch != branch_name {
-        println!("ENTRO A change branch \n");
         change_branch(server_client_path, branch_name.as_str())?;
     }
 
@@ -188,7 +183,6 @@ pub fn create_new_branch_with_hash(path: &Path, branch_name: &str, hash: &str) -
 
 fn branch_exist(branch_name: &str, server_client_path: &PathBuf) -> Result<bool, std::io::Error> {
     let branchs: Vec<String> = Branch::get_branches(&server_client_path)?;
-    println!("BRANCHSSSSSSSS : {:?}\n", branchs);
     Ok(branchs.contains(&branch_name.to_string()))
 }
 
