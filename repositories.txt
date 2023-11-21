@@ -1,0 +1,4 @@
+tests/test_folder/clone_test
+tests/clone_test
+tests/clone
+clone
