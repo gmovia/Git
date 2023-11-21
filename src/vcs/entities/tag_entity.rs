@@ -2,6 +2,7 @@ use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
 use crate::{utils::randoms::random::Random, vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, constants::constant::TAG_CODE};
 
+#[derive(Debug, Clone)]
 pub struct TagEntity{
     pub commit_hash: String,
     pub typef: String,
@@ -21,7 +22,7 @@ impl TagEntity{
         tag_file.write_all(format!("tagger gmovia <gmovia@fi.uba.ar> 1700522965 -0300\n").as_bytes())?; // aca deberia ir el tagger
         tag_file.write_all(format!("\n{}", tag.message).as_bytes())?;
 
-        let tag_hash = HashObject::hash_object(repo_path, Init::get_object_path(repo_path)?, WriteOption::Write, TAG_CODE)?;
+        let tag_hash = HashObject::hash_object(&tag_path, Init::get_object_path(repo_path)?, WriteOption::Write, TAG_CODE)?;
 
         let _ = fs::remove_file(tag_path);
         Ok(tag_hash)
