@@ -1,6 +1,6 @@
 
 use std::{net::TcpStream, path::{Path, PathBuf}, io::Write};
-use crate::{packfiles::packfile::{process_line, to_pkt_line}, servers::encoder::Encoder, vcs::{commands::{branch::Branch, init::Init}, files::current_commit::CurrentCommit}};
+use crate::{packfiles::packfile::{process_line, to_pkt_line}, servers::encoder::Encoder, vcs::{commands::{branch::Branch, init::Init}, files::current_commit::CurrentCommit}, constants::constant::COMMIT_INIT_HASH};
 
 pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_entries: &Vec<String>) -> Result<(), std::io::Error> {
     // aca leo lo que me responde el servidor 
@@ -12,7 +12,6 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_ent
     //PACKDATA 
     //leer hasta que reciba un 0
     println!("Entro a handle--- send--pack \n");
-    let mut refs = Vec::new();
     // Buffer para almacenar los datos leídos
     let mut send_refs = Vec::new(); // Cambiado a Vec<String>
     loop {
@@ -22,7 +21,6 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &PathBuf, log_ent
                 if value == "0" {
                     break;
                 } else {
-                    refs.push(value.clone());
                     send_refs.push(value);
                 }                
             }
@@ -62,6 +60,9 @@ fn process_hash_server(send_ref: &Vec<String>, current_repo: PathBuf) -> Result<
             last_commit_server = parts[0].to_string();
             break;
         }
+    }
+    if exist_branch_in_server == false {
+        last_commit_server = COMMIT_INIT_HASH.to_string();
     }
     Ok(last_commit_server)
 }
@@ -114,8 +115,9 @@ fn reformatted_hash_commit(send_ref: Vec<String>, current_repo: &PathBuf)-> Resu
 
 fn send_pack(packfile: Vec<u8>, stream: &mut TcpStream, log_entries: &Vec<String>) -> Result<String, std::io::Error> {
     let entry_hash = format!("{}\n", log_entries[0]);
+    println!("LOG ENTIRES ---> {:?}", entry_hash);
     stream.write(to_pkt_line(&entry_hash).as_bytes())?;
-    println!("el mensaje de old y new antes del packfile --> {}\n", to_pkt_line(&log_entries[0]));
+    println!("el mensaje de old y new antes del packfile --> {}\n", to_pkt_line(&entry_hash));
 
     let msg_done = "0000";
     stream.write(msg_done.as_bytes())?;

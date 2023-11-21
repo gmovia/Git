@@ -1,6 +1,6 @@
 use std::{net::TcpStream, path::{Path, PathBuf}, io::{Write, self, BufRead}, fs};
 
-use crate::{ packfiles::packfile::to_pkt_line, protocol::send_pack::handle_send_pack};
+use crate::{ packfiles::packfile::to_pkt_line, protocol::send_pack::handle_send_pack, vcs::commands::branch::Branch};
 
 pub struct Push;
 
@@ -10,16 +10,19 @@ impl Push{
 
         let logs_path = current_repo.join(".rust_git").join("logs");
         let log_entries = Self::get_commits_branch(&logs_path)?;
-
+        let mut entry_to_send:Vec<String> = Vec::new();
         println!("LOG entries -----> {:?}\n", log_entries);
-
+        let current_branch:String = Branch::get_current_branch(&current_repo)?;
         for entries in &log_entries{
-            let ref_to_pkt = to_pkt_line(entries);
-            stream.write_all(ref_to_pkt.as_bytes())?;
+            if entries.contains(&current_branch){
+                entry_to_send.push(entries.to_string());
+                let ref_to_pkt = to_pkt_line(entries);
+                stream.write_all(ref_to_pkt.as_bytes())?;
+            }
         }
 
         println!("Hasta aca desde el cliente le mande las refs que tengo \n");
-        handle_send_pack(stream, &current_repo, &log_entries)?;
+        handle_send_pack(stream, &current_repo, &entry_to_send)?;
         
         //send_done_msg(stream)?;
 /* 

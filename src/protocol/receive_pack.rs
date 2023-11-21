@@ -1,7 +1,9 @@
+use crate::constants::constant::COMMIT_INIT_HASH;
+use crate::vcs::commands::branch::Branch;
 use crate::vcs::commands::cat_file::CatFile;
 use crate::vcs::commands::checkout::Checkout;
 use std::collections::HashMap;
-use std::fs::{OpenOptions, self};
+use std::fs::{OpenOptions, self, File};
 use std::io::{Write, self};
 use std::net::Shutdown;
 use std::path::Path;
@@ -90,7 +92,6 @@ fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: 
 
 fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<(), std::io::Error>{
     //
-    let mut refs = Vec::new();
     let mut receive_refs = Vec::new(); // Cambiado a Vec<String>
     loop {
         let value = process_line(writer);
@@ -99,7 +100,7 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
                 if value == "0" {
                     break;
                 } else {
-                    refs.push(value.clone());
+                    println!("ENTROOOOOOMELIIIIIIIII\n");
                     receive_refs.push(value);
                 }                
             }
@@ -115,9 +116,9 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
     // 2. puede pasar que el que pushee sea nueva_rama y el server lo tenga, se guarda normal
     // 3. puede pasar que el server no lo tenga por lo tanto tendra que crear nueva_rama, checkout a esa rama, y guardar datos ahi!
 
-    println!("Mi lista de refs que recibo es :  --->{:?}\n" , receive_refs);    
+    println!("::::::::::::::Mi lista de refs que recibo es :  --->{:?}\n" , receive_refs);    
 
-    change_current_branch(receive_refs,&server_client_path)?;
+    change_current_branch(receive_refs, &server_client_path)?;
 
     // aca espero la PACKDATA
     let objects = Clone::get_socket_response(writer)?;
@@ -126,15 +127,71 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
     Ok(())
 }
 
-fn change_current_branch(receive_refs:Vec<String>, server_client_path: &PathBuf) -> Result<(), std::io::Error> {
-    let (branch_name, last_commit_client ) = extract_branch_name(receive_refs[0].to_string())?;
-    let current_branch = Init::get_current_branch(server_client_path)?;
-    if current_branch != branch_name {
-        Checkout::change_branch(server_client_path, branch_name.as_str())?;
-    }
-    CurrentCommit::write_for_branch(&server_client_path, &branch_name, last_commit_client)?;
+fn empty_log_file(server_client_path: &PathBuf, branch_name: &str) -> io::Result<()> {
+    let logs_path = server_client_path.join(".rust_git").join("logs").join(branch_name);
+
+    // Abre el archivo en modo de escritura y establece la longitud a cero.
+    OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(&logs_path)?
+        .set_len(0)?;
+
     Ok(())
 }
+
+fn change_current_branch(receive_refs: Vec<String>, server_client_path: &PathBuf) -> Result<(), std::io::Error> {
+    let (branch_name, last_commit_client) = extract_branch_name(receive_refs[0].to_string())?;
+    println!("BRANCH NAME {:?} last commit cliente : {:?}", branch_name, last_commit_client);
+    let current_branch = Init::get_current_branch(server_client_path)?;
+
+    if !branch_exist(&branch_name, &server_client_path)? {
+        println!("ENTRA pq branch exist es FALS --- \n");
+        let _ = create_new_branch_with_hash(server_client_path, &branch_name, &last_commit_client)?;
+        empty_log_file(server_client_path, branch_name.as_str())?;
+        println!("CERROOK\n\n");
+    }
+
+    if current_branch != branch_name {
+        println!("ENTRO A change branch \n");
+        change_branch(server_client_path, branch_name.as_str())?;
+    }
+
+    CurrentCommit::write_for_branch(server_client_path, &branch_name, last_commit_client)?;
+
+    Ok(())
+}
+
+pub fn change_branch(path: &Path, branch_name: &str) -> Result<(), std::io::Error>{
+    let rust_git_path = path.join(".rust_git");
+    let head_path = rust_git_path.join("HEAD");
+    let mut file = File::create(head_path)?;
+    file.write_all(format!("refs/heads/{}", branch_name).as_bytes())?;
+    Ok(())
+}
+
+pub fn create_new_branch_with_hash(path: &Path, branch_name: &str, hash: &str) -> Result<(),std::io::Error> { 
+    let branch_head_path = path.join(".rust_git").join("refs").join("heads").join(branch_name);        
+    let mut branch_head = OpenOptions::new().write(true).create(true).append(false).open(branch_head_path)?;
+
+    let branch_log_path = path.join(".rust_git").join("logs").join(branch_name);
+    let mut branch_log = OpenOptions::new().write(true).create(true).append(true).open(branch_log_path)?;
+    
+    let current_log = Init::get_current_log(path)?;
+    let table = fs::read_to_string(current_log)?;
+    
+    branch_head.write_all(hash.as_bytes())?;
+    branch_log.write_all(table.as_bytes())?;
+    Ok(())
+}
+
+
+fn branch_exist(branch_name: &str, server_client_path: &PathBuf) -> Result<bool, std::io::Error> {
+    let branchs: Vec<String> = Branch::get_branches(&server_client_path)?;
+    println!("BRANCHSSSSSSSS : {:?}\n", branchs);
+    Ok(branchs.contains(&branch_name.to_string()))
+}
+
 
 pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &PathBuf, last_commit: String) -> Result<(), std::io::Error> {
     let objects_prcessed = Clone::process_folder(objects.to_vec());
