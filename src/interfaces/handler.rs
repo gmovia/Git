@@ -1,5 +1,5 @@
 use std::{fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::hash_object::WriteOption, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE}, handlers::clone::handler_clone};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE}, handlers::clone::handler_clone};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
 use gtk::{prelude::*, Button};
@@ -412,6 +412,7 @@ pub fn handle_other_commands(interface: &RustInterface) {
     handle_ls_files(interface);
     handle_ls_tree(interface);
     handle_check_ignore(interface);
+    handle_tag(interface);
 
     interface.others_close.connect_clicked({
        let dialog2 = interface.others_dialog.clone(); 
@@ -523,6 +524,146 @@ pub fn handle_check_ignore(interface: &RustInterface) {
             dialog2.hide();
         } 
     });
+}
+
+pub fn handle_tag(interface: &RustInterface) {
+
+    let dialog = interface.tag_dialog.clone();
+    let cdl_dialog = interface.create_delete_light_dialog.clone();
+    let c_dialog = interface.create_dialog.clone();
+    let st_box = interface.show_tags_box.clone();
+    let tl_box = interface.tag_light_box.clone();
+    let t_box = interface.tag_box.clone();
+    let t_entry = interface.tag_light_entry.clone();
+    let entry = interface.tag_entry.clone();
+    let m_entry = interface.tag_message_entry.clone();
+
+    let cd_button = interface.delete_tag_button.clone();
+    let cl_button = interface.create_light_button.clone();
+
+    interface.delete_tag_button.set_sensitive(false);
+    interface.create_light_button.set_sensitive(false);
+
+    interface.tag_box.set_visible(false);
+    interface.show_tags_box.set_visible(false);
+
+    interface.tag.connect_clicked({
+        move |_| {
+            dialog.run();
+            dialog.hide();
+        }
+    });
+
+    interface.show_tags.connect_clicked({
+        move |_| {
+            st_box.foreach(|child| {
+                st_box.remove(child);
+            });
+            if let Ok(tags) = VersionControlSystem::tag(TagOptions::Get) {
+                for tag in tags {
+                    let message = format!("{}\n",tag);
+                    draw_message(&st_box, &message, 0.5);
+                }
+                st_box.set_visible(true);
+            }
+        }
+    });
+
+    interface.create_light_tag.connect_clicked({
+       let t_entry = interface.tag_light_entry.clone();
+       move |_| {
+            tl_box.foreach(|child| {
+                tl_box.remove(child);
+            });
+            t_entry.connect_changed({
+                let cl_button = cl_button.clone();
+                move |e| {
+                    cl_button.set_sensitive(!e.text().is_empty());
+                }
+            });
+            cdl_dialog.run();
+            cdl_dialog.hide();
+       } 
+    });
+    interface.delete_tag.connect_clicked({
+        let cdl_dialog = interface.create_delete_light_dialog.clone();
+        let tl_box = interface.tag_light_box.clone();
+        let t_entry = interface.tag_light_entry.clone();
+        move |_| {
+            tl_box.foreach(|child| {
+                tl_box.remove(child);
+            });
+            t_entry.connect_changed({
+                let cd_button = cd_button.clone();
+                move |e| {
+                    cd_button.set_sensitive(!e.text().is_empty());
+                }
+            });
+            cdl_dialog.run();
+            cdl_dialog.hide();
+        } 
+    });
+
+    interface.create_tag.connect_clicked({
+        move |_| {
+            t_box.foreach(|child| {
+                t_box.remove(child);
+            });
+            c_dialog.run();
+            c_dialog.hide();
+        }
+    });
+
+    interface.create_light_button.connect_clicked({
+       let tl_box = interface.tag_light_box.clone();
+       move |button| {
+            tl_box.foreach(|child| {
+                tl_box.remove(child);
+            });
+            let _ = VersionControlSystem::tag(TagOptions::CreateLight(&t_entry.text()));
+            draw_message(&tl_box, &"      TAG CREATED SUCCESSFULLY!     ".to_string(), 0.5);
+            tl_box.set_visible(true);
+            t_entry.set_text("");
+            button.set_sensitive(false);
+       } 
+    });
+
+    interface.delete_tag_button.connect_clicked({
+        let tl_box = interface.tag_light_box.clone();
+        let t_entry = interface.tag_light_entry.clone();
+        move |button| {
+            tl_box.foreach(|child| {
+                tl_box.remove(child);
+            });
+            let _ = VersionControlSystem::tag(TagOptions::Delete(&t_entry.text()));
+            draw_message(&tl_box, &"      TAG DELETED SUCCESSFULLY!     ".to_string(), 0.5);
+            tl_box.set_visible(true);
+            t_entry.set_text("");
+            button.set_sensitive(false);
+        } 
+    });
+
+    interface.create_tag_button.connect_clicked({
+        let t_box = interface.tag_box.clone();
+        move |button| {
+            t_box.foreach(|child| {
+                t_box.remove(child);
+            });
+            let _ = VersionControlSystem::tag(TagOptions::Create(&entry.text(), &m_entry.text()));
+            draw_message(&t_box, &"      TAG CREATED SUCCESSFULLY!     ".to_string(), 0.5);
+            t_box.set_visible(true);
+            entry.set_text("");
+            m_entry.set_text("");
+            button.set_sensitive(false);
+        } 
+    });
+
+     interface.tag_close.connect_clicked({
+        let dialog_2 = interface.tag_dialog.clone();
+        move |_| {
+            dialog_2.hide();
+    }});
+
 }
 
  

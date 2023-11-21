@@ -1,6 +1,6 @@
-//use std::{path::Path, io::{self, Write}};
+use std::{path::Path, io::{self, Write}};
 
-//use rust_git::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command};
+use rust_git::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command};
 
 use rust_git::interfaces::interface::RustInterface;
 

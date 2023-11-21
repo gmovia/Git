@@ -23,7 +23,7 @@ impl Encoder {
     pub fn init_encoder(path: &Path, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let encoder = Encoder { path: path.to_path_buf() };
         let mut packfile= Vec::new();
-        println!("MENSAJES: {:?} - PATH: {:?}", messages, path.clone());
+        println!("MENSAJES: {:?} - PATH: {:?}", messages, path);
         
         if messages.0.is_empty() {
             println!("Already up to date")
