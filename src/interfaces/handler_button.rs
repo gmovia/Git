@@ -113,11 +113,18 @@ pub fn handle_commit_button(interface: &RustInterface) {
     let rc_entry = interface.message.clone();
     let rc_box = interface.commit_box.clone();
 
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+    let rc_tuple = errors_tuple.clone();
+
     interface.message_ok.connect_clicked({
         let rc_entry = rc_entry.clone();
         move |button| {
-            let _ = VersionControlSystem::commit(rc_entry.text().to_string());
-            draw_message(&rc_box, &"     COMMITED SUCCESSFULLY!    ".to_string(), 0.5);  
+            if  VersionControlSystem::commit(rc_entry.text().to_string()).is_ok(){
+                draw_message(&rc_box, &"     COMMITED SUCCESSFULLY!    ".to_string(), 0.5);
+            }else{
+                draw_error(rc_tuple.clone(), &"  CAN'T COMMIT WITH STAGING EMPTY...   ".to_string(), &rc_entry);
+            }
+              
             rc_entry.set_text("");
             button.set_sensitive(false);
         }
