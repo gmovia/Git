@@ -1,7 +1,7 @@
 use std::io::Write;
 use std::net::TcpStream;
 use std::path::Path;
-use crate::vcs::commands::clone;
+use crate::vcs::commands::{clone, push};
 use crate::packfiles::packfile::to_pkt_line;
 use crate::constants::constant::{PUERTO, HOST};
 use crate::vcs::commands::fetch::Fetch;
@@ -30,6 +30,7 @@ impl Client {
         match command {
         command_str if command_str.contains("git clone") => Self::handler_clone(stream, command, current_repository),
         command_str if command_str.contains("git fetch") => Self::handler_fetch(stream, command, current_repository),
+        command_str if command_str.contains("git push") => Self::handler_push(stream,command,&current_repository),
         _ => Ok(())
     }
    }
@@ -39,6 +40,15 @@ impl Client {
         let pkt_line = to_pkt_line(&query_to_send);
         let _ = stream.write(pkt_line.as_bytes());
         Self::handler_query(&query_to_send, &mut stream, current_repository, "clone")?;
+        Ok(())
+    }
+
+    fn handler_push(mut stream: TcpStream, command: &str, current_repository: &Path) -> Result<(),std::io::Error>{
+        let query_to_send = Self::handler_input(&command, &current_repository)?;
+        let pkt_line = to_pkt_line(&query_to_send);
+        print!("Query to_pkt_line : {:?} ---> \n", pkt_line);
+        stream.write(pkt_line.as_bytes())?;
+        let _ = Self::handler_query(&query_to_send, &mut stream, &current_repository, "");
         Ok(())
     }
 
@@ -60,6 +70,9 @@ impl Client {
             _ if input.contains("git fetch") => {
                 Ok(format!("git-upload-pack /{}", current_repository.display()))
             },
+            _ if input.contains("git push") => {
+                return Ok(format!("git-receive-pack /{}\0host={}:{}\0\0version=2\0", current_repository.display(), HOST, PUERTO));
+            },
             _ => Ok(input.to_string()),
         }
     }
@@ -68,6 +81,7 @@ impl Client {
             match query {
             command_str if command_str.contains("git-upload-pack") && command_type == "clone" => clone::Clone::git_clone(socket, current_repository),
             command_str if command_str.contains("git-upload-pack") && command_type == "fetch" => Fetch::git_fetch(socket, current_repository),
+            command_str if command_str.contains("git-receive-pack") =>  push::Push::push(socket, (&current_repository).to_path_buf()),
             _ => Ok(()),
         }
     }
