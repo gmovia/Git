@@ -1,7 +1,5 @@
-use crate::constants::constant::COMMIT_INIT_HASH;
 use crate::vcs::commands::branch::Branch;
 use crate::vcs::commands::cat_file::CatFile;
-use crate::vcs::commands::checkout::Checkout;
 use std::collections::HashMap;
 use std::fs::{OpenOptions, self, File};
 use std::io::{Write, self};
@@ -43,11 +41,11 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
 fn extract_branch_name(old_new_hash_commit: String) ->  Result<(String, String), std::io::Error> {
     let parts: Vec<&str> = old_new_hash_commit.split_whitespace().collect();
     let last_commit_client = parts[1];
-    let branch_name = parts[2].trim_start_matches("refs/heads/").trim_end_matches("\n");
+    let branch_name = parts[2].trim_start_matches("refs/heads/").trim_end_matches('\n');
     Ok((branch_name.to_owned(), last_commit_client.to_string()))
 }
 
-fn recovery_last_commit_for_each_branch(server_client_path: &PathBuf) -> Result<Vec<(String, String)>, io::Error> {
+fn recovery_last_commit_for_each_branch(server_client_path: &Path) -> Result<Vec<(String, String)>, io::Error> {
     let logs_path = server_client_path.join(".rust_git").join("logs");
 
     let mut branch_commits = Vec::new();
@@ -70,23 +68,23 @@ fn recovery_last_commit_for_each_branch(server_client_path: &PathBuf) -> Result<
 
 fn extract_last_commit(log_content: &str) -> Result<String, io::Error> {
     let last_line = log_content.lines().last().ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log file is empty"))?;
-    let line_parts: Vec<&str> = last_line.split("-").collect();
+    let line_parts: Vec<&str> = last_line.split('-').collect();
     let last_commit = line_parts.get(2).ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log line is malformed"))?;
     Ok(last_commit.to_string())
 }
 
-fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: &PathBuf) -> Result<(), std::io::Error>{
+fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: &Path) -> Result<(), std::io::Error>{
     let last_commit_and_branch = recovery_last_commit_for_each_branch(server_client_path)?;
     
     for (last_commit, branch_server_name) in last_commit_and_branch{
         let update_info = format!("{} refs/heads/{}\n",last_commit, branch_server_name);
         let info_to_pkt_line = to_pkt_line(&update_info);
         println!("Mi pedido del server al cliente {:?}\n\n", info_to_pkt_line);
-        writer.write(info_to_pkt_line.as_bytes())?;
+        writer.write_all(info_to_pkt_line.as_bytes())?;
     }
 
     let msg_done = "0000";
-    writer.write(msg_done.as_bytes())?;
+    writer.write_all(msg_done.as_bytes())?;
     Ok(())
 }
 
@@ -126,25 +124,25 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
     Ok(())
 }
 
-fn empty_log_file(server_client_path: &PathBuf, branch_name: &str) -> io::Result<()> {
+fn empty_log_file(server_client_path: &Path, branch_name: &str) -> io::Result<()> {
     let logs_path = server_client_path.join(".rust_git").join("logs").join(branch_name);
 
     // Abre el archivo en modo de escritura y establece la longitud a cero.
     OpenOptions::new()
         .write(true)
         .truncate(true)
-        .open(&logs_path)?
+        .open(logs_path)?
         .set_len(0)?;
 
     Ok(())
 }
 
-fn change_current_branch(receive_refs: Vec<String>, server_client_path: &PathBuf) -> Result<(), std::io::Error> {
+fn change_current_branch(receive_refs: Vec<String>, server_client_path: &Path) -> Result<(), std::io::Error> {
     let (branch_name, last_commit_client) = extract_branch_name(receive_refs[0].to_string())?;
     let current_branch = Init::get_current_branch(server_client_path)?;
 
-    if !branch_exist(&branch_name, &server_client_path)? {
-        let _ = create_new_branch_with_hash(server_client_path, &branch_name, &last_commit_client)?;
+    if !branch_exist(&branch_name, server_client_path)? {
+        create_new_branch_with_hash(server_client_path, &branch_name, &last_commit_client)?;
         empty_log_file(server_client_path, branch_name.as_str())?;
     }
 
@@ -181,30 +179,30 @@ pub fn create_new_branch_with_hash(path: &Path, branch_name: &str, hash: &str) -
 }
 
 
-fn branch_exist(branch_name: &str, server_client_path: &PathBuf) -> Result<bool, std::io::Error> {
-    let branchs: Vec<String> = Branch::get_branches(&server_client_path)?;
+fn branch_exist(branch_name: &str, server_client_path: &Path) -> Result<bool, std::io::Error> {
+    let branchs: Vec<String> = Branch::get_branches(server_client_path)?;
     Ok(branchs.contains(&branch_name.to_string()))
 }
 
 
-pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &PathBuf, last_commit: String) -> Result<(), std::io::Error> {
+pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &Path, _last_commit: String) -> Result<(), std::io::Error> {
     let objects_prcessed = Clone::process_folder(objects.to_vec());
 
     for obj in &objects_prcessed{
         println!("------> {:?}", obj);
     }
 
-    let commits_created = Clone::create_folders(objects_prcessed.clone(), &repo_server_client);
+    let commits_created = Clone::create_folders(objects_prcessed.clone(), repo_server_client);
     println!("COMMITS CREATEDDDD ---> {:?}\n", commits_created);
 
     let hashes_sorted = sort_hashes(&commits_created);
 
     println!("HASH SORTED ---> {:?}\n", hashes_sorted);
     for(commit_hash, commit_entity ) in &hashes_sorted{
-        write_commit_log_push(&commit_entity.parent_hash, &commit_hash, &commit_entity, repo_server_client.to_path_buf())?;
+        write_commit_log_push(&commit_entity.parent_hash, commit_hash, commit_entity, repo_server_client.to_path_buf())?;
     }
 
-    update_cd(&repo_server_client.clone())?;
+    update_cd(repo_server_client)?;
 
     Ok(())
 }
@@ -238,7 +236,7 @@ fn write_commit_log_push(last_commit_hash: &String, new_commit_hash: &String, co
     Ok(())
 }
 
-pub fn update_cd(path: &PathBuf) -> Result<(), std::io::Error>{
+pub fn update_cd(path: &Path) -> Result<(), std::io::Error>{
     let repository_hashmap = Repository::read(path)?;
 
     delete_all_files_and_folders(path)?;

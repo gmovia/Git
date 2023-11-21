@@ -72,7 +72,7 @@ impl Server {
             s if s.contains("git-receive-pack") => Push::parse_query_to_extract_path(message)?.to_string(),
             _ => return Err(std::io::Error::new(std::io::ErrorKind::Other, "No entiendo tu mensaje")),
         };
-        let aux = format!("{}/{}",path.display().to_string(), client_path);
+        let aux = format!("{}/{}",path.display(), client_path);
         let server_path = Path::new(&aux).to_path_buf();
     
         Ok(server_path)

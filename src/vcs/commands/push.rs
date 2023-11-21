@@ -1,18 +1,18 @@
-use std::{net::TcpStream, path::{Path, PathBuf}, io::{Write, self, BufRead}, fs};
+use std::{net::TcpStream, path::Path, io::{Write, self, BufRead}, fs};
 
 use crate::{ packfiles::packfile::to_pkt_line, protocol::send_pack::handle_send_pack, vcs::commands::branch::Branch};
 
 pub struct Push;
 
 impl Push{
-    pub fn push(stream: &mut TcpStream, current_repo: PathBuf) -> Result<(),std::io::Error> {
+    pub fn push(stream: &mut TcpStream, current_repo: &Path) -> Result<(),std::io::Error> {
         println!("ESTOY EN PUSH\n\n");
 
         let logs_path = current_repo.join(".rust_git").join("logs");
         let log_entries = Self::get_commits_branch(&logs_path)?;
         let mut entry_to_send:Vec<String> = Vec::new();
         println!("LOG entries -----> {:?}\n", log_entries);
-        let current_branch:String = Branch::get_current_branch(&current_repo)?;
+        let current_branch:String = Branch::get_current_branch(current_repo)?;
         for entries in &log_entries{
             if entries.contains(&current_branch){
                 entry_to_send.push(entries.to_string());
@@ -22,7 +22,7 @@ impl Push{
         }
 
         println!("Hasta aca desde el cliente le mande las refs que tengo \n");
-        handle_send_pack(stream, &current_repo, &entry_to_send)?;
+        handle_send_pack(stream, current_repo, &entry_to_send)?;
         
         //send_done_msg(stream)?;
 /* 
@@ -34,7 +34,7 @@ impl Push{
     }
 
     fn extract_old_new_commit(line: String) -> String{
-        let parts: Vec<&str> = line.split("-").collect();
+        let parts: Vec<&str> = line.split('-').collect();
         let old_hash = parts[1];
         let new_hash = parts[2];
         let hashes = format!("{} {}", old_hash, new_hash);

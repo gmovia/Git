@@ -334,17 +334,17 @@ impl Encoder {
 
 
 
-    pub fn get_object_for_commit(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str , last_commit_server: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+    pub fn get_object_for_commit(server_path: &Path, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str , last_commit_server: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
         let objects_path = server_path.join(".rust_git").join("objects");
         let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
 
         if want_path.exists() {
             println!(" WANT PATH exist\n");
-            let commit_entity = CommitEntity::read(&server_path, commit_hash)?;
+            let commit_entity = CommitEntity::read(server_path, commit_hash)?;
             if let Ok(_metadata) = fs::metadata(&want_path) {
                 println!("::::::::::OBJECT DATA    {:?}",objects_data);
                 
-                Self::get_objects_tree(&server_path, objects_data, commit_entity, last_commit_server, &want_path)?;
+                Self::get_objects_tree(server_path, objects_data, commit_entity, last_commit_server, &want_path)?;
                 //objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
                 
             }
@@ -361,13 +361,13 @@ impl Encoder {
     }
 
     
-    fn get_objects_tree(server_path: &PathBuf, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity, last_commit_server: &str, want_path: &Path) -> Result<(), std::io::Error> {
+    fn get_objects_tree(server_path: &Path, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity, last_commit_server: &str, want_path: &Path) -> Result<(), std::io::Error> {
         let tree_path = server_path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
         let tree_entity = TreeEntity::read(server_path, commit_entity.tree_hash)?;
         if let Ok(metadata) = fs::metadata(&tree_path) {
             if let Some(commit)  = CommitsTable::get_commit(commit_entity.parent_hash.clone(), &Branch::get_current_branch(&CurrentRepository::read()?)?)?{
                 
-                if commit.hash.as_str().trim_end_matches("\n") == last_commit_server.trim_end_matches("\n") {
+                if commit.hash.as_str().trim_end_matches('\n') == last_commit_server.trim_end_matches('\n') {
                     return Ok(()); 
                 }     
             }
