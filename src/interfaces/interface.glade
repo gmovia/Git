@@ -1177,7 +1177,7 @@
             </child>
             <child>
               <object class="GtkButton" id="fetch">
-                <property name="label" translatable="yes">fetch</property>
+                <property name="label" translatable="yes">Fetch</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -1193,7 +1193,7 @@
             </child>
             <child>
               <object class="GtkButton" id="log">
-                <property name="label" translatable="yes">log</property>
+                <property name="label" translatable="yes">Log</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -1209,7 +1209,7 @@
             </child>
             <child>
               <object class="GtkButton" id="rm">
-                <property name="label" translatable="yes">rm</property>
+                <property name="label" translatable="yes">Rm</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -1225,7 +1225,7 @@
             </child>
             <child>
               <object class="GtkButton" id="terminal">
-                <property name="label" translatable="yes">terminal</property>
+                <property name="label" translatable="yes">Terminal</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
