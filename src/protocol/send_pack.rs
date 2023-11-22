@@ -3,17 +3,8 @@ use std::{net::TcpStream, path::{Path, PathBuf}, io::Write};
 use crate::{packfiles::packfile::{process_line, to_pkt_line}, servers::encoder::Encoder, vcs::{commands::init::Init, files::current_commit::CurrentCommit}, constants::constant::COMMIT_INIT_HASH};
 
 pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &Path, log_entries: &[String]) -> Result<(), std::io::Error> {
-    // aca leo lo que me responde el servidor 
-    //por lo que son una lista de referencias de lo que puede actualizar 
-
-    //dado el caso busco mi commit, y armo el paquete para enviarselo
-    // empiezo por mandar el paquete directamente
-    // y 0000
-    //PACKDATA 
-    //leer hasta que reciba un 0
     println!("Entro a handle--- send--pack \n");
-    // Buffer para almacenar los datos leídos
-    let mut send_refs = Vec::new(); // Cambiado a Vec<String>
+    let mut send_refs = Vec::new(); 
     loop {
         let value = process_line(stream);
         match value {
