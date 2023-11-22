@@ -12,9 +12,12 @@ pub const TREE_CODE_NUMBER: u8 = 2;
 pub const BLOB_CODE: &str = "blob";
 pub const BLOB_CODE_NUMBER: u8 = 3;
 
-//COMMIT
+// COMMIT
 pub const COMMIT_CODE_NUMBER: u8 = 1;
 pub const COMMIT_CODE: &str = "commit";
+
+// TAG
+pub const TAG_CODE: &str = "tag";
 
 pub const COMMIT_INIT_HASH: &str = "0000000000000000000000000000000000000000";
 

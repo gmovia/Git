@@ -243,14 +243,14 @@ impl Fetch {
                 parent_hash: partes[1].trim_end_matches('\n').trim_start_matches('\n').trim_start_matches("parent ").to_string(),
             }
         };
-        let hash_commit = Proxy::write_commit(repo.clone(), &commit_entity)?;
+        let hash_commit = Proxy::write_commit(repo, &commit_entity)?;
 
         Ok((hash_commit, commit_entity))
     }
     
 
     fn create_blob_folder(content: &String, repo: &Path){
-        let _ = Proxy::write_blob(repo.clone(),content);
+        let _ = Proxy::write_blob(repo,content);
     }
 
     fn create_tree_folder(content: &str, repo: &Path) -> Result<String, std::io::Error> {

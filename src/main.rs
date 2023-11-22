@@ -2,6 +2,10 @@ use std::{path::Path, io::{self, Write}};
 
 use rust_git::{vcs::version_control_system::VersionControlSystem, handlers::commands::handler_command};
 
+
+use rust_git::interfaces::interface::RustInterface;
+
+
 fn main() -> Result<(), std::io::Error>{
     VersionControlSystem::init(Path::new("test1"), Vec::new());
     //let _ = VersionControlSystem::init(Path::new("clone"), Vec::new());
