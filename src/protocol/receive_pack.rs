@@ -1,5 +1,8 @@
 use crate::vcs::commands::branch::Branch;
 use crate::vcs::commands::cat_file::CatFile;
+use crate::vcs::entities::entity::convert_to_repository;
+use crate::vcs::entities::tree_entity::TreeEntity;
+use crate::vcs::files::commits_table::CommitsTable;
 use std::collections::HashMap;
 use std::fs::{OpenOptions, self, File};
 use std::io::{Write, self};
@@ -11,7 +14,7 @@ use chrono::{DateTime, Utc, NaiveDateTime};
 
 use crate::packfiles::packfile::{process_line, to_pkt_line};
 
-use crate::utils::files::file::{delete_all_files_and_folders, create_file_and_their_folders};
+use crate::utils::files::file::{delete_all_files_and_folders, create_file_and_their_folders, self};
 use crate::utils::randoms::random::Random;
 use crate::vcs::commands::clone::Clone;
 use crate::vcs::commands::init::Init;
@@ -202,6 +205,8 @@ pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &Path, _l
         write_commit_log_push(&commit_entity.parent_hash, commit_hash, commit_entity, repo_server_client.to_path_buf())?;
     }
 
+
+
     update_cd(repo_server_client)?;
 
     Ok(())
@@ -237,15 +242,49 @@ fn write_commit_log_push(last_commit_hash: &String, new_commit_hash: &String, co
 }
 
 pub fn update_cd(path: &Path) -> Result<(), std::io::Error>{
+    println!("REPO PATH --> {:?}", path);
     let repository_hashmap = Repository::read(path)?;
+    println!("repository_hashmap--> {:?}", repository_hashmap);
 
     delete_all_files_and_folders(path)?;
 
     for (key, value) in repository_hashmap{
         let content = CatFile::cat_file(&value, Init::get_object_path(path)?)?;
-        create_file_and_their_folders(Path::new(&key), &content)?
+        println!("CONTENT ----------->{}", content);
+        
+        if let Some(first_component) = path.display().to_string().split('/').next(){
+            // Crear un nuevo PathBuf con el nombre de archivo base y la clave
+            let path_server = Path::new(first_component).join(key.clone());
+            println!("key ---> {:?}\n", key);
+            create_file_and_their_folders(&path_server, &content)?
+        }
     }
     Ok(())
+}
+
+pub fn read(repo_path: &Path) -> Result<HashMap<String,String>,std::io::Error>{
+    let current_branch = &Init::get_current_branch(repo_path)?;
+    
+    let current_commit_hash = CurrentCommit::read_for_branch(repo_path, &current_branch)?;
+
+    let mut local_repository: HashMap<String, String>  = HashMap::new();
+    local_repository.extend(Repository::read_repository_of_commit(repo_path.to_path_buf(), current_branch, &current_commit_hash)?);
+    Ok(local_repository)
+}
+
+pub fn read_repository_of_commit(repo_path: PathBuf, branch: &str, commit_hash: &str) -> Result<HashMap<String, String>,std::io::Error>{
+    let commits_table = CommitsTable::read(repo_path.clone(), branch)?;
+
+    for commit in commits_table {
+        if commit.hash == commit_hash {
+            let commit_entity = CommitEntity::read(&repo_path, commit_hash)?; 
+            
+            let entities  = TreeEntity::read(&repo_path, commit_entity.tree_hash)?;
+
+            return Ok(convert_to_repository(&entities, repo_path));
+        }
+    }
+    Ok(HashMap::new())
 }
 
 fn handler_receive_pack(writer: &mut TcpStream) ->  Result<String, std::io::Error>{
