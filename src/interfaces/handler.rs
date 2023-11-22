@@ -773,7 +773,7 @@ pub fn handle_pull(interface: &RustInterface) {
     });
 }
 
-/*
+
 pub fn handle_push(interface: &RustInterface) {
     let info = interface.info_pull_push.clone();
 
@@ -784,7 +784,7 @@ pub fn handle_push(interface: &RustInterface) {
             info.foreach({|child|{
                 info.remove(child);
             }});
-            let _ = VersionControlSystem::git_push();
+            let _ = VersionControlSystem::push("git push".to_string());
             let close = Button::builder()
                 .label("close")
                 .build();
@@ -803,4 +803,3 @@ pub fn handle_push(interface: &RustInterface) {
         } 
     });
 }
-*/

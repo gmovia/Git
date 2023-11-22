@@ -83,11 +83,6 @@ impl VersionControlSystem {
         LsFiles::ls_files(option, &current)
     }
 
-    pub fn push(message: String)-> Result<(), std::io::Error>{
-        let current = CurrentRepository::read()?;
-        let _ = Client::client(message, &current);
-        Ok(())
-    }
 
     pub fn ls_tree(branch: &str) -> Result<Vec<String>, std::io::Error> {
         let current = CurrentRepository::read()?;
@@ -124,5 +119,11 @@ impl VersionControlSystem {
         Self::merge(&Init::get_current_branch(&current)?)?;
         Ok(())
 
+    }
+
+    pub fn push(message: String)-> Result<(), std::io::Error>{
+        let current = CurrentRepository::read()?;
+        let _ = Client::client(message, &current);
+        Ok(())
     }
 }
