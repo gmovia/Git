@@ -30,9 +30,7 @@ impl Clone{
                 packets.push(packet);
             }
         }
-        for packet in &packets {
-            println!("Paquete: {:?}", packet);
-        }
+
         for want in Self::get_want_msgs(&packets) {
             let _ = socket.write_all(want.as_bytes());
         }
@@ -111,7 +109,7 @@ impl Clone{
         }
     }
 
-    fn process_folder(objects: Vec<(u8,Vec<u8>)>) -> Vec<(u8, String)> {
+    pub fn process_folder(objects: Vec<(u8,Vec<u8>)>) -> Vec<(u8, String)> {
         let mut objects_processed : Vec<(u8, String)> = Vec::new();
         for (number, inner_vec) in &objects {
             if *number != TREE_CODE_NUMBER {
@@ -125,7 +123,7 @@ impl Clone{
 
 
 
-     fn create_folders(objects: Vec<(u8, String)>, repo: &Path) -> HashMap<String, CommitEntity>{
+     pub fn create_folders(objects: Vec<(u8, String)>, repo: &Path) -> HashMap<String, CommitEntity>{
         let mut commits_created: HashMap<String, CommitEntity> = HashMap::new();
 
         for (index, content) in objects.iter() {
@@ -224,7 +222,7 @@ impl Clone{
         Ok(())
     }
 
-    fn get_date(line: &str) -> &str {
+    pub fn get_date(line: &str) -> &str {
         let start = match line.find('>') {
             Some(pos) => pos + 2, 
             None => 0, 
@@ -243,12 +241,11 @@ impl Clone{
             }
             want_msgs.push(pkt_commit);
         }
-        println!("WANTS MESSAGE --> {:?} \n", want_msgs);
         want_msgs
     }
 
 
-    fn get_socket_response(socket: &mut TcpStream) -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
+    pub fn get_socket_response(socket: &mut TcpStream) -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
         let mut buffer = Vec::new();
             match socket.read_to_end(&mut buffer) {
                 Ok(_) => {

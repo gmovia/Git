@@ -9,9 +9,12 @@ use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, Write};
 use crate::constants::constant::COMMIT_INIT_HASH;
+use crate::vcs::commands::branch::Branch;
 use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::entities::entity::Entity;
 use crate::vcs::entities::tree_entity::TreeEntity;
+use crate::vcs::files::commits_table::CommitsTable;
+use crate::vcs::files::current_repository::CurrentRepository;
 
 
 pub struct Encoder {
@@ -23,7 +26,6 @@ impl Encoder {
     pub fn init_encoder(path: &Path, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let encoder = Encoder { path: path.to_path_buf() };
         let mut packfile= Vec::new();
-        println!("MENSAJES: {:?} - PATH: {:?}", messages, path);
         
         if messages.0.is_empty() {
             println!("Already up to date")
@@ -32,7 +34,6 @@ impl Encoder {
             packfile = Self::create_packfile(&encoder.path)?;        
         }
         else {
-            println!("ENTRA BIEN. EL PATH ES: {:?}", path);
             packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
         }
         Ok(packfile)
@@ -111,12 +112,8 @@ impl Encoder {
             .into_iter()
             .filter(|obj| unique_set.insert(obj.clone()))
             .collect();
-        
-        for object in &unique_objects_data {
-            println!("OBJECT: {:?}", object);
-        }
-        println!("OBJECTS DATA: {:?}", unique_objects_data);
-        Self::create_fetch_header(&mut packfile, unique_objects_data.len())?;
+
+        Self::create_size_header(&mut packfile, unique_objects_data.len())?;
         for objects in unique_objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -195,7 +192,7 @@ impl Encoder {
         Ok(())
     }
 
-    fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
+    pub fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
         if object_type > 7 {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid object type"));
         }
@@ -242,7 +239,7 @@ impl Encoder {
         Ok(objects)
     }
 
-    fn create_fetch_header(packfile: &mut Vec<u8>, objects: usize) -> Result<(),std::io::Error>{
+    pub fn create_size_header(packfile: &mut Vec<u8>, objects: usize) -> Result<(),std::io::Error>{
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
         }
@@ -310,7 +307,7 @@ impl Encoder {
     }
 
 
-    fn compress_object(archivo_entrada: &Path, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
+    pub fn compress_object(archivo_entrada: &Path, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
         let mut entrada = File::open(archivo_entrada)?;
         let temp_dir = TempDir::new("my_temp_dir")?;
 
@@ -337,14 +334,19 @@ impl Encoder {
 
 
 
-    pub fn get_object_for_commit(server_path: &Path, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+    pub fn get_object_for_commit(server_path: &Path, objects_data: &mut Vec<(String,usize,usize)>, commit_hash: &str , last_commit_server: &str) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
         let objects_path = server_path.join(".rust_git").join("objects");
         let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
+
         if want_path.exists() {
+            println!(" WANT PATH exist\n");
             let commit_entity = CommitEntity::read(server_path, commit_hash)?;
-            if let Ok(metadata) = fs::metadata(&want_path) {
-                objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
-                Self::get_objects_tree(server_path, objects_data, commit_entity)?;
+            if let Ok(_metadata) = fs::metadata(&want_path) {
+                println!("::::::::::OBJECT DATA    {:?}",objects_data);
+                
+                Self::get_objects_tree(server_path, objects_data, commit_entity, last_commit_server, &want_path)?;
+                //objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
+                
             }
         }
         objects_data.sort_by(|a, b| a.1.cmp(&b.1));
@@ -358,15 +360,23 @@ impl Encoder {
         Ok(unique_objects_data)
     }
 
-    fn get_objects_tree(server_path: &Path, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity) -> Result<(), std::io::Error> {
+    
+    fn get_objects_tree(server_path: &Path, objects_data: &mut Vec<(String,usize,usize)>, commit_entity: CommitEntity, last_commit_server: &str, want_path: &Path) -> Result<(), std::io::Error> {
         let tree_path = server_path.join(".rust_git").join("objects").join(&commit_entity.tree_hash[..2]).join(&commit_entity.tree_hash[2..]);
         let tree_entity = TreeEntity::read(server_path, commit_entity.tree_hash)?;
         if let Ok(metadata) = fs::metadata(&tree_path) {
+            if let Some(commit)  = CommitsTable::get_commit(commit_entity.parent_hash.clone(), &Branch::get_current_branch(&CurrentRepository::read()?)?)?{
+                
+                if commit.hash.as_str().trim_end_matches('\n') == last_commit_server.trim_end_matches('\n') {
+                    return Ok(()); 
+                }     
+            }
             objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
+            println!("GUIDOBJECTDATA {:?}", objects_data);
             Self::get_objects_blobs(server_path, objects_data, tree_entity)?;
-            if commit_entity.parent_hash != *"".to_string() {
-                Self::get_object_for_commit(server_path, objects_data, &commit_entity.parent_hash)?;
-            }     
+            objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
+
+            Self::get_object_for_commit(server_path, objects_data, &commit_entity.parent_hash,last_commit_server)?;
         } else {
             std::io::Error::new(io::ErrorKind::NotFound, "Directory no found");
         }
