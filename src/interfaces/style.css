@@ -10,6 +10,7 @@
 }
 
 .button-commit{
+    font-size: 15px;
     margin: 10px;
     color: rgba(246, 255, 249, 0.901);
     font-weight: bold;
@@ -22,6 +23,7 @@
 }
 
 .button-rm{
+    font-size: 15px;
     margin: 10px;
     color: rgba(246, 255, 249, 0.901);
     font-weight: bold;
@@ -34,6 +36,7 @@
 }
 
 .button-status{
+    font-size: 15px;
     margin: 10px;
     color: rgb(0, 0, 0);
     font-weight: bold;
@@ -67,6 +70,7 @@
 }
 
 button {
+    font-size: 15px;
     margin: 10px;
     color: white;
     font-weight: bold;
