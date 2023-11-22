@@ -265,7 +265,7 @@ pub fn update_cd(path: &Path) -> Result<(), std::io::Error>{
 pub fn read(repo_path: &Path) -> Result<HashMap<String,String>,std::io::Error>{
     let current_branch = &Init::get_current_branch(repo_path)?;
     
-    let current_commit_hash = CurrentCommit::read_for_branch(repo_path, &current_branch)?;
+    let current_commit_hash = CurrentCommit::read_for_branch(repo_path, current_branch)?;
 
     let mut local_repository: HashMap<String, String>  = HashMap::new();
     local_repository.extend(Repository::read_repository_of_commit(repo_path.to_path_buf(), current_branch, &current_commit_hash)?);
