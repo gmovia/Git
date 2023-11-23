@@ -108,6 +108,7 @@ pub mod vcs{
         pub mod ls_tree;
         pub mod check_ignore;
         pub mod tag;
+        pub mod show_ref;
     }
 
     pub mod sets{
