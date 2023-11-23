@@ -46,7 +46,7 @@ impl Init {
         self.create_git_config_file(&path)?;
         self.create_head_file(&path, branch_name)?;
         self.create_index(&path)?;    
-        self.create_git_ignore()?;    
+        self.create_git_ignore()?;   
         Ok(())
     }
 
