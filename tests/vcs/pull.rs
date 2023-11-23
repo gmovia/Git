@@ -2,7 +2,7 @@
 mod tests {
     use std::{thread, path::Path, fs};
 
-    use rust_git::{servers::server::Server, handlers::{clone::handler_clone, fetch::handler_fetch, pull::handler_pull}, vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions}};
+    use rust_git::{servers::server::Server, handlers::{clone::handler_clone, pull::handler_pull}, vcs::version_control_system::VersionControlSystem};
 
     use crate::tests_functions::{commit_one_file, get_number_of_elements};
 
