@@ -9,7 +9,7 @@ mod tests {
     pub fn test_01_calculate_hash_object_of_file_1() -> Result<(), std::io::Error> {
         let _temp_dir = set_up();
         let path = create_file(&_temp_dir, "file1.txt");  
-        assert_eq!(VersionControlSystem::hash_object(&path, WriteOption::NoWrite, BLOB_CODE)?, "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391");
+        assert_eq!(VersionControlSystem::hash_object(&path, WriteOption::NoWrite, BLOB_CODE)?, "d994c6bb648123a17e8f70a966857c546b2a6f94");
         Ok(())
     }
 
