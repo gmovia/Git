@@ -1,12 +1,10 @@
-use std::{path::{Path, PathBuf}, fs::{self, File, create_dir_all}, io::{Read, self, Write}};
-
 #[cfg(test)]
 mod tests {
     use std::{thread, path::Path, fs};
 
     use rust_git::{servers::server::Server, handlers::{clone::handler_clone, fetch::handler_fetch, pull::handler_pull}, vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions}};
 
-    use crate::vcs::pull::{commit_one_file, get_number_of_elements};
+    use crate::tests_functions::{commit_one_file, get_number_of_elements};
 
     #[test]
     pub fn test_01_test_pull_with_2_file_2_commit()-> Result<(), std::io::Error>{ 
@@ -43,47 +41,4 @@ mod tests {
         Ok(())
     }
 
-}
-
-
-pub fn commit_one_file(server_path: PathBuf, file_name: &str) {
-    let folder = &server_path.join("tests").join("clone");
-    let _ = create_dir_all(folder);
-    let test_file_path = folder.join(file_name);
-    if let Ok(mut archivo) = File::create(test_file_path) {
-        let _ = archivo.write_all(format!("Archivo para hacer prueba de clone: {}", file_name ).as_bytes());
-        let _ = rust_git::vcs::version_control_system::VersionControlSystem::add(&server_path);
-        let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!("{} commit", file_name));
-    }    
-}
-
-pub fn commit_one_folder(server_path: PathBuf, folders: &str, file_name: &str) {
-    let folder = &server_path.join("tests").join("clone").join(folders);
-    let _ = create_dir_all(folder);
-    let test_file_path = folder.join(file_name);
-    if let Ok(mut archivo) = File::create(test_file_path) {
-        let _ = archivo.write_all(format!("Archivo para hacer prueba de clone: {}", file_name ).as_bytes());
-        let _ = rust_git::vcs::version_control_system::VersionControlSystem::add(&server_path);
-        let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!("{} commit", file_name));
-    }    
-}
-
-fn get_number_of_elements(path: PathBuf) -> usize {
-    let mut archivos = 0;
-    let mut directorios = 0;
-
-    if let Ok(entries) = fs::read_dir(path) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                if let Ok(metadata) = entry.metadata() {
-                    if metadata.is_file() {
-                        archivos += 1;
-                    } else if metadata.is_dir() {
-                        directorios += 1;
-                    }
-                }
-            }
-        }
-    }
-    archivos + directorios
 }
