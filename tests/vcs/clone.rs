@@ -6,7 +6,7 @@ mod tests {
 
     use rust_git::{servers::server::Server, handlers::clone::handler_clone, vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions}};
 
-    use crate::vcs::clone::{compare_directories, commit_one_file, commit_one_folder};
+    use crate::vcs::clone::{compare_directories, commit_one_file, commit_one_folder, get_number_of_elements};
 
     #[test]
     pub fn test_01_test_clone_with_1_file_1_commit()-> Result<(), std::io::Error>{ 
@@ -27,6 +27,9 @@ mod tests {
             compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
             "Los directorios no son iguales"
         );
+        let server = get_number_of_elements(server_path.join("tests").join("clone"));
+        let client = get_number_of_elements(client_path.to_path_buf());
+        assert_eq!(server,client);
         fs::remove_dir_all(client_path)?;
         fs::remove_dir_all(server_path)?;
         Ok(())
@@ -52,6 +55,9 @@ mod tests {
             compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
             "Los directorios no son iguales"
         );
+        let server = get_number_of_elements(server_path.join("tests").join("clone"));
+        let client = get_number_of_elements(client_path.to_path_buf());
+        assert_eq!(server,client);
         fs::remove_dir_all(client_path)?;
         fs::remove_dir_all(server_path)?;
         Ok(())
@@ -79,6 +85,9 @@ mod tests {
             compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
             "Los directorios no son iguales"
         );
+        let server = get_number_of_elements(server_path.join("tests").join("clone"));
+        let client = get_number_of_elements(client_path.to_path_buf());
+        assert_eq!(server,client);
         fs::remove_dir_all(client_path)?;
         fs::remove_dir_all(server_path)?;
         Ok(())
@@ -105,6 +114,9 @@ mod tests {
             compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
             "Los directorios no son iguales"
         );
+        let server = get_number_of_elements(server_path.join("tests").join("clone"));
+        let client = get_number_of_elements(client_path.to_path_buf());
+        assert_eq!(server,client);
         fs::remove_dir_all(client_path)?;
         fs::remove_dir_all(server_path)?;
         Ok(())
@@ -168,4 +180,25 @@ pub fn commit_one_folder(server_path: PathBuf, folders: &str, file_name: &str) {
         let _ = rust_git::vcs::version_control_system::VersionControlSystem::add(&server_path);
         let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!("{} commit", file_name));
     }    
+}
+
+
+fn get_number_of_elements(path: PathBuf) -> usize {
+    let mut archivos = 0;
+    let mut directorios = 0;
+
+    if let Ok(entries) = fs::read_dir(path) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                if let Ok(metadata) = entry.metadata() {
+                    if metadata.is_file() {
+                        archivos += 1;
+                    } else if metadata.is_dir() {
+                        directorios += 1;
+                    }
+                }
+            }
+        }
+    }
+    archivos + directorios
 }
