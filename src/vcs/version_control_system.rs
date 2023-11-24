@@ -102,7 +102,7 @@ impl VersionControlSystem {
         Tag::tag(&current, option)
     }
 
-    pub fn show_ref(option: ShowRefOptions) -> Result<Vec<String>, std::io::Error> {
+    pub fn show_ref(option: ShowRefOptions) -> Result<HashMap<String, String>, std::io::Error> {
         let current = CurrentRepository::read()?;
         ShowRef::show_ref(&current, option)
     }
