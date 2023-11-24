@@ -47,8 +47,7 @@ impl ShowRef {
     // git show-ref --> Lee todo
     pub fn get_all_refs(repo_path: &Path) -> Result<HashMap<String, String>, std::io::Error> {
         let heads: HashMap<String, String> = Self::get_refs_heads(repo_path)?;
-        let  tags: HashMap<String, String> = Self::get_refs_tags(repo_path)?;
-        // vengo con dilay
+        let tags: HashMap<String, String> = Self::get_refs_tags(repo_path)?;
         Ok(heads.into_iter().chain(tags).collect()) 
     }
 

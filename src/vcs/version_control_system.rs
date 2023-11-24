@@ -109,7 +109,6 @@ impl VersionControlSystem {
 
     pub fn git_clone(message: String, path_to_clone: &Path)-> Result<(), std::io::Error>{
         Client::client(message, path_to_clone)
-        //Ok(())
     }
 
     pub fn fetch(message: String)-> Result<(), std::io::Error>{
