@@ -24,6 +24,8 @@ pub mod vcs{
     pub mod ls_tree;
     pub mod fetch;
     pub mod pull;
+    pub mod show_ref;
+    pub mod tag;
 }
 
 pub mod tests_functions;

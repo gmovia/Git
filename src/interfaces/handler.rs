@@ -1,5 +1,5 @@
 use std::{fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE}, handlers::clone::handler_clone};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE}, handlers::clone::handler_clone};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
 use gtk::{prelude::*, Button};
@@ -413,6 +413,7 @@ pub fn handle_other_commands(interface: &RustInterface) {
     handle_ls_tree(interface);
     handle_check_ignore(interface);
     handle_tag(interface);
+    handle_show_ref(interface);
 
     interface.others_close.connect_clicked({
        let dialog2 = interface.others_dialog.clone(); 
@@ -666,6 +667,75 @@ pub fn handle_tag(interface: &RustInterface) {
 
 }
 
+pub fn handle_show_ref(interface: &RustInterface) {
+
+    let dialog = interface.show_ref_dialog.clone();
+    let sr_box = interface.show_ref_box.clone();
+
+    interface.show_ref.connect_clicked({
+       move |_| {
+            sr_box.foreach(|child|{
+                sr_box.remove(child);
+            });
+            dialog.run();
+            dialog.hide();    
+        } 
+    });
+
+    interface.get_all_refs.connect_clicked({
+        let sr_box = interface.show_ref_box.clone();
+        move |_| {
+            sr_box.foreach(|child|{
+                sr_box.remove(child);
+            });
+            if let Ok(refs) = VersionControlSystem::show_ref(ShowRefOptions::GetAll) {
+                for (key, value) in refs {
+                    let message = format!("- {}\n\n       - {}\n",key, value);
+                    draw_message(&sr_box, &message, 0.0);
+                }
+            }
+        } 
+    });
+
+    interface.get_refs_heads.connect_clicked({
+        let sr_box = interface.show_ref_box.clone();
+        move |_| {
+            sr_box.foreach(|child|{
+                sr_box.remove(child);
+            });
+            if let Ok(refs) = VersionControlSystem::show_ref(ShowRefOptions::GetRefHeads) {
+                for (key, value) in refs {
+                    let message = format!("- {}\n\n       - {}\n",key, value);
+                    draw_message(&sr_box, &message, 0.0);
+                }
+            }
+        } 
+    });
+
+    interface.get_refs_tags.connect_clicked({
+        let sr_box = interface.show_ref_box.clone();
+        move |_| {
+            sr_box.foreach(|child|{
+                sr_box.remove(child);
+            });
+            if let Ok(refs) = VersionControlSystem::show_ref(ShowRefOptions::GetRefTags) {
+                for (key, value) in refs {
+                    let message = format!("- {}\n\n       - {}\n",key, value);
+                    draw_message(&sr_box, &message, 0.0);
+                }
+            }
+        } 
+    });
+
+    interface.show_ref_close.connect_clicked({
+       let dialog = interface.show_ref_dialog.clone(); 
+       move |_| {
+            dialog.hide();
+       } 
+    });
+
+}
+
  
 pub fn handle_clone(interface: &RustInterface) {
     
@@ -773,7 +843,7 @@ pub fn handle_pull(interface: &RustInterface) {
     });
 }
 
-/*
+
 pub fn handle_push(interface: &RustInterface) {
     let info = interface.info_pull_push.clone();
 
@@ -784,7 +854,7 @@ pub fn handle_push(interface: &RustInterface) {
             info.foreach({|child|{
                 info.remove(child);
             }});
-            let _ = VersionControlSystem::git_push();
+            let _ = VersionControlSystem::push("git push".to_string());
             let close = Button::builder()
                 .label("close")
                 .build();
@@ -803,4 +873,3 @@ pub fn handle_push(interface: &RustInterface) {
         } 
     });
 }
-*/

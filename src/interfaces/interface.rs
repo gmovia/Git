@@ -5,7 +5,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interfaces::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch, handle_pull};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch, handle_pull, handle_push};
 
 #[derive(Debug, Default)]
 pub struct RustInterface {
@@ -116,6 +116,14 @@ pub struct RustInterface {
     pub check_ignore_box: gtk::Box,
     pub close_ignore: gtk::Button,
     pub check_button: gtk::Button,
+    pub show_ref: gtk::Button,
+    pub show_ref_dialog: gtk::Dialog,
+    pub get_all_refs: gtk::Button,
+    pub get_refs_heads: gtk::Button,
+    pub get_refs_tags: gtk::Button,
+    pub show_ref_close: gtk::Button,
+    pub show_ref_box: gtk::Box
+
 }
 
 impl RustInterface {
@@ -191,7 +199,7 @@ impl RustInterface {
             fetch_dialog: builder.object("fetch-dialog").unwrap(),
             fetch_box: builder.object("fetch-box").unwrap(),
             fetch_close: builder.object("fetch-close").unwrap(),
-            push: builder.object("pull").unwrap(),
+            push: builder.object("push").unwrap(),
             pull: builder.object("pull").unwrap(),
             info_pull_push: builder.object("info-pull-push").unwrap(),
             files: builder.object("ls-files").unwrap(),
@@ -239,6 +247,13 @@ impl RustInterface {
             check_ignore_box: builder.object("check-ignore-box").unwrap(),
             close_ignore: builder.object("close-ignore").unwrap(),
             check_button: builder.object("check-ignore-button").unwrap(),
+            show_ref: builder.object("show-ref").unwrap(),
+            show_ref_dialog: builder.object("show-ref-dialog").unwrap(),
+            get_all_refs: builder.object("get-all-refs").unwrap(),
+            get_refs_heads: builder.object("get-refs-heads").unwrap(),
+            get_refs_tags: builder.object("get-refs-tags").unwrap(),
+            show_ref_close: builder.object("show-ref-close").unwrap(),
+            show_ref_box: builder.object("show-ref-box").unwrap(),
         }
     }
     
@@ -262,7 +277,7 @@ impl RustInterface {
         handle_clone(self);
         handle_fetch(self);
         handle_pull(self);
-        //handle_push(self);
+        handle_push(self);
 
         self.window.show_all();   
         gtk::main();

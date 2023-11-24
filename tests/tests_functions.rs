@@ -34,7 +34,6 @@ pub fn status_contains(result: HashMap<String, String>, status: &str, file: &Pat
     false
 }
 
-
 pub fn compare_files(file1: &Path, file2: &Path) -> io::Result<bool> {
     let mut buf1 = Vec::new();
     let mut buf2 = Vec::new();
@@ -111,4 +110,25 @@ pub fn get_number_of_elements(path: PathBuf) -> usize {
         }
     }
     archivos + directorios
+}
+
+pub fn count_files(path: &Path) -> Result<u32, std::io::Error> {
+    let mut total = 0;
+
+    if path.is_dir() {
+        for entrada in fs::read_dir(path)? {
+            let entrada = entrada?;
+            let ruta = entrada.path();
+
+            if ruta.is_file() {
+                total += 1;
+            } else if ruta.is_dir() {
+                total += count_files(&ruta)?;
+            }
+        }
+    } else if path.is_file() {
+        total = 1;
+    }
+
+    Ok(total)
 }

@@ -19,7 +19,9 @@ pub mod handlers{
     pub mod fetch;
     pub mod ls_tree;
     pub mod pull;
+    pub mod push;
     pub mod tag;
+    pub mod show_ref;
 }
 
 pub mod proxies{
@@ -46,6 +48,11 @@ pub mod interfaces{
     pub mod handler;
     pub mod css;
     pub mod handler_button;
+}
+
+pub mod protocol{
+    pub mod send_pack;
+    pub mod receive_pack;
 }
 
 pub mod types{
@@ -97,10 +104,12 @@ pub mod vcs{
         pub mod reset;
         pub mod clone;
         pub mod ls_files;
+        pub mod push;
         pub mod fetch;
         pub mod ls_tree;
         pub mod check_ignore;
         pub mod tag;
+        pub mod show_ref;
     }
 
     pub mod sets{
