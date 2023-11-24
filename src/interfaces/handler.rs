@@ -753,7 +753,7 @@ pub fn handle_pull(interface: &RustInterface) {
             info.foreach({|child|{
                 info.remove(child);
             }});
-            let _ = VersionControlSystem::git_pull();
+            let _ = VersionControlSystem::git_pull("git_pull".to_string());
             let close = Button::builder()
                 .label("close")
                 .build();

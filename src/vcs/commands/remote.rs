@@ -1,4 +1,4 @@
-use std::{path::Path, fs::OpenOptions, io::Write};
+use std::{path::Path, fs::{OpenOptions, self}, io::{Write, Read, BufReader, BufRead}};
 
 use super::init::Init;
 
@@ -18,5 +18,20 @@ impl Remote{
         config_file.write_all(msge_format.as_bytes())?;
         Ok(())
     }
+
+    pub fn remote_added(current_repo: &Path) -> Result<bool, std::io::Error>{
+        let path = Init::get_current_config(current_repo)?;
+        let file = fs::File::open(path)?;
+        let reader = BufReader::new(file); 
+    
+        for line in reader.lines() {
+            let line = line?;
+            if line.contains("remote") {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+    
 
 }

@@ -113,8 +113,14 @@ impl VersionControlSystem {
         Ok(())
     }
     
-    pub fn git_pull() -> Result<(), std::io::Error> {
+    pub fn git_pull(message: String) -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
+        let input: Vec<&str>  = message.split_ascii_whitespace().collect();
+        if Remote::remote_added(&current)? ==true &&  input.len() < 3 {
+            println!("Error: Please specify which branch you want to merge with\n\ngit pull <remote> <branch>");
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Please specify which branch you want to merge with\n\ngit pull <remote> <branch>"));
+        }
+        
         Self::fetch("git fetch".to_string())?;
         Self::merge(&Init::get_current_branch(&current)?)?;
         Ok(())
