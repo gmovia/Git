@@ -4,11 +4,15 @@ use std::path::Path;
 use std::net::TcpStream;
 use crate::packfiles::packfile::{to_pkt_line, process_line};
 use crate::servers::encoder::Encoder;
+use crate::vcs::commands::cat_file::CatFile;
+use crate::vcs::commands::init::Init;
 use crate::vcs::files::current_commit::CurrentCommit;
 
 
 /// Esta funcion se encarga de procesar la respuesta que el server le entregara al cliente al mensaje de upload pack
 pub fn start_handler_upload(stream: &mut TcpStream, path: &Path) -> Result<String, std::io::Error> {
+
+    println!("Entre a start_handler_upload");
     let first_response = handler_upload_pack(path)?;
 
     send_response(first_response, stream)?;
@@ -69,6 +73,8 @@ fn get_log_entries(path: &Path) -> Result<Vec<String>, std::io::Error>{
     let mut log_entries = Vec::new();
     let logs_path = path.join(".rust_git").join("logs");
     
+    let tags_path = path.join(".rust_git").join("refs").join("tags");
+
     let entries = fs::read_dir(logs_path)?;
     
     for entry in entries {
@@ -82,10 +88,34 @@ fn get_log_entries(path: &Path) -> Result<Vec<String>, std::io::Error>{
 
         }
     }
+    let entries_tag = fs::read_dir(tags_path)?;
+
+    for entry in entries_tag{
+        let tag_file: fs::DirEntry = entry?;
+        let _ = fs::File::open(tag_file.path())?;
+        if let Some(tag_name) = tag_file.path().file_name() {
+            let tag_hash  = fs::read_to_string(tag_file.path())?;
+            let is_comun = process_tag_content(tag_hash.clone(), path)?;
+            let mut format_tag = String::new();
+            if is_comun == true{
+                format_tag = format!("{} refs/tags/{}^{}", tag_hash, tag_name.to_string_lossy(), "{}");
+            }else {
+                format_tag = format!("{} refs/tags/{}", tag_hash, tag_name.to_string_lossy());
+            }
+            log_entries.push(format_tag);
+        }
+    }
+
     Ok(log_entries)
 }
 
-
+    fn process_tag_content(hash: String, repo_server_path:&Path) -> Result<bool, std::io::Error>{
+        let content = CatFile::cat_file(&hash, Init::get_object_path(repo_server_path)?)?; // commit or tag
+        if content.contains("tag"){
+            return Ok(true);
+        }
+        Ok(false)
+    }
 
 fn send_response(response: Vec<String>, writer: &mut TcpStream) -> Result<(), std::io::Error> {
     for resp in response {

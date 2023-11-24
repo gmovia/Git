@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::fs::File;
+use std::fs::{File, DirEntry};
 use tempdir::TempDir;
 use std::path::Path;
 use std::{path::PathBuf, io, fs};
@@ -10,6 +10,8 @@ use flate2::Compression;
 use std::io::{Read, Write};
 use crate::constants::constant::COMMIT_INIT_HASH;
 use crate::vcs::commands::branch::Branch;
+use crate::vcs::commands::cat_file::CatFile;
+use crate::vcs::commands::init::Init;
 use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::entities::entity::Entity;
 use crate::vcs::entities::tree_entity::TreeEntity;
@@ -60,13 +62,34 @@ impl Encoder {
         }
         //checkear si existen objetos tags para sumar al total
 
-        let amount_objects_tags = path.join(".rust_git").join("refs").join("tags");
+/*         let amount_objects_tags = path.join(".rust_git").join("refs").join("tags");
+        
         if let Ok(entries) = fs::read_dir(amount_objects_tags) {
             for entry in entries.flatten() {
-                total_files += 1;
+                let is_comun = Self::process_tag_content(path, entry)?;
+                if is_comun == true{
+                    total_files += 1;
+                }
             }
-        }
+        } */
         Ok(total_files)
+    }
+
+    pub fn process_tag_content(path: &Path, entry: DirEntry) -> Result<bool, std::io::Error>{
+        let metadata = entry.metadata()?;
+        let mut hash = String::new(); // hash
+        
+        if metadata.is_file() {
+            let mut file: File = File::open(entry.path())?;
+            file.read_to_string(&mut hash)?;
+        }
+
+        let content = CatFile::cat_file(&hash, Init::get_object_path(path)?)?; // commit or tag
+        println!("CONTENT DEL TAG ES ----> {}", content);
+        if content.contains("tag"){
+            return Ok(true);
+        }
+        Ok(false)
     }
 
     fn create_packfile(path: &Path) -> Result<Vec<u8>,std::io::Error> {
@@ -99,7 +122,9 @@ impl Encoder {
             if entry_path.is_file() {
                 println!("ENTRE a recorrer mi file\n");
                 let data = Self::process_tag_file(&entry_path)?;
-                objects_data.push(data);
+                if data.1 != 0{
+                    objects_data.push(data);
+                }
             }
         }
         println!("process_tag_directory  TAG FOLDER\n");
@@ -126,7 +151,6 @@ impl Encoder {
                 Self::fetch_process_directory(server_path, &mut objects_data, commit_hash, &messages.1)?;
             }
         }
-
         objects_data.sort_by(|a, b| a.1.cmp(&b.1));
         
         let mut unique_set = HashSet::new();
@@ -258,6 +282,7 @@ impl Encoder {
         }
         Self::add_number_to_packfile(2, packfile);
         let objects = Self::get_objects_number(path)?; //sumar un objeto si existen tags
+        println!("NUMERO DE OBJETOS QUE CONTE ----> {}", objects);
         Self::add_number_to_packfile(objects as u32, packfile);
         Ok(objects)
     }
@@ -307,7 +332,14 @@ impl Encoder {
         let metadata = fs::metadata(file_path)?;
         let mut content = String::new();
         let mut file = fs::File::open(file_path)?;
-        return Ok((file_path.to_string_lossy().to_string(),4_usize,metadata.len() as usize))
+
+        file.read_to_string(&mut content)?;
+
+        if content.contains("tag"){
+            return Ok((file_path.to_string_lossy().to_string(), 4_usize, metadata.len() as usize));
+        }
+        return Ok(("NONE".to_string(), 0, 0))
+   
     }
     
     fn process_directory(path: &Path, objects_data: &mut Vec<(String,usize,usize)>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
