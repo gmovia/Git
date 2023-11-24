@@ -21,6 +21,7 @@ pub mod handlers{
     pub mod pull;
     pub mod push;
     pub mod tag;
+    pub mod show_ref;
 }
 
 pub mod proxies{

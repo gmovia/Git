@@ -116,6 +116,14 @@ pub struct RustInterface {
     pub check_ignore_box: gtk::Box,
     pub close_ignore: gtk::Button,
     pub check_button: gtk::Button,
+    pub show_ref: gtk::Button,
+    pub show_ref_dialog: gtk::Dialog,
+    pub get_all_refs: gtk::Button,
+    pub get_refs_heads: gtk::Button,
+    pub get_refs_tags: gtk::Button,
+    pub show_ref_close: gtk::Button,
+    pub show_ref_box: gtk::Box
+
 }
 
 impl RustInterface {
@@ -239,6 +247,13 @@ impl RustInterface {
             check_ignore_box: builder.object("check-ignore-box").unwrap(),
             close_ignore: builder.object("close-ignore").unwrap(),
             check_button: builder.object("check-ignore-button").unwrap(),
+            show_ref: builder.object("show-ref").unwrap(),
+            show_ref_dialog: builder.object("show-ref-dialog").unwrap(),
+            get_all_refs: builder.object("get-all-refs").unwrap(),
+            get_refs_heads: builder.object("get-refs-heads").unwrap(),
+            get_refs_tags: builder.object("get-refs-tags").unwrap(),
+            show_ref_close: builder.object("show-ref-close").unwrap(),
+            show_ref_box: builder.object("show-ref-box").unwrap(),
         }
     }
     
