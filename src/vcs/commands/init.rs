@@ -182,10 +182,9 @@ impl Init {
         Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't find the branch"))
     }
 
-    pub fn get_current_config(path: &Path) -> Result<PathBuf,std::io::Error>{
+    pub fn get_current_config(path: &Path) -> Result<PathBuf, std::io::Error>{
         let config_path = path.join(".rust_git").join("config");
-        let mut head_file = File::open(config_path)?;
-        Ok(config_path)
+        Ok(Path::new(&config_path).to_path_buf())
     }
 
 }
