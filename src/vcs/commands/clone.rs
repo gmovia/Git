@@ -15,19 +15,21 @@ impl Clone{
         loop {
             let mut len_buf = [0; 4]; 
             if socket.read_exact(&mut len_buf).is_ok() {
-                let len_str: &str = from_utf8(&len_buf).unwrap();
-                let len = usize::from_str_radix(len_str, 16).unwrap();
-                if len == 0 {
-                    break;
+                if let Ok(len_str) = from_utf8(&len_buf) {
+                    if let Ok(len) = usize::from_str_radix(len_str, 16) {
+                        if len == 0 {
+                            break;
+                        }
+    
+                        let packet = read_packet(socket, len);
+                        if packet.contains("fatal error") {
+                            return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
+                        }
+                        
+                        println!("ACA PACKETTT ---> {:?} \n", packet);
+                        packets.push(packet);
+                    }
                 }
-
-                let packet = read_packet(socket, len);
-                if packet.contains("fatal error") {
-                    return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
-                }
-                
-                println!("ACA PACKETTT ---> {:?} \n", packet);
-                packets.push(packet);
             }
         }
 
