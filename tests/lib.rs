@@ -22,6 +22,8 @@ pub mod vcs{
     pub mod clone;
     pub mod ls_files;
     pub mod ls_tree;
+    pub mod show_ref;
+    pub mod tag;
 }
 
 pub mod tests_functions;
