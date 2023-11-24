@@ -18,6 +18,8 @@ pub const COMMIT_CODE: &str = "commit";
 
 // TAG
 pub const TAG_CODE: &str = "tag";
+pub const TAG_CODE_NUMBER: u8 = 4;
+
 
 pub const COMMIT_INIT_HASH: &str = "0000000000000000000000000000000000000000";
 

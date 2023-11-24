@@ -58,6 +58,14 @@ impl Encoder {
                 }
             }
         }
+        //checkear si existen objetos tags para sumar al total
+
+        let amount_objects_tags = path.join(".rust_git").join("refs").join("tags");
+        if let Ok(entries) = fs::read_dir(amount_objects_tags) {
+            for entry in entries.flatten() {
+                total_files += 1;
+            }
+        }
         Ok(total_files)
     }
 
@@ -67,7 +75,7 @@ impl Encoder {
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-
+        Self::process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data)?;
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -81,6 +89,21 @@ impl Encoder {
             }
         }
         Ok(packfile)
+    }
+
+    fn process_tag_directory(path: &Path, objects_data: &mut Vec<(String,usize,usize)>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+        //Aca agregar objetos tags
+        for entrada in fs::read_dir(path)? {
+            let entrada = entrada?;
+            let entry_path = entrada.path();
+            if entry_path.is_file() {
+                println!("ENTRE a recorrer mi file\n");
+                let data = Self::process_tag_file(&entry_path)?;
+                objects_data.push(data);
+            }
+        }
+        println!("process_tag_directory  TAG FOLDER\n");
+        Ok(objects_data.to_vec())
     }
  
     fn create_fetch_packfile(server_path: &Path, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
@@ -234,7 +257,7 @@ impl Encoder {
             packfile.push(byte);
         }
         Self::add_number_to_packfile(2, packfile);
-        let objects = Self::get_objects_number(path)?;
+        let objects = Self::get_objects_number(path)?; //sumar un objeto si existen tags
         Self::add_number_to_packfile(objects as u32, packfile);
         Ok(objects)
     }
@@ -278,6 +301,13 @@ impl Encoder {
         else {
             return Ok((file_path.to_string_lossy().to_string(),3_usize,metadata.len() as usize))
         }
+    }
+
+    fn process_tag_file(file_path: &Path) -> Result<(String,usize,usize),std::io::Error> {
+        let metadata = fs::metadata(file_path)?;
+        let mut content = String::new();
+        let mut file = fs::File::open(file_path)?;
+        return Ok((file_path.to_string_lossy().to_string(),4_usize,metadata.len() as usize))
     }
     
     fn process_directory(path: &Path, objects_data: &mut Vec<(String,usize,usize)>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {

@@ -1,5 +1,5 @@
 use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
-use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::commit_entity::CommitEntity}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH}, utils::randoms::random::Random};
+use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::commit_entity::CommitEntity}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER}, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
 
@@ -144,11 +144,18 @@ impl Clone{
                     }
                 },
                 BLOB_CODE_NUMBER => Self::create_blob_folder(content, repo),
+                TAG_CODE_NUMBER => Self::create_tag_folder(content, repo),
+
                 _ => println!("Type not identify {}", index),
             }
         }
         commits_created
     }
+
+    fn create_tag_folder(content: &str, repo: &Path){
+        println!("PROCESAR UN TAG FOLDER")
+    }
+
     
     fn create_commit_folder(content: &str, repo: &Path) -> Result<(String, CommitEntity), std::io::Error>{
         let partes: Vec<&str> = content.split('\n').collect();
@@ -261,6 +268,7 @@ impl Clone{
     fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
         let object_number = Self::parse_number(&pack[8..12])?;
         
+        println!("CANTIDAD DE OBJETOS ---> {}\n", object_number);
         let mut position: usize = 12;
         let mut objects = Vec::new();
         for object in 0..object_number {
