@@ -104,7 +104,7 @@ dialog {
 }
 
 button:hover{
-    background: rgba(28, 168, 86, 0.901);
+    background: rgba(96, 95, 96, 0.619);
     font-weight: bold;
     transition:cubic-bezier(0.075, 0.82, 0.165, 1);
 }
