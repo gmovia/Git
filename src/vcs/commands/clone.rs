@@ -41,7 +41,7 @@ impl Clone{
         let objects = Self::get_socket_response(socket)?;
         let (list_tags, list_refs) = Self::exclude_tag_ref(packets.clone())?;
 
-        Self::create_tag_files(list_tags);
+        Self::create_tag_files(list_tags)?;
         Self::init_commits(&list_refs , &objects, repo)?;
         Ok(()) 
     }
@@ -198,8 +198,7 @@ impl Clone{
     }
 
     fn create_tag_folder(content: &str, repo: &Path){
-        println!("PROCESAR UN TAG FOLDER");
-        
+        println!("PROCESAR UN TAG FOLDER");      
     }
 
     
