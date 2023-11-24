@@ -690,7 +690,7 @@ pub fn handle_show_ref(interface: &RustInterface) {
             });
             if let Ok(refs) = VersionControlSystem::show_ref(ShowRefOptions::GetAll) {
                 for (key, value) in refs {
-                    let message = format!("- {}\n   {}\n",key, value);
+                    let message = format!("- {}\n\n       - {}\n",key, value);
                     draw_message(&sr_box, &message, 0.0);
                 }
             }
@@ -705,7 +705,7 @@ pub fn handle_show_ref(interface: &RustInterface) {
             });
             if let Ok(refs) = VersionControlSystem::show_ref(ShowRefOptions::GetRefHeads) {
                 for (key, value) in refs {
-                    let message = format!("- {}\n   {}\n",key, value);
+                    let message = format!("- {}\n\n       - {}\n",key, value);
                     draw_message(&sr_box, &message, 0.0);
                 }
             }
@@ -720,7 +720,7 @@ pub fn handle_show_ref(interface: &RustInterface) {
             });
             if let Ok(refs) = VersionControlSystem::show_ref(ShowRefOptions::GetRefTags) {
                 for (key, value) in refs {
-                    let message = format!("- {}\n   {}\n",key, value);
+                    let message = format!("- {}\n\n       - {}\n",key, value);
                     draw_message(&sr_box, &message, 0.0);
                 }
             }
