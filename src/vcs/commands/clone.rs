@@ -1,5 +1,5 @@
 use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
-use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::commit_entity::CommitEntity, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER}, utils::randoms::random::Random};
+use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::commit_entity::CommitEntity, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
 
@@ -190,7 +190,7 @@ impl Clone{
                 },
                 BLOB_CODE_NUMBER => Self::create_blob_folder(content, repo),
                 TAG_CODE_NUMBER => Self::create_tag_folder(content, repo),
-
+                OBJ_REF_DELTA_CODE_NUMBER => Self::create_ref_delta_folder(content, repo),
                 _ => println!("Type not identify {}", index),
             }
         }
@@ -201,6 +201,9 @@ impl Clone{
         println!("PROCESAR UN TAG FOLDER");      
     }
 
+    fn create_ref_delta_folder(content: &str, repo: &Path) {
+        println!("DELTAS");
+    }
     
     fn create_commit_folder(content: &str, repo: &Path) -> Result<(String, CommitEntity), std::io::Error>{
         let partes: Vec<&str> = content.split('\n').collect();
@@ -319,18 +322,22 @@ impl Clone{
         let mut objects = Vec::new();
         for object in 0..object_number {
             let objet_type = Self::get_object_type(pack[position]);
+            println!("TIPO OBJTO: {}", objet_type);
             while Self::is_bit_set(pack[position]) {
                 position += 1;
             }
             position += 1;
             if objet_type == 7 {
+                let base_object = &pack[position..position+20];
+                let hex_representation: String = base_object.iter().map(|b| format!("{:02x}", b)).collect();
+                println!("BASE OBJECT: {}", hex_representation);
                 position += 20;
                 if let Ok(data) = decompress_data(&pack[position..]) {
                     println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
                     println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
                     println!("DATA EN BYTES: {:?}", data);
                     position += data.1 as usize; 
-                    objects.push((objet_type, data.0))   
+                    objects.push((objet_type, data.0.clone()));   
                 }
             }
             else {

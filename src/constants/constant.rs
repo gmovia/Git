@@ -20,6 +20,9 @@ pub const COMMIT_CODE: &str = "commit";
 pub const TAG_CODE: &str = "tag";
 pub const TAG_CODE_NUMBER: u8 = 4;
 
+// OBJ_REF_DELTA
+pub const OBJ_REF_DELTA_CODE: &str = "ref_delta";
+pub const OBJ_REF_DELTA_CODE_NUMBER: u8 = 7;
 
 pub const COMMIT_INIT_HASH: &str = "0000000000000000000000000000000000000000";
 
