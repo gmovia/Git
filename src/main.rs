@@ -8,7 +8,7 @@ use rust_git::interfaces::interface::RustInterface;
 
 fn main() -> Result<(), std::io::Error>{
     // VersionControlSystem::init(Path::new("test1"), Vec::new());
-    // //let _ = VersionControlSystem::init(Path::new("clone"), Vec::new());
+    let _ = VersionControlSystem::init(Path::new("test_delta"), Vec::new());
 
     loop{
         let mut input = String::new();

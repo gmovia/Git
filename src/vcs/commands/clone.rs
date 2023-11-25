@@ -314,6 +314,7 @@ impl Clone{
         let object_number = Self::parse_number(&pack[8..12])?;
         
         println!("CANTIDAD DE OBJETOS ---> {}\n", object_number);
+        println!("ACA EL PACK: {:?}", String::from_utf8_lossy(pack));
         let mut position: usize = 12;
         let mut objects = Vec::new();
         for object in 0..object_number {
@@ -322,12 +323,23 @@ impl Clone{
                 position += 1;
             }
             position += 1;
-
-            if let Ok(data) = decompress_data(&pack[position..]) {
-                println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
-                println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                position += data.1 as usize; 
-                objects.push((objet_type, data.0))   
+            if objet_type == 7 {
+                position += 20;
+                if let Ok(data) = decompress_data(&pack[position..]) {
+                    println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
+                    println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                    println!("DATA EN BYTES: {:?}", data);
+                    position += data.1 as usize; 
+                    objects.push((objet_type, data.0))   
+                }
+            }
+            else {
+                if let Ok(data) = decompress_data(&pack[position..]) {
+                    println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
+                    println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                    position += data.1 as usize; 
+                    objects.push((objet_type, data.0))   
+                }    
             }
         }
         objects.sort_by(|a, b| a.0.cmp(&b.0));
