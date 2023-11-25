@@ -1,4 +1,4 @@
-use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
+use std::{net::TcpStream, io::{Read, Write, self, SeekFrom, Seek}, str::from_utf8, path::Path, fs::{OpenOptions, File}, collections::HashMap, ascii::AsciiExt};
 use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::commit_entity::CommitEntity, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
@@ -157,18 +157,59 @@ impl Clone{
     pub fn process_folder(objects: Vec<(u8,Vec<u8>)>) -> Vec<(u8, String)> {
         let mut objects_processed : Vec<(u8, String)> = Vec::new();
         for (number, inner_vec) in &objects {
-            if *number != TREE_CODE_NUMBER {
-                objects_processed.push(Self::process_non_tree_object(*number, inner_vec));
-            }else{
+            if *number == OBJ_REF_DELTA_CODE_NUMBER {
+                objects_processed.push(Self::process_delta_object(*number, inner_vec, &objects));
+            }else if *number == TREE_CODE_NUMBER {
                 objects_processed.push(Self::process_tree_object(*number, inner_vec));
+            }else {
+                objects_processed.push(Self::process_non_tree_object(*number, inner_vec));
             }
         }
         objects_processed
     }
 
 
+    fn process_delta_object(number: u8, inner_vec: &Vec<u8>, objects: &Vec<(u8,Vec<u8>)>) -> (u8, String) {
+        let base_object = &inner_vec[..20];
+        let hash_base_object: String = base_object.iter().map(|b| format!("{:02x}", b)).collect();
+        let decompres_data = &inner_vec[20..];
+        if Self::is_bit_set(inner_vec[20]) {
+            // COPY
+            println!("INNER VEC COPY: {}", inner_vec[20]);
+        } else {
+            // APPEND
+            println!("INNER VEC APPEND: {:?}", &inner_vec[20..25]);
+            println!("DATA IN APPEND: {}", String::from_utf8_lossy(&inner_vec[25..]));
+            let _ = Self::mostrar_contenido_desde_posicion("/home/amoralejo/23C2-4Rust/test_delta/.rust_git/objects/35/180127f9eb0074cd684cacc8f82bf6fe74d7e3", 79);   
+        }
+        
+        println!("BASE OBJECT: {}", hash_base_object);
+        println!("ACA NUMBER: {}", number);
+        println!("DATA ACA: {}", String::from_utf8_lossy(&inner_vec[20..]));
+        (number, String::from_utf8_lossy(&inner_vec[20..]).to_string())
+    }
 
-     pub fn create_folders(objects: Vec<(u8, String)>, repo: &Path) -> HashMap<String, CommitEntity>{
+        
+    fn mostrar_contenido_desde_posicion(ruta: &str, posicion: u64) -> io::Result<()> {
+        println!("ENTRA");
+        // Abre el archivo en modo de lectura
+        let mut archivo = File::open(ruta)?;
+        println!("NO PASA");
+        // Mueve el cursor a la posición especificada
+        archivo.seek(SeekFrom::Start(posicion))?;
+
+        // Lee el contenido desde la posición especificada
+        let mut contenido = String::new();
+        archivo.read_to_string(&mut contenido)?;
+
+        // Imprime el contenido
+        println!("IMPRIMIO: {}", contenido);
+
+        Ok(())
+    }
+
+
+    pub fn create_folders(objects: Vec<(u8, String)>, repo: &Path) -> HashMap<String, CommitEntity>{
         let mut commits_created: HashMap<String, CommitEntity> = HashMap::new();
 
         for (index, content) in objects.iter() {
@@ -328,16 +369,18 @@ impl Clone{
             }
             position += 1;
             if objet_type == 7 {
-                let base_object = &pack[position..position+20];
+                let mut base_object = pack[position..position+20].to_vec();
                 let hex_representation: String = base_object.iter().map(|b| format!("{:02x}", b)).collect();
                 println!("BASE OBJECT: {}", hex_representation);
                 position += 20;
                 if let Ok(data) = decompress_data(&pack[position..]) {
                     println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
                     println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                    println!("DATA EN BYTES: {:?}", data);
-                    position += data.1 as usize; 
-                    objects.push((objet_type, data.0.clone()));   
+                    println!("DATA EN BYTES: {:?}", data); 
+                    position += data.1 as usize;
+                    base_object.extend_from_slice(&data.0); 
+                    println!("BASE + DATA EN BYTES: {:?}", base_object);
+                    objects.push((objet_type, base_object));   
                 }
             }
             else {
