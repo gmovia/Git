@@ -17,10 +17,10 @@ impl Merge {
         let mut repository = Repository::read_repository()?;
         let current = CurrentRepository::read()?;
         let current_branch = Branch::get_current_branch(&current)?;
-
+        println!("BRANCH {} - CURRENT BRANCH: {}", branch, current_branch);
         let current_commits_table = CommitsTable::read(current.clone(), &current_branch)?;
         let branch_commits_table = CommitsTable::read(current.clone(), branch)?;
-
+        println!("CURRENT {:?} - CURRENT BRANCH: {:?}", current_commits_table, branch_commits_table);
         let mut conflicts: HashMap<String, Conflict> = HashMap::new();
 
         let current_commit_of_current_commits_table = CurrentCommit::read_for_branch(&current, &current_branch)?;

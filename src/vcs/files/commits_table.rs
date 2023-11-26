@@ -65,8 +65,10 @@ impl CommitsTable{
     /// Devuelve el ultimo commit comun
     pub fn get_parent_commit(current_commits: &Vec<CommitTableEntry>, branch_commits: &Vec<CommitTableEntry>) ->  Option<CommitTableEntry>{
         let size = if current_commits.len() >= branch_commits.len() { branch_commits.len() } else { current_commits.len() };
+        println!("SIZE: {}",size);
         for index in 0..size{
-            if current_commits[index].id == branch_commits[index].id{
+            println!("ERROR: {} - {}", current_commits[index].hash,branch_commits[index].hash);
+            if current_commits[index].hash == branch_commits[index].hash {
                 if index == size - 1{
                     return Some(current_commits[index].clone())
                 }
