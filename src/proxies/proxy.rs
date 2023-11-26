@@ -1,5 +1,5 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::randoms::random::Random, constants::constant::TREE_CODE};
+use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity, ref_delta_entity::RefDeltaEntity}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::randoms::random::Random, constants::constant::TREE_CODE};
 
 pub struct Proxy;
 
@@ -49,6 +49,14 @@ impl Proxy{
 
     pub fn read_blob(repo_path: &Path, blob_hash: String) -> Result<String, std::io::Error>{
         BlobEntity::read(repo_path, blob_hash)
+    }
+
+    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity) -> Result<String, std::io::Error>{
+        RefDeltaEntity::write(repo_path, content)
+    }
+
+    pub fn read_ref_delta(repo_path: &Path, delta_hash: String) -> Result<RefDeltaEntity, std::io::Error>{
+        RefDeltaEntity::read(repo_path, delta_hash)
     } 
 }
 

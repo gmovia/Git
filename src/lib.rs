@@ -125,6 +125,7 @@ pub mod vcs{
         pub mod change;
         pub mod conflict;
         pub mod tag_entity;
+        pub mod ref_delta_entity;
     }
   
     pub mod version_control_system;
