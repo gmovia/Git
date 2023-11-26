@@ -5,7 +5,7 @@ use crate::{
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constant::{RESPONSE_NOK_GIT_IGNORE, RESPONSE_OK_IGNORE}, clients::client::Client,};
 
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore, tag::{TagOptions, Tag}, remote::Remote}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
 #[derive(Debug, Clone)]
@@ -107,7 +107,7 @@ impl VersionControlSystem {
         //Ok(())
     }
 
-    pub fn fetch(message: String)-> Result<(), std::io::Error>{
+    pub fn fetch(message: String, server_added: &PathBuf, branch_name: String)-> Result<(), std::io::Error>{
         let current = CurrentRepository::read()?;
         let _ = Client::client(message, &current);
         Ok(())
@@ -116,15 +116,29 @@ impl VersionControlSystem {
     pub fn git_pull(message: String) -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
-        if Remote::remote_added(&current)? ==true &&  input.len() < 3 {
+        let mut remote_added:bool = false;
+
+        let mut repo_name: &str = "";
+        let mut branch_name: &str = "";
+
+        if Remote::remote_added(&current)? &&  input.len() < 3 {
             println!("Error: Please specify which branch you want to merge with\n\ngit pull <remote> <branch>");
             return Err(std::io::Error::new(std::io::ErrorKind::Other, "Please specify which branch you want to merge with\n\ngit pull <remote> <branch>"));
+        }else if Remote::remote_added(&current)? &&  input.len() > 3 {
+            remote_added = true;
+            repo_name =  input[2]; //origin
+            branch_name = input[3]; //main
+        }
+
+        let server_added = Remote::get_path_of_repo_remote(repo_name)?;
+        
+        Self::fetch("git fetch".to_string(), &server_added, branch_name.to_string())?;
+
+        if !remote_added{
+            Self::merge(&Init::get_current_branch(&current)?)?;
         }
         
-        Self::fetch("git fetch".to_string())?;
-        Self::merge(&Init::get_current_branch(&current)?)?;
         Ok(())
-
     }
 
     pub fn push(message: String)-> Result<(), std::io::Error>{
