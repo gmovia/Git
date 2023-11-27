@@ -40,6 +40,7 @@ pub mod servers{
 
 pub mod packfiles{
     pub mod packfile;
+    pub mod tag_file;
 }
 
 pub mod interfaces{

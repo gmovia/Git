@@ -9,6 +9,7 @@ use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, Write};
 use crate::constants::constant::COMMIT_INIT_HASH;
+use crate::packfiles::tag_file::process_tag_directory;
 use crate::vcs::commands::branch::Branch;
 use crate::vcs::commands::cat_file::CatFile;
 use crate::vcs::commands::init::Init;
@@ -98,7 +99,7 @@ impl Encoder {
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-        Self::process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data)?;
+        process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data)?;
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -114,22 +115,12 @@ impl Encoder {
         Ok(packfile)
     }
 
-    fn process_tag_directory(path: &Path, objects_data: &mut Vec<(String,usize,usize)>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
-        //Aca agregar objetos tags
-        for entrada in fs::read_dir(path)? {
-            let entrada = entrada?;
-            let entry_path = entrada.path();
-            if entry_path.is_file() {
-                println!("ENTRE a recorrer mi file\n");
-                let data = Self::process_tag_file(&entry_path)?;
-                if data.1 != 0{
-                    objects_data.push(data);
-                }
-            }
-        }
-        println!("process_tag_directory  TAG FOLDER\n");
-        Ok(objects_data.to_vec())
-    }
+ /*    pub fn add_tag_file(&mut objects_data : Vec<(String, usize, usize)>, path: &Path){
+        Self::process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data)?;
+        
+    } */
+
+
  
     fn create_fetch_packfile(server_path: &Path, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile = Vec::new();
@@ -326,20 +317,6 @@ impl Encoder {
         else {
             return Ok((file_path.to_string_lossy().to_string(),3_usize,metadata.len() as usize))
         }
-    }
-
-    fn process_tag_file(file_path: &Path) -> Result<(String,usize,usize),std::io::Error> {
-        let metadata = fs::metadata(file_path)?;
-        let mut content = String::new();
-        let mut file = fs::File::open(file_path)?;
-
-        file.read_to_string(&mut content)?;
-
-        if content.contains("tag"){
-            return Ok((file_path.to_string_lossy().to_string(), 4_usize, metadata.len() as usize));
-        }
-        return Ok(("NONE".to_string(), 0, 0))
-   
     }
     
     fn process_directory(path: &Path, objects_data: &mut Vec<(String,usize,usize)>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {

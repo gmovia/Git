@@ -1,5 +1,5 @@
 use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
-use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::commit_entity::CommitEntity, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER}, utils::randoms::random::Random};
+use crate::{packfiles::{packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files}}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::commit_entity::CommitEntity, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER}, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
 
@@ -37,51 +37,11 @@ impl Clone{
 
         send_done_msg(socket)?;
         let objects = Self::get_socket_response(socket)?;
-        let (list_tags, list_refs) = Self::exclude_tag_ref(packets.clone())?;
-
-        Self::create_tag_files(list_tags);
+        let (list_tags, list_refs) = exclude_tag_ref(packets.clone())?;
+        
+        create_tag_files(list_tags, &CurrentRepository::read()?);
         Self::init_commits(&list_refs , &objects, repo)?;
         Ok(()) 
-    }
-
-    fn create_tag_files(list_tags: Vec<String>) -> Result<(), std::io::Error>{
-        let path = CurrentRepository::read()?;
-        println!("LIST TAGS ---> {:?}", list_tags);
-        for string_tag in list_tags{
-            println!("STRING_TAG {}", string_tag);
-            let tag: Vec<&str> = string_tag.split_whitespace().collect();
-            let hash = tag[0];
-            let filename = tag[1].trim_end_matches("^{}");
-
-            let file_path = path.join(".rust_git").join(filename);
-            let mut file = OpenOptions::new().create(true).write(true).append(true).open(&file_path)?;
-            println!("filepath ---> {:?}", file_path.clone());
-            file.write_all(hash.as_bytes())?;
-        } 
-        Ok(())
-    }
-
-    fn exclude_tag_ref(packets: Vec<String>) -> Result<(Vec<String>, Vec<String>), std::io::Error> {
-        let mut to_remove: Vec<usize> = Vec::new();
-        let mut list_tags: Vec<String> = Vec::new();
-        
-        for (index, refs) in packets.iter().enumerate() {
-            if refs.contains("^{}") {
-                // Crear folder de tag aquí para esa respectiva refs
-            }
-            if refs.contains("tags") {
-                list_tags.push(refs.clone());
-                to_remove.push(index);
-            }
-        }
-        let remaining_packets: Vec<String> = packets
-            .into_iter()
-            .enumerate()
-            .filter(|(index, _)| !to_remove.contains(index))
-            .map(|(_, packet)| packet)
-            .collect();
-    
-        Ok((list_tags, remaining_packets))
     }
 
     fn init_commits(list_refs: &Vec<String>, objects: &[(u8,Vec<u8>)], repo: &Path) -> Result<(), std::io::Error>  {
@@ -163,8 +123,6 @@ impl Clone{
         }
         objects_processed
     }
-
-
 
      pub fn create_folders(objects: Vec<(u8, String)>, repo: &Path) -> HashMap<String, CommitEntity>{
         let mut commits_created: HashMap<String, CommitEntity> = HashMap::new();

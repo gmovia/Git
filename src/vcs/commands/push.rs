@@ -1,6 +1,6 @@
 use std::{net::TcpStream, path::Path, io::{Write, self, BufRead}, fs};
 
-use crate::{ packfiles::packfile::to_pkt_line, protocol::send_pack::handle_send_pack, vcs::commands::branch::Branch};
+use crate::{ packfiles::packfile::to_pkt_line, servers::upload_pack::process_tag_content ,protocol::send_pack::handle_send_pack, vcs::commands::branch::Branch, handlers::tag};
 
 pub struct Push;
 
@@ -9,9 +9,15 @@ impl Push{
         println!("ESTOY EN PUSH\n\n");
 
         let logs_path = current_repo.join(".rust_git").join("logs");
-        let log_entries = Self::get_commits_branch(&logs_path)?;
+        let mut log_entries = Self::get_commits_branch(&logs_path)?;
+        let mut tag_entries = Self::get_tags(current_repo)?;
         let mut entry_to_send:Vec<String> = Vec::new();
         println!("LOG entries -----> {:?}\n", log_entries);
+        
+        if !tag_entries.is_empty() {
+            log_entries.append(&mut tag_entries);
+        }
+        
         let current_branch:String = Branch::get_current_branch(current_repo)?;
         for entries in &log_entries{
             if entries.contains(&current_branch){
@@ -25,6 +31,29 @@ impl Push{
         handle_send_pack(stream, current_repo, &entry_to_send)?;
         
         Ok(())
+    }
+
+    fn get_tags(path: &Path) -> Result<Vec<String>, std::io::Error>{
+        let mut log_entries = Vec::new();
+        let tags_path = path.join(".rust_git").join("refs").join("tags");
+        let entries_tag = fs::read_dir(tags_path)?;
+
+        for entry in entries_tag{
+            let tag_file: fs::DirEntry = entry?;
+            let _ = fs::File::open(tag_file.path())?;
+            if let Some(tag_name) = tag_file.path().file_name() {
+                let tag_hash  = fs::read_to_string(tag_file.path())?;
+                let is_comun = process_tag_content(tag_hash.clone(), path)?;
+                let mut format_tag = String::new();
+                if is_comun == true{
+                    format_tag = format!("{} refs/tags/{}^{}", tag_hash, tag_name.to_string_lossy(), "{}");
+                }else {
+                    format_tag = format!("{} refs/tags/{}", tag_hash, tag_name.to_string_lossy());
+                }
+                log_entries.push(format_tag);
+            }
+        }
+        Ok(log_entries)
     }
 
     fn extract_old_new_commit(line: String) -> String{

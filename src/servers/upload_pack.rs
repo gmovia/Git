@@ -109,7 +109,7 @@ fn get_log_entries(path: &Path) -> Result<Vec<String>, std::io::Error>{
     Ok(log_entries)
 }
 
-    fn process_tag_content(hash: String, repo_server_path:&Path) -> Result<bool, std::io::Error>{
+    pub fn process_tag_content(hash: String, repo_server_path:&Path) -> Result<bool, std::io::Error>{
         let content = CatFile::cat_file(&hash, Init::get_object_path(repo_server_path)?)?; // commit or tag
         if content.contains("tag"){
             return Ok(true);
