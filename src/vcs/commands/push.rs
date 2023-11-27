@@ -6,12 +6,10 @@ pub struct Push;
 
 impl Push{
     pub fn push(stream: &mut TcpStream, current_repo: &Path) -> Result<(),std::io::Error> {
-        println!("ESTOY EN PUSH\n\n");
-
         let logs_path = current_repo.join(".rust_git").join("logs");
         let log_entries = Self::get_commits_branch(&logs_path)?;
         let mut entry_to_send:Vec<String> = Vec::new();
-        println!("LOG entries -----> {:?}\n", log_entries);
+
         let current_branch:String = Branch::get_current_branch(current_repo)?;
         for entries in &log_entries{
             if entries.contains(&current_branch){
@@ -21,7 +19,6 @@ impl Push{
             }
         }
 
-        println!("Hasta aca desde el cliente le mande las refs que tengo \n");
         handle_send_pack(stream, current_repo, &entry_to_send)?;
         
         Ok(())
@@ -58,7 +55,7 @@ impl Push{
                 if file_path.is_file() {
                     let last_line = Self::process_file(&file_path)?;
                     let hashes = Self::extract_old_new_commit(last_line);
-                    println!("ESTOS SON LOS HASHES old new --> {} \n", hashes);
+
                     let file_name = file_path
                         .file_stem()
                         .and_then(|stem| stem.to_str())

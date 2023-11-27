@@ -41,10 +41,9 @@ impl Tag {
         let tagger = "tagger gmovia <gmovia@fi.uba.ar> 1700522965 -0300";
         
         let tag_entity = TagEntity{commit_hash: commit_hash, typef: typef.to_string(), tagger: tagger.to_string(), tag: tag.to_string(), message: message.to_string()};
-        println!("{:?}",tag_entity);
         let hash_tag = TagEntity::write(path, tag_entity)?;
-        println!("{:?}",hash_tag);
         let tags_path = path.join(".rust_git").join("refs").join("tags").join(tag);
+        
         let mut tag_file = OpenOptions::new().write(true).create(true).append(true).open(tags_path)?;
         tag_file.write_all(hash_tag.as_bytes())?;
 

@@ -120,7 +120,9 @@ impl VersionControlSystem {
     pub fn git_pull() -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
         Self::fetch("git fetch".to_string())?;
-        Self::merge(&Init::get_current_branch(&current)?)?;
+        let branch_name = Init::get_current_branch(&current)?;
+        let format = format!("origin_{}", branch_name);
+        Self::merge(&format)?;
         Ok(())
 
     }
