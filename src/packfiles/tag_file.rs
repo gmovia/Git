@@ -40,15 +40,11 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
     let mut new_tags = Vec::new();
     let old_tags: Vec<String> = get_tags(path)?;
 
-    // hash refs/heads/master
-    // hash refs/tags/version1
-    //hash refs/tags/version2{}
     for tags in old_tags{
         if !refs.contains(&tags){
             new_tags.push(tags)
         }
     }
-
     Ok(new_tags)
     }
 
@@ -72,20 +68,13 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
     //Encodea el objeto tag en formato (path, 4, size_paquete)
     //Recorre el directorio, de tags tiene que formatear a 4 solo los que sean objetos tags normal 
     pub fn process_tag_file(file_path: &Path, path_to_read: &Path) -> Result<(String,usize,usize),std::io::Error> {
-        let metadata = fs::metadata(file_path)?;
         let mut content_hash = String::new();
         let mut file = fs::File::open(file_path)?;
 
-        file.read_to_string(&mut content_hash)?;
-        println!("CONTEN que leo ---> {:?}\n", content_hash);
-        
-    
+        file.read_to_string(&mut content_hash)?;        
         let content = CatFile::cat_file(&content_hash, Init::get_object_path(&path_to_read)?)?;
 
-        println!("CATFILE content {:?}\n", content);
         if content.contains("tag"){
-            println!("CONTIENE TAGGG tag_file\n");
-
             return Ok((file_path.to_string_lossy().to_string(), 4_usize, content.len() as usize));
         }
         return Ok(("NONE".to_string(), 0, 0))
@@ -95,7 +84,6 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
     pub fn create_tag_files(list_tags: Vec<String>, path: &Path) -> Result<(), std::io::Error>{
         println!("LIST TAGS ---> {:?}", list_tags);
         for string_tag in list_tags{
-            println!("STRING_TAG {}", string_tag);
             let tag: Vec<&str> = string_tag.split_whitespace().collect();
             let hash = tag[0];
             let filename = tag[1].trim_end_matches("^{}");

@@ -64,9 +64,6 @@ fn init_packfile(last_commit_current: String, current_repo: &Path, last_commit_s
     println!("LAS COMMIT ---> {}\n", last_commit_current);
     Encoder::get_object_for_commit(current_repo, &mut objects_data, &last_commit_current, last_commit_server)?;
     
-
-    println!("LEN OBJECTS ANTESSSSSSS{:?}\n", objects_data.len());
-
     process_directory_to_send_new_tag(&current_repo.join(".rust_git").join("refs").join("tags"), &mut objects_data, send_new_tag.to_vec(), current_repo)?;
 
     println!("LEN OBJECTS DESPUESSSS {:?}\n", objects_data.len());
@@ -103,15 +100,10 @@ fn process_directory_to_send_new_tag(path: &Path, objects_data: &mut Vec<(String
 
             // Convert hash_bytes to a String for comparison
             let hash = String::from_utf8_lossy(&hash_bytes).trim().to_string();
-            println!("HASH del read en process_directory_to_send_new_tag: {:?}\n", hash);
-            println!("SEND NEW TAG ES --> {:?}\n", send_new_tag_set);
 
             if send_new_tag_set.contains(&hash) {
-                println!("entra jeeeeeeeeeeeeeeeeeeeeeeeeeeee");
-                println!("MATCHHHHH");
                 // aca para el tag l etiene que llegar el path del object y no el que esta en refs/tag
                 let data = process_particular_tag_to_send(&entry_path, current_repo)?;
-                println!("TAG A ENVIAR ES -----> {:?}\n", data);
                 if data.1 != 0 {
                     objects_data.push(data);
                 }
@@ -129,13 +121,10 @@ fn process_particular_tag_to_send(file_path: &Path, path_to_read: &Path) -> Resu
     let mut content_hash = String::new();
     let mut file = fs::File::open(file_path)?;
 
-    file.read_to_string(&mut content_hash)?;
-    println!("CONTEN que leo ---> {:?}\n", content_hash);
-    
+    file.read_to_string(&mut content_hash)?;    
 
     let content = CatFile::cat_file(&content_hash, Init::get_object_path(&path_to_read)?)?;
 
-    println!("CATFILE content {:?}\n", content);
     if content.contains("tag"){
         println!("CONTIENE TAGGG tag_file\n");
 
@@ -143,33 +132,10 @@ fn process_particular_tag_to_send(file_path: &Path, path_to_read: &Path) -> Resu
         let object_path = Init::get_object_path(path_to_read)?;
 
         let final_path  = object_path.join(format!("{}/{}", folder_name, &content_hash[2..]).as_str());
-        println!("FINALPATH---> {:?}", final_path);
         return Ok((final_path.to_string_lossy().to_string(), 4_usize, content.len() as usize));
     }
     return Ok(("NONE".to_string(), 0, 0))
 }
-
-/* fn process_directory_to_send_new_tag(path: &Path, objects_data: &mut Vec<(String,usize,usize)>, send_new_tag: Vec<String>, current_repo: &Path ) -> Result<Vec<(String, usize, usize)>, std::io::Error>{
-    for entrada in fs::read_dir(path)? {
-        let entrada = entrada?;
-        let entry_path = entrada.path();
-        if entry_path.is_file() {
-            let hash = fs::read_to_string(entry_path.clone())?;
-            println!("HASH del read en process_directory_to_send_new_tag {hash}\n");
-            println!("SEND NEW TAG ES --> {:?}\n", send_new_tag);
-            if send_new_tag.contains(&hash) {
-                println!("MATCHHHHH");
-                let data = process_tag_file(&entry_path, current_repo)?;
-                println!("TAG A ENVIAR eS -----> {:?}\n", data);
-                if data.1 != 0{
-                    objects_data.push(data);
-                }
-            }
-        }
-    }
-    println!("process_tag_directory  TAG FOLDER\n");
-    Ok(objects_data.to_vec())
-} */
 
 
 fn send_pack(packfile: Vec<u8>, stream: &mut TcpStream, log_entries: &[String], send_new_tag: Vec<String>) -> Result<String, std::io::Error> {
