@@ -38,7 +38,7 @@ pub fn handler_command(input: &str) -> String{
         x if x.contains("git push") => handler_push(x.to_string()),
         x if x.contains("git fetch") => handler_fetch(x.to_string()),
         x if x.contains("git ls-tree") => handler_ls_tree(x.to_string()),
-        x if x.contains("git pull") => handler_pull(x.to_string()),
+        x if x.contains("git pull") => handler_pull(),
         x if x.contains("git tag") => handler_tag(x.to_string()),
         x if x.contains("git remote") => handler_remote(x.to_string()),
         x if x.contains("git show-ref") => handler_show_ref(x.to_string()),

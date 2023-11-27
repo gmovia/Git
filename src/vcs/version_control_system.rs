@@ -5,7 +5,7 @@ use crate::{
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constant::{RESPONSE_NOK_IGNORE, RESPONSE_OK_IGNORE}, clients::client::Client,};
 
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore, tag::{TagOptions, Tag}, show_ref::{ShowRefOptions, ShowRef}, remote::Remote}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
 #[derive(Debug, Clone)]
@@ -111,15 +111,20 @@ impl VersionControlSystem {
         Client::client(message, path_to_clone)
     }
 
-    pub fn fetch(message: String, server_added: &PathBuf, branch_name: String)-> Result<(), std::io::Error>{
+    pub fn fetch(message: String)-> Result<(), std::io::Error>{
         let current = CurrentRepository::read()?;
         let _ = Client::client(message, &current);
         Ok(())
     }
     
-    pub fn git_pull(message: String) -> Result<(), std::io::Error> {
+    pub fn git_pull() -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
-        let input: Vec<&str>  = message.split_ascii_whitespace().collect();
+        Self::fetch("git fetch".to_string())?;
+        let branch_name = Init::get_current_branch(&current)?;
+        let format = format!("origin_{}", branch_name);
+        Self::merge(&format)?;
+
+/*         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
         let mut remote_added:bool = false;
 
         let mut repo_name: &str = "";
@@ -137,11 +142,10 @@ impl VersionControlSystem {
         let server_added = Remote::get_path_of_repo_remote(repo_name)?;
         
         Self::fetch("git fetch".to_string(), &server_added, branch_name.to_string())?;
-
+        
         if !remote_added{
             Self::merge(&Init::get_current_branch(&current)?)?;
-        }
-        
+        } */
         Ok(())
     }
 
