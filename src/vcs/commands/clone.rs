@@ -39,7 +39,7 @@ impl Clone{
         let objects = Self::get_socket_response(socket)?;
         let (list_tags, list_refs) = exclude_tag_ref(packets.clone())?;
         
-        create_tag_files(list_tags, &CurrentRepository::read()?);
+        let _ = create_tag_files(list_tags, &CurrentRepository::read()?);
         Self::init_commits(&list_refs , &objects, repo)?;
         Ok(()) 
     }
@@ -166,8 +166,7 @@ impl Clone{
 
         let tag_entity = TagEntity{commit_hash:commit_hash[1].to_string(),typef:typed[1].to_string(), tag: tag[1].to_string(), tagger: tagger.to_string(), message: message.to_string()};
             
-        Ok(TagEntity::write(repo, tag_entity)?)
-    
+        TagEntity::write(repo, tag_entity)    
     }
 
     

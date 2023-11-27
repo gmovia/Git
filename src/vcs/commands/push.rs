@@ -1,6 +1,6 @@
 use std::{net::TcpStream, path::Path, io::{Write, self, BufRead}, fs};
 
-use crate::{ packfiles::packfile::to_pkt_line, servers::upload_pack::process_tag_content ,protocol::send_pack::handle_send_pack, vcs::commands::branch::Branch, handlers::tag};
+use crate::{ packfiles::packfile::to_pkt_line, servers::upload_pack::process_tag_content ,protocol::send_pack::handle_send_pack, vcs::commands::branch::Branch};
 
 pub struct Push;
 
@@ -44,12 +44,11 @@ impl Push{
             if let Some(tag_name) = tag_file.path().file_name() {
                 let tag_hash  = fs::read_to_string(tag_file.path())?;
                 let is_comun = process_tag_content(tag_hash.clone(), path)?;
-                let mut format_tag = String::new();
-                if is_comun == true{
-                    format_tag = format!("{} refs/tags/{}^{}", tag_hash, tag_name.to_string_lossy(), "{}");
+                let format_tag = if is_comun{
+                    format!("{} refs/tags/{}^{}", tag_hash, tag_name.to_string_lossy(), "{}")
                 }else {
-                    format_tag = format!("{} refs/tags/{}", tag_hash, tag_name.to_string_lossy());
-                }
+                    format!("{} refs/tags/{}", tag_hash, tag_name.to_string_lossy())
+                };
                 log_entries.push(format_tag);
             }
         }

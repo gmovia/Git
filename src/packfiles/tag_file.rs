@@ -1,6 +1,6 @@
-use std::{path::Path, fs::{self, DirEntry, File, OpenOptions}, io::{Read, Write}};
+use std::{path::Path, fs::{self, OpenOptions}, io::{Read, Write}};
 
-use crate::{vcs::commands::{cat_file::CatFile, init::Init}, handlers::tag};
+use crate::vcs::commands::{cat_file::CatFile, init::Init};
 
 pub fn get_tags(path: &Path) -> Result<Vec<String>, std::io::Error>{
     let mut log_entries = Vec::new();
@@ -13,12 +13,11 @@ pub fn get_tags(path: &Path) -> Result<Vec<String>, std::io::Error>{
         if let Some(tag_name) = tag_file.path().file_name() {
             let tag_hash  = fs::read_to_string(tag_file.path())?;
             let is_comun = process_tag_content(tag_hash.clone(), path)?;
-            let mut format_tag = String::new();
-            if is_comun == true{
-                format_tag = format!("{} refs/tags/{}^{}", tag_hash, tag_name.to_string_lossy(), "{}");
+            let format_tag = if is_comun{
+                format!("{} refs/tags/{}^{}", tag_hash, tag_name.to_string_lossy(), "{}")
             }else {
-                format_tag = format!("{} refs/tags/{}", tag_hash, tag_name.to_string_lossy());
-            }
+                format!("{} refs/tags/{}", tag_hash, tag_name.to_string_lossy())
+            };
             log_entries.push(format_tag);
         }
     }
@@ -72,13 +71,12 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
         let mut file = fs::File::open(file_path)?;
 
         file.read_to_string(&mut content_hash)?;        
-        let content = CatFile::cat_file(&content_hash, Init::get_object_path(&path_to_read)?)?;
+        let content = CatFile::cat_file(&content_hash, Init::get_object_path(path_to_read)?)?;
 
         if content.contains("tag"){
-            return Ok((file_path.to_string_lossy().to_string(), 4_usize, content.len() as usize));
+            return Ok((file_path.to_string_lossy().to_string(), 4_usize, content.len()));
         }
-        return Ok(("NONE".to_string(), 0, 0))
-   
+        Ok(("NONE".to_string(), 0, 0))   
     }
     
     pub fn create_tag_files(list_tags: Vec<String>, path: &Path) -> Result<(), std::io::Error>{

@@ -1,6 +1,6 @@
 
 use std::{net::TcpStream, path::{Path, PathBuf}, io::{Write, Read}, fs, collections::HashSet};
-use crate::{packfiles::{packfile::{process_line, to_pkt_line}, tag_file::{process_refs_tag, process_tag_directory, process_tag_file}}, servers::encoder::Encoder, vcs::{commands::{init::Init, cat_file::CatFile}, files::current_commit::CurrentCommit}, constants::constant::COMMIT_INIT_HASH};
+use crate::{packfiles::{packfile::{process_line, to_pkt_line}, tag_file::process_refs_tag}, servers::encoder::Encoder, vcs::{commands::{init::Init, cat_file::CatFile}, files::current_commit::CurrentCommit}, constants::constant::COMMIT_INIT_HASH};
 
 pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &Path, log_entries: &[String]) -> Result<(), std::io::Error> {
     println!("Entro a handle--- send--pack \n");
@@ -56,7 +56,7 @@ fn process_hash_server(send_ref: &Vec<String>, current_repo: PathBuf) -> Result<
 }
 
 
-fn init_packfile(last_commit_current: String, current_repo: &Path, last_commit_server: &str, send_new_tag: &Vec<String>) -> Result<Vec<u8>,std::io::Error>{
+fn init_packfile(last_commit_current: String, current_repo: &Path, last_commit_server: &str, send_new_tag:&[String]) -> Result<Vec<u8>,std::io::Error>{
     let mut packfile: Vec<u8> = Vec::new();
 
     let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
@@ -116,14 +116,12 @@ fn process_directory_to_send_new_tag(path: &Path, objects_data: &mut Vec<(String
 
 
 fn process_particular_tag_to_send(file_path: &Path, path_to_read: &Path) -> Result<(String,usize,usize),std::io::Error> {
-
-    let metadata = fs::metadata(file_path)?;
     let mut content_hash = String::new();
     let mut file = fs::File::open(file_path)?;
 
     file.read_to_string(&mut content_hash)?;    
 
-    let content = CatFile::cat_file(&content_hash, Init::get_object_path(&path_to_read)?)?;
+    let content = CatFile::cat_file(&content_hash, Init::get_object_path(path_to_read)?)?;
 
     if content.contains("tag"){
         println!("CONTIENE TAGGG tag_file\n");
@@ -132,9 +130,9 @@ fn process_particular_tag_to_send(file_path: &Path, path_to_read: &Path) -> Resu
         let object_path = Init::get_object_path(path_to_read)?;
 
         let final_path  = object_path.join(format!("{}/{}", folder_name, &content_hash[2..]).as_str());
-        return Ok((final_path.to_string_lossy().to_string(), 4_usize, content.len() as usize));
+        return Ok((final_path.to_string_lossy().to_string(), 4_usize, content.len()));
     }
-    return Ok(("NONE".to_string(), 0, 0))
+    Ok(("NONE".to_string(), 0, 0))
 }
 
 

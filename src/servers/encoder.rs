@@ -9,7 +9,6 @@ use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, Write};
 use crate::constants::constant::COMMIT_INIT_HASH;
-use crate::packfiles::tag_file::process_tag_directory;
 use crate::vcs::commands::branch::Branch;
 use crate::vcs::commands::cat_file::CatFile;
 use crate::vcs::commands::init::Init;
@@ -318,7 +317,7 @@ impl Encoder {
         } else if content.contains("100644") || content.contains("40000"){
             return Ok((file_path.to_string_lossy().to_string(), 2_usize,metadata.len() as usize))
         } else if content.contains("object") && content.contains("tag"){
-            return Ok((file_path.to_string_lossy().to_string(), 4_usize, content.len() as usize));
+            return Ok((file_path.to_string_lossy().to_string(), 4_usize, content.len()));
         }
         else {
             return Ok((file_path.to_string_lossy().to_string(),3_usize,metadata.len() as usize))
