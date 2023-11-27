@@ -64,7 +64,7 @@ fn init_packfile(last_commit_current: String, current_repo: &Path, last_commit_s
     println!("LAS COMMIT ---> {}\n", last_commit_current);
     Encoder::get_object_for_commit(current_repo, &mut objects_data, &last_commit_current, last_commit_server)?;
     
-    process_directory_to_send_new_tag(&current_repo.join(".rust_git").join("refs").join("tags"), &mut objects_data, send_new_tag)?;
+    process_directory_to_send_new_tag(&current_repo.join(".rust_git").join("refs").join("tags"), &mut objects_data, send_new_tag, current_repo)?;
 
     println!("LEN OBJECTS {:?}\n", objects_data.len());
     println!("OBJECTS DATA: {:?}\n", objects_data);
@@ -78,7 +78,7 @@ fn init_packfile(last_commit_current: String, current_repo: &Path, last_commit_s
         }
         let path = Path::new(&objects.0);
         
-        let compress_data = Encoder::compress_object(path.clone(), objects.1)?;
+        let compress_data = Encoder::compress_object(path.clone(), objects.1, current_repo)?;
         for byte in compress_data {
             packfile.push(byte);    
         }
@@ -86,7 +86,7 @@ fn init_packfile(last_commit_current: String, current_repo: &Path, last_commit_s
     Ok(packfile)
 }
 
-fn process_directory_to_send_new_tag(path: &Path, objects_data: &mut Vec<(String,usize,usize)>, send_new_tag: Vec<String> ) -> Result<Vec<(String, usize, usize)>, std::io::Error>{
+fn process_directory_to_send_new_tag(path: &Path, objects_data: &mut Vec<(String,usize,usize)>, send_new_tag: Vec<String>, current_repo: &Path ) -> Result<Vec<(String, usize, usize)>, std::io::Error>{
     for entrada in fs::read_dir(path)? {
         let entrada = entrada?;
         let entry_path = entrada.path();
@@ -94,7 +94,7 @@ fn process_directory_to_send_new_tag(path: &Path, objects_data: &mut Vec<(String
             println!("ENTRE a recorrer mi file\n");
             let hash = fs::read_to_string(entry_path.clone())?;
             if send_new_tag.contains(&hash){
-                let data = process_tag_file(&entry_path)?;
+                let data = process_tag_file(&entry_path, current_repo)?;
                 if data.1 != 0{
                     objects_data.push(data);
                 }

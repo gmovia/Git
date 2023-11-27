@@ -52,14 +52,14 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
     Ok(new_tags)
     }
 
-    pub fn process_tag_directory(path: &Path, objects_data: &mut Vec<(String,usize,usize)>) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
+    pub fn process_tag_directory(path: &Path, objects_data: &mut Vec<(String,usize,usize)>, path_to_read: &Path) -> Result<Vec<(String,usize,usize)>, std::io::Error> {
         //Aca agregar objetos tags
         for entrada in fs::read_dir(path)? {
             let entrada = entrada?;
             let entry_path = entrada.path();
             if entry_path.is_file() {
                 println!("ENTRE a recorrer mi file\n");
-                let data = process_tag_file(&entry_path)?;
+                let data = process_tag_file(&entry_path, path_to_read)?;
                 if data.1 != 0{
                     objects_data.push(data);
                 }
@@ -70,16 +70,23 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
     }
 
     //Encodea el objeto tag en formato (path, 4, size_paquete)
-    pub fn process_tag_file(file_path: &Path) -> Result<(String,usize,usize),std::io::Error> {
+    //Recorre el directorio, de tags tiene que formatear a 4 solo los que sean objetos tags normal 
+    pub fn process_tag_file(file_path: &Path, path_to_read: &Path) -> Result<(String,usize,usize),std::io::Error> {
         let metadata = fs::metadata(file_path)?;
-        let mut content = String::new();
+        let mut content_hash = String::new();
         let mut file = fs::File::open(file_path)?;
 
-        file.read_to_string(&mut content)?;
-        println!("CONTEN que leo ---> {:?}\n", content);
+        file.read_to_string(&mut content_hash)?;
+        println!("CONTEN que leo ---> {:?}\n", content_hash);
+        
+    
+        let content = CatFile::cat_file(&content_hash, Init::get_object_path(&path_to_read)?)?;
+
+        println!("CATFILE content {:?}\n", content);
         if content.contains("tag"){
             println!("CONTIENE TAGGG tag_file\n");
-            return Ok((file_path.to_string_lossy().to_string(), 4_usize, metadata.len() as usize));
+
+            return Ok((file_path.to_string_lossy().to_string(), 4_usize, content.len() as usize));
         }
         return Ok(("NONE".to_string(), 0, 0))
    

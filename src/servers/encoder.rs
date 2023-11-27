@@ -99,15 +99,15 @@ impl Encoder {
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-        process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data)?;
+        process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data, path)?;
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
                 packfile.push(object);
             }
-            let path = Path::new(&objects.0);
+            let path_object = Path::new(&objects.0); //CAMBIO NOMBRE DE PATH 
             
-            let compress_data = Self::compress_object(path, objects.1)?;
+            let compress_data = Self::compress_object(path_object, objects.1, path)?;
             for byte in compress_data {
                 packfile.push(byte);    
             }
@@ -160,7 +160,7 @@ impl Encoder {
 
             let path = Path::new(&objects.0);
             
-            let compress_data = Self::compress_object(path, objects.1)?;
+            let compress_data = Self::compress_object(path, objects.1, server_path)?;
             for byte in compress_data {
                 packfile.push(byte);    
             }
@@ -346,9 +346,10 @@ impl Encoder {
     }
 
 
-    pub fn compress_object(archivo_entrada: &Path, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
+    pub fn compress_object(archivo_entrada: &Path, object_type: usize, server_path: &Path) -> Result<Vec<u8>, std::io::Error> {
         let mut entrada = File::open(archivo_entrada)?;
         let temp_dir = TempDir::new("my_temp_dir")?;
+        println!("COMPREESSS OBJECT");
 
         if object_type == 2 {
             let mut buf = String::new();
@@ -362,6 +363,24 @@ impl Encoder {
             temp_file.write_all(buf.as_bytes())?;
             entrada = File::open(&temp_file_path)?; 
         }
+            if object_type == 4{
+            
+            let mut buf = String::new();
+            let _ = entrada.read_to_string(&mut buf)?;
+            
+            let hash_tag_str: &str = buf.as_str().clone();
+            println!("SERVER PATHHHH ----> {:?}", server_path);
+            let folder_name = hash_tag_str.chars().take(2).collect::<String>();
+            let object_path = Init::get_object_path(server_path)?;
+
+            let file_path  = object_path.join(format!("{}/{}", folder_name, &hash_tag_str[2..]).as_str());
+            println!("FILEPATH DE OBJETO 4 ---> {:?} ", file_path);
+            entrada = File::open(file_path)?;
+            println!("--------------_> ENTRADA TIPO 4 {:?}", entrada );
+            //let entrada = file_path.display().to_string();
+        } 
+
+        println!("ENTRADAS OBJECTS ---> {:?}", entrada);
 
         let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
         io::copy(&mut entrada, &mut encoder)?;
