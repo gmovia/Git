@@ -99,7 +99,11 @@ impl Encoder {
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-        process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data, path)?;
+        println!("OBJECTS DATA LENNNN 11111--------> {:?}", objects_data.len());
+
+        //process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data, path)?;
+
+        println!("OBJECTS DATA LENNNN 22222--------> {:?}", objects_data.len());
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -313,6 +317,8 @@ impl Encoder {
             return Ok((file_path.to_string_lossy().to_string(), 1_usize,metadata.len() as usize))
         } else if content.contains("100644") || content.contains("40000"){
             return Ok((file_path.to_string_lossy().to_string(), 2_usize,metadata.len() as usize))
+        } else if content.contains("object") && content.contains("tag"){
+            return Ok((file_path.to_string_lossy().to_string(), 4_usize, content.len() as usize));
         }
         else {
             return Ok((file_path.to_string_lossy().to_string(),3_usize,metadata.len() as usize))
@@ -363,22 +369,22 @@ impl Encoder {
             temp_file.write_all(buf.as_bytes())?;
             entrada = File::open(&temp_file_path)?; 
         }
-            if object_type == 4{
-            
+/*         if object_type == 4{
+            println!("4444444444\n\n");
             let mut buf = String::new();
             let _ = entrada.read_to_string(&mut buf)?;
             
             let hash_tag_str: &str = buf.as_str().clone();
-            println!("SERVER PATHHHH ----> {:?}", server_path);
+            //println!("SERVER PATHHHH ----> {:?}", server_path);
             let folder_name = hash_tag_str.chars().take(2).collect::<String>();
             let object_path = Init::get_object_path(server_path)?;
 
             let file_path  = object_path.join(format!("{}/{}", folder_name, &hash_tag_str[2..]).as_str());
-            println!("FILEPATH DE OBJETO 4 ---> {:?} ", file_path);
+            //println!("FILEPATH DE OBJETO 4 ---> {:?} ", file_path);
             entrada = File::open(file_path)?;
-            println!("--------------_> ENTRADA TIPO 4 {:?}", entrada );
+            //println!("--------------_> ENTRADA TIPO 4 {:?}", entrada );
             //let entrada = file_path.display().to_string();
-        } 
+        }  */
 
         println!("ENTRADAS OBJECTS ---> {:?}", entrada);
 
