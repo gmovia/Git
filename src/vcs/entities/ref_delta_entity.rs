@@ -38,6 +38,7 @@ impl RefDeltaEntity{
     }
 
     fn write_append(&self, mut base_object_content: String, mut delta_file: File) -> Result<(),std::io::Error> {
+        println!("APPEND");
         base_object_content.drain((self.data[3] as usize)..);
         println!("BASE CORTADO 2: {}", base_object_content);
         let format = format!("{}{}",base_object_content, String::from_utf8_lossy(&self.data[5..]).to_string());
@@ -47,6 +48,7 @@ impl RefDeltaEntity{
     }
 
     fn write_copy(&self, mut base_object_content: String, mut delta_file: File) -> Result<(),std::io::Error> {
+        println!("COPY");
         base_object_content.drain((self.data[5] as usize)..(self.data[7] as usize));
         println!("BASE CORTADO 2: {}", base_object_content);
         let format = format!("{}{}",base_object_content, String::from_utf8_lossy(&self.data[8..]).to_string());

@@ -180,6 +180,7 @@ impl Clone{
 
         if Self::is_bit_set(inner_vec[20]) {
             // COPY
+            println!("COPY");
             println!("INNER VEC COPY: {}", inner_vec[20]);
             println!("VEC: {:?}", decompres_data);
             println!("REF DELTA VEC: {}", String::from_utf8_lossy(&decompres_data).to_string());
@@ -191,22 +192,15 @@ impl Clone{
                     
             };
             let _ = Proxy::write_ref_delta(repo_path, delta_entity, DeltaOptions::Copy);
-            println!("INNER VEC APPEND: {:?}", &inner_vec[20..]);
-            println!("DATA IN APPEND: {}", String::from_utf8_lossy(&inner_vec[..]));
+            println!("INNER VEC COPY: {:?}", &inner_vec[20..]);
+            println!("DATA IN COPY: {}", String::from_utf8_lossy(&inner_vec[..]));
         } else {
-            let delta_entity = if decompres_data.len() == 4 {
+            println!("APPEND");
+            let delta_entity = 
                 RefDeltaEntity {
                     base_object_hash: hash_base_object.clone(),
                     data: decompres_data.to_vec(), 
-                }
-            }
-            else {
-                println!("REF DELTA EN CLONE: {}", String::from_utf8_lossy(&decompres_data[5..]).to_string());
-                RefDeltaEntity {
-                    base_object_hash: hash_base_object.clone(),
-                    data: decompres_data.to_vec()
-                }
-            };
+                };
             let _ = Proxy::write_ref_delta(repo_path, delta_entity, DeltaOptions::Append);
             println!("INNER VEC APPEND: {:?}", &inner_vec[20..]);
             println!("DATA IN APPEND: {}", String::from_utf8_lossy(&inner_vec[..]));
