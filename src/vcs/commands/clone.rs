@@ -186,10 +186,9 @@ impl Clone{
             println!("REF DELTA EN CLONE: {}", String::from_utf8_lossy(&decompres_data[5..]).to_string());
             let delta_entity =   
             RefDeltaEntity {
-                    base_object_hash: hash_base_object.clone(),
-                    data_to_chage: String::from_utf8_lossy(&decompres_data[8..]).to_string(),
-                    position_to_change: decompres_data[5] as usize,
-                    stop_position: decompres_data[7] as usize,
+                base_object_hash: hash_base_object.clone(),
+                data: decompres_data.to_vec(),
+                    
             };
             let _ = Proxy::write_ref_delta(repo_path, delta_entity, DeltaOptions::Copy);
             println!("INNER VEC APPEND: {:?}", &inner_vec[20..]);
@@ -198,18 +197,14 @@ impl Clone{
             let delta_entity = if decompres_data.len() == 4 {
                 RefDeltaEntity {
                     base_object_hash: hash_base_object.clone(),
-                    data_to_chage: "".to_string(),
-                    position_to_change: decompres_data[3] as usize,
-                    stop_position: 0 as usize,
+                    data: decompres_data.to_vec(), 
                 }
             }
             else {
                 println!("REF DELTA EN CLONE: {}", String::from_utf8_lossy(&decompres_data[5..]).to_string());
                 RefDeltaEntity {
                     base_object_hash: hash_base_object.clone(),
-                    data_to_chage: String::from_utf8_lossy(&decompres_data[5..]).to_string(),
-                    position_to_change: decompres_data[3] as usize,
-                    stop_position: 0 as usize,
+                    data: decompres_data.to_vec()
                 }
             };
             let _ = Proxy::write_ref_delta(repo_path, delta_entity, DeltaOptions::Append);

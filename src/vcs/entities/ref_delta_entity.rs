@@ -11,9 +11,7 @@ pub enum DeltaOptions{
 #[derive(Debug, Clone)]
 pub struct RefDeltaEntity{
     pub base_object_hash: String,
-    pub data_to_chage: String,
-    pub position_to_change: usize,
-    pub stop_position: usize,
+    pub data: Vec<u8>,
 }
 
 impl RefDeltaEntity{
@@ -23,8 +21,8 @@ impl RefDeltaEntity{
         
         let mut base_object_content = VersionControlSystem::cat_file(&ref_delta.base_object_hash)?;
 
-        if ref_delta.data_to_chage == "".to_string() {
-            base_object_content.drain(ref_delta.position_to_change..);
+        if ref_delta.data.len() == 4 {
+            base_object_content.drain((ref_delta.data[3] as usize)..);
             delta_file.write_all(base_object_content.as_bytes())?;
         }
         else {
@@ -40,18 +38,18 @@ impl RefDeltaEntity{
     }
 
     fn write_append(&self, mut base_object_content: String, mut delta_file: File) -> Result<(),std::io::Error> {
-        base_object_content.drain(self.position_to_change..);
+        base_object_content.drain((self.data[3] as usize)..);
         println!("BASE CORTADO 2: {}", base_object_content);
-        let format = format!("{}{}",base_object_content, self.data_to_chage);
+        let format = format!("{}{}",base_object_content, String::from_utf8_lossy(&self.data[5..]).to_string());
         println!("FORMAT: {}", format);
         delta_file.write_all(format.as_bytes())?;
         Ok(())
     }
 
     fn write_copy(&self, mut base_object_content: String, mut delta_file: File) -> Result<(),std::io::Error> {
-        base_object_content.drain(self.position_to_change..self.stop_position);
+        base_object_content.drain((self.data[5] as usize)..(self.data[7] as usize));
         println!("BASE CORTADO 2: {}", base_object_content);
-        let format = format!("{}{}",base_object_content, self.data_to_chage);
+        let format = format!("{}{}",base_object_content, String::from_utf8_lossy(&self.data[8..]).to_string());
         println!("FORMAT: {}", format);
         delta_file.write_all(format.as_bytes())?;
         Ok(())
