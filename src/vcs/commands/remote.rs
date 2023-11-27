@@ -33,7 +33,7 @@ impl Remote{
         Ok(false)
     }
 
-    pub fn get_path_of_repo_remote(repo_name: &str) -> Result<PathBuf, std::io::Error> {
+    pub fn get_pathbuf_of_repo_remote(repo_name: &str) -> Result<PathBuf, std::io::Error> {
         let open_path = Path::new(repo_name);
         let path = Init::get_current_config(open_path)?;
     
@@ -47,6 +47,28 @@ impl Remote{
                 if let Some(value) = parts.get(1) {
                     let mut path_buf = PathBuf::new();
                     path_buf.push(value);
+                    return Ok(path_buf);
+                }
+            }
+        }
+        Err(io::Error::new(io::ErrorKind::NotFound, "Path not found"))
+    }
+
+    pub fn get_path_of_repo_remote(repo_name: &str) -> Result<PathBuf, std::io::Error> {
+        let open_path = Path::new(repo_name);
+        let path = Init::get_current_config(open_path)?;
+    
+        let file = fs::File::open(path)?;
+        let reader = io::BufReader::new(file);
+    
+        for line in reader.lines() {
+            let line = line?;
+            if line.contains("[remote 'origin']") && line.starts_with("path") {
+                let parts: Vec<&str> = line.split('=').map(|s| s.trim()).collect();
+                if let Some(value) = parts.get(1) {
+                    let split:Vec<&str> = value.split("/").collect();
+                    let mut path_buf = PathBuf::new();
+                    path_buf.push(split[1]);
                     return Ok(path_buf);
                 }
             }
