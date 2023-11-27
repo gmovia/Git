@@ -30,10 +30,6 @@ impl Log {
                 log.push_str(&format!("\n {} {} ","Date:",formatted_date));
                 log.push_str(&format!("\n {} {} ","   message: ",message));
                 log.push_str("\n ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~");
-                println!("\n commit: {} ", tree_hash);
-                println!("Author: ldiazc <ldiazc@fi.uba.ar>");
-                println!("Date: {}", formatted_date);
-                println!("\n    {}", message);
             }else {
                 println!("Error analyzing date {}", date_time);
             }
