@@ -18,6 +18,8 @@ pub const COMMIT_CODE: &str = "commit";
 
 // TAG
 pub const TAG_CODE: &str = "tag";
+pub const TAG_CODE_NUMBER: u8 = 4;
+
 
 pub const COMMIT_INIT_HASH: &str = "0000000000000000000000000000000000000000";
 
@@ -58,7 +60,7 @@ pub const RESPONSE_OK_COMMIT: &str = "Commit created succesfully.";
 pub const RESPONSE_OK_MERGE: &str = "Merged successfully";
 
 pub const RESPONSE_OK_IGNORE: &str = "The path is ignored as per the rules in the .gitignore file.";
-pub const RESPONSE_NOK_GIT_IGNORE: &str = "The path is not ignored or is not listed in the .gitignore file.";
+pub const RESPONSE_NOK_IGNORE: &str = "The path is not ignored or is not listed in the .gitignore file.";
 
 pub const RESPONSE_OK_CLONE: &str = "Clone successfully";
 pub const RESPONSE_OK_PUSH: &str = "Push successfully";

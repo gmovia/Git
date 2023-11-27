@@ -42,11 +42,3 @@ impl TagEntity{
         return Ok(TagEntity{commit_hash: commit_hash[1].to_string(), typef : typef[1].to_string(), tag : tag[1].to_string(), tagger: tagger.to_string(), message: message.to_string()})
     }
 }
-/*
-object 233efbf7b39ffd409dbb7d7f639fd7d9c1a5a430
-type commit
-tag v2.0.0
-tagger gmovia <gmovia@fi.uba.ar> 1700522965 -0300
-
-hola
-*/

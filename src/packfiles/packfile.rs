@@ -31,10 +31,18 @@ pub fn process_line(stream: &mut TcpStream) -> Result<String, std::io::Error> {
     let mut result = String::new();
         let mut len_buf = [0; 4];
         if stream.read_exact(&mut len_buf).is_ok() {
-            let len_str = from_utf8(&len_buf).unwrap();
-            let len = usize::from_str_radix(len_str, 16).unwrap();
-            let packet = read_packet(stream, len);
-            result = packet;
+            if let Ok(len_str) = from_utf8(&len_buf) {
+                if let Ok(len) = usize::from_str_radix(len_str, 16) {
+                    let packet = read_packet(stream, len);
+                    result = packet;
+                }
+                else {
+                    return Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "Error reading packet"));
+                }
+            }
+        }
+        else {
+            return Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "Error reading packet"));
         }
     
     Ok(result)
