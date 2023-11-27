@@ -193,12 +193,15 @@ impl Clone{
                 }
             }
             else {
-                return (2, "hola".to_string());
+                RefDeltaEntity {
+                    base_object_hash: hash_base_object.clone(),
+                    data_to_chage: String::from_utf8_lossy(&decompres_data[5..]).to_string(),
+                    position_to_change: decompres_data[3] as usize,
+                }
             };
             let _ = Proxy::write_ref_delta(repo_path, delta_entity);
             println!("INNER VEC APPEND: {:?}", &inner_vec[20..]);
             println!("DATA IN APPEND: {}", String::from_utf8_lossy(&inner_vec[..]));
-            //let _ = Self::mostrar_contenido_desde_posicion("/home/amoralejo/23C2-4Rust/test_delta/.rust_git/objects/35/180127f9eb0074cd684cacc8f82bf6fe74d7e3", 79);   
         }
         
         println!("BASE OBJECT: {}", hash_base_object);
@@ -206,26 +209,6 @@ impl Clone{
         println!("DATA ACA: {}", String::from_utf8_lossy(&inner_vec[20..]));
         (number, String::from_utf8_lossy(&inner_vec[20..]).to_string())
     }
-
-        
-    fn mostrar_contenido_desde_posicion(ruta: &str, posicion: u64) -> io::Result<()> {
-        println!("ENTRA");
-        // Abre el archivo en modo de lectura
-        let mut archivo = File::open(ruta)?;
-        println!("NO PASA");
-        // Mueve el cursor a la posición especificada
-        archivo.seek(SeekFrom::Start(posicion))?;
-
-        // Lee el contenido desde la posición especificada
-        let mut contenido = String::new();
-        archivo.read_to_string(&mut contenido)?;
-
-        // Imprime el contenido
-        println!("IMPRIMIO: {}", contenido);
-
-        Ok(())
-    }
-
 
     pub fn create_folders(objects: Vec<(u8, String)>, repo: &Path) -> HashMap<String, CommitEntity>{
         let mut commits_created: HashMap<String, CommitEntity> = HashMap::new();

@@ -54,10 +54,6 @@ impl Proxy{
     pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity) -> Result<String, std::io::Error>{
         RefDeltaEntity::write(repo_path, content)
     }
-
-    pub fn read_ref_delta(repo_path: &Path, delta_hash: String) -> Result<RefDeltaEntity, std::io::Error>{
-        RefDeltaEntity::read(repo_path, delta_hash)
-    } 
 }
 
 
