@@ -369,6 +369,7 @@ impl Encoder {
             temp_file.write_all(buf.as_bytes())?;
             entrada = File::open(&temp_file_path)?; 
         }
+        println!("SANDIA\n");
 /*         if object_type == 4{
             println!("4444444444\n\n");
             let mut buf = String::new();
