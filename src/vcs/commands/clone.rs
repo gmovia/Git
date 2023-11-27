@@ -1,5 +1,5 @@
 use std::{net::TcpStream, io::{Read, Write, self, SeekFrom, Seek}, str::from_utf8, path::Path, fs::{OpenOptions, File}, collections::HashMap, ascii::AsciiExt};
-use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository, version_control_system::VersionControlSystem}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random, handlers::cat_file::handler_cat_file};
+use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, ref_delta_entity::{RefDeltaEntity, DeltaOptions}}, files::current_repository::CurrentRepository, version_control_system::VersionControlSystem}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random, handlers::cat_file::handler_cat_file};
 use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
 
@@ -177,29 +177,42 @@ impl Clone{
     fn process_delta_object(number: u8, inner_vec: &Vec<u8>, repo_path: &Path) -> (u8, String) {
         let hash_base_object: String = (&inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
         let decompres_data = &inner_vec[20..];
-        
-        let mut cat_file = VersionControlSystem::cat_file(&hash_base_object).unwrap();
-        println!("CAT FILE: {}", cat_file);
+
         if Self::is_bit_set(inner_vec[20]) {
             // COPY
             println!("INNER VEC COPY: {}", inner_vec[20]);
+            println!("VEC: {:?}", decompres_data);
+            println!("REF DELTA VEC: {}", String::from_utf8_lossy(&decompres_data).to_string());
+            println!("REF DELTA EN CLONE: {}", String::from_utf8_lossy(&decompres_data[5..]).to_string());
+            let delta_entity =   
+            RefDeltaEntity {
+                    base_object_hash: hash_base_object.clone(),
+                    data_to_chage: String::from_utf8_lossy(&decompres_data[8..]).to_string(),
+                    position_to_change: decompres_data[5] as usize,
+                    stop_position: decompres_data[7] as usize,
+            };
+            let _ = Proxy::write_ref_delta(repo_path, delta_entity, DeltaOptions::Copy);
+            println!("INNER VEC APPEND: {:?}", &inner_vec[20..]);
+            println!("DATA IN APPEND: {}", String::from_utf8_lossy(&inner_vec[..]));
         } else {
-            // APPEND
             let delta_entity = if decompres_data.len() == 4 {
                 RefDeltaEntity {
                     base_object_hash: hash_base_object.clone(),
                     data_to_chage: "".to_string(),
                     position_to_change: decompres_data[3] as usize,
+                    stop_position: 0 as usize,
                 }
             }
             else {
+                println!("REF DELTA EN CLONE: {}", String::from_utf8_lossy(&decompres_data[5..]).to_string());
                 RefDeltaEntity {
                     base_object_hash: hash_base_object.clone(),
                     data_to_chage: String::from_utf8_lossy(&decompres_data[5..]).to_string(),
                     position_to_change: decompres_data[3] as usize,
+                    stop_position: 0 as usize,
                 }
             };
-            let _ = Proxy::write_ref_delta(repo_path, delta_entity);
+            let _ = Proxy::write_ref_delta(repo_path, delta_entity, DeltaOptions::Append);
             println!("INNER VEC APPEND: {:?}", &inner_vec[20..]);
             println!("DATA IN APPEND: {}", String::from_utf8_lossy(&inner_vec[..]));
         }

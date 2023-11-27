@@ -1,5 +1,5 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity, ref_delta_entity::RefDeltaEntity}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::randoms::random::Random, constants::constant::TREE_CODE};
+use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity, ref_delta_entity::{RefDeltaEntity, DeltaOptions}}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::randoms::random::Random, constants::constant::TREE_CODE};
 
 pub struct Proxy;
 
@@ -51,8 +51,8 @@ impl Proxy{
         BlobEntity::read(repo_path, blob_hash)
     }
 
-    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity) -> Result<String, std::io::Error>{
-        RefDeltaEntity::write(repo_path, content)
+    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity, action: DeltaOptions) -> Result<String, std::io::Error>{
+        RefDeltaEntity::write(repo_path, content, action)
     }
 }
 
