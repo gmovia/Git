@@ -7,7 +7,7 @@ use rust_git::interfaces::interface::RustInterface;
 
 
 fn main() -> Result<(), std::io::Error>{
-    VersionControlSystem::init(Path::new("test1"), Vec::new());
+    VersionControlSystem::init(Path::new("cloneDAEMON"), Vec::new());
     //let _ = VersionControlSystem::init(Path::new("clone"), Vec::new());
 
     loop{

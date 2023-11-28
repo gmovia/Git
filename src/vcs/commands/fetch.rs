@@ -32,15 +32,10 @@ impl Fetch {
         }
 
         let last_commit_per_branch= Self::format_packet(&packets)?;
-        println!("LAST COMMIT: {:?}",last_commit_per_branch);
         let mut message_to_send = Self::packet_manager(last_commit_per_branch, repo)?;
         
         let (tags_received, _) = exclude_tag_ref(packets.clone())?;
-        println!("--------------------------------->tags_received {:?}\n", tags_received);
-
-        println!("REPO ---> {:?}\n", repo);
         let want_tag_to_send = process_refs_old_new(tags_received, repo)?;
-        println!("--------------------------------->WANTTTT TAGGGGGGGGGG to send: {:?}\n", want_tag_to_send);
         message_to_send.0.append(&mut want_tag_to_send.clone());
         
         println!("--------------------------------->Message to send: {:?}\n", message_to_send);

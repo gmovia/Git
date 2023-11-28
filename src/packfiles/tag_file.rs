@@ -38,12 +38,9 @@ pub fn process_refs_old_new(refs : Vec<String>, path: &Path)-> Result<Vec<String
     //si no no suma, y solo se envia referencia sin {}
     let mut new_tags = Vec::new();
     let old_tags: Vec<String> = get_tags(path)?;
-    println!("OLD TAGGGGG {:?}\n", old_tags);
     
     for tags in refs{
-        println!("TAGS ----> {:?}", tags);
         if !old_tags.contains(&tags){
-            println!("ENTRO en refsTAGSSSS");
             let format_tag = format!("want {}", tags);
             new_tags.push(to_pkt_line(&format_tag));
         }
@@ -57,12 +54,9 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
     //si no no suma, y solo se envia referencia sin {}
     let mut new_tags = Vec::new();
     let old_tags: Vec<String> = get_tags(path)?;
-    println!("OLD TAGGGGG {:?}\n", old_tags);
     
     for tags in old_tags{
-        println!("TAGS ----> {:?}", tags);
         if !refs.contains(&tags){
-            println!("ENTRO en refsTAGSSSS");
             new_tags.push(tags)
         }
     }
@@ -83,7 +77,6 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
                 }
             }
         }
-        println!("process_tag_directory  TAG FOLDER\n");
         Ok(objects_data.to_vec())
     }
 
@@ -132,7 +125,6 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
 
 
     pub fn create_tag_folder(content: &str, repo: &Path) -> Result<String, std::io::Error>{
-        println!("PROCESAR UN TAG FOLDER");
         let content_lines: Vec<&str> = content.split('\n').collect();
         println!("CONTENt de create_tag_folder \n {:?}", content);
         let commit_hash: Vec<&str> = content_lines[0].split_whitespace().collect();
