@@ -49,6 +49,7 @@ pub mod interfaces{
     pub mod handler;
     pub mod css;
     pub mod handler_button;
+    pub mod login;
 }
 
 pub mod protocol{
@@ -87,6 +88,7 @@ pub mod vcs{
         pub mod current_commit;
         pub mod commits_table;
         pub mod repositories;
+        pub mod config;
     }
 
     pub mod commands{
