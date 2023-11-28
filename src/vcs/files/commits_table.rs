@@ -76,4 +76,15 @@ impl CommitsTable{
         }
         None
     }
+
+    // Recibe una tabla de commits y una entrada
+    // Devuelve un booleano indicando si la entrada esta contenida en la tabla o no
+    pub fn contains(commits_table: &Vec<CommitTableEntry>, entry: &CommitTableEntry) -> bool{
+        for commit in commits_table{
+            if commit.hash == entry.hash{
+                return true;
+            }
+        }
+        false
+    }
 }

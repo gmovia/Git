@@ -14,6 +14,7 @@ use super::merge::handler_merge;
 use super::ls_files::handler_ls_files;
 use super::ls_tree::handler_ls_tree;
 use super::pull::handler_pull;
+use super::rebase::handler_rebase;
 use super::show_ref::handler_show_ref;
 use super::tag::handler_tag;
 
@@ -40,6 +41,7 @@ pub fn handler_command(input: &str) -> String{
         x if x.contains("git pull") => handler_pull(),
         x if x.contains("git tag") => handler_tag(x.to_string()),
         x if x.contains("git show-ref") => handler_show_ref(x.to_string()),
+        x if x.contains("git rebase") => handler_rebase(x.to_string()),
          _ => "Failed or Panicked.".to_string()
      }
 }
