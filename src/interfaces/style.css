@@ -55,10 +55,15 @@
     background: rgba(196, 44, 44, 0.901);
 }
 
+.login-border:focus{
+    padding-left: 10px;
+    color: #363636; 
+}
+
 .login-border{
+    padding-left: 20px;
     margin: 10px;
     font-size: 14px;
-    font-weight: bold;  
     background: #ececec;
     border-radius: 12px;
     border: 2px solid #080505;
