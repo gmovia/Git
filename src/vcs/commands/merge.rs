@@ -15,12 +15,12 @@ pub struct Merge;
 impl Merge {
     pub fn merge(branch: &str, potential_conflicts: HashMap<String, Conflict>) -> Result<HashMap<String, Conflict>,std::io::Error> {
         let mut repository = Repository::read_repository()?;
+        
         let current = CurrentRepository::read()?;
         let current_branch = Branch::get_current_branch(&current)?;
-
+        
         let current_commits_table = CommitsTable::read(current.clone(), &current_branch)?;
         let branch_commits_table = CommitsTable::read(current.clone(), branch)?;
-
         let mut conflicts: HashMap<String, Conflict> = HashMap::new();
 
         let current_commit_of_current_commits_table = CurrentCommit::read_for_branch(&current, &current_branch)?;
