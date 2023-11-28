@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, fs::{self, File, OpenOptions}, io::{Write, Read, self}};
 
-use crate::{constants::constant::{RUST_PATH, COMMIT_INIT_HASH}, vcs::files::current_repository::CurrentRepository};
+use crate::{constants::constant::{RUST_PATH, COMMIT_INIT_HASH}, vcs::files::{current_repository::CurrentRepository, config::Config}};
 
 /// Este Struct representa el comando git init. El cual se encarga de inicializar un repostorio.
 pub struct Init {
@@ -115,7 +115,7 @@ impl Init {
     /// Crea el archivo config al inicializar un nuevo repositorio
     fn create_git_config_file(&self, git_path: &Path) -> Result<(),std::io::Error> {
         let config_path = git_path.join("config");
-        
+        let configuration = Config::read_config()?;
         if fs::File::open(&config_path).is_ok() {
 
         } else {
@@ -124,6 +124,8 @@ impl Init {
             file.write_all("    repostiryformatversion = 0\n".to_string().as_bytes())?;
             file.write_all("    filemode = false\n".to_string().as_bytes())?;
             file.write_all("    bare = false\n".to_string().as_bytes())?;
+            file.write_all("[user]\n".to_string().as_bytes())?;
+            file.write_all(format!("    user.name= {}\n    user.email= {}",configuration.0,configuration.1).as_bytes())?;
         }
 
         Ok(())

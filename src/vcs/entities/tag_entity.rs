@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{utils::randoms::random::Random, vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, constants::constant::TAG_CODE};
+use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init, cat_file::CatFile}, files::config::Config}, constants::constant::TAG_CODE};
 
 #[derive(Debug, Clone)]
 pub struct TagEntity{
@@ -15,11 +15,11 @@ impl TagEntity{
     pub fn write(repo_path: &Path, tag: TagEntity) -> Result<String, std::io::Error>{
         let tag_path = Path::new(&repo_path).join(Random::random());
         let mut tag_file = OpenOptions::new().write(true).create(true).append(true).open(&tag_path)?;
-        
+        let config = Config::read_config()?;
         tag_file.write_all(format!("object {}\n", tag.commit_hash).as_bytes())?;
         tag_file.write_all(format!("type {}\n", tag.typef).as_bytes())?;
         tag_file.write_all(format!("tag {}\n", tag.tag).as_bytes())?;
-        tag_file.write_all(format!("tagger gmovia <gmovia@fi.uba.ar> 1700522965 -0300\n").as_bytes())?; // aca deberia ir el tagger
+        tag_file.write_all(format!("tagger {} <{}> 1700522965 -0300\n", config.0, config.1).as_bytes())?; // aca deberia ir el tagger
         tag_file.write_all(format!("\n{}", tag.message).as_bytes())?;
 
         let tag_hash = HashObject::hash_object(&tag_path, Init::get_object_path(repo_path)?, WriteOption::Write, TAG_CODE)?;
