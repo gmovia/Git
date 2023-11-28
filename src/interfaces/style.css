@@ -47,6 +47,14 @@
     margin-bottom: 45px;
 }
 
+.login-ok-button:hover{
+    background: rgba(39, 198, 105, 0.901);
+}
+
+.login-nok-button:hover{
+    background: rgba(196, 44, 44, 0.901);
+}
+
 .login-border{
     margin: 10px;
     font-size: 14px;
