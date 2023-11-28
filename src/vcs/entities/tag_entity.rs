@@ -39,6 +39,6 @@ impl TagEntity{
         let tagger = lines[3];
         let message = lines[5];
 
-        return Ok(TagEntity{commit_hash: commit_hash[1].to_string(), typef : typef[1].to_string(), tag : tag[1].to_string(), tagger: tagger.to_string(), message: message.to_string()})
+        Ok(TagEntity{commit_hash: commit_hash[1].to_string(), typef : typef[1].to_string(), tag : tag[1].to_string(), tagger: tagger.to_string(), message: message.to_string()})
     }
 }
