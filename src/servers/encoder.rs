@@ -9,6 +9,7 @@ use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::{Read, Write};
 use crate::constants::constant::COMMIT_INIT_HASH;
+use crate::packfiles::tag_file::process_tag_directory;
 use crate::vcs::commands::branch::Branch;
 use crate::vcs::commands::cat_file::CatFile;
 use crate::vcs::commands::init::Init;
@@ -131,18 +132,21 @@ impl Encoder {
         if let Some(path) = server_path.file_name() {
             client_path = path.to_string_lossy().to_string();
         };
-
         println!("PATH SERVER: {:?}, PATH CLINET: {:?}", server_path, client_path);
         println!("MENSAJES: {:?}", messages);
-        
+
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         for want in &messages.0 {
             let parts: Vec<&str> = want.split(' ').collect();
             println!("PARTS: {:?}", parts);
             let commit_hash = parts[1];
             println!("{}", commit_hash);
-            if !Self::have_object(commit_hash, &messages.1) {
-                Self::fetch_process_directory(server_path, &mut objects_data, commit_hash, &messages.1)?;
+            if !want.contains("tag"){
+                if !Self::have_object(commit_hash, &messages.1) {
+                    Self::fetch_process_directory(server_path, &mut objects_data, commit_hash, &messages.1)?;
+                }
+            }else{
+                process_tag_directory(&server_path.join(".rust_git").join("refs").join("tags"), &mut objects_data, server_path, want.to_string())?;
             }
         }
         objects_data.sort_by(|a, b| a.1.cmp(&b.1));
@@ -368,7 +372,6 @@ impl Encoder {
             temp_file.write_all(buf.as_bytes())?;
             entrada = File::open(&temp_file_path)?; 
         }
-        println!("SANDIA\n");
 /*         if object_type == 4{
             println!("4444444444\n\n");
             let mut buf = String::new();

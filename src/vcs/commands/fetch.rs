@@ -1,5 +1,5 @@
 use std::{net::TcpStream, path::Path, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
-use crate::{packfiles::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{commands::branch::Branch, entities::commit_entity::CommitEntity}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxies::proxy::Proxy, utils::randoms::random::Random};
+use crate::{packfiles::{packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, tag_file::{process_refs_tag, exclude_tag_ref, create_tag_files, process_refs_old_new, create_tag_folder}}, vcs::{commands::branch::Branch, entities::commit_entity::CommitEntity, files::current_repository::CurrentRepository}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH, BLOB_CODE_NUMBER, TAG_CODE_NUMBER, COMMIT_CODE_NUMBER}, proxies::proxy::Proxy, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 
 pub struct Fetch;
@@ -31,26 +31,37 @@ impl Fetch {
             println!("Paquete: {:?}", packet);
         }
 
-        let last_commit_per_branch = Self::format_packet(&packets)?;
+        let last_commit_per_branch= Self::format_packet(&packets)?;
         println!("LAST COMMIT: {:?}",last_commit_per_branch);
-        let message_to_send = Self::packet_manager(last_commit_per_branch, repo)?;
-        println!("Message to send: {:?}", message_to_send);
+        let mut message_to_send = Self::packet_manager(last_commit_per_branch, repo)?;
+        
+        let (tags_received, _) = exclude_tag_ref(packets.clone())?;
+        println!("--------------------------------->tags_received {:?}\n", tags_received);
+
+        println!("REPO ---> {:?}\n", repo);
+        let want_tag_to_send = process_refs_old_new(tags_received, repo)?;
+        println!("--------------------------------->WANTTTT TAGGGGGGGGGG to send: {:?}\n", want_tag_to_send);
+        message_to_send.0.append(&mut want_tag_to_send.clone());
+        
+        println!("--------------------------------->Message to send: {:?}\n", message_to_send);
 
         Self::send_messages(socket, message_to_send)?;
 
         let objects = Self::get_socket_response(socket)?;
-        println!("OBJETOS: {:?}", objects);
+        
+        let _ = create_tag_files(want_tag_to_send, &CurrentRepository::read()?);
+        //println!("OBJETOS: {:?}", objects);
         Self::create_objects(&packets , &objects, repo)?;
         Ok(()) 
     }
 
-    fn create_objects(packets: &Vec<String> , objects: &Vec<(u8, Vec<u8>)>, client_path: &Path) -> Result<(),std::io::Error> {
-        println!("PACKETS: {:?}", packets);
+    fn create_objects(list_refs: &Vec<String> , objects: &Vec<(u8, Vec<u8>)>, client_path: &Path) -> Result<(),std::io::Error> {
+        println!("PACKETS: {:?}", list_refs);
         println!("OBJECTS: {:?}", objects);
         println!("CLIENT PATH: {:?}", client_path);
         
         let mut branchs: HashMap<String, String> = HashMap::new();
-        println!("--------------------LIST REFERENCESSSS ---> {:?}\n", packets);
+        println!("--------------------LIST REFERENCESSSS ---> {:?}\n", list_refs);
 
         let objects_processed = Self::process_folder(objects.to_vec());
         for obj in &objects_processed{
@@ -59,7 +70,7 @@ impl Fetch {
         let commits_created = Self::create_folders(objects_processed.clone(), client_path)?;
         
 
-        for item in packets {
+        for item in list_refs {
             if item.contains("HEAD") {
                 continue;
             }
@@ -172,7 +183,7 @@ impl Fetch {
 
         for (index, content) in objects.iter() {
             match *index {
-                1 => {
+                COMMIT_CODE_NUMBER => {
                     match Self::create_commit_folder(content, repo) {
                         Ok((hash, commit_entity)) => {
                             commits_created.insert(hash.clone(), commit_entity);
@@ -182,12 +193,15 @@ impl Fetch {
                         },
                     }
                 }
-                2 => {
+                TREE_CODE_NUMBER => {
                     if let Err(e) = Self::create_tree_folder(content, repo) {
                         println!("Error creating tree {}", e);
                     }
                 },
-                3 => Self::create_blob_folder(content, repo),
+                BLOB_CODE_NUMBER => Self::create_blob_folder(content, repo),
+                TAG_CODE_NUMBER =>   if let Err(e) = create_tag_folder(content, repo){
+                    println!("Error creating tag {}", e);   
+                },
                 _ => println!("Type not identify {}", index),
             }
         }
@@ -309,16 +323,18 @@ impl Fetch {
 
 
     /// Esta funcion se encarga de parsear la respuesta del servidor al upload pack. Devuelve la rama y el ultimo commit
-    fn format_packet(packets: &Vec<String>) -> Result<Vec<(String,String)>,std::io::Error> {
+    fn format_packet(packets: &Vec<String>) -> Result<(Vec<(String, String)>), std::io::Error> {
         let mut branch_commit: Vec<(String,String)> = Vec::new();
+
         for packet in packets {
             let parts: Vec<&str> = packet.splitn(2, ' ').collect();
-            branch_commit.push((parts[1].trim_start_matches("refs/heads/").to_owned(), parts[0].to_owned()));
+            if !packet.contains("tag"){
+                branch_commit.push((parts[1].trim_start_matches("refs/heads/").to_owned(), parts[0].to_owned()));
+            }
         }
-
         let mut last_entries: HashMap<&String, &String> = std::collections::HashMap::new();
         let mut last_commits: Vec<(String, String)> = Vec::new();
-    
+
         for (key, value) in branch_commit.iter().rev() {
             if let std::collections::hash_map::Entry::Vacant(e) = last_entries.entry(key) {
                 e.insert(value);
@@ -326,7 +342,7 @@ impl Fetch {
             }
         }
         last_commits.reverse();
-        Ok(last_commits)
+        Ok((last_commits))
     }
 
     fn send_messages(socket: &mut TcpStream, message_to_send: (Vec<String>,Vec<String>)) -> Result<(), std::io::Error> {
@@ -344,6 +360,12 @@ impl Fetch {
         send_done_msg(socket)?;
         Ok(())
     }
+
+    fn tag_manager(tag_entries: Vec<(String)>, repo: &Path) -> Result<Vec<String>, std::io::Error>{
+        let send_new_tags = process_refs_tag(tag_entries, repo )?;
+        Ok(send_new_tags)
+    }
+
 
     fn packet_manager(last_branch_commit_recieve: Vec<(String,String)>, repo: &Path) -> Result<(Vec<String>,Vec<String>), std::io::Error>{
         let mut want_list: Vec<String> = Vec::new();

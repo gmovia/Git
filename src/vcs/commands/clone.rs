@@ -1,5 +1,5 @@
 use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
-use crate::{packfiles::{packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files}}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, tag_entity::TagEntity}, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER}, utils::randoms::random::Random};
+use crate::{packfiles::{packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, create_tag_folder}}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, tag_entity::TagEntity}, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER}, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
 
@@ -145,7 +145,7 @@ impl Clone{
                     }
                 },
                 BLOB_CODE_NUMBER => Self::create_blob_folder(content, repo),
-                TAG_CODE_NUMBER =>   if let Err(e) = Self::create_tag_folder(content, repo){
+                TAG_CODE_NUMBER =>   if let Err(e) = create_tag_folder(content, repo){
                     println!("Error creating tag {}", e);   
                 },
                 _ => println!("Type not identify {}", index),
@@ -154,20 +154,7 @@ impl Clone{
         commits_created
     }
 
-    fn create_tag_folder(content: &str, repo: &Path) -> Result<String, std::io::Error>{
-        println!("PROCESAR UN TAG FOLDER");
-        let content_lines: Vec<&str> = content.split('\n').collect();
-        println!("CONTENt de create_tag_folder \n {:?}", content);
-        let commit_hash: Vec<&str> = content_lines[0].split_whitespace().collect();
-        let typed: Vec<&str> = content_lines[1].split_whitespace().collect();
-        let tag: Vec<&str> = content_lines[2].split_whitespace().collect();
-        let tagger: &str = content_lines[3];
-        let message: &str = content_lines[5];
 
-        let tag_entity = TagEntity{commit_hash:commit_hash[1].to_string(),typef:typed[1].to_string(), tag: tag[1].to_string(), tagger: tagger.to_string(), message: message.to_string()};
-            
-        TagEntity::write(repo, tag_entity)    
-    }
 
     
     fn create_commit_folder(content: &str, repo: &Path) -> Result<(String, CommitEntity), std::io::Error>{

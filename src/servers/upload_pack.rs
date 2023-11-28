@@ -14,10 +14,13 @@ pub fn start_handler_upload(stream: &mut TcpStream, path: &Path) -> Result<Strin
 
     println!("Entre a start_handler_upload");
     let first_response = handler_upload_pack(path)?;
-
+    println!("1111111 \n");
     send_response(first_response, stream)?;
-    
+    println!("HOLAAAAAAA\n");
     let query = receive_wants_and_have_message(stream)?;
+
+    println!("chau\n");
+
     let packfile_result = Encoder::init_encoder(path, query);
 
     match packfile_result {
