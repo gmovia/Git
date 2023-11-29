@@ -1,5 +1,5 @@
-use std::{fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE}, handlers::clone::handler_clone};
+use std::{fs::{OpenOptions, self}, io::Write, path::Path};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::Remote}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::{clone::handler_clone, remote::handler_remote}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
 use gtk::{prelude::*, Button};
@@ -414,6 +414,7 @@ pub fn handle_other_commands(interface: &RustInterface) {
     handle_check_ignore(interface);
     handle_tag(interface);
     handle_show_ref(interface);
+    handle_remote(interface);
 
     interface.others_close.connect_clicked({
        let dialog2 = interface.others_dialog.clone(); 
@@ -736,6 +737,39 @@ pub fn handle_show_ref(interface: &RustInterface) {
 
 }
 
+
+pub fn handle_remote(interface: &RustInterface) {
+
+    let dialog = interface.remote_dialog.clone();
+    let r_entry = interface.repo_name_remote.clone();
+    let p_entry = interface.path_remote.clone();
+    let r_box = interface.box_remote.clone();
+
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+
+    let rc_tuple = errors_tuple.clone();
+
+    interface.remote.connect_clicked({
+       move |_| {
+            dialog.run();
+            dialog.hide();
+       } 
+    });
+
+    interface.enter_remote.connect_clicked({
+       move |_| {
+            let response = handler_remote(format!("git remote add {} {:?}",r_entry.text().to_string(), Path::new(&format!("server/{}",p_entry.text()))));
+            if response == RESPONSE_OK_REMOTE {
+                draw_message(&r_box, &"REMOTE SUCCESSFULLY".to_string(), 0.5);
+            }else {
+                draw_error(rc_tuple.clone(), &"CAN'T REMOTE".to_string(), &r_entry);
+            }
+
+       } 
+    });
+
+}
+
  
 pub fn handle_clone(interface: &RustInterface) {
     
@@ -846,30 +880,49 @@ pub fn handle_pull(interface: &RustInterface) {
 
 pub fn handle_push(interface: &RustInterface) {
     let info = interface.info_pull_push.clone();
-
+    let dialog = interface.remote_commands_dialog.clone();
+    let r_entry = interface.remote_commands_entry.clone();
     interface.info_pull_push.set_visible(false);
 
     interface.push.connect_clicked({
+        move|_| {
+            if let Ok(remote_names) = Remote::read_remote_names() {
+                if remote_names.len() > 1 {
+                    dialog.run();
+                    dialog.hide();
+                }else {
+                    draw_push_pull("git push origin".to_string(), &info);
+                }
+            }
+        }
+    });
+
+    interface.remote_commands_enter.connect_clicked({
+        let info2 = interface.info_pull_push.clone();
         move |_| {
-            info.foreach({|child|{
-                info.remove(child);
-            }});
-            let _ = VersionControlSystem::push("git push".to_string());
-            let close = Button::builder()
-                .label("close")
-                .build();
-                close.set_visible(true);
-                draw_message(&info, &"    PUSH SUCCESSFULLY!     ".to_string(), 0.5);
-                info.add(&close);
-                info.set_visible(true);
-                close.connect_clicked({
-                    let info = info.clone();
-                    move |_| {
-                        info.foreach({|child|{
-                            info.remove(child);
-                        }});
-                    }
-                });
+            draw_push_pull(format!("git push {}", r_entry.text().to_string()),&info2);
         } 
     });
+}
+
+pub fn draw_push_pull(input: String, info: &gtk::Box) {
+    info.foreach({|child|{
+        info.remove(child);
+    }});
+    let _ = VersionControlSystem::push(input);
+    let close = Button::builder()
+        .label("close")
+        .build();
+        close.set_visible(true);
+        draw_message(&info, &"    PUSH SUCCESSFULLY!     ".to_string(), 0.5);
+        info.add(&close);
+        info.set_visible(true);
+        close.connect_clicked({
+            let info = info.clone();
+            move |_| {
+                info.foreach({|child|{
+                    info.remove(child);
+                }});
+            }
+        });
 }
