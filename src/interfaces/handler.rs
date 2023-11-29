@@ -1,7 +1,7 @@
 use std::{fs::{OpenOptions, self}, io::Write, path::Path};
 use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::Remote}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::{clone::handler_clone, remote::handler_remote}};
 
-use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error, draw_push_pull}};
+use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error, draw_push_pull, draw_fetch}};
 use gtk::{prelude::*, Button};
 
 pub fn handle_repository(interface: &RustInterface) {
@@ -832,20 +832,46 @@ pub fn handle_clone(interface: &RustInterface) {
 
  
 pub fn handle_fetch(interface: &RustInterface) {
-    let dialog = interface.fetch_dialog.clone();
+    let dialog = interface.remote_commands_dialog.clone();
+    let fetch_dialog = interface.fetch_dialog.clone();
     let rc_box = interface.fetch_box.clone();
+    let r_entry = interface.remote_commands_entry.clone();
 
     interface.fetch.connect_clicked({
         move |_| {
             rc_box.foreach(|child| {
                 rc_box.remove(child);
             });
-            let _ = VersionControlSystem::fetch("git fetch".to_string());
-            draw_message(&rc_box, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
-            dialog.run();
-            dialog.hide();
+            if let Ok(remote_names) = Remote::read_remote_names() {
+                if remote_names.len() > 1 {
+                    dialog.run();
+                    dialog.hide();
+                }else {
+                    draw_fetch("git fetch origin".to_string(), &rc_box, &fetch_dialog);
+                }
+            }
         }
     });
+
+    interface.remote_commands_enter.connect_clicked({
+        let rc_box = interface.fetch_box.clone();
+        let fetch_dialog = interface.fetch_dialog.clone();
+        move |_| {
+            draw_fetch(format!("git fetch {}", r_entry.text().to_string()),&rc_box, &fetch_dialog);
+        } 
+    });
+
+    // interface.fetch.connect_clicked({
+    //     move |_| {
+    //         rc_box.foreach(|child| {
+    //             rc_box.remove(child);
+    //         });
+    //         let _ = VersionControlSystem::fetch("git fetch".to_string());
+    //         draw_message(&rc_box, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
+    //         dialog.run();
+    //         dialog.hide();
+    //     }
+    // });
 
     interface.fetch_close.connect_clicked({
         let dialog2 = interface.fetch_dialog.clone();

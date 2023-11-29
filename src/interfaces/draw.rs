@@ -225,3 +225,13 @@ pub fn draw_info_box(info: &gtk::Box, message: &String) {
         }
     });
 }
+
+pub fn draw_fetch(input: String, box_fetch: &gtk::Box, dialog: &gtk::Dialog) {
+    box_fetch.foreach(|child| {
+        box_fetch.remove(child);
+    });
+    let _ = VersionControlSystem::fetch(input);
+    draw_message(&box_fetch, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
+    dialog.run();
+    dialog.hide();
+}
