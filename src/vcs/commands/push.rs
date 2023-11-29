@@ -18,7 +18,11 @@ impl Push{
         
         let current_branch:String = Branch::get_current_branch(current_repo)?;
         for entries in &log_entries{
-            if entries.contains(&current_branch){
+
+            let entry: Vec<&str> = entries.split_whitespace().collect();
+            let branch_name: Vec<&str> = entry[2].split("/").collect();
+
+            if branch_name[2].trim_end_matches("\n") == current_branch.trim_end_matches("\n"){
                 entry_to_send.push(entries.to_string());
                 let ref_to_pkt = to_pkt_line(entries);
                 stream.write_all(ref_to_pkt.as_bytes())?;
