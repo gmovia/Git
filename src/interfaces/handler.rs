@@ -798,7 +798,7 @@ pub fn handle_fetch(interface: &RustInterface) {
             rc_box.foreach(|child| {
                 rc_box.remove(child);
             });
-            let _ = VersionControlSystem::fetch("git fetch".to_string(), "repo".to_string().into());
+            let _ = VersionControlSystem::fetch("git fetch".to_string());
             draw_message(&rc_box, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
             dialog.run();
             dialog.hide();

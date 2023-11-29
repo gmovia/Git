@@ -111,50 +111,45 @@ impl VersionControlSystem {
         Client::client(message, path_to_clone)
     }
 
-    pub fn fetch(message: String, repo_to_fetch: PathBuf)-> Result<(), std::io::Error>{
-        //let current = CurrentRepository::read()?;
+
+    //git fetch origin
+    pub fn fetch(message: String)-> Result<(), std::io::Error>{
+        let input: Vec<&str>  = message.split_ascii_whitespace().collect();
+        let repo_to_fetch = Remote::get_path_of_repo_remote(input[2])?;
         let _ = Client::client(message, &repo_to_fetch);
         Ok(())
     }
     
+    //git pull origin
     pub fn git_pull(message: String) -> Result<(), std::io::Error> {
-        let current = CurrentRepository::read()?;
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
-        let mut remote_added:bool = false;
 
-        let mut repo_name: &str = "";
-        let mut branch_name: &str = "";
+        let repo_to_fetch = Remote::get_path_of_repo_remote(input[2])?;
+        let current = CurrentRepository::read()?;
 
-        if Remote::remote_added(&current)? &&  input.len() < 3 {
-            println!("Error: Please specify which branch you want to merge with\n\ngit pull <remote> <branch>");
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Please specify which branch you want to merge with\n\ngit pull <remote> <branch>"));
-        }else if Remote::remote_added(&current)? &&  input.len() > 3 {
-            remote_added = true;
-            repo_name =  input[2]; //origin
-            branch_name = input[3]; //main
-        }
+        let format = format!("git fetch {:?}", repo_to_fetch);
+        Self::fetch(format)?;
 
-        let server_added = Remote::get_path_of_repo_remote(repo_name)?;
-        
-        println!("Name of server added {:?} ", server_added);
-        Self::fetch("git fetch".to_string(), server_added)?;
         let branch_name = Init::get_current_branch(&current)?;
         let format = format!("origin_{}", branch_name);
         Self::merge(&format)?;
-        
-        if !remote_added{
-            Self::merge(&Init::get_current_branch(&current)?)?;
-        } 
+                
         Ok(())
     }
-
 
     pub fn push(message: String)-> Result<(), std::io::Error>{
-        let current = CurrentRepository::read()?;
-        let _ = Client::client(message, &current);
+        let input: Vec<&str>  = message.split_ascii_whitespace().collect();
+        let repo_to_push = Remote::get_path_of_repo_remote(input[2])?;
+        let _ = Client::client(message, &repo_to_push);
         Ok(())
     }
 
+    //git remote add origin server/test1
+    //git remote add repo1 server/test40
+
+    //git remote remove origin
+    //git remote get_url origin
+    //git remote set_url origin
     pub fn remote(new_repo_name :String, repo_server: &Path) -> Result<(), std::io::Error>{
         let current = CurrentRepository::read()?;
         Remote::remote(&current, new_repo_name, repo_server)?;
