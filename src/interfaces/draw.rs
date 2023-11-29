@@ -202,7 +202,7 @@ pub fn draw_push_pull(input: String, info: &gtk::Box, message: &String) {
     match message.as_str() {
         "PUSH" => {let _ = VersionControlSystem::push(input);
                    draw_info_box(info, &message);},
-        "PULL" => {let _ = VersionControlSystem::git_pull(input);
+        "PULL" => {let _ = VersionControlSystem::pull(input);
                    draw_info_box(info, &message);},
         _ => {},
     }
