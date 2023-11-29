@@ -115,7 +115,8 @@ impl VersionControlSystem {
     //git fetch origin
     pub fn fetch(message: String)-> Result<(), std::io::Error>{
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
-        let repo_to_fetch = Remote::get_path_of_repo_remote(input[2])?;
+        let current = CurrentRepository::read()?;
+        let repo_to_fetch = Remote::get_path_of_repo_remote(&current, input[2])?;
         let _ = Client::client(message, &repo_to_fetch);
         Ok(())
     }
@@ -124,10 +125,11 @@ impl VersionControlSystem {
     pub fn git_pull(message: String) -> Result<(), std::io::Error> {
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
 
-        let repo_to_fetch = Remote::get_path_of_repo_remote(input[2])?;
         let current = CurrentRepository::read()?;
-
-        let format = format!("git fetch {}", repo_to_fetch.display());
+        println!("input ----->>>>>< {:?}", input);
+        // git pull origin
+        let parts: Vec<&str> = message.split_whitespace().collect();
+        let format = format!("git fetch {}", parts[2]);
         Self::fetch(format)?;
 
         let branch_name = Init::get_current_branch(&current)?;
@@ -138,8 +140,11 @@ impl VersionControlSystem {
     }
 
     pub fn push(message: String)-> Result<(), std::io::Error>{
+        println!("MESSAGE ---> {}", message);
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
-        let repo_to_push = Remote::get_path_of_repo_remote(input[2])?;
+        let current = CurrentRepository::read()?;
+        let repo_to_push = Remote::get_path_of_repo_remote(&current, input[2].trim_end_matches("\n"))?;
+        println!("REPO TO PATH ---> {:?}", repo_to_push);
         let _ = Client::client(message, &repo_to_push);
         Ok(())
     }

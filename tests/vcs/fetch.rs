@@ -32,7 +32,7 @@ mod tests {
         let _ = folder_to_fetch.join();
         
         let _ = VersionControlSystem::init(client_path, Vec::new());
-        let _ = handler_fetch("git fetch".to_string());
+        let _ = handler_fetch("git fetch origin".to_string());
         assert!(
             compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
             "Los directorios no son iguales"
@@ -73,7 +73,7 @@ mod tests {
         let _ = folder_to_fetch.join();
         
         let _ = VersionControlSystem::init(client_path, Vec::new());
-        let _ = handler_fetch("git fetch".to_string());
+        let _ = handler_fetch("git fetch origin".to_string());
         assert!(
             compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
             "Los directorios no son iguales"
