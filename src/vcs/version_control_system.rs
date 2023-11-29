@@ -127,7 +127,7 @@ impl VersionControlSystem {
         let repo_to_fetch = Remote::get_path_of_repo_remote(input[2])?;
         let current = CurrentRepository::read()?;
 
-        let format = format!("git fetch {:?}", repo_to_fetch);
+        let format = format!("git fetch {}", repo_to_fetch.display());
         Self::fetch(format)?;
 
         let branch_name = Init::get_current_branch(&current)?;
