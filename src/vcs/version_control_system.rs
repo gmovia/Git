@@ -4,7 +4,7 @@ use crate::{
     types::set_type::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constant::{RESPONSE_NOK_IGNORE, RESPONSE_OK_IGNORE}, clients::client::Client,};
 
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore, tag::{TagOptions, Tag}, show_ref::{ShowRefOptions, ShowRef}, remote::Remote}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore, tag::{TagOptions, Tag}, show_ref::{ShowRefOptions, ShowRef}, remote::Remote, pull::Pull}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
@@ -107,12 +107,10 @@ impl VersionControlSystem {
         ShowRef::show_ref(&current, option)
     }
 
-    pub fn git_clone(message: String, path_to_clone: &Path)-> Result<(), std::io::Error>{
+    pub fn clone(message: String, path_to_clone: &Path)-> Result<(), std::io::Error>{
         Client::client(message, path_to_clone)
     }
 
-
-    //git fetch origin
     pub fn fetch(message: String)-> Result<(), std::io::Error>{
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
         let current = CurrentRepository::read()?;
@@ -121,40 +119,18 @@ impl VersionControlSystem {
         Ok(())
     }
     
-    //git pull origin
-    pub fn git_pull(message: String) -> Result<(), std::io::Error> {
-        let input: Vec<&str>  = message.split_ascii_whitespace().collect();
-
-        let current = CurrentRepository::read()?;
-        println!("input ----->>>>>< {:?}", input);
-        // git pull origin
-        let parts: Vec<&str> = message.split_whitespace().collect();
-        let format = format!("git fetch {}", parts[2]);
-        Self::fetch(format)?;
-
-        let branch_name = Init::get_current_branch(&current)?;
-        let format = format!("origin_{}", branch_name);
-        Self::merge(&format)?;
-                
-        Ok(())
+    pub fn pull(message: String) -> Result<(), std::io::Error> {
+        Pull::pull(message)
     }
 
     pub fn push(message: String)-> Result<(), std::io::Error>{
-        println!("MESSAGE ---> {}", message);
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
         let current = CurrentRepository::read()?;
         let repo_to_push = Remote::get_path_of_repo_remote(&current, input[2].trim_end_matches("\n"))?;
-        println!("REPO TO PATH ---> {:?}", repo_to_push);
         let _ = Client::client(message, &repo_to_push);
         Ok(())
     }
 
-    //git remote add origin server/test1
-    //git remote add repo1 server/test40
-
-    //git remote remove origin
-    //git remote get_url origin
-    //git remote set_url origin
     pub fn remote(new_repo_name :String, repo_server: &Path) -> Result<(), std::io::Error>{
         let current = CurrentRepository::read()?;
         Remote::remote(&current, new_repo_name, repo_server)?;
