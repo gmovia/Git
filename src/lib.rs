@@ -21,6 +21,7 @@ pub mod handlers{
     pub mod pull;
     pub mod push;
     pub mod tag;
+    pub mod remote;
     pub mod show_ref;
 }
 
@@ -112,6 +113,7 @@ pub mod vcs{
         pub mod ls_tree;
         pub mod check_ignore;
         pub mod tag;
+        pub mod remote;
         pub mod show_ref;
     }
 

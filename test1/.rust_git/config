@@ -1,0 +1,6 @@
+[core]
+    repostiryformatversion = 0
+    filemode = false
+    bare = false
+[remote 'origin']
+	path = test_folder/test1

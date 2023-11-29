@@ -70,6 +70,9 @@ pub const RESPONSE_NOK_CLONE: &str = "The path is not correct";
 pub const RESPONSE_OK_FETCH: &str = "Fetched successfully";
 pub const RESPONSE_OK_PULL: &str = "Pull successfully";
 
+pub const RESPONSE_OK_REMOTE: &str = "Remote successfully";
+
+
 // ERRORS
 pub const ERR_INVALID_PARAMETERS: &str = "Invalid parameters.";
 pub const ERR_GET_BRANCHES: &str = "Error getting the branches.";

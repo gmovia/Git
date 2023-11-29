@@ -46,7 +46,7 @@ impl Init {
         self.create_git_config_file(&path)?;
         self.create_head_file(&path, branch_name)?;
         self.create_index(&path)?;    
-        self.create_git_ignore()?;    
+        self.create_git_ignore()?;   
         Ok(())
     }
 
@@ -183,4 +183,9 @@ impl Init {
         }
         Err(io::Error::new(io::ErrorKind::InvalidInput, "Can't find the branch"))
     }
+    pub fn get_current_config(path: &Path) -> Result<PathBuf, std::io::Error>{
+        let config_path = path.join(".rust_git").join("config");
+        Ok(Path::new(&config_path).to_path_buf())
+    }
+
 }
