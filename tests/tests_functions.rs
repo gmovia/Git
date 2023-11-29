@@ -1,4 +1,4 @@
-use rust_git::{vcs::files::vcs_file::VCSFile, vcs::version_control_system::VersionControlSystem};
+use rust_git::{vcs::files::vcs_file::VCSFile, vcs::{version_control_system::VersionControlSystem, files::config::Config}};
 use std::{collections::HashMap, path::{Path, PathBuf}, fs::{File, self, create_dir_all}, io::{Read, self, Write}};
 use tempdir::TempDir;
 
@@ -11,6 +11,7 @@ pub fn equals(staging_area: HashMap<String, VCSFile>, path: &Path, state: &str) 
 
 pub fn set_up() -> TempDir{
     let temp_dir = TempDir::new("test_version_control_system").expect("Failed to create temp directory");
+    let _ = Config::write_config(("temp_dir_name".to_string(),"temp_dir_email".to_string()));
     VersionControlSystem::init(temp_dir.path(), Vec::new());
     temp_dir
 }

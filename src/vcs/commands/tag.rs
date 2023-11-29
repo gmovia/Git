@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{self, OpenOptions}, io::Write};
 
-use crate::vcs::{files::current_commit::CurrentCommit, entities::tag_entity::TagEntity};
+use crate::vcs::{files::{current_commit::CurrentCommit, config::Config}, entities::tag_entity::TagEntity};
 
 
 
@@ -28,7 +28,6 @@ impl Tag {
     pub fn create_light_tag(path: &Path, tag: &str) -> Result<Vec<String>, std::io::Error>{
         let tags_path = path.join(".rust_git").join("refs").join("tags").join(tag);
         let mut tag_file = OpenOptions::new().write(true).create(true).append(true).open(tags_path)?;
-        
         let commit_hash = CurrentCommit::read()?;
         tag_file.write_all(commit_hash.as_bytes())?;
         
@@ -37,8 +36,10 @@ impl Tag {
     
     pub fn create_tag(path: &Path, tag: &str, message: &str) -> Result<Vec<String>, std::io::Error>{
         let commit_hash = CurrentCommit::read()?;
+        let config = Config::read_config()?;
         let typef = "commit";
-        let tagger = "tagger gmovia <gmovia@fi.uba.ar> 1700522965 -0300";
+        let format = format!("tagger {} <{}> 1700522965 -0300",config.0,config.1);
+        let tagger = format.as_str();
         
         let tag_entity = TagEntity{commit_hash: commit_hash, typef: typef.to_string(), tagger: tagger.to_string(), tag: tag.to_string(), message: message.to_string()};
         let hash_tag = TagEntity::write(path, tag_entity)?;

@@ -3,6 +3,7 @@ pub const BDD_PATH: &str = "repositories.txt";
 pub const NULL_PATH: &str = "null_path";
 pub const CURRENT_REPOSITORY_PATH: &str = "current_repository.txt";
 pub const RUST_PATH: &str = ".rust_git";
+pub const  CONFIG_PATH: &str = "config.txt";
 
 // CODES
 pub const TREE_CODE: &str = "tree";

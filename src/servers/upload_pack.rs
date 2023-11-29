@@ -14,10 +14,13 @@ pub fn start_handler_upload(stream: &mut TcpStream, path: &Path) -> Result<Strin
 
     println!("Entre a start_handler_upload");
     let first_response = handler_upload_pack(path)?;
-
+    println!("1111111 \n");
     send_response(first_response, stream)?;
-    
+    println!("HOLAAAAAAA\n");
     let query = receive_wants_and_have_message(stream)?;
+
+    println!("chau\n");
+
     let packfile_result = Encoder::init_encoder(path, query);
 
     match packfile_result {
@@ -96,12 +99,11 @@ fn get_log_entries(path: &Path) -> Result<Vec<String>, std::io::Error>{
         if let Some(tag_name) = tag_file.path().file_name() {
             let tag_hash  = fs::read_to_string(tag_file.path())?;
             let is_comun = process_tag_content(tag_hash.clone(), path)?;
-            let mut format_tag = String::new();
-            if is_comun == true{
-                format_tag = format!("{} refs/tags/{}^{}", tag_hash, tag_name.to_string_lossy(), "{}");
+            let format_tag = if is_comun{
+                format!("{} refs/tags/{}^{}", tag_hash, tag_name.to_string_lossy(), "{}")
             }else {
-                format_tag = format!("{} refs/tags/{}", tag_hash, tag_name.to_string_lossy());
-            }
+                format!("{} refs/tags/{}", tag_hash, tag_name.to_string_lossy())
+            };
             log_entries.push(format_tag);
         }
     }
@@ -109,7 +111,7 @@ fn get_log_entries(path: &Path) -> Result<Vec<String>, std::io::Error>{
     Ok(log_entries)
 }
 
-    fn process_tag_content(hash: String, repo_server_path:&Path) -> Result<bool, std::io::Error>{
+    pub fn process_tag_content(hash: String, repo_server_path:&Path) -> Result<bool, std::io::Error>{
         let content = CatFile::cat_file(&hash, Init::get_object_path(repo_server_path)?)?; // commit or tag
         if content.contains("tag"){
             return Ok(true);

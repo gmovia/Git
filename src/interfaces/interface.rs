@@ -4,7 +4,7 @@ use gtk::prelude::*;
 
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interfaces::draw::{repositories, branches, changes_and_staging_area};
-use super::css::{init_css, set_styles_css};
+use super::css::{init_css, set_styles_css_in_interface};
 use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch, handle_pull, handle_push};
 
 #[derive(Debug, Default)]
@@ -258,7 +258,8 @@ impl RustInterface {
     }
     
     pub fn impl_interface(&self) -> Result<(), std::io::Error>{    
-        set_styles_css(self);
+
+        set_styles_css_in_interface(self);
         
         VersionControlSystem::init(Path::new("server"), Vec::new());
 
