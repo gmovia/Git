@@ -823,7 +823,7 @@ pub fn handle_pull(interface: &RustInterface) {
             info.foreach({|child|{
                 info.remove(child);
             }});
-            let _ = VersionControlSystem::git_pull("git pull".to_string());
+            let _ = VersionControlSystem::git_pull();
             let close = Button::builder()
                 .label("close")
                 .build();
