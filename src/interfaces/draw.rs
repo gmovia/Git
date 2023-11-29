@@ -194,3 +194,34 @@ pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_en
     c_entry.set_text("");
 
 }
+
+pub fn draw_push_pull(input: String, info: &gtk::Box, message: &String) {
+    info.foreach({|child|{
+        info.remove(child);
+    }});
+    match message.as_str() {
+        "PUSH" => {let _ = VersionControlSystem::push(input);
+                   draw_info_box(info, &message);},
+        "PULL" => {let _ = VersionControlSystem::git_pull(input);
+                   draw_info_box(info, &message);},
+        _ => {},
+    }
+}
+
+pub fn draw_info_box(info: &gtk::Box, message: &String) {
+    let close = Button::builder()
+                        .label("close")
+                        .build();
+    close.set_visible(true);
+    draw_message(&info, &format!("    {} SUCCESSFULLY!     ",message).to_string(), 0.5);
+    info.add(&close);
+    info.set_visible(true);
+    close.connect_clicked({
+        let info = info.clone();
+        move |_| {
+            info.foreach({|child|{
+                info.remove(child);
+            }});
+        }
+    });
+}
