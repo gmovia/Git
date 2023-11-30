@@ -32,7 +32,7 @@ mod tests {
         let _ = folder_to_fetch.join();
         
         let _ = VersionControlSystem::init(client_path, Vec::new());
-        let _ = handler_pull();
+        let _ = handler_pull("git pull origin".to_string());
         let server = get_number_of_elements(server_path.join("tests").join("clone"));
         let client = get_number_of_elements(client_path.to_path_buf());
         assert_eq!(server,client);

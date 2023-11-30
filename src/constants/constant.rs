@@ -3,6 +3,7 @@ pub const BDD_PATH: &str = "repositories.txt";
 pub const NULL_PATH: &str = "null_path";
 pub const CURRENT_REPOSITORY_PATH: &str = "current_repository.txt";
 pub const RUST_PATH: &str = ".rust_git";
+pub const  CONFIG_PATH: &str = "config.txt";
 
 // CODES
 pub const TREE_CODE: &str = "tree";
@@ -68,6 +69,10 @@ pub const RESPONSE_OK_PUSH: &str = "Push successfully";
 pub const RESPONSE_NOK_CLONE: &str = "The path is not correct";
 pub const RESPONSE_OK_FETCH: &str = "Fetched successfully";
 pub const RESPONSE_OK_PULL: &str = "Pull successfully";
+
+pub const RESPONSE_OK_REMOTE: &str = "Remote successfully";
+pub const RESPONSE_NOK_REMOTE: &str = "Can't Remote";
+
 
 // ERRORS
 pub const ERR_INVALID_PARAMETERS: &str = "Invalid parameters.";

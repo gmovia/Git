@@ -21,6 +21,7 @@ pub mod handlers{
     pub mod pull;
     pub mod push;
     pub mod tag;
+    pub mod remote;
     pub mod show_ref;
     pub mod rebase;
 }
@@ -41,6 +42,7 @@ pub mod servers{
 
 pub mod packfiles{
     pub mod packfile;
+    pub mod tag_file;
 }
 
 pub mod interfaces{
@@ -49,6 +51,7 @@ pub mod interfaces{
     pub mod handler;
     pub mod css;
     pub mod handler_button;
+    pub mod login;
 }
 
 pub mod protocol{
@@ -87,6 +90,7 @@ pub mod vcs{
         pub mod current_commit;
         pub mod commits_table;
         pub mod repositories;
+        pub mod config;
     }
 
     pub mod commands{
@@ -110,8 +114,10 @@ pub mod vcs{
         pub mod ls_tree;
         pub mod check_ignore;
         pub mod tag;
+        pub mod remote;
         pub mod show_ref;
         pub mod rebase;
+        pub mod pull;
     }
 
     pub mod sets{

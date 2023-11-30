@@ -1,7 +1,7 @@
 use std::{path::{PathBuf, Path}, fs::OpenOptions, collections::HashMap, io::{Write, self, BufRead}};
 use chrono::Local;
 use crate::{vcs::{entities::{commit_table_entry::CommitTableEntry, commit_entity::CommitEntity, tree_entity::TreeEntity, entity::convert_to_entities}, commands::init::Init}, utils::randoms::random::Random};
-use super::{current_repository::CurrentRepository, current_commit::CurrentCommit};
+use super::{current_repository::CurrentRepository, current_commit::CurrentCommit, config::Config};
 
 #[derive(Debug, Clone)]
 pub struct CommitsTable;
@@ -40,10 +40,11 @@ impl CommitsTable{
     pub fn write(message: &String, repository: &HashMap<String, String>) -> Result<(),std::io::Error>{
         let id = Random::random();
         let last_commit_hash = CurrentCommit::read()?;
+        let config = Config::read_config()?;
         let current_timestamp = Local::now().timestamp();
 
-        let author = format!( "author gmovia <gmovia@fi.uba.ar> {} -0300" , current_timestamp );
-        let committer = format!("committer gmovia <gmovia@fi.uba.ar> {} -0300", current_timestamp);
+        let author = format!( "author {} <{}> {} -0300" , config.0, config.1, current_timestamp );
+        let committer = format!( "committer {} <{}> {} -0300" , config.0, config.1, current_timestamp );
         
         let current = CurrentRepository::read()?;
         let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_current_log(&current)?)?; //abro la tabla de commits para escribir - si no existe, la creo
@@ -88,3 +89,4 @@ impl CommitsTable{
         false
     }
 }
+

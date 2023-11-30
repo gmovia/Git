@@ -4,7 +4,7 @@ use gtk::prelude::*;
 
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interfaces::draw::{repositories, branches, changes_and_staging_area};
-use super::css::{init_css, set_styles_css};
+use super::css::{init_css, set_styles_css_in_interface};
 use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch, handle_pull, handle_push};
 
 #[derive(Debug, Default)]
@@ -122,8 +122,16 @@ pub struct RustInterface {
     pub get_refs_heads: gtk::Button,
     pub get_refs_tags: gtk::Button,
     pub show_ref_close: gtk::Button,
-    pub show_ref_box: gtk::Box
-
+    pub show_ref_box: gtk::Box,
+    pub remote: gtk::Button,
+    pub remote_dialog: gtk::Dialog,
+    pub repo_name_remote: gtk::Entry,
+    pub path_remote: gtk::Entry,
+    pub enter_remote: gtk::Button,
+    pub box_remote: gtk::Box,
+    pub remote_commands_dialog: gtk::Dialog,
+    pub remote_commands_entry: gtk::Entry,
+    pub remote_commands_enter: gtk::Button,
 }
 
 impl RustInterface {
@@ -254,11 +262,21 @@ impl RustInterface {
             get_refs_tags: builder.object("get-refs-tags").unwrap(),
             show_ref_close: builder.object("show-ref-close").unwrap(),
             show_ref_box: builder.object("show-ref-box").unwrap(),
+            remote: builder.object("remote").unwrap(),
+            remote_dialog: builder.object("remote-dialog").unwrap(),
+            repo_name_remote: builder.object("repo-name-remote").unwrap(),
+            path_remote: builder.object("path-remote").unwrap(),
+            enter_remote: builder.object("enter-remote").unwrap(),
+            box_remote: builder.object("box-remote").unwrap(),
+            remote_commands_dialog: builder.object("remote-commands-dialog").unwrap(),
+            remote_commands_entry: builder.object("remote-commands-entry").unwrap(),
+            remote_commands_enter: builder.object("enter-commands").unwrap(),
         }
     }
     
     pub fn impl_interface(&self) -> Result<(), std::io::Error>{    
-        set_styles_css(self);
+
+        set_styles_css_in_interface(self);
         
         VersionControlSystem::init(Path::new("server"), Vec::new());
 
