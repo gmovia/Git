@@ -12,7 +12,7 @@ impl Pull{
         let parts: Vec<&str> = message.split_whitespace().collect();
     
         VersionControlSystem::fetch(format!("git fetch {}", parts[2]))?;
-        VersionControlSystem::merge(&format!("origin_{}", branch_name))?;
+        VersionControlSystem::rebase(&format!("origin_{}", branch_name))?;
 
         Ok(())
     }
