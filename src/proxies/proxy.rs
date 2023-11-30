@@ -51,8 +51,8 @@ impl Proxy{
         BlobEntity::read(repo_path, blob_hash)
     }
 
-    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity, action: DeltaOptions) -> Result<String, std::io::Error>{
-        RefDeltaEntity::write(repo_path, content, action)
+    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
+        RefDeltaEntity::write(repo_path, content)
     }
 }
 

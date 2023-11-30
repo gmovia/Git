@@ -1,6 +1,6 @@
 use std::{net::TcpStream, io::{Read, Write, self, SeekFrom, Seek}, str::from_utf8, path::Path, fs::{OpenOptions, File}, collections::HashMap, ascii::AsciiExt};
 use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, ref_delta_entity::{RefDeltaEntity, DeltaOptions}}, files::current_repository::CurrentRepository, version_control_system::VersionControlSystem}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random, handlers::cat_file::handler_cat_file};
-use super::{cat_file::CatFile, init::Init};
+use super::{cat_file::CatFile, init::Init, commit};
 pub struct Clone;
 
 impl Clone{
@@ -93,12 +93,22 @@ impl Clone{
         for obj in &objects_processed{
             println!("-->{:?}", obj);
         }
-        let commits_created = Self::create_folders(objects_processed.clone(), repo);
+        let mut commits_created = Self::create_folders(objects_processed.clone(), repo);
 
         let delta_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 7).cloned().collect();
-        for (number, inner_vec) in delta_objects {
-            Self::process_delta_object(number, &inner_vec, repo);
+        for (_, inner_vec) in delta_objects {
+            // Tendria que devolver los commits para agregarlos a commits created
+            if let Ok( commits) = Self::process_delta_object( &inner_vec, repo) {
+                if !commits.is_empty() {
+                    for commit in commits {
+                        println!("COMIIT ACA: {:?}", commit);
+                        commits_created.insert(commit.0, commit.1);
+                    }
+                }
+            }
         }
+
+        println!("COMMITS CREATED: {:?}", commits_created);
 
         for item in list_refs {
             if item.contains("HEAD") {
@@ -174,42 +184,16 @@ impl Clone{
     }
 
 
-    fn process_delta_object(number: u8, inner_vec: &Vec<u8>, repo_path: &Path) -> (u8, String) {
+    fn process_delta_object(inner_vec: &Vec<u8>, repo_path: &Path) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
         let hash_base_object: String = (&inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
         let decompres_data = &inner_vec[20..];
-
-        if Self::is_bit_set(inner_vec[20]) {
-            // COPY
-            println!("COPY");
-            println!("INNER VEC COPY: {}", inner_vec[20]);
-            println!("VEC: {:?}", decompres_data);
-            println!("REF DELTA VEC: {}", String::from_utf8_lossy(&decompres_data).to_string());
-            println!("REF DELTA EN CLONE: {}", String::from_utf8_lossy(&decompres_data[5..]).to_string());
-            let delta_entity =   
-            RefDeltaEntity {
+    
+        let delta_entity = RefDeltaEntity {
                 base_object_hash: hash_base_object.clone(),
-                data: decompres_data.to_vec(),
-                    
+                data: decompres_data.to_vec(), 
             };
-            let _ = Proxy::write_ref_delta(repo_path, delta_entity, DeltaOptions::Copy);
-            println!("INNER VEC COPY: {:?}", &inner_vec[20..]);
-            println!("DATA IN COPY: {}", String::from_utf8_lossy(&inner_vec[..]));
-        } else {
-            println!("APPEND");
-            let delta_entity = 
-                RefDeltaEntity {
-                    base_object_hash: hash_base_object.clone(),
-                    data: decompres_data.to_vec(), 
-                };
-            let _ = Proxy::write_ref_delta(repo_path, delta_entity, DeltaOptions::Append);
-            println!("INNER VEC APPEND: {:?}", &inner_vec[20..]);
-            println!("DATA IN APPEND: {}", String::from_utf8_lossy(&inner_vec[..]));
-        }
-        
-        println!("BASE OBJECT: {}", hash_base_object);
-        println!("ACA NUMBER: {}", number);
-        println!("DATA ACA: {}", String::from_utf8_lossy(&inner_vec[20..]));
-        (number, String::from_utf8_lossy(&inner_vec[20..]).to_string())
+        let commit = Proxy::write_ref_delta(repo_path, delta_entity)?;
+        Ok(commit)
     }
 
     pub fn create_folders(objects: Vec<(u8, String)>, repo: &Path) -> HashMap<String, CommitEntity>{
