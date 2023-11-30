@@ -836,6 +836,7 @@ pub fn handle_fetch(interface: &RustInterface) {
     let fetch_dialog = interface.fetch_dialog.clone();
     let rc_box = interface.fetch_box.clone();
     let r_entry = interface.remote_commands_entry.clone();
+    let rc_branch = interface.select_branch.clone();
 
     interface.fetch.connect_clicked({
         move |_| {
@@ -847,17 +848,18 @@ pub fn handle_fetch(interface: &RustInterface) {
                     dialog.run();
                     dialog.hide();
                 }else {
-                    draw_fetch("git fetch origin".to_string(), &rc_box, &fetch_dialog);
+                    draw_fetch(&rc_branch, "git fetch origin".to_string(), &rc_box, &fetch_dialog);
                 }
             }
         }
     });
 
     interface.remote_commands_enter.connect_clicked({
+        let rc_branch = interface.select_branch.clone();
         let rc_box = interface.fetch_box.clone();
         let fetch_dialog = interface.fetch_dialog.clone();
         move |_| {
-            draw_fetch(format!("git fetch {}", r_entry.text().to_string()),&rc_box, &fetch_dialog);
+            draw_fetch(&rc_branch, format!("git fetch {}", r_entry.text().to_string()),&rc_box, &fetch_dialog);
         } 
     });
 
@@ -885,6 +887,7 @@ pub fn handle_pull(interface: &RustInterface) {
     let info = interface.info_pull_push.clone();
     let dialog = interface.remote_commands_dialog.clone();
     let r_entry = interface.remote_commands_entry.clone();
+    let rc_branch = interface.select_branch.clone();
 
     interface.info_pull_push.set_visible(false);
 
@@ -895,7 +898,7 @@ pub fn handle_pull(interface: &RustInterface) {
                     dialog.run();
                     dialog.hide();
                 }else {
-                    draw_push_pull("git pull origin".to_string(), &info, &"PULL".to_string());
+                    draw_push_pull(&rc_branch, "git pull origin".to_string(), &info, &"PULL".to_string());
                 }
             }
         }
@@ -903,8 +906,9 @@ pub fn handle_pull(interface: &RustInterface) {
 
     interface.remote_commands_enter.connect_clicked({
         let info2 = interface.info_pull_push.clone();
+        let rc_branch = interface.select_branch.clone();
         move |_| {
-            draw_push_pull(format!("git push {}", r_entry.text().to_string()),&info2, &"PULL".to_string());
+            draw_push_pull(&rc_branch, format!("git push {}", r_entry.text().to_string()),&info2, &"PULL".to_string());
         } 
     });
 
@@ -938,6 +942,7 @@ pub fn handle_push(interface: &RustInterface) {
     let info = interface.info_pull_push.clone();
     let dialog = interface.remote_commands_dialog.clone();
     let r_entry = interface.remote_commands_entry.clone();
+    let rc_branch = interface.select_branch.clone();
 
     interface.info_pull_push.set_visible(false);
 
@@ -948,16 +953,17 @@ pub fn handle_push(interface: &RustInterface) {
                     dialog.run();
                     dialog.hide();
                 }else {
-                    draw_push_pull("git push origin".to_string(), &info, &"PUSH".to_string());
+                    draw_push_pull(&rc_branch, "git push origin".to_string(), &info, &"PUSH".to_string());
                 }
             }
         }
     });
 
     interface.remote_commands_enter.connect_clicked({
+        let rc_branch = interface.select_branch.clone();
         let info2 = interface.info_pull_push.clone();
         move |_| {
-            draw_push_pull(format!("git push {}", r_entry.text().to_string()),&info2, &"PUSH".to_string());
+            draw_push_pull(&rc_branch, format!("git push {}", r_entry.text().to_string()),&info2, &"PUSH".to_string());
         } 
     });
 

@@ -1,6 +1,6 @@
 use std::{path::Path, collections::HashMap};
 use gtk::{prelude::*, Button, ComboBoxText};
-use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::repositories::Repositories};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::repositories::Repositories}, handlers::branch};
 
 
 pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
@@ -195,15 +195,21 @@ pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_en
 
 }
 
-pub fn draw_push_pull(input: String, info: &gtk::Box, message: &String) {
+pub fn draw_push_pull(rc_branch: &gtk::ComboBoxText, input: String, info: &gtk::Box, message: &String) {
     info.foreach({|child|{
         info.remove(child);
     }});
     match message.as_str() {
-        "PUSH" => {let _ = VersionControlSystem::push(input);
-                   draw_info_box(info, &message);},
-        "PULL" => {let _ = VersionControlSystem::pull(input);
-                   draw_info_box(info, &message);},
+        "PUSH" => {
+            let _ = VersionControlSystem::push(input);
+            draw_info_box(info, &message);
+        },
+        "PULL" => {
+            let _ = VersionControlSystem::pull(input);
+            rc_branch.remove_all();
+            let _ = branches(&rc_branch);            
+            draw_info_box(info, &message);
+        },
         _ => {},
     }
 }
@@ -226,11 +232,13 @@ pub fn draw_info_box(info: &gtk::Box, message: &String) {
     });
 }
 
-pub fn draw_fetch(input: String, box_fetch: &gtk::Box, dialog: &gtk::Dialog) {
+pub fn draw_fetch(rc_branch: &gtk::ComboBoxText, input: String, box_fetch: &gtk::Box, dialog: &gtk::Dialog) {
     box_fetch.foreach(|child| {
         box_fetch.remove(child);
     });
     let _ = VersionControlSystem::fetch(input);
+    rc_branch.remove_all();
+    let _ = branches(&rc_branch);
     draw_message(&box_fetch, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
     dialog.run();
     dialog.hide();

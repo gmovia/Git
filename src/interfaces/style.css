@@ -191,29 +191,33 @@ button:hover{
 
 
 .custom-add-label{
+    font-size: 16px;
     color: rgb(211, 211, 211);
     font-weight: bold;
-    font-size: 12px;
     margin-right: 5px;
 }
 
 .custom-sa-label{
+    font-size: 16px;
     color: rgb(211, 211, 211);
     font-weight: bold;
     font-size: 12px;
 }
 
 .custom-changes-label-created{
+    font-size: 16px;
     color: rgba(17, 107, 77, 0.668);
     font-weight: bold;
 }
     
 .custom-changes-label-modified{
+    font-size: 16px;
     color: rgba(178, 204, 32, 0.776);
     font-weight: bold;
 }    
 
 .custom-changes-label-deleted{
+    font-size: 16px;
     color: rgba(182, 18, 18, 0.697);
     font-weight: bold;
 }
