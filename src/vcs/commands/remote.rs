@@ -7,7 +7,7 @@ use super::init::Init;
 pub struct Remote;
 
 impl Remote{
-    //git remote add origin test_folder/repo1
+    //git remote add origin repo1
     pub fn remote(current_repo: &Path, new_repo_name: String, server_repo: &Path) -> Result<(), std::io::Error>{
         let _ = Self::write_config(current_repo, new_repo_name, server_repo);
         Ok(())

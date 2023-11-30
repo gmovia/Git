@@ -140,8 +140,10 @@ fn send_pack(packfile: Vec<u8>, stream: &mut TcpStream, log_entries: &[String], 
     let entry_hash = format!("{}\n", log_entries[0]); //esto manda pos [0] pq siempre mandas cambio de la rama en la que estas parado.
     println!("LOG ENTIRES ---> {:?}", entry_hash);
     stream.write_all(to_pkt_line(&entry_hash).as_bytes())?;
+
     println!("el mensaje de old y new antes del packfile --> {}\n", to_pkt_line(&entry_hash));
 
+    println!("SEND NEW TAG TO SEND ---> {:?}", send_new_tag);
     for tag in send_new_tag{
         let tag_to_pkt_line = to_pkt_line(&tag);
         println!("Mi pedido de los tags al cliente es: {:?}\n\n", tag_to_pkt_line);

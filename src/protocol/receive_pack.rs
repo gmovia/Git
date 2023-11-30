@@ -4,7 +4,7 @@ use crate::vcs::commands::cat_file::CatFile;
 use crate::vcs::entities::entity::convert_to_repository;
 use crate::vcs::entities::tree_entity::TreeEntity;
 use crate::vcs::files::commits_table::CommitsTable;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{OpenOptions, self, File};
 use std::io::{Write, self};
 use std::net::Shutdown;
@@ -30,7 +30,7 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
 
     let old_new_hash_commit = handler_receive_pack(writer)?;
 
-    let (_, _ )= extract_branch_name(old_new_hash_commit.to_string())?;
+    //let (_, _ )= extract_branch_name(old_new_hash_commit.to_string())?;
     
     println!("Received from packet: ---> {:?}", old_new_hash_commit); //lo recibe porque lo manda el cliente, pero daemon no hace nada con eso
     //ni crea la rama si no la tiene, pero eso si lo tenems que hacer almenos
@@ -51,6 +51,8 @@ fn extract_branch_name(old_new_hash_commit: String) ->  Result<(String, String),
     let branch_name = parts[2].trim_start_matches("refs/heads/").trim_end_matches('\n');
     Ok((branch_name.to_owned(), last_commit_client.to_string()))
 }
+
+
 
 //fn extract_refs_tags()
 
@@ -135,10 +137,13 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
     println!("::::::::::::::Mi lista de refs que recibo es :  --->{:?}\n" , receive_refs);    
 
     
-    change_current_branch(receive_refs.clone(), &server_client_path)?;
+    let (list_tags, branchs_refs) = exclude_tag_ref(receive_refs)?;
+    change_current_branch(branchs_refs.clone(), &server_client_path)?;
+    println!("::::LIST TAG ANTES DEL CREATE TAG FILES --->{:?}\n" , list_tags);    
 
-    let (list_tags, _) = exclude_tag_ref(receive_refs)?;
-    create_tag_files(list_tags, &server_client_path)?;    //recibo refs de ultimos branchs  y al final los de tags
+    let set: HashSet<String> = list_tags.into_iter().collect();
+    let unique_list_tags: Vec<String> = set.into_iter().collect();
+    create_tag_files(unique_list_tags, &server_client_path)?;    //recibo refs de ultimos branchs  y al final los de tags
 
     // aca espero la PACKDATA
     let objects = Clone::get_socket_response(writer)?;
