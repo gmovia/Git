@@ -13,7 +13,7 @@ impl Rebase{
         if !branches.contains(&branch.to_string()){
             return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the branch"));
         }
-    
+
         let old_current_commits_table = CommitsTable::read(current.clone(), &current_branch)?;
         let branch_commits_table = CommitsTable::read(current.clone(), branch)?;
         
