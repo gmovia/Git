@@ -10,7 +10,7 @@ impl Rebase{
         let current_branch = Branch::get_current_branch(&current)?;
         
         let branches = Branch::get_branches(&current)?;
-        if branches.contains(&branch.to_string()){
+        if !branches.contains(&branch.to_string()){
             return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the branch"));
         }
     
