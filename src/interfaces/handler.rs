@@ -883,14 +883,15 @@ pub fn handle_clone(interface: &RustInterface) {
 pub fn handle_fetch(interface: &RustInterface) {
     let rc_dialog = interface.pull_push_fetch_dialog.clone();
     let rc_box = interface.pull_push_fetch_box.clone();
-    let rc_button = interface.remote_commands_enter.clone();
+    let rc_button = interface.fetch_enter.clone();
     let rc_branch = interface.select_branch.clone();
-    let r_entry = interface.remote_commands_entry.clone();
-    let dialog = interface.remote_commands_dialog.clone();
+    let r_entry = interface.fetch_entry.clone();
+    let dialog = interface.fetch_dialog.clone();
+    let button = interface.pull_push_fetch_close.clone();
 
-    interface.remote_commands_enter.set_sensitive(false);
+    interface.fetch_enter.set_sensitive(false);
 
-    interface.remote_commands_entry.connect_changed({
+    interface.fetch_entry.connect_changed({
        move |e| {
             rc_button.set_sensitive(!e.text().is_empty());
        } 
@@ -906,26 +907,20 @@ pub fn handle_fetch(interface: &RustInterface) {
                     dialog.run();
                     dialog.hide();
                 }else {
-                    draw_push_pull_fetch(&rc_branch, "git fetch origin".to_string(), &rc_box, &"FETCH".to_string(),&rc_dialog);
+                    draw_push_pull_fetch(&rc_branch, "git fetch origin".to_string(), &rc_box, &"FETCH".to_string(),&rc_dialog, &button);
                 }
             }
         }
     });
 
-    interface.remote_commands_enter.connect_clicked({
+    interface.fetch_enter.connect_clicked({
         let rc_branch = interface.select_branch.clone();
         let rc_dialog = interface.pull_push_fetch_dialog.clone();
         let rc_box = interface.pull_push_fetch_box.clone();
+        let button = interface.pull_push_fetch_close.clone();
         move |_| {
-            draw_push_pull_fetch(&rc_branch, format!("git fetch {}", r_entry.text().to_string()),&rc_box, &"FETCH".to_string(),&rc_dialog);
+            draw_push_pull_fetch(&rc_branch, format!("git fetch {}", r_entry.text().to_string()),&rc_box, &"FETCH".to_string(),&rc_dialog, &button);
         } 
-    });
-
-    interface.pull_push_fetch_close.connect_clicked({
-        let rc_dialog = interface.pull_push_fetch_dialog.clone();
-        move |_| {
-            rc_dialog.hide();
-        }
     });
 }
 
@@ -933,14 +928,15 @@ pub fn handle_pull(interface: &RustInterface) {
 
     let rc_dialog = interface.pull_push_fetch_dialog.clone();
     let rc_box = interface.pull_push_fetch_box.clone();
-    let rc_button = interface.remote_commands_enter.clone();
+    let rc_button = interface.pull_enter.clone();
     let rc_branch = interface.select_branch.clone();
-    let r_entry = interface.remote_commands_entry.clone();
-    let dialog = interface.remote_commands_dialog.clone();
+    let r_entry = interface.pull_entry.clone();
+    let dialog = interface.pull_dialog.clone();
+    let button = interface.pull_push_fetch_close.clone();
 
-    interface.remote_commands_enter.set_sensitive(false);
+    interface.pull_enter.set_sensitive(false);
 
-    interface.remote_commands_entry.connect_changed({
+    interface.pull_entry.connect_changed({
        move |e| {
             rc_button.set_sensitive(!e.text().is_empty());
        } 
@@ -953,26 +949,20 @@ pub fn handle_pull(interface: &RustInterface) {
                     dialog.run();
                     dialog.hide();
                 }else {
-                    draw_push_pull_fetch(&rc_branch, "git pull origin".to_string(), &rc_box, &"PULL".to_string(), &rc_dialog);
+                    draw_push_pull_fetch(&rc_branch, "git pull origin".to_string(), &rc_box, &"PULL".to_string(), &rc_dialog, &button);
                 }
             }
         }
     });
 
-    interface.remote_commands_enter.connect_clicked({
+    interface.pull_enter.connect_clicked({
         let rc_branch = interface.select_branch.clone();
         let rc_dialog = interface.pull_push_fetch_dialog.clone();
         let rc_box = interface.pull_push_fetch_box.clone();
+        let button = interface.pull_push_fetch_close.clone();
         move |_| {
-            draw_push_pull_fetch(&rc_branch, format!("git pull {}", r_entry.text().to_string()),&rc_box, &"PULL".to_string(), &rc_dialog);
+            draw_push_pull_fetch(&rc_branch, format!("git pull {}", r_entry.text().to_string()),&rc_box, &"PULL".to_string(), &rc_dialog, &button);
         } 
-    });
-
-    interface.pull_push_fetch_close.connect_clicked({
-        let rc_dialog = interface.pull_push_fetch_dialog.clone();
-        move |_| {
-            rc_dialog.hide();
-        }
     });
 }
 
@@ -981,14 +971,15 @@ pub fn handle_push(interface: &RustInterface) {
 
     let rc_dialog = interface.pull_push_fetch_dialog.clone();
     let rc_box = interface.pull_push_fetch_box.clone();
-    let rc_button = interface.remote_commands_enter.clone();
+    let rc_button = interface.push_enter.clone();
     let rc_branch = interface.select_branch.clone();
-    let r_entry = interface.remote_commands_entry.clone();
-    let dialog = interface.remote_commands_dialog.clone();
+    let r_entry = interface.push_entry.clone();
+    let dialog = interface.push_dialog.clone();
+    let button = interface.pull_push_fetch_close.clone();
 
-    interface.remote_commands_enter.set_sensitive(false);
+    interface.push_enter.set_sensitive(false);
 
-    interface.remote_commands_entry.connect_changed({
+    interface.push_entry.connect_changed({
        move |e| {
             rc_button.set_sensitive(!e.text().is_empty());
        } 
@@ -1001,27 +992,22 @@ pub fn handle_push(interface: &RustInterface) {
                     dialog.run();
                     dialog.hide();
                 }else {
-                    draw_push_pull_fetch(&rc_branch, "git push origin".to_string(), &rc_box, &"PUSH".to_string(), &rc_dialog);
+                    draw_push_pull_fetch(&rc_branch, "git push origin".to_string(), &rc_box, &"PUSH".to_string(), &rc_dialog, &button);
                 }
             }
         }
     });
 
-    interface.remote_commands_enter.connect_clicked({
+    interface.push_enter.connect_clicked({
         let rc_branch = interface.select_branch.clone();
         let rc_dialog = interface.pull_push_fetch_dialog.clone();
         let rc_box = interface.pull_push_fetch_box.clone();
+        let button = interface.pull_push_fetch_close.clone();
         move |_| {
-            draw_push_pull_fetch(&rc_branch, format!("git push {}", r_entry.text().to_string()),&rc_box, &"PUSH".to_string(), &rc_dialog);
+            draw_push_pull_fetch(&rc_branch, format!("git push {}", r_entry.text().to_string()),&rc_box, &"PUSH".to_string(), &rc_dialog, &button);
         } 
     });
 
-    interface.pull_push_fetch_close.connect_clicked({
-        let rc_dialog = interface.pull_push_fetch_dialog.clone();
-        move |_| {
-            rc_dialog.hide();
-        }
-    });
 }
 
 

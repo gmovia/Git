@@ -195,7 +195,7 @@ pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_en
 
 }
 
-pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: &gtk::Box, message: &String, dialog: &gtk::Dialog) {
+pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: &gtk::Box, message: &String, dialog: &gtk::Dialog, button: &gtk::Button) {
     info.foreach({|child|{
         info.remove(child);
     }});
@@ -203,18 +203,36 @@ pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: 
         "PUSH" => {
             let _ = VersionControlSystem::push(input);
             draw_info_box(info, &message, &dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
         },
         "PULL" => {
             let _ = VersionControlSystem::pull(input);
             rc_branch.remove_all();
             let _ = branches(&rc_branch);            
             draw_info_box(info, &message, &dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
         },
         "FETCH" => {
             let _ = VersionControlSystem::fetch(input);
             rc_branch.remove_all();
             let _ = branches(&rc_branch);            
             draw_info_box(info, &message, &dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
         }
         _ => {},
     }
