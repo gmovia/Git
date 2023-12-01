@@ -912,18 +912,6 @@ pub fn handle_fetch(interface: &RustInterface) {
         } 
     });
 
-    // interface.fetch.connect_clicked({
-    //     move |_| {
-    //         rc_box.foreach(|child| {
-    //             rc_box.remove(child);
-    //         });
-    //         let _ = VersionControlSystem::fetch("git fetch".to_string());
-    //         draw_message(&rc_box, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
-    //         dialog.run();
-    //         dialog.hide();
-    //     }
-    // });
-
     interface.fetch_close.connect_clicked({
         let dialog2 = interface.fetch_dialog.clone();
         move |_| {
@@ -957,33 +945,9 @@ pub fn handle_pull(interface: &RustInterface) {
         let info2 = interface.info_pull_push.clone();
         let rc_branch = interface.select_branch.clone();
         move |_| {
-            draw_push_pull(&rc_branch, format!("git push {}", r_entry.text().to_string()),&info2, &"PULL".to_string());
+            draw_push_pull(&rc_branch, format!("git pull {}", r_entry.text().to_string()),&info2, &"PULL".to_string());
         } 
     });
-
-    // interface.pull.connect_clicked({
-    //     move |_| {
-    //         info.foreach({|child|{
-    //             info.remove(child);
-    //         }});
-    //         let _ = VersionControlSystem::git_pull("git pull".to_string());
-    //         let close = Button::builder()
-    //             .label("close")
-    //             .build();
-    //             close.set_visible(true);
-    //             draw_message(&info, &"    PULL SUCCESSFULLY!     ".to_string(), 0.5);
-    //             info.add(&close);
-    //             info.set_visible(true);
-    //             close.connect_clicked({
-    //                 let info = info.clone();
-    //                 move |_| {
-    //                     info.foreach({|child|{
-    //                         info.remove(child);
-    //                     }});
-    //                 }
-    //             });
-    //     } 
-    // });
 }
 
 
@@ -1015,30 +979,6 @@ pub fn handle_push(interface: &RustInterface) {
             draw_push_pull(&rc_branch, format!("git push {}", r_entry.text().to_string()),&info2, &"PUSH".to_string());
         } 
     });
-
-    // interface.push.connect_clicked({
-    //     move |_| {
-    //         info.foreach({|child|{
-    //             info.remove(child);
-    //         }});
-    //         let _ = VersionControlSystem::push("git push".to_string());
-    //         let close = Button::builder()
-    //             .label("close")
-    //             .build();
-    //             close.set_visible(true);
-    //             draw_message(&info, &"    PUSH SUCCESSFULLY!     ".to_string(), 0.5);
-    //             info.add(&close);
-    //             info.set_visible(true);
-    //             close.connect_clicked({
-    //                 let info = info.clone();
-    //                 move |_| {
-    //                     info.foreach({|child|{
-    //                         info.remove(child);
-    //                     }});
-    //                 }
-    //             });
-    //     } 
-    // });
 }
 
 
