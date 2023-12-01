@@ -92,8 +92,7 @@ impl Branch{
                 if let Some(file_name) = entry.path().file_name(){
                     branches.push(file_name.to_string_lossy().to_string());
                 }
-
-                }
+            }
         }
         Ok(branches)
     }        
