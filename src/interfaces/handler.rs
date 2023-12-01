@@ -665,7 +665,6 @@ pub fn handle_tag(interface: &RustInterface) {
             t_box.set_visible(true);
             entry.set_text("");
             m_entry.set_text("");
-            button.set_sensitive(false);
         } 
     });
 
@@ -775,7 +774,6 @@ pub fn handle_remote(interface: &RustInterface) {
             }
             p_entry.set_text("");
             r_entry.set_text("");
-            button.set_sensitive(false);
        } 
     });
 
