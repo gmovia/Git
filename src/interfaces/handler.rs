@@ -766,14 +766,16 @@ pub fn handle_remote(interface: &RustInterface) {
     });
 
     interface.enter_remote.connect_clicked({
-       move |_| {
+       move |button| {
             let response = handler_remote(format!("git remote add {} {:?}",r_entry.text().to_string(), Path::new(&format!("{}",p_entry.text()))));
             if response == RESPONSE_OK_REMOTE {
                 draw_message(&r_box, &"     REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
             }else {
                 draw_error(rc_tuple.clone(), &"CAN'T REMOTE".to_string(), &r_entry);
             }
-
+            p_entry.set_text("");
+            r_entry.set_text("");
+            button.set_sensitive(false);
        } 
     });
 
