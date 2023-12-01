@@ -8,20 +8,12 @@ impl Rebase{
     pub fn rebase(branch: &str) -> Result<(), std::io::Error>{
         let current = CurrentRepository::read()?;
         let current_branch = Branch::get_current_branch(&current)?;
-        let mut names = Vec::new();
-        let refs_path = current.join(".rust_git").join("refs").join("heads");
-
-        if let Ok(entries) = fs::read_dir(refs_path) {
-            for entry in entries.flatten() {
-                let name = entry.file_name().to_string_lossy().to_string();
-                names.push(name);
-            }
-        }
-
-        if !names.contains(&branch.to_string()){
+        
+        let branches = Branch::get_branches(&current)?;
+        if branches.contains(&branch.to_string()){
             return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the branch"));
         }
-
+    
         let old_current_commits_table = CommitsTable::read(current.clone(), &current_branch)?;
         let branch_commits_table = CommitsTable::read(current.clone(), branch)?;
         
