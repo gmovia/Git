@@ -15,8 +15,13 @@ impl Remote{
 
     fn write_config(current_repo: &Path, new_repo_name: String, server_repo: &Path) -> Result<(), std::io::Error>{
         let mut config_file = OpenOptions::new().write(true).create(true).append(true).open(Init::get_current_config(&current_repo.to_path_buf())?)?; 
-        let msge_format = format!("\n[remote {new_repo_name}]\n\tpath = {}",server_repo.display());
-
+        let path_repo_cow = server_repo.to_string_lossy();
+        let mut path_repo = path_repo_cow.into_owned();
+        
+        if path_repo.starts_with('\"') && path_repo.ends_with('\"') {
+            path_repo = path_repo.trim_matches('\"').to_string();
+        }
+        let msge_format = format!("\n[remote {}]\n\tpath = {}", new_repo_name, path_repo);
         config_file.write_all(msge_format.as_bytes())?;
         Ok(())
     }
