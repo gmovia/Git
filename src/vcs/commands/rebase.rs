@@ -10,10 +10,10 @@ impl Rebase{
         let current_branch = Branch::get_current_branch(&current)?;
         
         let branches = Branch::get_branches(&current)?;
-        if branches.contains(&branch.to_string()){
-            return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the branch"));
+        if !branches.contains(&branch.to_string()){
+            return Err(std::io::Error::new(std::io::ErrorKind::NotFound, "Can't find the branch"));
         }
-    
+
         let old_current_commits_table = CommitsTable::read(current.clone(), &current_branch)?;
         let branch_commits_table = CommitsTable::read(current.clone(), branch)?;
         
