@@ -3,7 +3,7 @@ use crate::{
     utils::files::file::read,
     types::set_type::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constant::{RESPONSE_NOK_IGNORE, RESPONSE_OK_IGNORE}, clients::client::Client};
-use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore, tag::{TagOptions, Tag}, show_ref::{ShowRefOptions, ShowRef}, remote::Remote, pull::Pull, rebase::Rebase}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
+use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore, tag::{TagOptions, Tag}, show_ref::{ShowRefOptions, ShowRef}, remote::{Remote, RemoteOption}, pull::Pull, rebase::Rebase}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
 use std::{collections::HashMap, path::{Path, PathBuf}};
 use super::files::index::Index;
 
@@ -130,9 +130,9 @@ impl VersionControlSystem {
         Ok(())
     }
 
-    pub fn remote(new_repo_name :String, repo_server: &Path) -> Result<(), std::io::Error>{
+    pub fn remote(new_repo_name :String, repo_server: &Path, option:RemoteOption) -> Result<(), std::io::Error>{
         let current = CurrentRepository::read()?;
-        Remote::remote(&current, new_repo_name, repo_server)?;
+        Remote::remote(&current, new_repo_name, repo_server, option)?;
         Ok(())
     }
 

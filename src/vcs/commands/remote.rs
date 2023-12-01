@@ -6,12 +6,24 @@ use super::init::Init;
 
 pub struct Remote;
 
+pub enum RemoteOption {
+    Add,
+    Remove,
+    Get,
+}
+
 impl Remote{
     //git remote add origin repo1
-    pub fn remote(current_repo: &Path, new_repo_name: String, server_repo: &Path) -> Result<(), std::io::Error>{
-        let _ = Self::write_config(current_repo, new_repo_name, server_repo);
+    pub fn remote(current_repo: &Path, new_repo_name: String, server_repo: &Path, option:RemoteOption) -> Result<(), std::io::Error>{
+        match option{
+            RemoteOption::Add => Remote::write_config(current_repo, new_repo_name, server_repo),
+            RemoteOption::Remove => Remote::remote_remove(current_repo, new_repo_name, server_repo),
+            RemoteOption::Get => Remote::get_remote(current_repo, new_repo_name, server_repo)
+        }
         Ok(())
     }
+
+    fn 
 
     fn write_config(current_repo: &Path, new_repo_name: String, server_repo: &Path) -> Result<(), std::io::Error>{
         let mut config_file = OpenOptions::new().write(true).create(true).append(true).open(Init::get_current_config(&current_repo.to_path_buf())?)?; 
