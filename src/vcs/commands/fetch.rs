@@ -1,5 +1,5 @@
 use std::{net::TcpStream, path::Path, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
-use crate::{packfiles::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{commands::branch::Branch, entities::commit_entity::CommitEntity}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxies::proxy::Proxy, utils::randoms::random::Random};
+use crate::{packfiles::packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, vcs::{commands::branch::Branch, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH}, proxies::proxy::Proxy, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 
 pub struct Fetch;
@@ -58,8 +58,22 @@ impl Fetch {
         for obj in &objects_processed{
             println!("-->{:?}", obj);
         }
-        let commits_created = Self::create_folders(objects_processed.clone(), client_path)?;
+        let mut commits_created = Self::create_folders(objects_processed.clone(), client_path)?;
         
+        
+        let delta_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 7).cloned().collect();
+        for (_, inner_vec) in delta_objects {
+            // Tendria que devolver los commits para agregarlos a commits created
+            if let Ok( commits) = Self::process_delta_object( &inner_vec, client_path) {
+                if !commits.is_empty() {
+                    for commit in commits {
+                        println!("COMIIT ACA: {:?}", commit);
+                        commits_created.insert(commit.0, commit.1);
+                    }
+                }
+            }
+        }
+
 
         for item in packets {
             if item.contains("HEAD") {
@@ -85,6 +99,18 @@ impl Fetch {
     fn process_non_tree_object(number: u8, inner_vec: &[u8]) -> (u8, String) {
         println!("({}, {:?})", number, String::from_utf8_lossy(inner_vec));
         (number, String::from_utf8_lossy(inner_vec).to_string())
+    }
+
+    fn process_delta_object(inner_vec: &Vec<u8>, repo_path: &Path) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
+        let hash_base_object: String = (&inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
+        let decompres_data = &inner_vec[20..];
+    
+        let delta_entity = RefDeltaEntity {
+                base_object_hash: hash_base_object.clone(),
+                data: decompres_data.to_vec(), 
+            };
+        let commit = Proxy::write_ref_delta(repo_path, delta_entity)?;
+        Ok(commit)
     }
 
     fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
