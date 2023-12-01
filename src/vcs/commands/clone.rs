@@ -1,6 +1,6 @@
-use std::{net::TcpStream, io::{Read, Write, self, SeekFrom, Seek}, str::from_utf8, path::Path, fs::{OpenOptions, File}, collections::HashMap, ascii::AsciiExt};
-use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, ref_delta_entity::{RefDeltaEntity, DeltaOptions}}, files::current_repository::CurrentRepository, version_control_system::VersionControlSystem}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random, handlers::cat_file::handler_cat_file};
-use super::{cat_file::CatFile, init::Init, commit};
+use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
+use crate::{packfiles::packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random};
+use super::{cat_file::CatFile, init::Init};
 pub struct Clone;
 
 impl Clone{
@@ -218,7 +218,6 @@ impl Clone{
                 },
                 BLOB_CODE_NUMBER => Self::create_blob_folder(content, repo),
                 TAG_CODE_NUMBER => Self::create_tag_folder(content, repo),
-                OBJ_REF_DELTA_CODE_NUMBER => Self::create_ref_delta_folder(content, repo),
                 _ => println!("Type not identify {}", index),
             }
         }
@@ -227,10 +226,6 @@ impl Clone{
 
     fn create_tag_folder(content: &str, repo: &Path){
         println!("PROCESAR UN TAG FOLDER");      
-    }
-
-    fn create_ref_delta_folder(content: &str, repo: &Path) {
-        println!("CREATE FOLDER DELTAS");
     }
     
     fn create_commit_folder(content: &str, repo: &Path) -> Result<(String, CommitEntity), std::io::Error>{

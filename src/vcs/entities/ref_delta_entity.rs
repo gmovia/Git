@@ -1,6 +1,6 @@
-use std::{path::Path, fs::{OpenOptions, self, File}, io::{Write, Read}};
+use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{OBJ_REF_DELTA_CODE, TREE_CODE, COMMIT_CODE}};
+use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{OBJ_REF_DELTA_CODE, COMMIT_CODE}};
 
 use super::commit_entity::CommitEntity;
 
@@ -105,7 +105,7 @@ impl RefDeltaEntity{
     }
 
     
-    fn get_hexadecimal(mut positions: Vec<usize>, bytes: &[u8], option: u8) -> Result<u32, std::io::Error> {
+    fn get_hexadecimal(positions: Vec<usize>, bytes: &[u8], option: u8) -> Result<u32, std::io::Error> {
         println!("POSITIONS: {:?}", positions); 
         println!("BYTES IN HEXA: {:?}", bytes);   
         let mut hexa_number = String::new();

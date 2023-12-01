@@ -1,5 +1,5 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity, ref_delta_entity::{RefDeltaEntity, DeltaOptions}}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::randoms::random::Random, constants::constant::TREE_CODE};
+use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity, ref_delta_entity::RefDeltaEntity}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::randoms::random::Random, constants::constant::TREE_CODE};
 
 pub struct Proxy;
 
