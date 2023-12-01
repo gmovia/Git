@@ -10,13 +10,19 @@ impl Remote{
     //git remote add origin repo1
     pub fn remote(current_repo: &Path, new_repo_name: String, server_repo: &Path) -> Result<(), std::io::Error>{
         let _ = Self::write_config(current_repo, new_repo_name, server_repo);
+        println!("ESTAS SON MIS REPOS REMOTAS {:?}", Self::read_remote_names());
         Ok(())
     }
 
     fn write_config(current_repo: &Path, new_repo_name: String, server_repo: &Path) -> Result<(), std::io::Error>{
         let mut config_file = OpenOptions::new().write(true).create(true).append(true).open(Init::get_current_config(&current_repo.to_path_buf())?)?; 
-        let msge_format = format!("\n[remote {}{new_repo_name}{}]\n\tpath = {}","'", "'",server_repo.display());
-
+        let path_repo_cow = server_repo.to_string_lossy();
+        let mut path_repo = path_repo_cow.into_owned();
+        
+        if path_repo.starts_with('\"') && path_repo.ends_with('\"') {
+            path_repo = path_repo.trim_matches('\"').to_string();
+        }
+        let msge_format = format!("\n[remote {}]\n\tpath = {}", new_repo_name, path_repo);
         config_file.write_all(msge_format.as_bytes())?;
         Ok(())
     }
@@ -35,28 +41,25 @@ impl Remote{
         Ok(false)
     }
 
-    pub fn read_remote_names() -> Result<Vec<String>, std::io::Error>{
+    pub fn read_remote_names() -> Result<Vec<String>, std::io::Error> {
         let path = CurrentRepository::read()?;
         let path_config = Init::get_current_config(&path)?;
         let file = File::open(&path_config)?;
-        let reader = io::BufReader::new(file);
-    
+        let reader = BufReader::new(file);
+
         let mut remote_names = Vec::new();
-        let mut in_remote_section = false;
-    
+
         for line in reader.lines() {
             let line = line?;
             let trimmed_line = line.trim();
-    
-            if trimmed_line.starts_with("[remote '") {
-                in_remote_section = true;
-                if let Some(name) = trimmed_line.strip_prefix("[remote '") {
-                    if let Some(name) = name.strip_suffix("']") {
-                        remote_names.push(name.to_string());
+
+            if trimmed_line.starts_with("[remote ") {
+                if let Some(remote_section) = trimmed_line.strip_prefix("[remote ") {
+                    if let Some(remote_name) = remote_section.strip_suffix("]") {
+                        let remote_name = remote_name.trim_end_matches("path = ");
+                        remote_names.push(remote_name.to_string());
                     }
                 }
-            } else if in_remote_section && trimmed_line.starts_with("path = ") {
-                in_remote_section = false;
             }
         }
         Ok(remote_names)

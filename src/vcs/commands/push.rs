@@ -6,6 +6,7 @@ pub struct Push;
 
 impl Push{
     pub fn push(stream: &mut TcpStream, current_repo: &Path) -> Result<(),std::io::Error> {
+        println!("CURRENT REOP EN PUSH ---> {:?}", current_repo);
         let logs_path = current_repo.join(".rust_git").join("logs");
         let mut log_entries = Self::get_commits_branch(&logs_path)?;
         let mut tag_entries = Self::get_tags(current_repo)?;

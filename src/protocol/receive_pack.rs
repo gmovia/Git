@@ -1,3 +1,4 @@
+use crate::constants::constant::COMMIT_INIT_HASH;
 use crate::packfiles::tag_file::{get_tags, exclude_tag_ref, create_tag_files};
 use crate::vcs::commands::branch::Branch;
 use crate::vcs::commands::cat_file::CatFile;
@@ -78,6 +79,9 @@ fn recovery_last_commit_for_each_branch(server_client_path: &Path) -> Result<Vec
 }
 
 fn extract_last_commit(log_content: &str) -> Result<String, io::Error> {
+    if log_content.is_empty() {
+        return Ok(COMMIT_INIT_HASH.to_string());
+    }
     let last_line = log_content.lines().last().ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log file is empty"))?;
     let line_parts: Vec<&str> = last_line.split('-').collect();
     let last_commit = line_parts.get(2).ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log line is malformed"))?;

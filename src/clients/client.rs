@@ -5,6 +5,7 @@ use crate::vcs::commands::{clone, push};
 use crate::packfiles::packfile::to_pkt_line;
 use crate::constants::constant::{PUERTO, HOST};
 use crate::vcs::commands::fetch::Fetch;
+use crate::vcs::files::current_repository::CurrentRepository;
 
 //comando para levantar el git daemon --> git daemon --base-path=. --export-all --reuseaddr --informative-errors --verbose --verbose
 pub struct Client;
@@ -77,10 +78,11 @@ impl Client {
     }
 
     fn handler_query(query: &str, socket: &mut TcpStream, input_repository: &Path, command_type: &str) -> Result<(),std::io::Error> {
+            let current_repo = CurrentRepository::read()?;
             match query {
-            command_str if command_str.contains("git-upload-pack") && command_type == "clone" => clone::Clone::git_clone(socket, input_repository),
-            command_str if command_str.contains("git-upload-pack") && command_type == "fetch" => Fetch::git_fetch(socket, input_repository),
-            command_str if command_str.contains("git-receive-pack") =>  push::Push::push(socket, input_repository),
+            command_str if command_str.contains("git-upload-pack") && command_type == "clone" => clone::Clone::git_clone(socket, &current_repo),
+            command_str if command_str.contains("git-upload-pack") && command_type == "fetch" => Fetch::git_fetch(socket, &current_repo),
+            command_str if command_str.contains("git-receive-pack") =>  push::Push::push(socket, &current_repo),
             _ => Ok(()),
         }
     }
