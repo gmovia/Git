@@ -27,20 +27,7 @@ impl RefDeltaEntity{
 
         let delta_len = ref_delta.data.len();
         let mut position: usize = 0;
-        /* 
-        let base_size = ref_delta.data[0];
-        position += 1;
-        let new_size: u8;
-        if ref_delta.data[1] == 1 {
-            new_size = ref_delta.data[2];
-            position += 3;
-        }
-        else {
-            new_size = ref_delta.data[1];
-            position += 1;
-        }
-        */
-
+    
         while Self::is_bit_set(ref_delta.data[position]) {
             position += 1;
         }
@@ -51,9 +38,6 @@ impl RefDeltaEntity{
         }
         position += 1;
 
-
-        //println!("DATA - {:?}", ref_delta.data);
-        //println!("BASE: {} - NEW: {}", base_size, new_size);
         while position < delta_len {
             println!("POSITION: {}, BYTE: {}", position, ref_delta.data[position]);
             if Self::is_bit_set(ref_delta.data[position]) {
@@ -92,14 +76,6 @@ impl RefDeltaEntity{
     fn is_bit_set(byte: u8) -> bool {
         let mask = 0b10000000;
         (byte & mask) == mask
-     }
-
-    fn get_positions(byte: u8) -> (u32, u32) {
-        let bits_primer_grupo = (byte & 0b00001111).count_ones();
-    
-        let bits_segundo_grupo = (byte & 0b01110000).count_ones();
-    
-       (bits_primer_grupo, bits_segundo_grupo)
     }
 
     fn positions(bytes: &[u8]) -> Result<(u32,u32,usize), std::io::Error> {
@@ -109,7 +85,6 @@ impl RefDeltaEntity{
         let bits_position = Self::get_bits_positions(bytes[0]);
         println!("BYTES POSITION: {:?}", bits_position);
         if (&bits_position.0).is_empty() {
-            println!("ENTRA ACA");
             initial_position = 0;
             let bytes_to_use = bits_position.1.len();
             let finish_bytes = &bytes[1..bytes_to_use+1];
