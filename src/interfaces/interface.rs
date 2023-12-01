@@ -132,6 +132,12 @@ pub struct RustInterface {
     pub remote_commands_dialog: gtk::Dialog,
     pub remote_commands_entry: gtk::Entry,
     pub remote_commands_enter: gtk::Button,
+    pub rebase: gtk::Button,
+    pub rebase_dialog: gtk::Dialog,
+    pub rebase_entry: gtk::Entry,
+    pub rebase_box: gtk::Box,
+    pub rebase_enter: gtk::Button,
+    pub rebase_cancel: gtk::Button,
 }
 
 impl RustInterface {
@@ -271,6 +277,12 @@ impl RustInterface {
             remote_commands_dialog: builder.object("remote-commands-dialog").unwrap(),
             remote_commands_entry: builder.object("remote-commands-entry").unwrap(),
             remote_commands_enter: builder.object("enter-commands").unwrap(),
+            rebase: builder.object("rebase").unwrap(),
+            rebase_dialog: builder.object("rebase-dialog").unwrap(),
+            rebase_box: builder.object("rebase-box").unwrap(),
+            rebase_entry: builder.object("rebase-entry").unwrap(),
+            rebase_enter: builder.object("rebase-enter").unwrap(),
+            rebase_cancel: builder.object("rebase-cancel").unwrap(),
         }
     }
     

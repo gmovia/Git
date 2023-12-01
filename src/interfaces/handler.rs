@@ -415,6 +415,7 @@ pub fn handle_other_commands(interface: &RustInterface) {
     handle_tag(interface);
     handle_show_ref(interface);
     handle_remote(interface);
+    handle_rebase(interface);
 
     interface.others_close.connect_clicked({
        let dialog2 = interface.others_dialog.clone(); 
@@ -766,9 +767,9 @@ pub fn handle_remote(interface: &RustInterface) {
 
     interface.enter_remote.connect_clicked({
        move |_| {
-            let response = handler_remote(format!("git remote add {} {:?}",r_entry.text().to_string(), Path::new(&format!("server/{}",p_entry.text()))));
+            let response = handler_remote(format!("git remote add {} {:?}",r_entry.text().to_string(), Path::new(&format!("{}",p_entry.text()))));
             if response == RESPONSE_OK_REMOTE {
-                draw_message(&r_box, &"REMOTE SUCCESSFULLY".to_string(), 0.5);
+                draw_message(&r_box, &"     REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
             }else {
                 draw_error(rc_tuple.clone(), &"CAN'T REMOTE".to_string(), &r_entry);
             }
@@ -776,6 +777,54 @@ pub fn handle_remote(interface: &RustInterface) {
        } 
     });
 
+}
+
+pub fn handle_rebase(interface: &RustInterface) {
+    let dialog = interface.rebase_dialog.clone();
+    let r_box = interface.rebase_box.clone();
+    let r_enter = interface.rebase_enter.clone();
+    let r_entry = interface.rebase_entry.clone();
+
+    interface.rebase_enter.set_sensitive(false);
+    interface.rebase_box.set_visible(false);
+
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+    let rc_tuple = errors_tuple.clone();
+
+    interface.rebase_entry.connect_changed({
+       move |e| {
+            r_enter.set_sensitive(!e.text().is_empty());
+       } 
+    });
+
+    interface.rebase.connect_clicked({
+        move |_| {
+            dialog.run();
+            dialog.hide();
+        } 
+    });
+
+    interface.rebase_enter.connect_clicked({
+       move |button| {
+            r_box.foreach(|child| {
+                r_box.remove(child);
+            });
+            if VersionControlSystem::rebase(&r_entry.text().to_string()).is_ok() {
+                draw_message(&r_box, &"     REBASE SUCCESSFULLY!    ".to_string(), 0.5);
+            }else{
+                draw_error(rc_tuple.clone(), &"      ERROR: THE BRANCH NAME NOT FOUND ...    ".to_string(), &r_entry);
+            }
+            button.set_sensitive(false);
+            r_entry.set_text("");
+       } 
+    });
+
+    interface.rebase_cancel.connect_clicked({
+        let dialog = interface.rebase_dialog.clone();
+        move |_| {
+            dialog.hide();
+        }
+    });
 }
 
  
