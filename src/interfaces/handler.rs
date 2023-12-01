@@ -1,7 +1,7 @@
 use std::{fs::{OpenOptions, self}, io::Write, path::Path};
 use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::Remote}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::{clone::handler_clone, remote::handler_remote}};
 
-use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error, draw_push_pull, draw_fetch}};
+use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error, draw_push_pull_fetch}};
 use gtk::{prelude::*, Button};
 
 pub fn handle_repository(interface: &RustInterface) {
@@ -881,11 +881,20 @@ pub fn handle_clone(interface: &RustInterface) {
 
  
 pub fn handle_fetch(interface: &RustInterface) {
-    let dialog = interface.remote_commands_dialog.clone();
-    let fetch_dialog = interface.fetch_dialog.clone();
-    let rc_box = interface.fetch_box.clone();
-    let r_entry = interface.remote_commands_entry.clone();
+    let rc_dialog = interface.pull_push_fetch_dialog.clone();
+    let rc_box = interface.pull_push_fetch_box.clone();
+    let rc_button = interface.remote_commands_enter.clone();
     let rc_branch = interface.select_branch.clone();
+    let r_entry = interface.remote_commands_entry.clone();
+    let dialog = interface.remote_commands_dialog.clone();
+
+    interface.remote_commands_enter.set_sensitive(false);
+
+    interface.remote_commands_entry.connect_changed({
+       move |e| {
+            rc_button.set_sensitive(!e.text().is_empty());
+       } 
+    });
 
     interface.fetch.connect_clicked({
         move |_| {
@@ -897,7 +906,7 @@ pub fn handle_fetch(interface: &RustInterface) {
                     dialog.run();
                     dialog.hide();
                 }else {
-                    draw_fetch(&rc_branch, "git fetch origin".to_string(), &rc_box, &fetch_dialog);
+                    draw_push_pull_fetch(&rc_branch, "git fetch origin".to_string(), &rc_box, &"FETCH".to_string(),&rc_dialog);
                 }
             }
         }
@@ -905,28 +914,37 @@ pub fn handle_fetch(interface: &RustInterface) {
 
     interface.remote_commands_enter.connect_clicked({
         let rc_branch = interface.select_branch.clone();
-        let rc_box = interface.fetch_box.clone();
-        let fetch_dialog = interface.fetch_dialog.clone();
+        let rc_dialog = interface.pull_push_fetch_dialog.clone();
+        let rc_box = interface.pull_push_fetch_box.clone();
         move |_| {
-            draw_fetch(&rc_branch, format!("git fetch {}", r_entry.text().to_string()),&rc_box, &fetch_dialog);
+            draw_push_pull_fetch(&rc_branch, format!("git fetch {}", r_entry.text().to_string()),&rc_box, &"FETCH".to_string(),&rc_dialog);
         } 
     });
 
-    interface.fetch_close.connect_clicked({
-        let dialog2 = interface.fetch_dialog.clone();
+    interface.pull_push_fetch_close.connect_clicked({
+        let rc_dialog = interface.pull_push_fetch_dialog.clone();
         move |_| {
-            dialog2.hide();
+            rc_dialog.hide();
         }
     });
 }
 
 pub fn handle_pull(interface: &RustInterface) {
-    let info = interface.info_pull_push.clone();
-    let dialog = interface.remote_commands_dialog.clone();
-    let r_entry = interface.remote_commands_entry.clone();
-    let rc_branch = interface.select_branch.clone();
 
-    interface.info_pull_push.set_visible(false);
+    let rc_dialog = interface.pull_push_fetch_dialog.clone();
+    let rc_box = interface.pull_push_fetch_box.clone();
+    let rc_button = interface.remote_commands_enter.clone();
+    let rc_branch = interface.select_branch.clone();
+    let r_entry = interface.remote_commands_entry.clone();
+    let dialog = interface.remote_commands_dialog.clone();
+
+    interface.remote_commands_enter.set_sensitive(false);
+
+    interface.remote_commands_entry.connect_changed({
+       move |e| {
+            rc_button.set_sensitive(!e.text().is_empty());
+       } 
+    });
 
     interface.pull.connect_clicked({
         move|_| {
@@ -935,29 +953,46 @@ pub fn handle_pull(interface: &RustInterface) {
                     dialog.run();
                     dialog.hide();
                 }else {
-                    draw_push_pull(&rc_branch, "git pull origin".to_string(), &info, &"PULL".to_string());
+                    draw_push_pull_fetch(&rc_branch, "git pull origin".to_string(), &rc_box, &"PULL".to_string(), &rc_dialog);
                 }
             }
         }
     });
 
     interface.remote_commands_enter.connect_clicked({
-        let info2 = interface.info_pull_push.clone();
         let rc_branch = interface.select_branch.clone();
+        let rc_dialog = interface.pull_push_fetch_dialog.clone();
+        let rc_box = interface.pull_push_fetch_box.clone();
         move |_| {
-            draw_push_pull(&rc_branch, format!("git pull {}", r_entry.text().to_string()),&info2, &"PULL".to_string());
+            draw_push_pull_fetch(&rc_branch, format!("git pull {}", r_entry.text().to_string()),&rc_box, &"PULL".to_string(), &rc_dialog);
         } 
+    });
+
+    interface.pull_push_fetch_close.connect_clicked({
+        let rc_dialog = interface.pull_push_fetch_dialog.clone();
+        move |_| {
+            rc_dialog.hide();
+        }
     });
 }
 
 
 pub fn handle_push(interface: &RustInterface) {
-    let info = interface.info_pull_push.clone();
-    let dialog = interface.remote_commands_dialog.clone();
-    let r_entry = interface.remote_commands_entry.clone();
-    let rc_branch = interface.select_branch.clone();
 
-    interface.info_pull_push.set_visible(false);
+    let rc_dialog = interface.pull_push_fetch_dialog.clone();
+    let rc_box = interface.pull_push_fetch_box.clone();
+    let rc_button = interface.remote_commands_enter.clone();
+    let rc_branch = interface.select_branch.clone();
+    let r_entry = interface.remote_commands_entry.clone();
+    let dialog = interface.remote_commands_dialog.clone();
+
+    interface.remote_commands_enter.set_sensitive(false);
+
+    interface.remote_commands_entry.connect_changed({
+       move |e| {
+            rc_button.set_sensitive(!e.text().is_empty());
+       } 
+    });
 
     interface.push.connect_clicked({
         move|_| {
@@ -966,7 +1001,7 @@ pub fn handle_push(interface: &RustInterface) {
                     dialog.run();
                     dialog.hide();
                 }else {
-                    draw_push_pull(&rc_branch, "git push origin".to_string(), &info, &"PUSH".to_string());
+                    draw_push_pull_fetch(&rc_branch, "git push origin".to_string(), &rc_box, &"PUSH".to_string(), &rc_dialog);
                 }
             }
         }
@@ -974,10 +1009,18 @@ pub fn handle_push(interface: &RustInterface) {
 
     interface.remote_commands_enter.connect_clicked({
         let rc_branch = interface.select_branch.clone();
-        let info2 = interface.info_pull_push.clone();
+        let rc_dialog = interface.pull_push_fetch_dialog.clone();
+        let rc_box = interface.pull_push_fetch_box.clone();
         move |_| {
-            draw_push_pull(&rc_branch, format!("git push {}", r_entry.text().to_string()),&info2, &"PUSH".to_string());
+            draw_push_pull_fetch(&rc_branch, format!("git push {}", r_entry.text().to_string()),&rc_box, &"PUSH".to_string(), &rc_dialog);
         } 
+    });
+
+    interface.pull_push_fetch_close.connect_clicked({
+        let rc_dialog = interface.pull_push_fetch_dialog.clone();
+        move |_| {
+            rc_dialog.hide();
+        }
     });
 }
 
