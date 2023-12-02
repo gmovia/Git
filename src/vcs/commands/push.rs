@@ -6,20 +6,16 @@ pub struct Push;
 
 impl Push{
     pub fn push(stream: &mut TcpStream, current_repo: &Path) -> Result<(),std::io::Error> {
-        println!("CURRENT REOP EN PUSH ---> {:?}", current_repo);
         let logs_path = current_repo.join(".rust_git").join("logs");
         let mut log_entries = Self::get_commits_branch(&logs_path)?;
         let mut tag_entries = Self::get_tags(current_repo)?;
         let mut entry_to_send:Vec<String> = Vec::new();
-        println!("LOG entries -----> {:?}\n", log_entries);
         
         if !tag_entries.is_empty() {
             log_entries.append(&mut tag_entries);
         }
-        println!("LOG ENTRIES despues de TAG!----{:?}", log_entries );
         let current_branch:String = Branch::get_current_branch(current_repo)?;
         for entries in &log_entries{
-            println!("ENTRIES dentro del for --> {:?}", entries);
             let entry: Vec<&str> = entries.split_whitespace().collect();
 
             if entry.len() == 3 {
