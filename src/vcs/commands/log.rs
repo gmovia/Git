@@ -50,7 +50,6 @@ fn process_line(line: &str, log: &mut String, config: (String, String)) -> Resul
         } else {
             println!("Error creating NaiveDateTime from timestamp {}", timestamp);
         }
-        println!("{}", log);
     } else {
         println!("Error extracting date and time from line: {}", line);
     }
