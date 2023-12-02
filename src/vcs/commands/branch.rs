@@ -86,15 +86,13 @@ impl Branch{
     /// obtengo todas las entradas del directorio /refs/heads/ que serian todas las ramas que tenemos
     pub fn get_branches(path: &Path) -> Result<Vec<String>,std::io::Error>{
         let mut branches: Vec<String> = Vec::new();
-        let p = Path::new(path);
-        let branchs_dir_path = p.join(".rust_git").join("refs").join("heads");
+        let branchs_dir_path = path.join(".rust_git").join("refs").join("heads");
         if let Ok(entries) = fs::read_dir(branchs_dir_path){
             for entry in entries.flatten(){
                 if let Some(file_name) = entry.path().file_name(){
                     branches.push(file_name.to_string_lossy().to_string());
                 }
-
-                }
+            }
         }
         Ok(branches)
     }        

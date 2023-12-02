@@ -3,6 +3,7 @@ pub const BDD_PATH: &str = "repositories.txt";
 pub const NULL_PATH: &str = "null_path";
 pub const CURRENT_REPOSITORY_PATH: &str = "current_repository.txt";
 pub const RUST_PATH: &str = ".rust_git";
+pub const  CONFIG_PATH: &str = "config.txt";
 
 // CODES
 pub const TREE_CODE: &str = "tree";
@@ -63,7 +64,7 @@ pub const RESPONSE_OK_COMMIT: &str = "Commit created succesfully.";
 pub const RESPONSE_OK_MERGE: &str = "Merged successfully";
 
 pub const RESPONSE_OK_IGNORE: &str = "The path is ignored as per the rules in the .gitignore file.";
-pub const RESPONSE_NOK_GIT_IGNORE: &str = "The path is not ignored or is not listed in the .gitignore file.";
+pub const RESPONSE_NOK_IGNORE: &str = "The path is not ignored or is not listed in the .gitignore file.";
 
 pub const RESPONSE_OK_CLONE: &str = "Clone successfully";
 pub const RESPONSE_OK_PUSH: &str = "Push successfully";
@@ -71,6 +72,10 @@ pub const RESPONSE_OK_PUSH: &str = "Push successfully";
 pub const RESPONSE_NOK_CLONE: &str = "The path is not correct";
 pub const RESPONSE_OK_FETCH: &str = "Fetched successfully";
 pub const RESPONSE_OK_PULL: &str = "Pull successfully";
+
+pub const RESPONSE_OK_REMOTE: &str = "Remote successfully";
+pub const RESPONSE_NOK_REMOTE: &str = "Can't Remote";
+
 
 // ERRORS
 pub const ERR_INVALID_PARAMETERS: &str = "Invalid parameters.";

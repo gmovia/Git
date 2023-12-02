@@ -1,6 +1,6 @@
 use std::{path::Path, collections::HashMap};
 use gtk::{prelude::*, Button, ComboBoxText};
-use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::repositories::Repositories};
+use crate::{vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::repositories::Repositories}, handlers::branch};
 
 
 pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
@@ -193,4 +193,56 @@ pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_en
 
     c_entry.set_text("");
 
+}
+
+pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: &gtk::Box, message: &String, dialog: &gtk::Dialog, button: &gtk::Button) {
+    info.foreach({|child|{
+        info.remove(child);
+    }});
+    match message.as_str() {
+        "PUSH" => {
+            let _ = VersionControlSystem::push(input);
+            draw_info_box(info, &message, &dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
+        },
+        "PULL" => {
+            let _ = VersionControlSystem::pull(input);
+            rc_branch.remove_all();
+            let _ = branches(&rc_branch);            
+            draw_info_box(info, &message, &dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
+        },
+        "FETCH" => {
+            let _ = VersionControlSystem::fetch(input);
+            rc_branch.remove_all();
+            let _ = branches(&rc_branch);            
+            draw_info_box(info, &message, &dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
+        }
+        _ => {},
+    }
+}
+
+pub fn draw_info_box(info: &gtk::Box, message: &String, dialog: &gtk::Dialog) {
+    info.foreach(|child| {
+        info.remove(child);
+    });
+    draw_message(&info, &format!("    {} SUCCESSFULLY!     ",message).to_string(), 0.5);
+    dialog.run();
+    dialog.hide();
 }

@@ -1,7 +1,7 @@
-use std::{fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE}, handlers::clone::handler_clone};
+use std::{fs::{OpenOptions, self}, io::Write, path::Path};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::{Remote, RemoteOption}}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::{clone::handler_clone, remote::handler_remote}};
 
-use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error}};
+use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error, draw_push_pull_fetch}};
 use gtk::{prelude::*, Button};
 
 pub fn handle_repository(interface: &RustInterface) {
@@ -414,6 +414,8 @@ pub fn handle_other_commands(interface: &RustInterface) {
     handle_check_ignore(interface);
     handle_tag(interface);
     handle_show_ref(interface);
+    handle_remote(interface);
+    handle_rebase(interface);
 
     interface.others_close.connect_clicked({
        let dialog2 = interface.others_dialog.clone(); 
@@ -548,6 +550,11 @@ pub fn handle_tag(interface: &RustInterface) {
     interface.tag_box.set_visible(false);
     interface.show_tags_box.set_visible(false);
 
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+
+    let rc_tuple = errors_tuple.clone();
+
+
     interface.tag.connect_clicked({
         move |_| {
             dialog.run();
@@ -636,8 +643,11 @@ pub fn handle_tag(interface: &RustInterface) {
             tl_box.foreach(|child| {
                 tl_box.remove(child);
             });
-            let _ = VersionControlSystem::tag(TagOptions::Delete(&t_entry.text()));
-            draw_message(&tl_box, &"      TAG DELETED SUCCESSFULLY!     ".to_string(), 0.5);
+            if VersionControlSystem::tag(TagOptions::Delete(&t_entry.text())).is_ok() {
+                draw_message(&tl_box, &"      TAG DELETED SUCCESSFULLY!     ".to_string(), 0.5);
+            }else {
+                draw_error(rc_tuple.clone(), &"      THE TAG DOESN'T FOUND...    ".to_string(), &t_entry);
+            }
             tl_box.set_visible(true);
             t_entry.set_text("");
             button.set_sensitive(false);
@@ -655,7 +665,6 @@ pub fn handle_tag(interface: &RustInterface) {
             t_box.set_visible(true);
             entry.set_text("");
             m_entry.set_text("");
-            button.set_sensitive(false);
         } 
     });
 
@@ -736,6 +745,173 @@ pub fn handle_show_ref(interface: &RustInterface) {
 
 }
 
+
+pub fn handle_remote(interface: &RustInterface) {
+
+    let dialog = interface.remote_options_dialog.clone();
+    let add_dialog = interface.remote_add_dialog.clone();
+    let remove_dialog = interface.remote_remove_dialog.clone();
+    let get_dialog = interface.remote_get_dialog.clone();
+    let n_add_entry = interface.repo_name_add_remote.clone();
+    let p_entry = interface.path_remote.clone();
+    let a_box = interface.box_add_remote.clone();
+    let r_box = interface.box_remove_remote.clone();
+    let g_box = interface.box_get_remote.clone();
+    let n_remove_entry = interface.repo_name_remove_remote.clone();
+    let n_get_entry = interface.repo_name_get_remote.clone();
+
+
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+
+    let rc_tuple = errors_tuple.clone();
+
+    interface.remote.connect_clicked({
+       move |_| {
+            dialog.run();
+            dialog.hide();
+       } 
+    });
+
+    interface.remote_add.connect_clicked({
+        move |_| {
+            a_box.foreach(|child|{
+                a_box.remove(child);
+            });
+            add_dialog.run();
+            add_dialog.hide();
+        }
+    });
+
+    interface.remote_remove.connect_clicked({
+        move |_| {
+            r_box.foreach(|child|{
+                r_box.remove(child);
+            });
+            remove_dialog.run();
+            remove_dialog.hide();
+        }
+    });
+
+    interface.remote_get.connect_clicked({
+        move |_| {
+            g_box.foreach(|child|{
+                g_box.remove(child);
+            });
+            get_dialog.run();
+            get_dialog.hide();
+        }
+    });
+
+
+    interface.enter_add_remote.connect_clicked({
+        let a_box = interface.box_add_remote.clone();
+       move |_| {
+            a_box.foreach(|child|{
+                a_box.remove(child);
+            });
+            if let Ok(response) = VersionControlSystem::remote(RemoteOption::Add(n_add_entry.text().as_str(), p_entry.text().as_str())){
+                if response == RESPONSE_OK_REMOTE {
+                    draw_message(&a_box, &"     ADD REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
+                } else {
+                    draw_error(rc_tuple.clone(), &"CAN'T REMOTE".to_string(), &n_add_entry);
+                }
+                p_entry.set_text("");
+                n_add_entry.set_text("");
+            } 
+        }
+    });
+
+    interface.delete_repo_remote.connect_clicked({
+        let r_box = interface.box_remove_remote.clone();
+        let rc_tuple = errors_tuple.clone();
+        move |_| {
+            r_box.foreach(|child|{
+                r_box.remove(child);
+            });
+             if let Ok(response) = VersionControlSystem::remote(RemoteOption::Remove(n_remove_entry.text().as_str())){
+                 if response == RESPONSE_OK_REMOTE {
+                     draw_message(&r_box, &"     REMOVE REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
+                 } else {
+                     draw_error(rc_tuple.clone(), &"CAN'T REMOVE".to_string(), &n_remove_entry);
+                 }
+                 n_remove_entry.set_text("");
+             } 
+         }
+     });
+
+     interface.get_repo_remote.connect_clicked({
+        let g_box = interface.box_get_remote.clone();
+        let rc_tuple = errors_tuple.clone();
+        move |_| {
+            g_box.foreach(|child|{
+                g_box.remove(child);
+            });
+            if let Ok(path) = VersionControlSystem::remote(RemoteOption::Get(n_get_entry.text().as_str())){
+                draw_message(&g_box, &path.to_string(), 0.5);}
+            else {
+                draw_error(rc_tuple.clone(), &"CAN'T REMOVE".to_string(), &n_get_entry);
+            }
+            n_get_entry.set_text("");
+         }
+     });
+
+     interface.remote_close.connect_clicked({
+        let dialog = interface.remote_options_dialog.clone();
+        move |_| {
+            dialog.hide();
+        }
+     });
+
+}
+
+pub fn handle_rebase(interface: &RustInterface) {
+    let dialog = interface.rebase_dialog.clone();
+    let r_box = interface.rebase_box.clone();
+    let r_enter = interface.rebase_enter.clone();
+    let r_entry = interface.rebase_entry.clone();
+
+    interface.rebase_enter.set_sensitive(false);
+    interface.rebase_box.set_visible(false);
+
+    let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
+    let rc_tuple = errors_tuple.clone();
+
+    interface.rebase_entry.connect_changed({
+       move |e| {
+            r_enter.set_sensitive(!e.text().is_empty());
+       } 
+    });
+
+    interface.rebase.connect_clicked({
+        move |_| {
+            dialog.run();
+            dialog.hide();
+        } 
+    });
+
+    interface.rebase_enter.connect_clicked({
+       move |button| {
+            r_box.foreach(|child| {
+                r_box.remove(child);
+            });
+            if VersionControlSystem::rebase(&r_entry.text().to_string()).is_ok() {
+                draw_message(&r_box, &"     REBASE SUCCESSFULLY!    ".to_string(), 0.5);
+            }else{
+                draw_error(rc_tuple.clone(), &"      ERROR: THE BRANCH NAME NOT FOUND ...    ".to_string(), &r_entry);
+            }
+            button.set_sensitive(false);
+            r_entry.set_text("");
+       } 
+    });
+
+    interface.rebase_cancel.connect_clicked({
+        let dialog = interface.rebase_dialog.clone();
+        move |_| {
+            dialog.hide();
+        }
+    });
+}
+
  
 pub fn handle_clone(interface: &RustInterface) {
     
@@ -790,86 +966,134 @@ pub fn handle_clone(interface: &RustInterface) {
 
  
 pub fn handle_fetch(interface: &RustInterface) {
+    let rc_dialog = interface.pull_push_fetch_dialog.clone();
+    let rc_box = interface.pull_push_fetch_box.clone();
+    let rc_button = interface.fetch_enter.clone();
+    let rc_branch = interface.select_branch.clone();
+    let r_entry = interface.fetch_entry.clone();
     let dialog = interface.fetch_dialog.clone();
-    let rc_box = interface.fetch_box.clone();
+    let button = interface.pull_push_fetch_close.clone();
+
+    interface.fetch_enter.set_sensitive(false);
+
+    interface.fetch_entry.connect_changed({
+       move |e| {
+            rc_button.set_sensitive(!e.text().is_empty());
+       } 
+    });
 
     interface.fetch.connect_clicked({
         move |_| {
             rc_box.foreach(|child| {
                 rc_box.remove(child);
             });
-            let _ = VersionControlSystem::fetch("git fetch".to_string());
-            draw_message(&rc_box, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
-            dialog.run();
-            dialog.hide();
+            if let Ok(remote_names) = Remote::read_remote_names() {
+                if remote_names.len() > 1 {
+                    dialog.run();
+                    dialog.hide();
+                }else {
+                    draw_push_pull_fetch(&rc_branch, "git fetch origin".to_string(), &rc_box, &"FETCH".to_string(),&rc_dialog, &button);
+                }
+            }
         }
     });
 
-    interface.fetch_close.connect_clicked({
-        let dialog2 = interface.fetch_dialog.clone();
+    interface.fetch_enter.connect_clicked({
+        let rc_branch = interface.select_branch.clone();
+        let rc_dialog = interface.pull_push_fetch_dialog.clone();
+        let rc_box = interface.pull_push_fetch_box.clone();
+        let button = interface.pull_push_fetch_close.clone();
         move |_| {
-            dialog2.hide();
-        }
+            draw_push_pull_fetch(&rc_branch, format!("git fetch {}", r_entry.text().to_string()),&rc_box, &"FETCH".to_string(),&rc_dialog, &button);
+        } 
     });
 }
 
 pub fn handle_pull(interface: &RustInterface) {
-    let info = interface.info_pull_push.clone();
 
-    interface.info_pull_push.set_visible(false);
+    let rc_dialog = interface.pull_push_fetch_dialog.clone();
+    let rc_box = interface.pull_push_fetch_box.clone();
+    let rc_button = interface.pull_enter.clone();
+    let rc_branch = interface.select_branch.clone();
+    let r_entry = interface.pull_entry.clone();
+    let dialog = interface.pull_dialog.clone();
+    let button = interface.pull_push_fetch_close.clone();
+
+    interface.pull_enter.set_sensitive(false);
+
+    interface.pull_entry.connect_changed({
+       move |e| {
+            rc_button.set_sensitive(!e.text().is_empty());
+       } 
+    });
 
     interface.pull.connect_clicked({
+        move|_| {
+            if let Ok(remote_names) = Remote::read_remote_names() {
+                if remote_names.len() > 1 {
+                    dialog.run();
+                    dialog.hide();
+                }else {
+                    draw_push_pull_fetch(&rc_branch, "git pull origin".to_string(), &rc_box, &"PULL".to_string(), &rc_dialog, &button);
+                }
+            }
+        }
+    });
+
+    interface.pull_enter.connect_clicked({
+        let rc_branch = interface.select_branch.clone();
+        let rc_dialog = interface.pull_push_fetch_dialog.clone();
+        let rc_box = interface.pull_push_fetch_box.clone();
+        let button = interface.pull_push_fetch_close.clone();
         move |_| {
-            info.foreach({|child|{
-                info.remove(child);
-            }});
-            let _ = VersionControlSystem::git_pull();
-            let close = Button::builder()
-                .label("close")
-                .build();
-                close.set_visible(true);
-                draw_message(&info, &"    PULL SUCCESSFULLY!     ".to_string(), 0.5);
-                info.add(&close);
-                info.set_visible(true);
-                close.connect_clicked({
-                    let info = info.clone();
-                    move |_| {
-                        info.foreach({|child|{
-                            info.remove(child);
-                        }});
-                    }
-                });
+
+            draw_push_pull_fetch(&rc_branch, format!("git pull {}", r_entry.text().to_string()),&rc_box, &"PULL".to_string(), &rc_dialog, &button);
         } 
     });
 }
 
 
 pub fn handle_push(interface: &RustInterface) {
-    let info = interface.info_pull_push.clone();
 
-    interface.info_pull_push.set_visible(false);
+    let rc_dialog = interface.pull_push_fetch_dialog.clone();
+    let rc_box = interface.pull_push_fetch_box.clone();
+    let rc_button = interface.push_enter.clone();
+    let rc_branch = interface.select_branch.clone();
+    let r_entry = interface.push_entry.clone();
+    let dialog = interface.push_dialog.clone();
+    let button = interface.pull_push_fetch_close.clone();
+
+    interface.push_enter.set_sensitive(false);
+
+    interface.push_entry.connect_changed({
+       move |e| {
+            rc_button.set_sensitive(!e.text().is_empty());
+       } 
+    });
 
     interface.push.connect_clicked({
+        move|_| {
+            if let Ok(remote_names) = Remote::read_remote_names() {
+                if remote_names.len() > 1 {
+                    dialog.run();
+                    dialog.hide();
+                }else {
+                    draw_push_pull_fetch(&rc_branch, "git push origin".to_string(), &rc_box, &"PUSH".to_string(), &rc_dialog, &button);
+                }
+            }
+        }
+    });
+
+    interface.push_enter.connect_clicked({
+        let rc_branch = interface.select_branch.clone();
+        let rc_dialog = interface.pull_push_fetch_dialog.clone();
+        let rc_box = interface.pull_push_fetch_box.clone();
+        let button = interface.pull_push_fetch_close.clone();
         move |_| {
-            info.foreach({|child|{
-                info.remove(child);
-            }});
-            let _ = VersionControlSystem::push("git push".to_string());
-            let close = Button::builder()
-                .label("close")
-                .build();
-                close.set_visible(true);
-                draw_message(&info, &"    PUSH SUCCESSFULLY!     ".to_string(), 0.5);
-                info.add(&close);
-                info.set_visible(true);
-                close.connect_clicked({
-                    let info = info.clone();
-                    move |_| {
-                        info.foreach({|child|{
-                            info.remove(child);
-                        }});
-                    }
-                });
+            draw_push_pull_fetch(&rc_branch, format!("git push {}", r_entry.text().to_string()),&rc_box, &"PUSH".to_string(), &rc_dialog, &button);
         } 
     });
+
 }
+
+

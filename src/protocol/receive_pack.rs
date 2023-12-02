@@ -1,9 +1,11 @@
+use crate::constants::constant::COMMIT_INIT_HASH;
+use crate::packfiles::tag_file::{get_tags, exclude_tag_ref, create_tag_files};
 use crate::vcs::commands::branch::Branch;
 use crate::vcs::commands::cat_file::CatFile;
 use crate::vcs::entities::entity::convert_to_repository;
 use crate::vcs::entities::tree_entity::TreeEntity;
 use crate::vcs::files::commits_table::CommitsTable;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{OpenOptions, self, File};
 use std::io::{Write, self};
 use std::net::Shutdown;
@@ -25,11 +27,11 @@ use crate::vcs::files::repository::Repository;
 
 pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<String, std::io::Error> {
     println!("-----------start_handler_receive in-------------- \n\n");    
-    println!("PATH CLIENTE   en start_handler_receive \n {:?}", server_client_path );
+    println!("PATH CLIENTE   en start_handler_receive  {:?}\n", server_client_path );
 
     let old_new_hash_commit = handler_receive_pack(writer)?;
 
-    let (_, _ )= extract_branch_name(old_new_hash_commit.to_string())?;
+    //let (_, _ )= extract_branch_name(old_new_hash_commit.to_string())?;
     
     println!("Received from packet: ---> {:?}", old_new_hash_commit); //lo recibe porque lo manda el cliente, pero daemon no hace nada con eso
     //ni crea la rama si no la tiene, pero eso si lo tenems que hacer almenos
@@ -43,10 +45,17 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
 
 fn extract_branch_name(old_new_hash_commit: String) ->  Result<(String, String), std::io::Error> {
     let parts: Vec<&str> = old_new_hash_commit.split_whitespace().collect();
+    // incluyen referencias de ramas o tags 
+    // old_hash new_hash nombre_rama
+    // tags 
     let last_commit_client = parts[1];
     let branch_name = parts[2].trim_start_matches("refs/heads/").trim_end_matches('\n');
     Ok((branch_name.to_owned(), last_commit_client.to_string()))
 }
+
+
+
+//fn extract_refs_tags()
 
 fn recovery_last_commit_for_each_branch(server_client_path: &Path) -> Result<Vec<(String, String)>, io::Error> {
     let logs_path = server_client_path.join(".rust_git").join("logs");
@@ -70,6 +79,9 @@ fn recovery_last_commit_for_each_branch(server_client_path: &Path) -> Result<Vec
 }
 
 fn extract_last_commit(log_content: &str) -> Result<String, io::Error> {
+    if log_content.is_empty() {
+        return Ok(COMMIT_INIT_HASH.to_string());
+    }
     let last_line = log_content.lines().last().ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log file is empty"))?;
     let line_parts: Vec<&str> = last_line.split('-').collect();
     let last_commit = line_parts.get(2).ok_or(io::Error::new(io::ErrorKind::InvalidData, "Log line is malformed"))?;
@@ -81,9 +93,19 @@ fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: 
     
     for (last_commit, branch_server_name) in last_commit_and_branch{
         let update_info = format!("{} refs/heads/{}\n",last_commit, branch_server_name);
+
         let info_to_pkt_line = to_pkt_line(&update_info);
         println!("Mi pedido del server al cliente {:?}\n\n", info_to_pkt_line);
         writer.write_all(info_to_pkt_line.as_bytes())?;
+    }
+
+    //agregar enviar todos los tags que tenga
+    let tags_exist = get_tags(server_client_path)?;
+
+    for tag in tags_exist{
+        let tag_to_pkt_line = to_pkt_line(&tag);
+        println!("Mi pedido de los tags al cliente es: {:?}\n\n", tag_to_pkt_line);
+        writer.write_all(tag_to_pkt_line.as_bytes())?;
     }
 
     let msg_done = "0000";
@@ -118,7 +140,14 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
 
     println!("::::::::::::::Mi lista de refs que recibo es :  --->{:?}\n" , receive_refs);    
 
-    change_current_branch(receive_refs, &server_client_path)?;
+    
+    let (list_tags, branchs_refs) = exclude_tag_ref(receive_refs)?;
+    change_current_branch(branchs_refs.clone(), &server_client_path)?;
+    println!("::::LIST TAG ANTES DEL CREATE TAG FILES --->{:?}\n" , list_tags);    
+
+    let set: HashSet<String> = list_tags.into_iter().collect();
+    let unique_list_tags: Vec<String> = set.into_iter().collect();
+    create_tag_files(unique_list_tags, &server_client_path)?;    //recibo refs de ultimos branchs  y al final los de tags
 
     // aca espero la PACKDATA
     let objects = Clone::get_socket_response(writer)?;
@@ -204,9 +233,7 @@ pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &Path, _l
     for(commit_hash, commit_entity ) in &hashes_sorted{
         write_commit_log_push(&commit_entity.parent_hash, commit_hash, commit_entity, repo_server_client.to_path_buf())?;
     }
-
-
-
+    println!("UPDATE REPO EN {:?}\n",repo_server_client);
     update_cd(repo_server_client)?;
 
     Ok(())
@@ -243,7 +270,7 @@ fn write_commit_log_push(last_commit_hash: &String, new_commit_hash: &String, co
 
 pub fn update_cd(path: &Path) -> Result<(), std::io::Error>{
     println!("REPO PATH --> {:?}", path);
-    let repository_hashmap = Repository::read(path)?;
+    let repository_hashmap = read(path)?;
     println!("repository_hashmap--> {:?}", repository_hashmap);
 
     delete_all_files_and_folders(path)?;
@@ -251,13 +278,11 @@ pub fn update_cd(path: &Path) -> Result<(), std::io::Error>{
     for (key, value) in repository_hashmap{
         let content = CatFile::cat_file(&value, Init::get_object_path(path)?)?;
         println!("CONTENT ----------->{}", content);
-        
-        if let Some(first_component) = path.display().to_string().split('/').next(){
-            // Crear un nuevo PathBuf con el nombre de archivo base y la clave
-            let path_server = Path::new(first_component).join(key.clone());
-            println!("key ---> {:?}\n", key);
-            create_file_and_their_folders(&path_server, &content)?
-        }
+        let path_server = Path::new(&key);
+        println!("path_server ---> {:?}\n", key);
+
+        println!("key ---> {:?}\n", key);
+        create_file_and_their_folders(&path_server, &content)?
     }
     Ok(())
 }
@@ -268,7 +293,7 @@ pub fn read(repo_path: &Path) -> Result<HashMap<String,String>,std::io::Error>{
     let current_commit_hash = CurrentCommit::read_for_branch(repo_path, current_branch)?;
 
     let mut local_repository: HashMap<String, String>  = HashMap::new();
-    local_repository.extend(Repository::read_repository_of_commit(repo_path.to_path_buf(), current_branch, &current_commit_hash)?);
+    local_repository.extend(read_repository_of_commit(repo_path.to_path_buf(), current_branch, &current_commit_hash)?);
     Ok(local_repository)
 }
 

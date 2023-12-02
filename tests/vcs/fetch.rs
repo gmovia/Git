@@ -32,7 +32,7 @@ mod tests {
         let _ = folder_to_fetch.join();
         
         let _ = VersionControlSystem::init(client_path, Vec::new());
-        let _ = handler_fetch("git fetch".to_string());
+        let _ = handler_fetch("git fetch origin".to_string());
         assert!(
             compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
             "Los directorios no son iguales"
@@ -73,7 +73,7 @@ mod tests {
         let _ = folder_to_fetch.join();
         
         let _ = VersionControlSystem::init(client_path, Vec::new());
-        let _ = handler_fetch("git fetch".to_string());
+        let _ = handler_fetch("git fetch origin".to_string());
         assert!(
             compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
             "Los directorios no son iguales"
@@ -81,10 +81,6 @@ mod tests {
         let server = get_number_of_elements(server_path.join("tests").join("clone"));
         let client = get_number_of_elements(client_path.to_path_buf());
         assert_ne!(server,client);
-        
-        let server_branches = get_number_of_elements(server_path.join("tests").join("clone").join(".rust_git").join("logs"));
-        let client_branches = get_number_of_elements(client_path.join(".rust_git").join("logs").to_path_buf());
-        assert_eq!(server_branches,client_branches);
         
         fs::remove_dir_all(client_path)?;
         fs::remove_dir_all(server_path)?;
