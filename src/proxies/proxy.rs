@@ -14,11 +14,9 @@ impl Proxy{
     }
 
     pub fn write_tree(repo_path: &Path, content: &str) -> Result<String, std::io::Error>{
-
         let entity_strings: Vec<&str> = content.split('\n')
         .filter(|&s| !s.is_empty())
         .collect();
-    
         let tree_path = Path::new(&repo_path).join(Random::random());
         let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&tree_path)?; 
     
@@ -51,8 +49,8 @@ impl Proxy{
         BlobEntity::read(repo_path, blob_hash)
     }
 
-    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
-        if let Ok( entity) = RefDeltaEntity::write(repo_path, content) {
+    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
+        if let Ok( entity) = RefDeltaEntity::write(repo_path, content, &mut blobs) {
             return Ok(entity);
         }
         else {

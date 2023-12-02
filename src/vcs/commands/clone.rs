@@ -90,15 +90,16 @@ impl Clone{
         let mut branchs: HashMap<String, String> = HashMap::new();
 
         let objects_processed = Self::process_folder(objects.to_vec());
+        
         for obj in &objects_processed{
             println!("-->{:?}", obj);
         }
         let mut commits_created = Self::create_folders(objects_processed.clone(), repo);
 
         let delta_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 7).cloned().collect();
+        let mut blob_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 2).cloned().collect();
         for (_, inner_vec) in delta_objects {
-            // Tendria que devolver los commits para agregarlos a commits created
-            if let Ok( commits) = Self::process_delta_object( &inner_vec, repo) {
+            if let Ok( commits) = Self::process_delta_object( &inner_vec, repo, &mut blob_objects) {
                 if !commits.is_empty() {
                     for commit in commits {
                         println!("COMIIT ACA: {:?}", commit);
@@ -107,8 +108,6 @@ impl Clone{
                 }
             }
         }
-
-        println!("COMMITS CREATED: {:?}", commits_created);
 
         for item in list_refs {
             if item.contains("HEAD") {
@@ -185,7 +184,7 @@ impl Clone{
     }
 
 
-    fn process_delta_object(inner_vec: &Vec<u8>, repo_path: &Path) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
+    fn process_delta_object(inner_vec: &Vec<u8>, repo_path: &Path, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
         let hash_base_object: String = (&inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
         let decompres_data = &inner_vec[20..];
     
@@ -193,7 +192,7 @@ impl Clone{
                 base_object_hash: hash_base_object.clone(),
                 data: decompres_data.to_vec(), 
             };
-        let commit = Proxy::write_ref_delta(repo_path, delta_entity)?;
+        let commit = Proxy::write_ref_delta(repo_path, delta_entity, &mut blobs)?;
         Ok(commit)
     }
 

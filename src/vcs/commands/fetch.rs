@@ -62,8 +62,9 @@ impl Fetch {
         
         
         let delta_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 7).cloned().collect();
+        let mut blob_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 2).cloned().collect();
         for (_, inner_vec) in delta_objects {
-            if let Ok( commits) = Self::process_delta_object( &inner_vec, client_path) {
+            if let Ok( commits) = Self::process_delta_object( &inner_vec, client_path, &mut blob_objects) {
                 if !commits.is_empty() {
                     for commit in commits {
                         println!("COMIIT ACA: {:?}", commit);
@@ -100,7 +101,7 @@ impl Fetch {
         (number, String::from_utf8_lossy(inner_vec).to_string())
     }
 
-    fn process_delta_object(inner_vec: &Vec<u8>, repo_path: &Path) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
+    fn process_delta_object(inner_vec: &Vec<u8>, repo_path: &Path, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
         let hash_base_object: String = (&inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
         let decompres_data = &inner_vec[20..];
     
@@ -108,7 +109,7 @@ impl Fetch {
                 base_object_hash: hash_base_object.clone(),
                 data: decompres_data.to_vec(), 
             };
-        let commit = Proxy::write_ref_delta(repo_path, delta_entity)?;
+        let commit = Proxy::write_ref_delta(repo_path, delta_entity, &mut blobs)?;
         Ok(commit)
     }
 

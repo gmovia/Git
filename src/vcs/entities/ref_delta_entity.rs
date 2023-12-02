@@ -1,6 +1,6 @@
-use std::{path::Path, fs::{OpenOptions, self}, io::Write};
+use std::{path::{Path, Prefix}, fs::{OpenOptions, self}, io::{Write, Read, self}};
 
-use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{OBJ_REF_DELTA_CODE, COMMIT_CODE, BLOB_CODE, TREE_CODE}};
+use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{OBJ_REF_DELTA_CODE, COMMIT_CODE, BLOB_CODE, TREE_CODE}, proxies::proxy::Proxy};
 
 use super::commit_entity::CommitEntity;
 
@@ -18,7 +18,7 @@ pub struct RefDeltaEntity{
 
 impl RefDeltaEntity{
     
-    pub fn write(repo_path: &Path, ref_delta: RefDeltaEntity) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
+    pub fn write(repo_path: &Path, ref_delta: RefDeltaEntity, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
         let mut commit: Vec<(String, CommitEntity)> = Vec::new();
         let delta_path = Path::new(&repo_path).join(Random::random());
         let mut delta_file = OpenOptions::new().write(true).create(true).append(true).open(&delta_path)?;
@@ -46,14 +46,49 @@ impl RefDeltaEntity{
                 let positions = Self::positions(&ref_delta.data[position..])?;
 
                 println!("POSICIONES: {} - {}", positions.0, positions.1);
-                let copy_content: &str;
+                let mut copy_content: &str = "Error";
                 if base_object_content.contains("100644") || base_object_content.contains("40000") {
-                    if let Some(text) = Self::get_blob_content(&base_object_content, positions.1 as usize) {
-                        copy_content = &text;
+                    println!("ACA ENTRA EL BLOB");
+                    println!("BLOBS ANTERIORES: {:?}", blobs);
+                    let mut counter = 0;
+                    for (iter, blob) in blobs.clone().iter().enumerate() {
+                        let new_blob = Self::process_tree_object(blob.0, &blob.1);
+                        let hash = Proxy::write_tree(repo_path, &new_blob.1)?;
+                        println!("DIFERENCIA = {} - {}",ref_delta.base_object_hash, hash);
+                        if ref_delta.base_object_hash == hash {
+                            let content_bytes = &blob.1[..positions.1 as usize];
+                            let content = Self::process_tree_object(blob.0, &content_bytes.to_vec());
+                            println!("REPO PATH: {:?} - CONTENIDO: {}", repo_path, content.1);
+                            let new_hash = Proxy::write_tree(repo_path, &content.1)?;
+                            //ACA ESTa EL PROBLEMA EL CONTENT.1 QUE TENGO QUE HACER PUSH ES EL POSTA DE GIT
+                            println!("NEW HASH BLOB: {}", new_hash);
+                            println!("CONTENIDO: {}", content.1);
+                            counter += 1;
+                            break;
+                        }else if iter == blobs.len()+counter-1{
+                            println!("ENTRA AL COUNTER");
+                            if let Some(text) = Self::get_blob_content(&base_object_content, positions.1 as usize) {
+                                copy_content = &text;
+                                println!("COPY CONTENT: {}", copy_content);
+                                delta_file.write_all(copy_content.as_bytes())?;
+                                HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?; 
+                            }
+                            else {
+                                return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta blob"));
+                            }
+                        }
+                        else {
+                            println!("ITER: {}, BLOB LEN: {}", iter, blobs.len()+counter-1)
+                        }
                     }
-                    else {
-                        return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta blob"));
-                    }
+                    
+                    println!("EL POSTA ES: {}",base_object_content);
+                    //if let Some(text) = Self::get_blob_content(&base_object_content, positions.1 as usize) {
+                    //    copy_content = &text;
+                    //}
+                    //else {
+                    //    return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta blob"));
+                    //}
                 }
                 else {
                     copy_content = &base_object_content[positions.0 as usize..positions.1 as usize];   
@@ -79,7 +114,7 @@ impl RefDeltaEntity{
             commit.push((ref_delta_hash, commit_entity));
         }
         else if base_object_content.contains("100644") || base_object_content.contains("40000") {
-            HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?; 
+            //HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?; 
         }
         else {
             HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, BLOB_CODE)?;    
@@ -91,7 +126,65 @@ impl RefDeltaEntity{
     fn is_bit_set(byte: u8) -> bool {
         let mask = 0b10000000;
         (byte & mask) == mask
+    }   
+    
+    fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
+            let mut reader = inner_vec.as_slice();
+        
+            if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
+                let entry_string: String = entries
+                    .iter()
+                    .map(|(mode, name, sha1)| {
+                        let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
+                        format!("{}-  {}-{}", mode, name, hex_string)
+                    })
+                    .collect::<Vec<String>>()
+                    .join("\n");
+                println!("ENTRY STRING: {}", entry_string);
+                (number, entry_string)
+            } else {
+                eprintln!("Error decoding the tree object");
+                (number, String::new())
+            }
     }
+
+    fn read_tree_sha1<R: Read>(reader: &mut R) -> io::Result<Vec<(String, String, Vec<u8>)>> {
+        let mut entries = Vec::new();
+        while let Ok(entry) = Self::read_tree_entry(reader) {
+            entries.push(entry);
+        }
+    
+        Ok(entries)
+    }
+
+
+    fn read_tree_entry<R: Read>(reader: &mut R) -> io::Result<(String, String, Vec<u8>)> {
+        let mut mode_bytes = [0; 6];
+        reader.read_exact(&mut mode_bytes)?;
+    
+        let binding = String::from_utf8_lossy(&mode_bytes[..]);
+        let mode_str = binding.trim();    
+        let name = Self::read_cstring(reader)?;
+    
+        let mut sha1 = vec![0; 20];
+        reader.read_exact(&mut sha1)?;
+
+        Ok((mode_str.to_string(), name, sha1))
+    }
+
+    fn read_cstring<R: Read>(reader: &mut R) -> io::Result<String> {
+        let mut buffer = Vec::new();
+        loop {
+            let mut byte = [0];
+            reader.read_exact(&mut byte)?;
+            if byte[0] == 0 {
+                break;
+            }
+            buffer.push(byte[0]);
+        }
+        Ok(String::from_utf8_lossy(&buffer).to_string())
+    }
+
 
     fn positions(bytes: &[u8]) -> Result<(u32,u32,usize), std::io::Error> {
         let initial_position: u32;
