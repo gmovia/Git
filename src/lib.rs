@@ -91,6 +91,7 @@ pub mod vcs{
         pub mod commits_table;
         pub mod repositories;
         pub mod config;
+        pub mod log;
     }
 
     pub mod commands{

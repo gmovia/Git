@@ -1,6 +1,6 @@
 use std::{path::Path, collections::HashMap};
 use gtk::{prelude::*, Button, ComboBoxText};
-use crate::{vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::repositories::Repositories}, handlers::branch};
+use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::{repositories::Repositories, log::Log}};
 
 
 pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
@@ -181,10 +181,11 @@ pub fn draw_message(m_changes: &gtk::Box, message: &String, align: f32) {
 }
 
 pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_entry: &gtk::Entry) {
+    let _ = Log::write_log(&format!("'{}'\n",message.to_uppercase().clone()));
     errors.1.foreach(|child| {
         errors.1.remove(child);
     });
-    draw_message(&errors.1, message, 2.0);
+    draw_message(&errors.1, &message.to_uppercase(), 2.0);
 
     errors.0.style_context().add_class("custom-error-dialog");
 
@@ -192,7 +193,6 @@ pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_en
     errors.0.hide();
 
     c_entry.set_text("");
-
 }
 
 pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: &gtk::Box, message: &String, dialog: &gtk::Dialog, button: &gtk::Button) {
