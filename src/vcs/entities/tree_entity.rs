@@ -21,14 +21,14 @@ impl TreeEntity{
             match entity{
                 Entity::Blob(blob) => {
                     if let Some(filename) = Path::new(&blob.path).file_name(){
-                        let entry = format!("100644 {} {} {}\n", blob.content_type, blob.blob_hash, filename.to_string_lossy());
+                        let entry = format!("100644 {} {}    {}\n", blob.content_type, blob.blob_hash, filename.to_string_lossy());
                         tree_file.write_all(entry.as_bytes())?;
                     }
                 },
                 Entity::Tree(tree) => {
                     let tree_hash = TreeEntity::write(repo_path, &tree.entities)?;
                     if let Some(filename) = Path::new(&tree.path).file_name(){
-                        let entry = format!("40000 {} {} {}\n", tree.content_type, tree_hash, filename.to_string_lossy());
+                        let entry = format!("40000 {} {}    {}\n", tree.content_type, tree_hash, filename.to_string_lossy());
                         tree_file.write_all(entry.as_bytes())?;
                     }
                 }

@@ -14,3 +14,17 @@ fn main() -> Result<(), std::io::Error>{
     }
     Ok(())
 }
+
+/* 
+fn main() -> Result<(), std::io::Error>{
+    let _ = VersionControlSystem::init(Path::new("test_delta"), Vec::new());
+
+    loop{
+        let mut input = String::new();
+        io::stdout().flush().unwrap();
+        io::stdin().read_line(&mut input).unwrap();
+        handler_command( &input);
+    }
+
+}
+*/

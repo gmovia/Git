@@ -1,5 +1,5 @@
 use std::{net::TcpStream, path::Path, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
-use crate::{packfiles::{packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, tag_file::{process_refs_tag, exclude_tag_ref, create_tag_files, process_refs_old_new, create_tag_folder}}, vcs::{commands::branch::Branch, entities::commit_entity::CommitEntity, files::current_repository::CurrentRepository}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH, BLOB_CODE_NUMBER, TAG_CODE_NUMBER, COMMIT_CODE_NUMBER}, proxies::proxy::Proxy, utils::randoms::random::Random};
+use crate::{packfiles::{packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, tag_file::{process_refs_tag, exclude_tag_ref, create_tag_files, process_refs_old_new, create_tag_folder}}, vcs::{commands::branch::Branch, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH, BLOB_CODE_NUMBER, TAG_CODE_NUMBER, COMMIT_CODE_NUMBER}, proxies::proxy::Proxy, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 
 pub struct Fetch;
@@ -64,8 +64,22 @@ impl Fetch {
         for obj in &objects_processed{
             println!("-->{:?}", obj);
         }
-        let commits_created = Self::create_folders(objects_processed.clone(), client_path)?;
+        let mut commits_created = Self::create_folders(objects_processed.clone(), client_path)?;
         
+        
+        let delta_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 7).cloned().collect();
+        let mut blob_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 2).cloned().collect();
+        for (_, inner_vec) in delta_objects {
+            if let Ok( commits) = Self::process_delta_object( &inner_vec, client_path, &mut blob_objects) {
+                if !commits.is_empty() {
+                    for commit in commits {
+                        println!("COMIIT ACA: {:?}", commit);
+                        commits_created.insert(commit.0, commit.1);
+                    }
+                }
+            }
+        }
+
 
         for item in list_refs {
             if item.contains("HEAD") {
@@ -94,6 +108,18 @@ impl Fetch {
         (number, String::from_utf8_lossy(inner_vec).to_string())
     }
 
+    fn process_delta_object(inner_vec: &Vec<u8>, repo_path: &Path, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
+        let hash_base_object: String = (&inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
+        let decompres_data = &inner_vec[20..];
+    
+        let delta_entity = RefDeltaEntity {
+                base_object_hash: hash_base_object.clone(),
+                data: decompres_data.to_vec(), 
+            };
+        let commit = Proxy::write_ref_delta(repo_path, delta_entity, &mut blobs)?;
+        Ok(commit)
+    }
+
     fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
         if std::str::from_utf8(inner_vec).is_ok() {
             let blobs: Vec<String> = String::from_utf8_lossy(inner_vec).split('\n').map(String::from).collect();
@@ -103,7 +129,7 @@ impl Fetch {
                 if blob_parts.len() == 3 {
                     let path = Path::new(blob_parts[1]);
                     if let Some(file_name) = path.file_name() {
-                        string_to_send = format!("{}{}-{}-{}\n", string_to_send, blob_parts[0], file_name.to_string_lossy(), blob_parts[2]);  
+                        string_to_send = format!("{}{}-   {}-{}\n", string_to_send, blob_parts[0], file_name.to_string_lossy(), blob_parts[2]);  
                     }
                 }                      
             }
@@ -434,16 +460,34 @@ impl Fetch {
                 break;
             }
             let objet_type = Self::get_object_type(pack[position]);
+            println!("\nOBJECT TYPE: {}\n", objet_type);
             while Self::is_bit_set(pack[position]) {
                 position += 1;
             }
             position += 1;
 
-            if let Ok(data) = decompress_data(&pack[position..]) {
-                println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
-                println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                position += data.1 as usize; 
-                objects.push((objet_type, data.0))   
+            if objet_type == 7 {
+                let mut base_object = pack[position..position+20].to_vec();
+                let hex_representation: String = base_object.iter().map(|b| format!("{:02x}", b)).collect();
+                println!("BASE OBJECT: {}", hex_representation);
+                position += 20;
+                if let Ok(data) = decompress_data(&pack[position..]) {
+                    println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
+                    println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                    println!("DATA EN BYTES: {:?}", data); 
+                    position += data.1 as usize;
+                    base_object.extend_from_slice(&data.0); 
+                    println!("BASE + DATA EN BYTES: {:?}", base_object);
+                    objects.push((objet_type, base_object));   
+                }
+            }
+            else {
+                if let Ok(data) = decompress_data(&pack[position..]) {
+                    println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
+                    println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                    position += data.1 as usize; 
+                    objects.push((objet_type, data.0))   
+                }   
             }
         }
         objects.sort_by(|a, b| a.0.cmp(&b.0));
