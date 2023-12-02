@@ -122,7 +122,7 @@ impl Fetch {
                 if blob_parts.len() == 3 {
                     let path = Path::new(blob_parts[1]);
                     if let Some(file_name) = path.file_name() {
-                        string_to_send = format!("{}{}-{}-{}\n", string_to_send, blob_parts[0], file_name.to_string_lossy(), blob_parts[2]);  
+                        string_to_send = format!("{}{}-   {}-{}\n", string_to_send, blob_parts[0], file_name.to_string_lossy(), blob_parts[2]);  
                     }
                 }                      
             }
