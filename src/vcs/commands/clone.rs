@@ -25,8 +25,6 @@ impl Clone{
                         if packet.contains("fatal error") {
                             return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
                         }
-                        
-                        println!("ACA PACKETTT ---> {:?} \n", packet);
                         packets.push(packet);
                     }
                 }
@@ -52,9 +50,6 @@ impl Clone{
 
         let objects_processed = Self::process_folder(objects.to_vec());
         
-        for obj in &objects_processed{
-            println!("-->{:?}", obj);
-        }
         let mut commits_created = Self::create_folders(objects_processed.clone(), repo);
 
         let delta_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 7).cloned().collect();
@@ -63,7 +58,6 @@ impl Clone{
             if let Ok( commits) = Self::process_delta_object( &inner_vec, repo, &mut blob_objects) {
                 if !commits.is_empty() {
                     for commit in commits {
-                        println!("COMIIT ACA: {:?}", commit);
                         commits_created.insert(commit.0, commit.1);
                     }
                 }
@@ -81,7 +75,6 @@ impl Clone{
                     if ref_part.starts_with("refs/") {
                         let branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
                         let _ = Branch::create_new_branch_with_hash(repo, branch_name.trim_end_matches('\n'), commit);
-                        println!("Commit: {}, Branch: {}", commit, branch_name);
                         branchs.insert(branch_name, commit.to_owned());
                 }
             }
@@ -121,7 +114,6 @@ impl Clone{
                     })
                     .collect::<Vec<String>>()
                     .join("\n");
-                println!("ENTRY STRING: {}", entry_string);
                 (number, entry_string)
             } else {
                 eprintln!("Error decoding the tree object");
@@ -288,7 +280,6 @@ impl Clone{
                     Self::manage_pack(&buffer[8..])
                 }
                 Err(e) => {
-                    println!("Failed to receive data: {}\n", e);
                     Err(e)
                 }
             } 
@@ -296,36 +287,24 @@ impl Clone{
 
     fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
         let object_number = Self::parse_number(&pack[8..12])?;
-        println!("CANTIDAD DE OBJETOS ---> {}\n", object_number);
-        println!("ACA EL PACK: {:?}", String::from_utf8_lossy(pack));
         let mut position: usize = 12;
         let mut objects = Vec::new();
         for object in 0..object_number {
             let objet_type = Self::get_object_type(pack[position]);
-            println!("TIPO OBJTO: {}", objet_type);
             while Self::is_bit_set(pack[position]) {
                 position += 1;
             }
             position += 1;
             if objet_type == 7 {
                 let mut base_object = pack[position..position+20].to_vec();
-                let hex_representation: String = base_object.iter().map(|b| format!("{:02x}", b)).collect();
-                println!("BASE OBJECT: {}", hex_representation);
                 position += 20;
                 if let Ok(data) = decompress_data(&pack[position..]) {
-                    println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
-                    println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                    println!("DATA EN BYTES: {:?}", data); 
                     position += data.1 as usize;
                     base_object.extend_from_slice(&data.0); 
-                    println!("BASE + DATA EN BYTES: {:?}", base_object);
                     objects.push((objet_type, base_object));   
                 }
             }
             else if let Ok(data) = decompress_data(&pack[position..]) {
-                    println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
-                    println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                    println!("DATA EN BYTES: {:?}", data); 
                     position += data.1 as usize; 
                     objects.push((objet_type, data.0))       
             }
