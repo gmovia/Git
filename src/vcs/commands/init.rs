@@ -67,7 +67,9 @@ impl Init {
     /// Crea el directorio info al inicializar un nuevo repositorio
     fn create_git_info_folder(&self, git_path: &Path) -> Result<(),std::io::Error> {
         let info_path = git_path.join("info");
+        let log_file = info_path.join("log");
         fs::create_dir_all(info_path)?;
+        fs::OpenOptions::new().create(true).append(true).open(log_file)?;
         Ok(())
     }
 
