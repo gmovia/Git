@@ -14,13 +14,16 @@ pub enum RemoteOption {
 
 impl Remote{
     //git remote add origin repo1
-    pub fn remote(current_repo: &Path, new_repo_name: String, server_repo: &Path, option:RemoteOption) -> Result<(), std::io::Error>{
+    pub fn remote(current_repo: &Path, repo_name_to_process: String, server_repo: &Path, option:RemoteOption) -> Result<(), std::io::Error>{
         match option{
-            RemoteOption::Add => Remote::write_config(current_repo, new_repo_name, server_repo),
-            RemoteOption::Remove => Remote::remote_remove(current_repo, new_repo_name, server_repo),
-            RemoteOption::Get => Remote::get_remote(current_repo, new_repo_name, server_repo)
+            RemoteOption::Add => Remote::write_config(current_repo, repo_name_to_process, server_repo),
+            RemoteOption::Remove => Remote::remote_remove(current_repo, repo_name_to_process),
+            RemoteOption::Get => Remote::get_path_of_repo_remote(current_repo, &repo_name_to_process)
+            .map(|path_buf| {
+                println!("Path {:?} ", path_buf.display());
+            })
+            .map_err(|err_msg| std::io::Error::new(std::io::ErrorKind::NotFound, err_msg)),
         }
-        Ok(())
     }
 
     fn write_config(current_repo: &Path, new_repo_name: String, server_repo: &Path) -> Result<(), std::io::Error>{
@@ -49,6 +52,36 @@ impl Remote{
         }
         Ok(false)
     }
+    //git remote remove origin
+    fn remote_remove(current_repo: &Path, remove_repo: String) -> Result<(), std::io::Error>{
+        let config_path = Init::get_current_config(current_repo)?;
+        let file = File::open(&config_path)?;
+        let reader = BufReader::new(file);
+    
+        let mut lines: Vec<String> = Vec::new();
+        let mut found = false;
+    
+        for line in reader.lines() {
+            let line = line?;
+            if line.contains(&format!("[remote {}]", remove_repo)) {
+                found = true;
+                continue;
+            }
+            if found {
+                found = false;
+                continue;
+            }
+            lines.push(line);
+        }
+    
+        let mut file = OpenOptions::new().write(true).truncate(true).open(&config_path)?;
+        for line in lines {
+            writeln!(file, "{}", line)?;
+        }
+    
+        Ok(())
+    }
+
 
     pub fn read_remote_names() -> Result<Vec<String>, std::io::Error> {
         let path = CurrentRepository::read()?;
@@ -74,15 +107,14 @@ impl Remote{
         Ok(remote_names)
     }
 
+
     pub fn get_path_of_repo_remote(current_repo: &Path, repo_name: &str) -> Result<PathBuf, io::Error> {
         let path = Init::get_current_config(current_repo)?;    
         let content = fs::read_to_string(path)?;
 
         let content_split: Vec<&str> = content.split("\n").collect();
-        println!("REPO NAME {:?} ", repo_name);
         for (index, line) in content_split.iter().enumerate(){
             if line.contains(repo_name){
-                println!("LINE ----> {:?}", line);
                 let parts: Vec<&str> = content_split[index+1].split('=').map(|s| s.trim()).collect();
                 if let Some(value) = parts.get(1) {
                     let mut path_buf = PathBuf::new();

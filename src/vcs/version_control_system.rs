@@ -131,9 +131,9 @@ impl VersionControlSystem {
         Ok(())
     }
 
-    pub fn remote(new_repo_name :String, repo_server: &Path, option:RemoteOption) -> Result<(), std::io::Error>{
+    pub fn remote(repo_name_to_process :String, repo_server: &Path, option: RemoteOption) -> Result<(), std::io::Error>{
         let current = CurrentRepository::read()?;
-        Remote::remote(&current, new_repo_name, repo_server, option)?;
+        Remote::remote(&current, repo_name_to_process, repo_server, option)?;
         Ok(())
     }
 

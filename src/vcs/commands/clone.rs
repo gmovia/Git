@@ -1,6 +1,6 @@
 use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
 use crate::{packfiles::{packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, create_tag_folder}}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, tag_entity::TagEntity}, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER}, utils::randoms::random::Random};
-use super::{cat_file::CatFile, init::Init, remote::Remote};
+use super::{cat_file::CatFile, init::Init, remote::{Remote, RemoteOption}};
 pub struct Clone;
 
 impl Clone{
@@ -43,7 +43,7 @@ impl Clone{
         
         let _ = create_tag_files(list_tags, &CurrentRepository::read()?);
         Self::init_commits(&list_refs , &objects, repo)?;
-        Remote::remote(&CurrentRepository::read()?, "origin".to_string(),repo)?;
+        Remote::remote(&CurrentRepository::read()?, "origin".to_string(),repo, RemoteOption::Add)?;
         Ok(()) 
     }
 
