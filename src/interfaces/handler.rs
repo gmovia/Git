@@ -1,5 +1,5 @@
 use std::{fs::{OpenOptions, self}, io::Write, path::Path};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::Remote}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::{clone::handler_clone, remote::handler_remote}};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::{Remote, RemoteOption}}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::{clone::handler_clone, remote::handler_remote}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error, draw_push_pull_fetch}};
 use gtk::{prelude::*, Button};
@@ -748,10 +748,18 @@ pub fn handle_show_ref(interface: &RustInterface) {
 
 pub fn handle_remote(interface: &RustInterface) {
 
-    let dialog = interface.remote_dialog.clone();
-    let r_entry = interface.repo_name_remote.clone();
+    let dialog = interface.remote_options_dialog.clone();
+    let add_dialog = interface.remote_add_dialog.clone();
+    let remove_dialog = interface.remote_remove_dialog.clone();
+    let get_dialog = interface.remote_get_dialog.clone();
+    let n_add_entry = interface.repo_name_add_remote.clone();
     let p_entry = interface.path_remote.clone();
-    let r_box = interface.box_remote.clone();
+    let a_box = interface.box_add_remote.clone();
+    let r_box = interface.box_remove_remote.clone();
+    let g_box = interface.box_get_remote.clone();
+    let n_remove_entry = interface.repo_name_remove_remote.clone();
+    let n_get_entry = interface.repo_name_get_remote.clone();
+
 
     let errors_tuple = (interface.error_dialog.clone(),interface.error_box.clone());
 
@@ -764,18 +772,95 @@ pub fn handle_remote(interface: &RustInterface) {
        } 
     });
 
-    interface.enter_remote.connect_clicked({
-       move |button| {
-            let response = handler_remote(format!("git remote add {} {:?}",r_entry.text().to_string(), Path::new(&format!("{}",p_entry.text()))));
-            if response == RESPONSE_OK_REMOTE {
-                draw_message(&r_box, &"     REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
-            }else {
-                draw_error(rc_tuple.clone(), &"CAN'T REMOTE".to_string(), &r_entry);
-            }
-            p_entry.set_text("");
-            r_entry.set_text("");
-       } 
+    interface.remote_add.connect_clicked({
+        move |_| {
+            a_box.foreach(|child|{
+                a_box.remove(child);
+            });
+            add_dialog.run();
+            add_dialog.hide();
+        }
     });
+
+    interface.remote_remove.connect_clicked({
+        move |_| {
+            r_box.foreach(|child|{
+                r_box.remove(child);
+            });
+            remove_dialog.run();
+            remove_dialog.hide();
+        }
+    });
+
+    interface.remote_get.connect_clicked({
+        move |_| {
+            g_box.foreach(|child|{
+                g_box.remove(child);
+            });
+            get_dialog.run();
+            get_dialog.hide();
+        }
+    });
+
+
+    interface.enter_add_remote.connect_clicked({
+        let a_box = interface.box_add_remote.clone();
+       move |_| {
+            a_box.foreach(|child|{
+                a_box.remove(child);
+            });
+            if let Ok(response) = VersionControlSystem::remote(RemoteOption::Add(n_add_entry.text().as_str(), p_entry.text().as_str())){
+                if response == RESPONSE_OK_REMOTE {
+                    draw_message(&a_box, &"     ADD REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
+                } else {
+                    draw_error(rc_tuple.clone(), &"CAN'T REMOTE".to_string(), &n_add_entry);
+                }
+                p_entry.set_text("");
+                n_add_entry.set_text("");
+            } 
+        }
+    });
+
+    interface.delete_repo_remote.connect_clicked({
+        let r_box = interface.box_remove_remote.clone();
+        let rc_tuple = errors_tuple.clone();
+        move |_| {
+            r_box.foreach(|child|{
+                r_box.remove(child);
+            });
+             if let Ok(response) = VersionControlSystem::remote(RemoteOption::Remove(n_remove_entry.text().as_str())){
+                 if response == RESPONSE_OK_REMOTE {
+                     draw_message(&r_box, &"     REMOVE REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
+                 } else {
+                     draw_error(rc_tuple.clone(), &"CAN'T REMOVE".to_string(), &n_remove_entry);
+                 }
+                 n_remove_entry.set_text("");
+             } 
+         }
+     });
+
+     interface.get_repo_remote.connect_clicked({
+        let g_box = interface.box_get_remote.clone();
+        let rc_tuple = errors_tuple.clone();
+        move |_| {
+            g_box.foreach(|child|{
+                g_box.remove(child);
+            });
+            if let Ok(path) = VersionControlSystem::remote(RemoteOption::Get(n_get_entry.text().as_str())){
+                draw_message(&g_box, &path.to_string(), 0.5);}
+            else {
+                draw_error(rc_tuple.clone(), &"CAN'T REMOVE".to_string(), &n_get_entry);
+            }
+            n_get_entry.set_text("");
+         }
+     });
+
+     interface.remote_close.connect_clicked({
+        let dialog = interface.remote_options_dialog.clone();
+        move |_| {
+            dialog.hide();
+        }
+     });
 
 }
 
