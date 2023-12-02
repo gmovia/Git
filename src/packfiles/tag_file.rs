@@ -70,7 +70,6 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
             let entrada = entrada?;
             let entry_path = entrada.path();
             if entry_path.is_file() {
-                println!("ENTRE a recorrer mi file\n");
                 let data: (String, usize, usize) = process_tag_file(&entry_path, path_to_read, tag_to_send.clone())?;
                 if data.1 != 0{
                     objects_data.push(data);
@@ -101,7 +100,6 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
     }
     
     pub fn create_tag_files(list_tags: Vec<String>, path: &Path) -> Result<(), std::io::Error>{
-        println!("LIST TAGS ---> {:?}", list_tags);
         for string_tag in list_tags{
             let tag: Vec<&str> = string_tag.split_whitespace().collect();
             let filename:&str;
@@ -117,7 +115,6 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
 
             let file_path = path.join(".rust_git").join(filename);
             let mut file = OpenOptions::new().create(true).write(true).append(true).open(&file_path)?;
-            println!("filepath ---> {:?}", file_path.clone());
             file.write_all(hash.as_bytes())?;
         } 
         Ok(())
@@ -126,7 +123,6 @@ pub fn process_refs_tag(refs : Vec<String>, path: &Path)-> Result<Vec<String>, s
 
     pub fn create_tag_folder(content: &str, repo: &Path) -> Result<String, std::io::Error>{
         let content_lines: Vec<&str> = content.split('\n').collect();
-        println!("CONTENt de create_tag_folder \n {:?}", content);
         let commit_hash: Vec<&str> = content_lines[0].split_whitespace().collect();
         let typed: Vec<&str> = content_lines[1].split_whitespace().collect();
         let tag: Vec<&str> = content_lines[2].split_whitespace().collect();
