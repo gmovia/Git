@@ -25,13 +25,8 @@ use crate::vcs::files::current_commit::CurrentCommit;
 
 
 pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<String, std::io::Error> {
-    println!("-----------start_handler_receive in-------------- \n\n");    
-    println!("PATH CLIENTE   en start_handler_receive  {:?}\n", server_client_path );
-
-    let old_new_hash_commit = handler_receive_pack(writer)?;
+    let old_new_hash_commit = handler_receive_pack(writer)?; // que hago con esto? let _? o lo saco?
     
-    println!("Received from packet: ---> {:?}", old_new_hash_commit); 
-
     send_repo_last_commit_for_branch(writer, &server_client_path)?;
     select_update(writer, server_client_path.clone())?;
     
@@ -85,7 +80,6 @@ fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: 
         let update_info = format!("{} refs/heads/{}\n",last_commit, branch_server_name);
 
         let info_to_pkt_line = to_pkt_line(&update_info);
-        println!("Mi pedido del server al cliente {:?}\n\n", info_to_pkt_line);
         writer.write_all(info_to_pkt_line.as_bytes())?;
     }
 
@@ -93,7 +87,6 @@ fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: 
 
     for tag in tags_exist{
         let tag_to_pkt_line = to_pkt_line(&tag);
-        println!("Mi pedido de los tags al cliente es: {:?}\n\n", tag_to_pkt_line);
         writer.write_all(tag_to_pkt_line.as_bytes())?;
     }
 
@@ -115,18 +108,14 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
                 }                
             }
             Err(e) => {
-                println!("Error al procesar la línea: {:?}", e);
                 return Err(e);
             }
         }
     }
 
-    println!("::::::::::::::Mi lista de refs que recibo es :  --->{:?}\n" , receive_refs);    
-
     
     let (list_tags, branchs_refs) = exclude_tag_ref(receive_refs)?;
     change_current_branch(branchs_refs.clone(), &server_client_path)?;
-    println!("::::LIST TAG ANTES DEL CREATE TAG FILES --->{:?}\n" , list_tags);    
 
     let set: HashSet<String> = list_tags.into_iter().collect();
     let unique_list_tags: Vec<String> = set.into_iter().collect();
@@ -201,20 +190,12 @@ fn branch_exist(branch_name: &str, server_client_path: &Path) -> Result<bool, st
 pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &Path, _last_commit: String) -> Result<(), std::io::Error> {
     let objects_prcessed = Clone::process_folder(objects.to_vec());
 
-    for obj in &objects_prcessed{
-        println!("------> {:?}", obj);
-    }
-
     let commits_created = Clone::create_folders(objects_prcessed.clone(), repo_server_client);
-    println!("COMMITS CREATEDDDD ---> {:?}\n", commits_created);
-
     let hashes_sorted = sort_hashes(&commits_created);
 
-    println!("HASH SORTED ---> {:?}\n", hashes_sorted);
     for(commit_hash, commit_entity ) in &hashes_sorted{
         write_commit_log_push(&commit_entity.parent_hash, commit_hash, commit_entity, repo_server_client.to_path_buf())?;
     }
-    println!("UPDATE REPO EN {:?}\n",repo_server_client);
     update_cd(repo_server_client)?;
 
     Ok(())
@@ -225,10 +206,8 @@ fn sort_hashes(commits_created: &HashMap<String, CommitEntity>) -> Vec<(String, 
 
     commits_vec.sort_by_key(|(_, commit)| {
         let date_str = commit.author.split_whitespace().nth(3).unwrap_or("");
-        println!("Fecha extraída: {}", date_str);
         let date_num = date_str.parse::<i64>().unwrap_or(0);
         let date_time = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(date_num, 0), Utc);
-        println!("DATE .> {:?}", date_time);
         date_time
     });
 
@@ -241,7 +220,6 @@ fn write_commit_log_push(last_commit_hash: &String, new_commit_hash: &String, co
     let id = Random::random();
     let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_current_log(&repo_server_client)?)?; //abro la tabla de commits para escribir - si no existe, la creo
     let date = Clone::get_date(&commit_entity.author);
-    println!("New commit hash {}\n", new_commit_hash);
 
     let commit = format!("{}-{}-{}-{}-{}\n", id, last_commit_hash, new_commit_hash, commit_entity.message, date); 
 
@@ -250,19 +228,12 @@ fn write_commit_log_push(last_commit_hash: &String, new_commit_hash: &String, co
 }
 
 pub fn update_cd(path: &Path) -> Result<(), std::io::Error>{
-    println!("REPO PATH --> {:?}", path);
     let repository_hashmap = read(path)?;
-    println!("repository_hashmap--> {:?}", repository_hashmap);
-
     delete_all_files_and_folders(path)?;
 
     for (key, value) in repository_hashmap{
         let content = CatFile::cat_file(&value, Init::get_object_path(path)?)?;
-        println!("CONTENT ----------->{}", content);
         let path_server = Path::new(&key);
-        println!("path_server ---> {:?}\n", key);
-
-        println!("key ---> {:?}\n", key);
         create_file_and_their_folders(path_server, &content)?
     }
     Ok(())
