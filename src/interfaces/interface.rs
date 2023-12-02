@@ -5,7 +5,7 @@ use gtk::prelude::*;
 use crate::vcs::version_control_system::VersionControlSystem;
 use crate::interfaces::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css_in_interface};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch, handle_pull, handle_push};
+use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch, handle_pull, handle_push, handle_logs_errors};
 
 #[derive(Debug, Default)]
 pub struct RustInterface {
@@ -156,6 +156,10 @@ pub struct RustInterface {
     pub rebase_box: gtk::Box,
     pub rebase_enter: gtk::Button,
     pub rebase_cancel: gtk::Button,
+    pub logs_errors: gtk::Button,
+    pub logs_errors_dialog: gtk::Dialog,
+    pub logs_errors_box: gtk::Box,
+    pub logs_errors_close: gtk::Button,
 }
 
 impl RustInterface {
@@ -319,6 +323,10 @@ impl RustInterface {
             rebase_enter: builder.object("rebase-enter").unwrap(),
             rebase_cancel: builder.object("rebase-cancel").unwrap(),
             remote_close: builder.object("remote-close").unwrap(),
+            logs_errors: builder.object("logs-errors").unwrap(),
+            logs_errors_dialog: builder.object("logs-errors-dialog").unwrap(),
+            logs_errors_box: builder.object("logs-errors-box").unwrap(),
+            logs_errors_close: builder.object("logs-errors-close").unwrap(),
         }
     }
     
@@ -344,6 +352,7 @@ impl RustInterface {
         handle_fetch(self);
         handle_pull(self);
         handle_push(self);
+        handle_logs_errors(self);
 
         self.window.show_all();   
         gtk::main();

@@ -1,5 +1,5 @@
 use std::{fs::{OpenOptions, self}, io::Write, path::Path};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::{Remote, RemoteOption}}, files::current_repository::CurrentRepository}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::{clone::handler_clone, remote::handler_remote}};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::{Remote, RemoteOption}}, files::{current_repository::CurrentRepository, log::Log}}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::{clone::handler_clone, remote::handler_remote}};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error, draw_push_pull_fetch}};
 use gtk::{prelude::*, Button};
@@ -1094,6 +1094,30 @@ pub fn handle_push(interface: &RustInterface) {
         } 
     });
 
+}
+
+pub fn handle_logs_errors(interface: &RustInterface) {
+    let dialog = interface.logs_errors_dialog.clone();
+    let logs_box = interface.logs_errors_box.clone();
+
+    interface.logs_errors.connect_clicked({
+       move |_| {
+            logs_box.foreach(|child| {
+                logs_box.remove(child);
+            });
+            if let Ok(logs) = Log::read_log() {
+                draw_message(&logs_box, &logs, 0.5);
+            }
+            dialog.run();
+            dialog.hide();
+       } 
+    });
+
+    interface.logs_errors_close.connect_clicked({
+        let dialog = interface.logs_errors_dialog.clone();
+        move |_| {
+            dialog.hide();
+    }});
 }
 
 
