@@ -3,7 +3,6 @@ use std::{net::TcpStream, path::{Path, PathBuf}, io::{Write, Read}, fs, collecti
 use crate::{packfiles::{packfile::{process_line, to_pkt_line}, tag_file::process_refs_tag}, servers::encoder::Encoder, vcs::{commands::{init::Init, cat_file::CatFile}, files::current_commit::CurrentCommit}, constants::constant::COMMIT_INIT_HASH};
 
 pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &Path, log_entries: &[String]) -> Result<(), std::io::Error> {
-    println!("Entro a handle--- send--pack \n");
     let mut send_refs = Vec::new(); 
     loop {
         let value = process_line(stream);
@@ -16,17 +15,14 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &Path, log_entrie
                 }                
             }
             Err(e) => {
-                println!("Error al procesar la línea: {:?}", e);
                 return Err(e);
             }
         }
     }
-    println!("Mi lista que recibo de refs a enviar es:  --->{:?}\n" , send_refs);
     let last_commit_server = process_hash_server(&send_refs, (current_repo).to_path_buf())?;
     let last_commit_current = CurrentCommit::read()?;
 
     let send_new_tags = process_refs_tag(send_refs,current_repo )?;
-    println!("SEND NEW TAGS ----< {:?}\n\n", send_new_tags);
     let packfile = init_packfile(last_commit_current, current_repo, &last_commit_server, &send_new_tags)?;
 
     send_pack(packfile, stream, log_entries, send_new_tags)?;
@@ -60,14 +56,9 @@ fn init_packfile(last_commit_current: String, current_repo: &Path, last_commit_s
     let mut packfile: Vec<u8> = Vec::new();
 
     let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
-    println!("CURREN REPO ---> {:?}\n", current_repo);
-    println!("LAS COMMIT ---> {}\n", last_commit_current);
     Encoder::get_object_for_commit(current_repo, &mut objects_data, &last_commit_current, last_commit_server)?;
     
     process_directory_to_send_new_tag(&current_repo.join(".rust_git").join("refs").join("tags"), &mut objects_data, send_new_tag.to_vec(), current_repo)?;
-
-    println!("LEN OBJECTS DESPUESSSS {:?}\n", objects_data.len());
-    println!("OBJECTS DATA: {:?}\n", objects_data);
 
     Encoder::create_size_header(&mut packfile, objects_data.len())?;
 
@@ -107,7 +98,6 @@ fn process_directory_to_send_new_tag(path: &Path, objects_data: &mut Vec<(String
             }
         }
     }
-    println!("process_tag_directory  TAG FOLDER\n");
     Ok(objects_data.to_vec())
 }
 
@@ -121,7 +111,6 @@ fn process_particular_tag_to_send(file_path: &Path, path_to_read: &Path) -> Resu
     let content = CatFile::cat_file(&content_hash, Init::get_object_path(path_to_read)?)?;
 
     if content.contains("tag"){
-        println!("CONTIENE TAGGG tag_file\n");
 
         let folder_name = content_hash.chars().take(2).collect::<String>();
         let object_path = Init::get_object_path(path_to_read)?;
@@ -135,15 +124,10 @@ fn process_particular_tag_to_send(file_path: &Path, path_to_read: &Path) -> Resu
 
 fn send_pack(packfile: Vec<u8>, stream: &mut TcpStream, log_entries: &[String], send_new_tag: Vec<String>) -> Result<String, std::io::Error> {
     let entry_hash = format!("{}\n", log_entries[0]);
-    println!("LOG ENTIRES ---> {:?}", entry_hash);
     stream.write_all(to_pkt_line(&entry_hash).as_bytes())?;
 
-    println!("el mensaje de old y new antes del packfile --> {}\n", to_pkt_line(&entry_hash));
-
-    println!("SEND NEW TAG TO SEND ---> {:?}", send_new_tag);
     for tag in send_new_tag{
         let tag_to_pkt_line = to_pkt_line(&tag);
-        println!("Mi pedido de los tags al cliente es: {:?}\n\n", tag_to_pkt_line);
         stream.write_all(tag_to_pkt_line.as_bytes())?;
     }
 
@@ -151,6 +135,5 @@ fn send_pack(packfile: Vec<u8>, stream: &mut TcpStream, log_entries: &[String], 
     stream.write_all(msg_done.as_bytes())?;
 
     stream.write_all(&packfile)?;
-    println!("PAQUETE ENVIADO CON EXITO\n");
     Ok("0000".to_string())
 }
