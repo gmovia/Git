@@ -71,6 +71,7 @@ pub const RESPONSE_OK_FETCH: &str = "Fetched successfully";
 pub const RESPONSE_OK_PULL: &str = "Pull successfully";
 
 pub const RESPONSE_OK_REMOTE: &str = "Remote successfully";
+pub const RESPONSE_NOK_REMOTE: &str = "Can't Remote";
 
 
 // ERRORS

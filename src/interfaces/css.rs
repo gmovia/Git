@@ -29,7 +29,10 @@ pub fn set_styles_css_in_interface(interface: &RustInterface){
     interface.commit_button.style_context().add_class("button-commit");
     interface.rm.style_context().add_class("button-rm");
     interface.status.style_context().add_class("button-status");
+    interface.clone_entry.style_context().add_class("entry");
+    interface.merge_entry.style_context().add_class("entry");
 }
+
 pub fn set_styles_css_in_login(login: &DrawLogin){
     login.login_window.style_context().add_class("login-window");
     login.title_login.style_context().add_class("login-title");

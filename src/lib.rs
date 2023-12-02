@@ -23,6 +23,7 @@ pub mod handlers{
     pub mod tag;
     pub mod remote;
     pub mod show_ref;
+    pub mod rebase;
 }
 
 pub mod proxies{
@@ -115,6 +116,8 @@ pub mod vcs{
         pub mod tag;
         pub mod remote;
         pub mod show_ref;
+        pub mod rebase;
+        pub mod pull;
     }
 
     pub mod sets{

@@ -1,4 +1,4 @@
-use std::{path::Path, fs::{self, OpenOptions}, io::Write};
+use std::{path::Path, fs::{self, OpenOptions}, io::{Write, self}};
 
 use crate::vcs::{files::{current_commit::CurrentCommit, config::Config}, entities::tag_entity::TagEntity};
 
@@ -52,6 +52,11 @@ impl Tag {
     }
     
     pub fn delete(path: &Path, tag: &str) -> Result<Vec<String>, std::io::Error>{
+        if let Ok(tags) = Self::get(path) {
+            if !tags.contains(&tag.to_string()) {
+                return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the tag"));
+            }
+        }
         let tags_path = path.join(".rust_git").join("refs").join("tags").join(tag);
         let _ = fs::remove_file(tags_path);
         Self::get(path)

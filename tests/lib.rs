@@ -27,6 +27,7 @@ pub mod vcs{
     pub mod show_ref;
     pub mod tag;
     pub mod check_ignore;
+    pub mod rebase;
 }
 
 pub mod tests_functions;

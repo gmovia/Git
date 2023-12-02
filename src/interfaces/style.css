@@ -3,6 +3,22 @@
     padding: 0;
 }
 
+.entry{
+    border: 2px solid rgb(0, 0, 0);
+    border-radius: 64px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 24px;
+    padding-right: 24px;
+    margin-left: 12px;
+    margin-right: 18px;
+}
+
+.entry:focus{
+    padding-left: 24px;
+}
+
+
 .custom-window {
     background: linear-gradient(to bottom, #000000, #363636);
     border: 2px solid #0a0a0a;
@@ -175,29 +191,33 @@ button:hover{
 
 
 .custom-add-label{
+    font-size: 16px;
     color: rgb(211, 211, 211);
     font-weight: bold;
-    font-size: 12px;
     margin-right: 5px;
 }
 
 .custom-sa-label{
+    font-size: 16px;
     color: rgb(211, 211, 211);
     font-weight: bold;
     font-size: 12px;
 }
 
 .custom-changes-label-created{
+    font-size: 16px;
     color: rgba(17, 107, 77, 0.668);
     font-weight: bold;
 }
     
 .custom-changes-label-modified{
+    font-size: 16px;
     color: rgba(178, 204, 32, 0.776);
     font-weight: bold;
 }    
 
 .custom-changes-label-deleted{
+    font-size: 16px;
     color: rgba(182, 18, 18, 0.697);
     font-weight: bold;
 }
