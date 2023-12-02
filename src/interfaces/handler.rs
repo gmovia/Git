@@ -1046,6 +1046,7 @@ pub fn handle_pull(interface: &RustInterface) {
         let rc_box = interface.pull_push_fetch_box.clone();
         let button = interface.pull_push_fetch_close.clone();
         move |_| {
+
             draw_push_pull_fetch(&rc_branch, format!("git pull {}", r_entry.text().to_string()),&rc_box, &"PULL".to_string(), &rc_dialog, &button);
         } 
     });

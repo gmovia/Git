@@ -120,6 +120,7 @@ impl VersionControlSystem {
     
     pub fn pull(message: String) -> Result<(), std::io::Error> {
         Pull::pull(message)
+
     }
 
     pub fn push(message: String)-> Result<(), std::io::Error>{
