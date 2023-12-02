@@ -79,6 +79,7 @@ fn init_packfile(last_commit_current: String, current_repo: &Path, last_commit_s
         let path = Path::new(&objects.0);
         
         let compress_data = Encoder::compress_object(path.clone(), objects.1, current_repo)?;
+
         for byte in compress_data {
             packfile.push(byte);    
         }

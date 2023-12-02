@@ -1,5 +1,5 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
-use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::randoms::random::Random, constants::constant::TREE_CODE};
+use crate::{vcs::{entities::{blob_entity::BlobEntity, tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity, ref_delta_entity::RefDeltaEntity}, commands::{hash_object::{HashObject, WriteOption}, init::Init}}, utils::randoms::random::Random, constants::constant::TREE_CODE};
 
 pub struct Proxy;
 
@@ -14,11 +14,9 @@ impl Proxy{
     }
 
     pub fn write_tree(repo_path: &Path, content: &str) -> Result<String, std::io::Error>{
-
         let entity_strings: Vec<&str> = content.split('\n')
         .filter(|&s| !s.is_empty())
         .collect();
-    
         let tree_path = Path::new(&repo_path).join(Random::random());
         let mut tree_file = OpenOptions::new().write(true).create(true).append(true).open(&tree_path)?; 
     
@@ -49,7 +47,16 @@ impl Proxy{
 
     pub fn read_blob(repo_path: &Path, blob_hash: String) -> Result<String, std::io::Error>{
         BlobEntity::read(repo_path, blob_hash)
-    } 
+    }
+
+    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
+        if let Ok( entity) = RefDeltaEntity::write(repo_path, content, &mut blobs) {
+            return Ok(entity);
+        }
+        else {
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta object"));
+        }
+    }
 }
 
 
