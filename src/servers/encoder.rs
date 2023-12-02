@@ -111,7 +111,7 @@ impl Encoder {
             }
             let path_object = Path::new(&objects.0); //CAMBIO NOMBRE DE PATH 
             
-            let compress_data = Self::compress_object(path_object, objects.1, path)?;
+            let compress_data = Self::compress_object(path_object, objects.1)?;
             for byte in compress_data {
                 packfile.push(byte);    
             }
@@ -167,7 +167,7 @@ impl Encoder {
 
             let path = Path::new(&objects.0);
             
-            let compress_data = Self::compress_object(path, objects.1, server_path)?;
+            let compress_data = Self::compress_object(path, objects.1)?;
             for byte in compress_data {
                 packfile.push(byte);    
             }
@@ -355,7 +355,7 @@ impl Encoder {
     }
 
 
-    pub fn compress_object(archivo_entrada: &Path, object_type: usize, server_path: &Path) -> Result<Vec<u8>, std::io::Error> {
+    pub fn compress_object(archivo_entrada: &Path, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
         let mut entrada = File::open(archivo_entrada)?;
         let temp_dir = TempDir::new("my_temp_dir")?;
         println!("COMPREESSS OBJECT");
@@ -372,22 +372,6 @@ impl Encoder {
             temp_file.write_all(buf.as_bytes())?;
             entrada = File::open(&temp_file_path)?; 
         }
-/*         if object_type == 4{
-            println!("4444444444\n\n");
-            let mut buf = String::new();
-            let _ = entrada.read_to_string(&mut buf)?;
-            
-            let hash_tag_str: &str = buf.as_str().clone();
-            //println!("SERVER PATHHHH ----> {:?}", server_path);
-            let folder_name = hash_tag_str.chars().take(2).collect::<String>();
-            let object_path = Init::get_object_path(server_path)?;
-
-            let file_path  = object_path.join(format!("{}/{}", folder_name, &hash_tag_str[2..]).as_str());
-            //println!("FILEPATH DE OBJETO 4 ---> {:?} ", file_path);
-            entrada = File::open(file_path)?;
-            //println!("--------------_> ENTRADA TIPO 4 {:?}", entrada );
-            //let entrada = file_path.display().to_string();
-        }  */
 
         println!("ENTRADAS OBJECTS ---> {:?}", entrada);
 

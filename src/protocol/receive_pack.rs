@@ -22,7 +22,6 @@ use crate::vcs::commands::clone::Clone;
 use crate::vcs::commands::init::Init;
 use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::files::current_commit::CurrentCommit;
-use crate::vcs::files::repository::Repository;
 
 
 pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<String, std::io::Error> {
@@ -282,7 +281,7 @@ pub fn update_cd(path: &Path) -> Result<(), std::io::Error>{
         println!("path_server ---> {:?}\n", key);
 
         println!("key ---> {:?}\n", key);
-        create_file_and_their_folders(&path_server, &content)?
+        create_file_and_their_folders(path_server, &content)?
     }
     Ok(())
 }

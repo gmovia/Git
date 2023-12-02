@@ -3,7 +3,7 @@ mod tests {
 
     use std::{fs::OpenOptions, io::Write};
 
-    use rust_git::{vcs::{version_control_system::VersionControlSystem, commands::{tag::TagOptions, show_ref::ShowRefOptions, branch::BranchOptions}}, constants::constant::{RESPONSE_OK_IGNORE, RESPONSE_NOK_CLONE, RESPONSE_NOK_IGNORE}};
+    use rust_git::{constants::constant::{RESPONSE_OK_IGNORE, RESPONSE_NOK_IGNORE}, vcs::version_control_system::VersionControlSystem};
     use crate::tests_functions::{create_file, set_up, create_dir};
 
     #[test]

@@ -1,5 +1,5 @@
 use std::{net::TcpStream, path::Path, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
-use crate::{packfiles::{packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, tag_file::{process_refs_tag, exclude_tag_ref, create_tag_files, process_refs_old_new, create_tag_folder}}, vcs::{commands::branch::Branch, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH, BLOB_CODE_NUMBER, TAG_CODE_NUMBER, COMMIT_CODE_NUMBER}, proxies::proxy::Proxy, utils::randoms::random::Random};
+use crate::{packfiles::{packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, process_refs_old_new, create_tag_folder}}, vcs::{commands::branch::Branch, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH, BLOB_CODE_NUMBER, TAG_CODE_NUMBER, COMMIT_CODE_NUMBER}, proxies::proxy::Proxy, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 
 pub struct Fetch;
@@ -70,7 +70,7 @@ impl Fetch {
         let delta_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 7).cloned().collect();
         let mut blob_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 2).cloned().collect();
         for (_, inner_vec) in delta_objects {
-            if let Ok( commits) = Self::process_delta_object( &inner_vec, client_path, &mut blob_objects) {
+            if let Ok(commits) = Self::process_delta_object(&inner_vec, client_path, &mut blob_objects) {
                 if !commits.is_empty() {
                     for commit in commits {
                         println!("COMIIT ACA: {:?}", commit);
@@ -108,15 +108,15 @@ impl Fetch {
         (number, String::from_utf8_lossy(inner_vec).to_string())
     }
 
-    fn process_delta_object(inner_vec: &Vec<u8>, repo_path: &Path, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
-        let hash_base_object: String = (&inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
+    fn process_delta_object(inner_vec: &[u8], repo_path: &Path, blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
+        let hash_base_object: String = (inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
         let decompres_data = &inner_vec[20..];
     
         let delta_entity = RefDeltaEntity {
                 base_object_hash: hash_base_object.clone(),
                 data: decompres_data.to_vec(), 
             };
-        let commit = Proxy::write_ref_delta(repo_path, delta_entity, &mut blobs)?;
+        let commit = Proxy::write_ref_delta(repo_path, delta_entity, blobs)?;
         Ok(commit)
     }
 
@@ -349,7 +349,7 @@ impl Fetch {
 
 
     /// Esta funcion se encarga de parsear la respuesta del servidor al upload pack. Devuelve la rama y el ultimo commit
-    fn format_packet(packets: &Vec<String>) -> Result<(Vec<(String, String)>), std::io::Error> {
+    fn format_packet(packets: &Vec<String>) -> Result<Vec<(String, String)>, std::io::Error> {
         let mut branch_commit: Vec<(String,String)> = Vec::new();
 
         for packet in packets {
@@ -368,7 +368,7 @@ impl Fetch {
             }
         }
         last_commits.reverse();
-        Ok((last_commits))
+        Ok(last_commits)
     }
 
     fn send_messages(socket: &mut TcpStream, message_to_send: (Vec<String>,Vec<String>)) -> Result<(), std::io::Error> {
@@ -386,12 +386,6 @@ impl Fetch {
         send_done_msg(socket)?;
         Ok(())
     }
-
-    fn tag_manager(tag_entries: Vec<(String)>, repo: &Path) -> Result<Vec<String>, std::io::Error>{
-        let send_new_tags = process_refs_tag(tag_entries, repo )?;
-        Ok(send_new_tags)
-    }
-
 
     fn packet_manager(last_branch_commit_recieve: Vec<(String,String)>, repo: &Path) -> Result<(Vec<String>,Vec<String>), std::io::Error>{
         let mut want_list: Vec<String> = Vec::new();
@@ -481,13 +475,11 @@ impl Fetch {
                     objects.push((objet_type, base_object));   
                 }
             }
-            else {
-                if let Ok(data) = decompress_data(&pack[position..]) {
+            else if let Ok(data) = decompress_data(&pack[position..]) {
                     println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
                     println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
                     position += data.1 as usize; 
-                    objects.push((objet_type, data.0))   
-                }   
+                    objects.push((objet_type, data.0))      
             }
         }
         objects.sort_by(|a, b| a.0.cmp(&b.0));

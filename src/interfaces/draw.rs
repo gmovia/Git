@@ -180,7 +180,7 @@ pub fn draw_message(m_changes: &gtk::Box, message: &String, align: f32) {
     m_changes.add(&label);
 }
 
-pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_entry: &gtk::Entry) {
+pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: String, c_entry: &gtk::Entry) {
     let _ = Log::write_log(&format!("'{}'\n",message.to_uppercase().clone()));
     errors.1.foreach(|child| {
         errors.1.remove(child);
@@ -202,7 +202,7 @@ pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: 
     match message.as_str() {
         "PUSH" => {
             let _ = VersionControlSystem::push(input);
-            draw_info_box(info, &message, &dialog);
+            draw_info_box(info, message, dialog);
             button.connect_clicked({
                 let rc_dialog = dialog.clone();
                 move |_| {
@@ -213,8 +213,8 @@ pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: 
         "PULL" => {
             let _ = VersionControlSystem::pull(input);
             rc_branch.remove_all();
-            let _ = branches(&rc_branch);            
-            draw_info_box(info, &message, &dialog);
+            let _ = branches(rc_branch);            
+            draw_info_box(info, message, dialog);
             button.connect_clicked({
                 let rc_dialog = dialog.clone();
                 move |_| {
@@ -225,8 +225,8 @@ pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: 
         "FETCH" => {
             let _ = VersionControlSystem::fetch(input);
             rc_branch.remove_all();
-            let _ = branches(&rc_branch);            
-            draw_info_box(info, &message, &dialog);
+            let _ = branches(rc_branch);            
+            draw_info_box(info, message, dialog);
             button.connect_clicked({
                 let rc_dialog = dialog.clone();
                 move |_| {
@@ -242,7 +242,7 @@ pub fn draw_info_box(info: &gtk::Box, message: &String, dialog: &gtk::Dialog) {
     info.foreach(|child| {
         info.remove(child);
     });
-    draw_message(&info, &format!("    {} SUCCESSFULLY!     ",message).to_string(), 0.5);
+    draw_message(info, &format!("    {} SUCCESSFULLY!     ",message).to_string(), 0.5);
     dialog.run();
     dialog.hide();
 }

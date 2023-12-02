@@ -23,8 +23,8 @@ impl Push{
             let entry: Vec<&str> = entries.split_whitespace().collect();
 
             if entry.len() == 3 { //osea si la refs es de una rama 
-                let refs_name: Vec<&str> = entry[2].split("/").collect();
-                if refs_name[2].trim_end_matches("\n") == current_branch.trim_end_matches("\n"){
+                let refs_name: Vec<&str> = entry[2].split('/').collect();
+                if refs_name[2].trim_end_matches('\n') == current_branch.trim_end_matches('\n'){
                     entry_to_send.push(entries.to_string());
                     let ref_to_pkt = to_pkt_line(entries);
                     stream.write_all(ref_to_pkt.as_bytes())?;

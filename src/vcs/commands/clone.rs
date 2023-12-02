@@ -1,5 +1,5 @@
 use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
-use crate::{packfiles::{packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, create_tag_folder}}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, tag_entity::TagEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random};
+use crate::{packfiles::{packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, create_tag_folder}}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init, remote::{Remote, RemoteOption}};
 pub struct Clone;
 
@@ -145,15 +145,15 @@ impl Clone{
     }
 
 
-    fn process_delta_object(inner_vec: &Vec<u8>, repo_path: &Path, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
-        let hash_base_object: String = (&inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
+    fn process_delta_object(inner_vec: &[u8], repo_path: &Path, blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
+        let hash_base_object: String = (inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
         let decompres_data = &inner_vec[20..];
     
         let delta_entity = RefDeltaEntity {
                 base_object_hash: hash_base_object.clone(),
                 data: decompres_data.to_vec(), 
             };
-        let commit = Proxy::write_ref_delta(repo_path, delta_entity, &mut blobs)?;
+        let commit = Proxy::write_ref_delta(repo_path, delta_entity, blobs)?;
         Ok(commit)
     }
 
@@ -323,14 +323,12 @@ impl Clone{
                     objects.push((objet_type, base_object));   
                 }
             }
-            else {
-                if let Ok(data) = decompress_data(&pack[position..]) {
+            else if let Ok(data) = decompress_data(&pack[position..]) {
                     println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
                     println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
                     println!("DATA EN BYTES: {:?}", data); 
                     position += data.1 as usize; 
-                    objects.push((objet_type, data.0))   
-                }    
+                    objects.push((objet_type, data.0))       
             }
         }
         objects.sort_by(|a, b| a.0.cmp(&b.0));
