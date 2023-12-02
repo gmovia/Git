@@ -1,4 +1,4 @@
-use std::{path::{Path, Prefix}, fs::{OpenOptions, self}, io::{Write, Read, self}};
+use std::{path::Path, fs::{OpenOptions, self, File}, io::{Write, Read, self}};
 
 use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{OBJ_REF_DELTA_CODE, COMMIT_CODE, BLOB_CODE, TREE_CODE}, proxies::proxy::Proxy};
 
@@ -18,7 +18,7 @@ pub struct RefDeltaEntity{
 
 impl RefDeltaEntity{
     
-    pub fn write(repo_path: &Path, ref_delta: RefDeltaEntity, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
+    pub fn write(repo_path: &Path, ref_delta: RefDeltaEntity, blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
         let mut commit: Vec<(String, CommitEntity)> = Vec::new();
         let delta_path = Path::new(&repo_path).join(Random::random());
         let mut delta_file = OpenOptions::new().write(true).create(true).append(true).open(&delta_path)?;
@@ -26,85 +26,14 @@ impl RefDeltaEntity{
         let base_object_content = VersionControlSystem::cat_file(&ref_delta.base_object_hash)?;
 
         let delta_len = ref_delta.data.len();
-        let mut position: usize = 0;
-    
-        while Self::is_bit_set(ref_delta.data[position]) {
-            position += 1;
-        }
-        position += 1;
-
-        while Self::is_bit_set(ref_delta.data[position]) {
-            position += 1;
-        }
-        position += 1;
+        let mut position = ref_delta.set_initial_position()?;
 
         while position < delta_len {
-            println!("POSITION: {}, BYTE: {}", position, ref_delta.data[position]);
             if Self::is_bit_set(ref_delta.data[position]) {
-                println!("\nCOPY\n");
-                println!("BASE OBJECT: {}", ref_delta.base_object_hash);                
-                let positions = Self::positions(&ref_delta.data[position..])?;
-
-                println!("POSICIONES: {} - {}", positions.0, positions.1);
-                let mut copy_content: &str = "Error";
-                if base_object_content.contains("100644") || base_object_content.contains("40000") {
-                    println!("ACA ENTRA EL BLOB");
-                    println!("BLOBS ANTERIORES: {:?}", blobs);
-                    let mut counter = 0;
-                    for (iter, blob) in blobs.clone().iter().enumerate() {
-                        let new_blob = Self::process_tree_object(blob.0, &blob.1);
-                        let hash = Proxy::write_tree(repo_path, &new_blob.1)?;
-                        println!("DIFERENCIA = {} - {}",ref_delta.base_object_hash, hash);
-                        if ref_delta.base_object_hash == hash {
-                            let content_bytes = &blob.1[..positions.1 as usize];
-                            let content = Self::process_tree_object(blob.0, &content_bytes.to_vec());
-                            println!("REPO PATH: {:?} - CONTENIDO: {}", repo_path, content.1);
-                            let new_hash = Proxy::write_tree(repo_path, &content.1)?;
-                            //ACA ESTa EL PROBLEMA EL CONTENT.1 QUE TENGO QUE HACER PUSH ES EL POSTA DE GIT
-                            println!("NEW HASH BLOB: {}", new_hash);
-                            println!("CONTENIDO: {}", content.1);
-                            counter += 1;
-                            break;
-                        }else if iter == blobs.len()+counter-1{
-                            println!("ENTRA AL COUNTER");
-                            if let Some(text) = Self::get_blob_content(&base_object_content, positions.1 as usize) {
-                                copy_content = &text;
-                                println!("COPY CONTENT: {}", copy_content);
-                                delta_file.write_all(copy_content.as_bytes())?;
-                                HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?; 
-                            }
-                            else {
-                                return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta blob"));
-                            }
-                        }
-                        else {
-                            println!("ITER: {}, BLOB LEN: {}", iter, blobs.len()+counter-1)
-                        }
-                    }
-                    
-                    println!("EL POSTA ES: {}",base_object_content);
-                    //if let Some(text) = Self::get_blob_content(&base_object_content, positions.1 as usize) {
-                    //    copy_content = &text;
-                    //}
-                    //else {
-                    //    return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta blob"));
-                    //}
-                }
-                else {
-                    copy_content = &base_object_content[positions.0 as usize..positions.1 as usize];   
-                }
-                delta_file.write_all(copy_content.as_bytes())?;
-                println!("BYTES USADOS: {}  (VIEJOS {})", positions.2, position);
-                position += positions.2;
-                println!("COPY: {}", copy_content);
+                position = ref_delta.copy_option(position, &mut delta_file, &base_object_content, blobs, repo_path, &delta_path)?;
             } 
             else {
-                println!("\nAPPEND\n");
-                let size = ref_delta.data[position];
-                let bytes = &ref_delta.data[(position+1 as usize)..(position+1+(size as usize))];
-                position += 1 + size as usize;
-                delta_file.write_all(bytes)?;
-                println!("APPEND: {}", String::from_utf8_lossy(bytes))
+                position = ref_delta.append_option(position, &mut delta_file)?;
             }
         }
         
@@ -113,10 +42,7 @@ impl RefDeltaEntity{
             let commit_entity = CommitEntity::read(repo_path, &ref_delta_hash)?;
             commit.push((ref_delta_hash, commit_entity));
         }
-        else if base_object_content.contains("100644") || base_object_content.contains("40000") {
-            //HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?; 
-        }
-        else {
+        else if !base_object_content.contains("100644") && !base_object_content.contains("40000") {
             HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, BLOB_CODE)?;    
         }
         let _ = fs::remove_file(delta_path);
@@ -128,6 +54,62 @@ impl RefDeltaEntity{
         (byte & mask) == mask
     }   
     
+    fn append_option(&self, mut position: usize, delta_file: &mut File) -> Result<usize,std::io::Error> {
+        let size = self.data[position];
+        let bytes = &self.data[(position+1 as usize)..(position+1+(size as usize))];
+        position += 1 + size as usize;
+        delta_file.write_all(bytes)?;
+        Ok(position)
+    }
+
+    fn set_initial_position(&self) -> Result<usize,std::io::Error> {
+        let mut position = 0;
+        while Self::is_bit_set(self.data[position]) {
+            position += 1;
+        }
+        position += 1;
+
+        while Self::is_bit_set(self.data[position]) {
+            position += 1;
+        }
+        position += 1;
+        Ok(position)
+    }
+
+    fn copy_option(&self, mut position: usize, delta_file: &mut File, base_object_content: &str,blobs: &mut Vec<(u8, Vec<u8>)>, repo_path: &Path, delta_path: &Path) -> Result<usize,std::io::Error> {
+        let positions = Self::positions(&self.data[position..])?;
+        let mut copy_content: &str = "";
+        if base_object_content.contains("100644") || base_object_content.contains("40000") {
+            let mut counter = 0;
+            for (iter, blob) in blobs.clone().iter().enumerate() {
+                let new_blob = Self::process_tree_object(blob.0, &blob.1);
+                let hash = Proxy::write_tree(repo_path, &new_blob.1)?;
+                if self.base_object_hash == hash {
+                    let content_bytes = &blob.1[..positions.1 as usize];
+                    let content = Self::process_tree_object(blob.0, &content_bytes.to_vec());
+                    Proxy::write_tree(repo_path, &content.1)?;
+                    counter += 1;
+                    break;
+                }else if iter == blobs.len()+counter-1{
+                    if let Some(text) = Self::get_blob_content(&base_object_content, positions.1 as usize) {
+                        copy_content = &text;
+                        delta_file.write_all(copy_content.as_bytes())?;
+                        HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?; 
+                    }
+                    else {
+                        return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta blob"));
+                    }
+                }
+            }
+        }
+        else {
+            copy_content = &base_object_content[positions.0 as usize..positions.1 as usize];   
+        }
+        delta_file.write_all(copy_content.as_bytes())?;
+        position += positions.2;
+        Ok(position)
+    }
+
     fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
             let mut reader = inner_vec.as_slice();
         
@@ -140,7 +122,6 @@ impl RefDeltaEntity{
                     })
                     .collect::<Vec<String>>()
                     .join("\n");
-                println!("ENTRY STRING: {}", entry_string);
                 (number, entry_string)
             } else {
                 eprintln!("Error decoding the tree object");
@@ -191,7 +172,6 @@ impl RefDeltaEntity{
         let finish_position: u32;
         let mut bytes_used: usize  = 0;
         let bits_position = Self::get_bits_positions(bytes[0]);
-        println!("BYTES POSITION: {:?}", bits_position);
         if (&bits_position.0).is_empty() {
             initial_position = 0;
             let bytes_to_use = bits_position.1.len();
@@ -204,11 +184,9 @@ impl RefDeltaEntity{
             initial_position = Self::get_hexadecimal(bits_position.0, in_bytes_to_use, 1)?;
             let fin_numeber_bytes_to_use = bits_position.1.len();
             let fin_bytes_to_use = &bytes[(in_numeber_bytes_to_use+1)..in_numeber_bytes_to_use+fin_numeber_bytes_to_use+1];
-            println!("IMPRIMI: {:?} - CANTIDAD DE BYTES: {}", fin_bytes_to_use, fin_numeber_bytes_to_use);
             bytes_used += in_numeber_bytes_to_use + fin_numeber_bytes_to_use + 1;
             finish_position = Self::get_hexadecimal(bits_position.1, fin_bytes_to_use, 2)?+initial_position;
         }
-
         Ok((initial_position,finish_position,bytes_used))
     }
 
@@ -224,8 +202,6 @@ impl RefDeltaEntity{
 
 
     fn get_hexadecimal(positions: Vec<usize>, bytes: &[u8], option: u8) -> Result<u32, std::io::Error> {
-        println!("POSITIONS: {:?}", positions); 
-        println!("BYTES IN HEXA: {:?}", bytes);   
         let mut hexa_number = String::new();
         if option == 2 {
             hexa_number = Self::size_bytes(positions, bytes);
