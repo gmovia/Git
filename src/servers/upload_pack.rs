@@ -11,22 +11,15 @@ use crate::vcs::files::current_commit::CurrentCommit;
 
 /// Esta funcion se encarga de procesar la respuesta que el server le entregara al cliente al mensaje de upload pack
 pub fn start_handler_upload(stream: &mut TcpStream, path: &Path) -> Result<String, std::io::Error> {
-
-    println!("Entre a start_handler_upload");
     let first_response = handler_upload_pack(path)?;
-    println!("1111111 \n");
     send_response(first_response, stream)?;
-    println!("HOLAAAAAAA\n");
     let query = receive_wants_and_have_message(stream)?;
-
-    println!("chau\n");
 
     let packfile_result = Encoder::init_encoder(path, query);
 
     match packfile_result {
         Ok( packfile) => {
             let _ = stream.write(&packfile);
-            println!("PAQUETE ENVIADO CON EXITO\n");
         },
         Err(e) => {
             println!("Error al inicializar el packfile: {:?}", e);
