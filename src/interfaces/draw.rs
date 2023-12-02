@@ -37,8 +37,6 @@ pub fn changes_and_staging_area(grid: &gtk::Grid, grid_staging: &gtk::Grid) -> R
 }
 
 pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_staging: &gtk::Grid){
-
-    //let mut index = 0;
     for (index,(path, state)) in changes.iter().enumerate() {
         let path_label = gtk::Label::new(Some(path));
         path_label.set_visible(true);
@@ -85,8 +83,6 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
         grid.attach(&state_label, 1, index as i32, 1, 1);
         grid.attach(&add_button, 2, index as i32, 1, 1);
         
-        //index += 1;
-
         let path_clone = path.clone(); 
         let reset_button = reset_button.clone();
         let path_label = path_label.clone();
@@ -122,8 +118,6 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
 }
 
 pub fn draw_staging_area(staging_area: &[String], grid: &gtk::Grid){
-
-    //let mut index = 0;
     for (index,path) in staging_area.iter().enumerate() {
         let label = gtk::Label::new(Some(path));
         label.set_visible(true);
@@ -143,7 +137,6 @@ pub fn draw_staging_area(staging_area: &[String], grid: &gtk::Grid){
         grid.attach(&label, 0, index as i32, 1, 1);
         grid.attach(&reset_button, 1, index as i32, 1, 1);
         
-        //index += 1;
         let path_clone = path.clone(); 
         reset_button.connect_clicked({
             let rc_grid = grid.clone();

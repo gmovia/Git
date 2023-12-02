@@ -7,7 +7,7 @@ mod tests {
     use crate::tests_functions::{create_file, set_up, equals};
 
     #[test]
-    pub fn test_01_add_file_1_to_staging_area() -> Result<(), std::io::Error>{ // git add file1.txt
+    pub fn test_01_add_file_1_to_staging_area() -> Result<(), std::io::Error>{
         let temp_dir = set_up();
         let path = create_file(&temp_dir, "file1.txt");        
 
@@ -17,7 +17,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_02_add_file_1_and_file_2_to_staging_area() -> Result<(), std::io::Error>{ // git add file1.txt y despues git add file2.txt
+    pub fn test_02_add_file_1_and_file_2_to_staging_area() -> Result<(), std::io::Error>{
         let temp_dir = set_up();
         let file1_path = create_file(&temp_dir, "file1.txt");   
         let file2_path = create_file(&temp_dir, "file2.txt");        
@@ -29,7 +29,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_03_add_file_1_the_status_is_created() -> Result<(), std::io::Error>{ // git add file1.txt
+    pub fn test_03_add_file_1_the_status_is_created() -> Result<(), std::io::Error>{
         let temp_dir = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
@@ -40,7 +40,7 @@ mod tests {
 
 
     #[test]
-    pub fn test_04_add_file_1_the_status_is_modified() -> Result<(), std::io::Error>{ // git add file1.txt
+    pub fn test_04_add_file_1_the_status_is_modified() -> Result<(), std::io::Error>{
         let temp_dir = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
@@ -58,7 +58,7 @@ mod tests {
 
 
     #[test]
-    pub fn test_05_if_file_1_is_in_staging_area_and_add_file_1_updated_staging_area() -> Result<(), std::io::Error>{ // git add file1.txt y despues git add file1.txt
+    pub fn test_05_if_file_1_is_in_staging_area_and_add_file_1_updated_staging_area() -> Result<(), std::io::Error>{
         let temp_dir = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_06_if_file_1_is_in_staging_area_and_add_file_1_updated_staging_area() -> Result<(), std::io::Error>{ // git add file1.txt
+    pub fn test_06_if_file_1_is_in_staging_area_and_add_file_1_updated_staging_area() -> Result<(), std::io::Error>{
         let temp_dir = set_up();
         let path = create_file(&temp_dir, "file1.txt");      
 
@@ -84,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_07_add_all_files_to_staging_area() -> Result<(), std::io::Error>{ // git add .
+    pub fn test_07_add_all_files_to_staging_area() -> Result<(), std::io::Error>{
         let temp_dir = set_up();
         let _ = create_file(&temp_dir, "file1.txt");
         let _ = create_file(&temp_dir, "file2.txt");        

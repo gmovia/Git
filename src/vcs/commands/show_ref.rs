@@ -21,12 +21,10 @@ impl ShowRef {
         }
     }
     
-    // git show-ref --heads --> Lee la carpeta refs/heads
     pub fn get_refs_heads(repo_path: &Path) -> Result<HashMap<String, String>, std::io::Error> {
         Self::get_dir_refs(repo_path, "heads")
     }
 
-    // git show-ref --tags --> Lee la carpeta refs/tags
     pub fn get_refs_tags(repo_path: &Path) -> Result<HashMap<String, String>, std::io::Error> {
         Self::get_dir_refs(repo_path, "tags")
     }
@@ -44,7 +42,6 @@ impl ShowRef {
         Ok(refs)
     }
 
-    // git show-ref --> Lee todo
     pub fn get_all_refs(repo_path: &Path) -> Result<HashMap<String, String>, std::io::Error> {
         let heads: HashMap<String, String> = Self::get_refs_heads(repo_path)?;
         let tags: HashMap<String, String> = Self::get_refs_tags(repo_path)?;

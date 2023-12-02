@@ -87,7 +87,7 @@ impl Clone{
             }
         }
         let _ = Self::write_commit_log(repo, branchs.clone(), &commits_created, objects_processed.clone());
-        Checkout::update_cd(repo)?; //Esto recien me crea los files.txt en working directory si tiene en la tabla de commits lleno
+        Checkout::update_cd(repo)?;
         Ok(())
     }
 
@@ -225,7 +225,7 @@ impl Clone{
     
 
     fn write_commit_log( repo: &Path, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
-        for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
+        for (branch_name, hash_commit_branch) in &branchs{
             if commits_created.contains_key(hash_commit_branch) {
                 let _ = Self::complete_commit_table(repo, &branch_name.to_string(), &hash_commit_branch.to_string(), commits_created);
             }
@@ -234,7 +234,6 @@ impl Clone{
     }
 
     fn complete_commit_table(repo: &Path, branch_name: &String, hash_commit_branch: &String, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
-        //branch_name, hash
         let logs_path = repo.join(".rust_git").join("logs").join(branch_name.trim_end_matches('\n'));
         let mut file = OpenOptions::new().create(true).write(true).append(true).open(logs_path)?;
         

@@ -18,7 +18,6 @@ impl Client {
 
         if Self::run_client(&address,  &command , input_repository).is_err() {
             return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: not a correct path"));
-            //println!("Error: {}",e);
         }
         Ok(())
     }

@@ -18,7 +18,3 @@ pub fn handler_remote(input: String) -> String {
     }
 }
 
-//git remote add origin repo1  LEN = 4
-//git remote get origin ---> repo1  LEN = 4
-//git remote remove origin  --> elimina [remote "origin"] path ....  LEN = 4
-

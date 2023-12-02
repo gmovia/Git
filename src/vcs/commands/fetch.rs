@@ -47,7 +47,6 @@ impl Fetch {
         let objects = Self::get_socket_response(socket)?;
         
         let _ = create_tag_files(want_tag_to_send, &CurrentRepository::read()?);
-        //println!("OBJETOS: {:?}", objects);
         Self::create_objects(&packets , &objects, repo)?;
         Ok(()) 
     }
@@ -91,7 +90,6 @@ impl Fetch {
                 let ref_part = parts[1];
                     if ref_part.starts_with("refs/") {
                         let branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
-                        //let _ = VersionControlSystem::branch(BranchOptions::NewBranch(branch_name.clone().trim_end_matches('\n')));
                         let format_branch_name = format!("origin_{}",branch_name.trim_end_matches('\n'));
                         let _ = Branch::create_new_branch_with_hash(client_path, &format_branch_name, commit);
                         println!("Commit: {}, Branch: {}", commit, branch_name);
@@ -298,7 +296,7 @@ impl Fetch {
     fn write_commit_log( repo: &Path, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
         println!("COMMITS CREATEDD ----> {:?}\n", commits_created.keys());
         println!("LEN DE COMMIT CREATED ---< {:?}\n", commits_created.len());
-        for (branch_name, hash_commit_branch) in &branchs{ // 2 nombre_rama, hash
+        for (branch_name, hash_commit_branch) in &branchs{
             if commits_created.contains_key(hash_commit_branch) {
                 let format = format!("origin_{}", branch_name.trim_end_matches('\n'));
                 let logs_path = repo.join(".rust_git").join("logs").join(format);
@@ -311,7 +309,6 @@ impl Fetch {
     }
 
     fn complete_commit_table(repo: &Path, branch_name: &String, hash_commit_branch: &String, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
-        //branch_name, hash
         let format = format!("origin_{}", branch_name.trim_end_matches('\n'));
         let logs_path = repo.join(".rust_git").join("logs").join(format);
         let mut file = OpenOptions::new().create(true).write(true).append(true).open(logs_path)?;

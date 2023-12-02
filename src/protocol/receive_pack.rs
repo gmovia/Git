@@ -29,11 +29,8 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
     println!("PATH CLIENTE   en start_handler_receive  {:?}\n", server_client_path );
 
     let old_new_hash_commit = handler_receive_pack(writer)?;
-
-    //let (_, _ )= extract_branch_name(old_new_hash_commit.to_string())?;
     
-    println!("Received from packet: ---> {:?}", old_new_hash_commit); //lo recibe porque lo manda el cliente, pero daemon no hace nada con eso
-    //ni crea la rama si no la tiene, pero eso si lo tenems que hacer almenos
+    println!("Received from packet: ---> {:?}", old_new_hash_commit); 
 
     send_repo_last_commit_for_branch(writer, &server_client_path)?;
     select_update(writer, server_client_path.clone())?;
@@ -43,18 +40,12 @@ pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf
 }
 
 fn extract_branch_name(old_new_hash_commit: String) ->  Result<(String, String), std::io::Error> {
-    let parts: Vec<&str> = old_new_hash_commit.split_whitespace().collect();
-    // incluyen referencias de ramas o tags 
-    // old_hash new_hash nombre_rama
-    // tags 
+    let parts: Vec<&str> = old_new_hash_commit.split_whitespace().collect(); 
     let last_commit_client = parts[1];
     let branch_name = parts[2].trim_start_matches("refs/heads/").trim_end_matches('\n');
     Ok((branch_name.to_owned(), last_commit_client.to_string()))
 }
 
-
-
-//fn extract_refs_tags()
 
 fn recovery_last_commit_for_each_branch(server_client_path: &Path) -> Result<Vec<(String, String)>, io::Error> {
     let logs_path = server_client_path.join(".rust_git").join("logs");
@@ -98,7 +89,6 @@ fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: 
         writer.write_all(info_to_pkt_line.as_bytes())?;
     }
 
-    //agregar enviar todos los tags que tenga
     let tags_exist = get_tags(server_client_path)?;
 
     for tag in tags_exist{
@@ -113,8 +103,7 @@ fn send_repo_last_commit_for_branch(writer: &mut TcpStream, server_client_path: 
 }
 
 fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<(), std::io::Error>{
-    //
-    let mut receive_refs = Vec::new(); // Cambiado a Vec<String>
+    let mut receive_refs = Vec::new();
     loop {
         let value = process_line(writer);
         match value {
@@ -131,11 +120,6 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
             }
         }
     }
-    
-    //Este contiene el old new name_branch del cliente,
-    // 1. puede pasar que el sea master y los doslos tienen se pushea normal
-    // 2. puede pasar que el que pushee sea nueva_rama y el server lo tenga, se guarda normal
-    // 3. puede pasar que el server no lo tenga por lo tanto tendra que crear nueva_rama, checkout a esa rama, y guardar datos ahi!
 
     println!("::::::::::::::Mi lista de refs que recibo es :  --->{:?}\n" , receive_refs);    
 
@@ -146,9 +130,7 @@ fn select_update(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<
 
     let set: HashSet<String> = list_tags.into_iter().collect();
     let unique_list_tags: Vec<String> = set.into_iter().collect();
-    create_tag_files(unique_list_tags, &server_client_path)?;    //recibo refs de ultimos branchs  y al final los de tags
-
-    // aca espero la PACKDATA
+    create_tag_files(unique_list_tags, &server_client_path)?;
     let objects = Clone::get_socket_response(writer)?;
     updating_repo( objects, &server_client_path, "asd".to_string())?;
     writer.flush()?;

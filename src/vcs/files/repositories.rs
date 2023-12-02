@@ -12,7 +12,7 @@ impl Repositories{
             let mut bdd = OpenOptions::new().write(true).append(true).open(bdd_path)?; 
             bdd.write_all(format!("{}\n",path.to_string_lossy()).as_bytes())?;
         }
-        let current_repository_path = Path::new(CURRENT_REPOSITORY_PATH); // DEFINIR LA CONSTANTE = "current_repository.txt"
+        let current_repository_path = Path::new(CURRENT_REPOSITORY_PATH);
         let mut current_repository = OpenOptions::new().write(true).append(true).open(current_repository_path)?; 
         current_repository.set_len(0)?;
         current_repository.write_all(format!("{}",path.to_string_lossy()).as_bytes())?;

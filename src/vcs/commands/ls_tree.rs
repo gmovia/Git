@@ -9,13 +9,8 @@ impl LsTree {
     pub fn ls_tree(branch: &str, path: &Path) -> Result<Vec<String>, std::io::Error>{
         let mut information = Vec::new();
         Self::get_information_branch(branch, path, &mut information)
-        // match option {
-        //     LsTreeOptions::TreeBranch => {Ok(Self::get_information_branch(branch, path, &mut information)?)},
-        //     LsTreeOptions::TreeBranchDirectory => todo!(),
-        // }
     } 
 
-    /// RECIBE UNA BRANCH Y DEVUELVE INFORMACION SOBRE SU ARBOL TREE
     pub fn get_information_branch(branch: &str, path: &Path, information: &mut Vec<String>) -> Result<Vec<String>, std::io::Error>{
         let commit_hash = CurrentCommit::read_for_branch(path, branch)?;
         if commit_hash != COMMIT_INIT_HASH{

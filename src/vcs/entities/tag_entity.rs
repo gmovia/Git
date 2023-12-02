@@ -19,7 +19,7 @@ impl TagEntity{
         tag_file.write_all(format!("object {}\n", tag.commit_hash).as_bytes())?;
         tag_file.write_all(format!("type {}\n", tag.typef).as_bytes())?;
         tag_file.write_all(format!("tag {}\n", tag.tag).as_bytes())?;
-        tag_file.write_all(format!("tagger {} <{}> 1700522965 -0300\n", config.0, config.1).as_bytes())?; // aca deberia ir el tagger
+        tag_file.write_all(format!("tagger {} <{}> 1700522965 -0300\n", config.0, config.1).as_bytes())?;
         tag_file.write_all(format!("\n{}", tag.message).as_bytes())?;
 
         let tag_hash = HashObject::hash_object(&tag_path, Init::get_object_path(repo_path)?, WriteOption::Write, TAG_CODE)?;

@@ -22,7 +22,7 @@ pub fn handle_send_pack(stream:  &mut TcpStream, current_repo: &Path, log_entrie
         }
     }
     println!("Mi lista que recibo de refs a enviar es:  --->{:?}\n" , send_refs);
-    let last_commit_server = process_hash_server(&send_refs, (current_repo).to_path_buf())?; //handlear despues para mas ramas
+    let last_commit_server = process_hash_server(&send_refs, (current_repo).to_path_buf())?;
     let last_commit_current = CurrentCommit::read()?;
 
     let send_new_tags = process_refs_tag(send_refs,current_repo )?;
@@ -87,7 +87,6 @@ fn init_packfile(last_commit_current: String, current_repo: &Path, last_commit_s
     Ok(packfile)
 }
 fn process_directory_to_send_new_tag(path: &Path, objects_data: &mut Vec<(String, usize, usize)>, send_new_tag: Vec<String>, current_repo: &Path) -> Result<Vec<(String, usize, usize)>, std::io::Error> {
-    // Convert send_new_tag to HashSet for efficient membership testing
     let send_new_tag_set: HashSet<_> = send_new_tag.into_iter().map(|s| match s.split_whitespace().next() {
         Some(hash) => hash.to_string(),
         None => String::new(),
@@ -98,12 +97,9 @@ fn process_directory_to_send_new_tag(path: &Path, objects_data: &mut Vec<(String
         let entry_path = entrada.path();
         if entry_path.is_file() {
             let hash_bytes = fs::read(&entry_path)?;
-
-            // Convert hash_bytes to a String for comparison
             let hash = String::from_utf8_lossy(&hash_bytes).trim().to_string();
 
             if send_new_tag_set.contains(&hash) {
-                // aca para el tag l etiene que llegar el path del object y no el que esta en refs/tag
                 let data = process_particular_tag_to_send(&entry_path, current_repo)?;
                 if data.1 != 0 {
                     objects_data.push(data);
@@ -138,7 +134,7 @@ fn process_particular_tag_to_send(file_path: &Path, path_to_read: &Path) -> Resu
 
 
 fn send_pack(packfile: Vec<u8>, stream: &mut TcpStream, log_entries: &[String], send_new_tag: Vec<String>) -> Result<String, std::io::Error> {
-    let entry_hash = format!("{}\n", log_entries[0]); //esto manda pos [0] pq siempre mandas cambio de la rama en la que estas parado.
+    let entry_hash = format!("{}\n", log_entries[0]);
     println!("LOG ENTIRES ---> {:?}", entry_hash);
     stream.write_all(to_pkt_line(&entry_hash).as_bytes())?;
 

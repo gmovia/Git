@@ -80,7 +80,6 @@ impl RefDeltaEntity{
         let positions = Self::positions(&self.data[position..])?;
         let mut copy_content: &str = "";
         if base_object_content.contains("100644") || base_object_content.contains("40000") {
-            //let counter = 0;
             for (iter, blob) in blobs.clone().iter().enumerate() {
                 let new_blob = Self::process_tree_object(blob.0, &blob.1);
                 let hash = Proxy::write_tree(repo_path, &new_blob.1)?;
@@ -88,9 +87,8 @@ impl RefDeltaEntity{
                     let content_bytes = &blob.1[..positions.1 as usize];
                     let content = Self::process_tree_object(blob.0, &content_bytes.to_vec());
                     Proxy::write_tree(repo_path, &content.1)?;
-                    //counter += 1;
                     break;
-                }else if iter == blobs.len()-1{ // counter
+                }else if iter == blobs.len()-1{
                     if let Some(text) = Self::get_blob_content(base_object_content, positions.1 as usize) {
                         copy_content = text;
                         delta_file.write_all(copy_content.as_bytes())?;

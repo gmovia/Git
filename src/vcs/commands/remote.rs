@@ -13,7 +13,6 @@ pub enum RemoteOption<'a>{
 }
 
 impl Remote{
-    //git remote add origin repo1
     pub fn remote(current_repo: &Path, option:RemoteOption) -> Result<String, std::io::Error>{
         match option{
             RemoteOption::Add(repo_name_to_process,server_repo) => {Ok(Remote::write_config(current_repo, repo_name_to_process, Path::new(server_repo))?)},
@@ -48,7 +47,6 @@ impl Remote{
         }
         Ok(false)
     }
-    //git remote remove origin
     fn remote_remove(current_repo: &Path, remove_repo: &str) -> Result<String, std::io::Error>{
         let config_path = Init::get_current_config(current_repo)?;
         let file = File::open(&config_path)?;

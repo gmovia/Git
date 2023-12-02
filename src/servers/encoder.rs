@@ -61,31 +61,19 @@ impl Encoder {
                 }
             }
         }
-        //checkear si existen objetos tags para sumar al total
-
-/*         let amount_objects_tags = path.join(".rust_git").join("refs").join("tags");
-        
-        if let Ok(entries) = fs::read_dir(amount_objects_tags) {
-            for entry in entries.flatten() {
-                let is_comun = Self::process_tag_content(path, entry)?;
-                if is_comun == true{
-                    total_files += 1;
-                }
-            }
-        } */
         Ok(total_files)
     }
 
     pub fn process_tag_content(path: &Path, entry: DirEntry) -> Result<bool, std::io::Error>{
         let metadata = entry.metadata()?;
-        let mut hash = String::new(); // hash
+        let mut hash = String::new();
         
         if metadata.is_file() {
             let mut file: File = File::open(entry.path())?;
             file.read_to_string(&mut hash)?;
         }
 
-        let content = CatFile::cat_file(&hash, Init::get_object_path(path)?)?; // commit or tag
+        let content = CatFile::cat_file(&hash, Init::get_object_path(path)?)?;
         println!("CONTENT DEL TAG ES ----> {}", content);
         if content.contains("tag"){
             return Ok(true);
@@ -101,15 +89,13 @@ impl Encoder {
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
         println!("OBJECTS DATA LENNNN 11111--------> {:?}", objects_data.len());
 
-        //process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data, path)?;
-
         println!("OBJECTS DATA LENNNN 22222--------> {:?}", objects_data.len());
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
                 packfile.push(object);
             }
-            let path_object = Path::new(&objects.0); //CAMBIO NOMBRE DE PATH 
+            let path_object = Path::new(&objects.0);
             
             let compress_data = Self::compress_object(path_object, objects.1)?;
             for byte in compress_data {
@@ -118,12 +104,6 @@ impl Encoder {
         }
         Ok(packfile)
     }
-
- /*    pub fn add_tag_file(&mut objects_data : Vec<(String, usize, usize)>, path: &Path){
-        Self::process_tag_directory(&path.join(".rust_git").join("refs").join("tags"), &mut objects_data)?;
-        
-    } */
-
 
  
     fn create_fetch_packfile(server_path: &Path, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
@@ -279,7 +259,7 @@ impl Encoder {
             packfile.push(byte);
         }
         Self::add_number_to_packfile(2, packfile);
-        let objects = Self::get_objects_number(path)?; //sumar un objeto si existen tags
+        let objects = Self::get_objects_number(path)?;
         println!("NUMERO DE OBJETOS QUE CONTE ----> {}", objects);
         Self::add_number_to_packfile(objects as u32, packfile);
         Ok(objects)
@@ -395,9 +375,7 @@ impl Encoder {
             if let Ok(_metadata) = fs::metadata(&want_path) {
                 println!("::::::::::OBJECT DATA    {:?}",objects_data);
                 
-                Self::get_objects_tree(server_path, objects_data, commit_entity, last_commit_server, &want_path)?;
-                //objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
-                
+                Self::get_objects_tree(server_path, objects_data, commit_entity, last_commit_server, &want_path)?;                
             }
         }
         objects_data.sort_by(|a, b| a.1.cmp(&b.1));
