@@ -30,15 +30,13 @@ impl Encoder {
         let encoder = Encoder { path: path.to_path_buf() };
         let mut packfile= Vec::new();
         
-        if messages.0.is_empty() {
-            println!("Already up to date")
-        }
-        else if messages.1.is_empty() || messages.1[0] == "0" {
+        if messages.1.is_empty() || messages.1[0] == "0" {
             packfile = Self::create_packfile(&encoder.path)?;        
         }
         else {
             packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
         }
+
         Ok(packfile)
     }
     
@@ -74,7 +72,6 @@ impl Encoder {
         }
 
         let content = CatFile::cat_file(&hash, Init::get_object_path(path)?)?;
-        println!("CONTENT DEL TAG ES ----> {}", content);
         if content.contains("tag"){
             return Ok(true);
         }
@@ -87,9 +84,7 @@ impl Encoder {
         
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         Self::process_directory(&path.join(".rust_git").join("objects"), &mut objects_data)?;
-        println!("OBJECTS DATA LENNNN 11111--------> {:?}", objects_data.len());
 
-        println!("OBJECTS DATA LENNNN 22222--------> {:?}", objects_data.len());
         for objects in objects_data.iter().rev() {
             let object_type = Self::set_bits(objects.1 as u8, objects.2)?;
             for object in object_type {
@@ -112,15 +107,11 @@ impl Encoder {
         if let Some(path) = server_path.file_name() {
             client_path = path.to_string_lossy().to_string();
         };
-        println!("PATH SERVER: {:?}, PATH CLINET: {:?}", server_path, client_path);
-        println!("MENSAJES: {:?}", messages);
 
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         for want in &messages.0 {
             let parts: Vec<&str> = want.split(' ').collect();
-            println!("PARTS: {:?}", parts);
             let commit_hash = parts[1];
-            println!("{}", commit_hash);
             if !want.contains("tag"){
                 if !Self::have_object(commit_hash, &messages.1) {
                     Self::fetch_process_directory(server_path, &mut objects_data, commit_hash, &messages.1)?;
@@ -260,7 +251,6 @@ impl Encoder {
         }
         Self::add_number_to_packfile(2, packfile);
         let objects = Self::get_objects_number(path)?;
-        println!("NUMERO DE OBJETOS QUE CONTE ----> {}", objects);
         Self::add_number_to_packfile(objects as u32, packfile);
         Ok(objects)
     }
@@ -338,7 +328,6 @@ impl Encoder {
     pub fn compress_object(archivo_entrada: &Path, object_type: usize) -> Result<Vec<u8>, std::io::Error> {
         let mut entrada = File::open(archivo_entrada)?;
         let temp_dir = TempDir::new("my_temp_dir")?;
-        println!("COMPREESSS OBJECT");
 
         if object_type == 2 {
             let mut buf = String::new();
@@ -352,8 +341,6 @@ impl Encoder {
             temp_file.write_all(buf.as_bytes())?;
             entrada = File::open(&temp_file_path)?; 
         }
-
-        println!("ENTRADAS OBJECTS ---> {:?}", entrada);
 
         let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
         io::copy(&mut entrada, &mut encoder)?;
@@ -370,11 +357,8 @@ impl Encoder {
         let want_path = objects_path.join(&commit_hash[..2]).join(&commit_hash[2..]);
 
         if want_path.exists() {
-            println!(" WANT PATH exist\n");
             let commit_entity = CommitEntity::read(server_path, commit_hash)?;
-            if let Ok(_metadata) = fs::metadata(&want_path) {
-                println!("::::::::::OBJECT DATA    {:?}",objects_data);
-                
+            if let Ok(_metadata) = fs::metadata(&want_path) {                
                 Self::get_objects_tree(server_path, objects_data, commit_entity, last_commit_server, &want_path)?;                
             }
         }
@@ -401,7 +385,6 @@ impl Encoder {
                 }     
             }
             objects_data.push((tree_path.to_string_lossy().to_string(),2,metadata.len() as usize));
-            println!("GUIDOBJECTDATA {:?}", objects_data);
             Self::get_objects_blobs(server_path, objects_data, tree_entity)?;
             objects_data.push((want_path.to_string_lossy().to_string(),1,metadata.len() as usize));
 
