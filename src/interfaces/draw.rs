@@ -195,51 +195,54 @@ pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_en
 
 }
 
-pub fn draw_push_pull(rc_branch: &gtk::ComboBoxText, input: String, info: &gtk::Box, message: &String) {
+pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: &gtk::Box, message: &String, dialog: &gtk::Dialog, button: &gtk::Button) {
     info.foreach({|child|{
         info.remove(child);
     }});
     match message.as_str() {
         "PUSH" => {
             let _ = VersionControlSystem::push(input);
-            draw_info_box(info, &message);
+            draw_info_box(info, &message, &dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
         },
         "PULL" => {
             let _ = VersionControlSystem::pull(input);
             rc_branch.remove_all();
             let _ = branches(&rc_branch);            
-            draw_info_box(info, &message);
+            draw_info_box(info, &message, &dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
         },
+        "FETCH" => {
+            let _ = VersionControlSystem::fetch(input);
+            rc_branch.remove_all();
+            let _ = branches(&rc_branch);            
+            draw_info_box(info, &message, &dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
+        }
         _ => {},
     }
 }
 
-pub fn draw_info_box(info: &gtk::Box, message: &String) {
-    let close = Button::builder()
-                        .label("close")
-                        .build();
-    close.set_visible(true);
+pub fn draw_info_box(info: &gtk::Box, message: &String, dialog: &gtk::Dialog) {
+    info.foreach(|child| {
+        info.remove(child);
+    });
     draw_message(&info, &format!("    {} SUCCESSFULLY!     ",message).to_string(), 0.5);
-    info.add(&close);
-    info.set_visible(true);
-    close.connect_clicked({
-        let info = info.clone();
-        move |_| {
-            info.foreach({|child|{
-                info.remove(child);
-            }});
-        }
-    });
-}
-
-pub fn draw_fetch(rc_branch: &gtk::ComboBoxText, input: String, box_fetch: &gtk::Box, dialog: &gtk::Dialog) {
-    box_fetch.foreach(|child| {
-        box_fetch.remove(child);
-    });
-    let _ = VersionControlSystem::fetch(input);
-    rc_branch.remove_all();
-    let _ = branches(&rc_branch);
-    draw_message(&box_fetch, &"     FETCH SUCCESSFULLY!      ".to_string(), 0.5);
     dialog.run();
     dialog.hide();
 }

@@ -126,6 +126,7 @@ impl VersionControlSystem {
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
         let current = CurrentRepository::read()?;
         let repo_to_push = Remote::get_path_of_repo_remote(&current, input[2].trim_end_matches("\n"))?;
+        println!("REPO TO PUSH ---< {:?}", repo_to_push);
         let _ = Client::client(message, &repo_to_push);
         Ok(())
     }
