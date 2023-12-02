@@ -114,7 +114,7 @@ impl VersionControlSystem {
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
         let current = CurrentRepository::read()?;
         let repo_to_fetch = Remote::get_path_of_repo_remote(&current, input[2])?;
-        let _ = Client::client(message, &repo_to_fetch);
+        let _ = Client::client(message, Path::new(&repo_to_fetch));
         Ok(())
     }
     
@@ -127,14 +127,13 @@ impl VersionControlSystem {
         let current = CurrentRepository::read()?;
         let repo_to_push = Remote::get_path_of_repo_remote(&current, input[2].trim_end_matches("\n"))?;
         println!("REPO TO PUSH ---< {:?}", repo_to_push);
-        let _ = Client::client(message, &repo_to_push);
+        let _ = Client::client(message, Path::new(&repo_to_push));
         Ok(())
     }
 
-    pub fn remote(repo_name_to_process :String, repo_server: &Path, option: RemoteOption) -> Result<(), std::io::Error>{
+    pub fn remote(option: RemoteOption) -> Result<String, std::io::Error>{
         let current = CurrentRepository::read()?;
-        Remote::remote(&current, repo_name_to_process, repo_server, option)?;
-        Ok(())
+        Remote::remote(&current, option)
     }
 
     pub fn rebase(branch: &str) -> Result<(), std::io::Error>{

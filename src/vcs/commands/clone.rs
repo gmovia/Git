@@ -43,7 +43,7 @@ impl Clone{
         
         let _ = create_tag_files(list_tags, &CurrentRepository::read()?);
         Self::init_commits(&list_refs , &objects, repo)?;
-        Remote::remote(&CurrentRepository::read()?, "origin".to_string(),repo, RemoteOption::Add)?;
+        Remote::remote(&CurrentRepository::read()?, RemoteOption::Add("origin", repo.to_string_lossy().to_string().as_str()))?;
         Ok(()) 
     }
 

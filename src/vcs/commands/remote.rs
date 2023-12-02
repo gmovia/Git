@@ -1,32 +1,28 @@
 use std::{path::{Path, PathBuf}, fs::{OpenOptions, self, File}, io::{Write, Read, BufReader, BufRead, self}};
 
-use crate::vcs::files::current_repository::CurrentRepository;
+use crate::{vcs::files::current_repository::CurrentRepository, constants::constant::RESPONSE_OK_REMOTE};
 
 use super::init::Init;
 
 pub struct Remote;
 
-pub enum RemoteOption {
-    Add,
-    Remove,
-    Get,
+pub enum RemoteOption<'a>{
+    Add(&'a str,&'a str),
+    Remove(&'a str),
+    Get(&'a str),
 }
 
 impl Remote{
     //git remote add origin repo1
-    pub fn remote(current_repo: &Path, repo_name_to_process: String, server_repo: &Path, option:RemoteOption) -> Result<(), std::io::Error>{
+    pub fn remote(current_repo: &Path, option:RemoteOption) -> Result<String, std::io::Error>{
         match option{
-            RemoteOption::Add => Remote::write_config(current_repo, repo_name_to_process, server_repo),
-            RemoteOption::Remove => Remote::remote_remove(current_repo, repo_name_to_process),
-            RemoteOption::Get => Remote::get_path_of_repo_remote(current_repo, &repo_name_to_process)
-            .map(|path_buf| {
-                println!("Path {:?} ", path_buf.display());
-            })
-            .map_err(|err_msg| std::io::Error::new(std::io::ErrorKind::NotFound, err_msg)),
+            RemoteOption::Add(repo_name_to_process,server_repo) => {Ok(Remote::write_config(current_repo, &repo_name_to_process, Path::new(server_repo))?)},
+            RemoteOption::Remove(repo_name_to_process) => {Ok(Remote::remote_remove(current_repo, repo_name_to_process)?)},
+            RemoteOption::Get(repo_name_to_process) => {Ok(Remote::get_path_of_repo_remote(current_repo, &repo_name_to_process)?)}
         }
     }
 
-    fn write_config(current_repo: &Path, new_repo_name: String, server_repo: &Path) -> Result<(), std::io::Error>{
+    fn write_config(current_repo: &Path, new_repo_name: &str, server_repo: &Path) -> Result<String, std::io::Error>{
         let mut config_file = OpenOptions::new().write(true).create(true).append(true).open(Init::get_current_config(&current_repo.to_path_buf())?)?; 
         let path_repo_cow = server_repo.to_string_lossy();
         let mut path_repo = path_repo_cow.into_owned();
@@ -36,7 +32,7 @@ impl Remote{
         }
         let msge_format = format!("\n[remote {}]\n\tpath = {}", new_repo_name, path_repo);
         config_file.write_all(msge_format.as_bytes())?;
-        Ok(())
+        Ok(RESPONSE_OK_REMOTE.to_string())
     }
 
     pub fn remote_added(current_repo: &Path) -> Result<bool, std::io::Error>{
@@ -53,7 +49,7 @@ impl Remote{
         Ok(false)
     }
     //git remote remove origin
-    fn remote_remove(current_repo: &Path, remove_repo: String) -> Result<(), std::io::Error>{
+    fn remote_remove(current_repo: &Path, remove_repo: &str) -> Result<String, std::io::Error>{
         let config_path = Init::get_current_config(current_repo)?;
         let file = File::open(&config_path)?;
         let reader = BufReader::new(file);
@@ -79,7 +75,7 @@ impl Remote{
             writeln!(file, "{}", line)?;
         }
     
-        Ok(())
+        Ok(RESPONSE_OK_REMOTE.to_string())
     }
 
 
@@ -108,7 +104,7 @@ impl Remote{
     }
 
 
-    pub fn get_path_of_repo_remote(current_repo: &Path, repo_name: &str) -> Result<PathBuf, io::Error> {
+    pub fn get_path_of_repo_remote(current_repo: &Path, repo_name: &str) -> Result<String, std::io::Error> {
         let path = Init::get_current_config(current_repo)?;    
         let content = fs::read_to_string(path)?;
 
@@ -119,7 +115,7 @@ impl Remote{
                 if let Some(value) = parts.get(1) {
                     let mut path_buf = PathBuf::new();
                     path_buf.push(value);
-                    return Ok(path_buf);
+                    return Ok(path_buf.to_string_lossy().to_string());
                 }
             }
         }
