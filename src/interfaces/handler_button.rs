@@ -30,7 +30,7 @@ pub fn handle_buttons_branch(interface: &RustInterface, button_branch: &gtk::But
                     "Delete" => {if VersionControlSystem::branch(BranchOptions::DeleteBranch(&rc_entry.text())).is_ok(){
                                     draw_message(&rc_box, &"     DELETED SUCCESSFULLY!    ".to_string(), 0.5);
                                 }else{
-                                    draw_error(rc_tuple.clone(), &"     CANNOT FOUND THE BRANCH...    ".to_string(), &rc_entry);
+                                    draw_error(rc_tuple.clone(), &format!("ERROR:  CANNOT FOUND THE BRANCH {}",rc_entry.text().to_string()).to_string(), &rc_entry);
                                 }
                     },
                     _ => {},
@@ -78,7 +78,7 @@ pub fn handle_buttons_repository(interface: &RustInterface, button_repo: &gtk::B
                     "Delete" => {if Repositories::remove(Path::new(&rc_entry.text().to_string())).is_ok(){
                                     draw_message(&rc_box, &"     DELETED SUCCESSFULLY!    ".to_string(), 0.5);
                                 }else{
-                                    draw_error(rc_tuple.clone(), &"     CANNOT FOUND THE REPOSITORY...    ".to_string(), &rc_entry);
+                                    draw_error(rc_tuple.clone(), &format!("ERROR:  CANNOT FOUND THE REPOSITORY {}",rc_entry.text().to_string()).to_string(), &rc_entry);
                                 }
                     },
                     _ => {},
@@ -122,7 +122,7 @@ pub fn handle_commit_button(interface: &RustInterface) {
             if  VersionControlSystem::commit(rc_entry.text().to_string()).is_ok(){
                 draw_message(&rc_box, &"     COMMITED SUCCESSFULLY!    ".to_string(), 0.5);
             }else{
-                draw_error(rc_tuple.clone(), &"  CAN'T COMMIT WITH STAGING EMPTY...   ".to_string(), &rc_entry);
+                draw_error(rc_tuple.clone(), &"ERROR:  CAN'T COMMIT WITH STAGING EMPTY".to_string(), &rc_entry);
             }
               
             rc_entry.set_text("");
@@ -178,7 +178,7 @@ pub fn handle_rm_button(interface: &RustInterface) {
                 if response == RESPONSE_OK_RM {
                     draw_message(&rc_box, &"     DELETE SUCCESSFULLY!    ".to_string(), 0.5);
                 }else if response == ERR_NO_SUCH_OR_DIRECTORY {
-                    draw_error(rc_tuple.clone(), &"      NO SUCH FILE OR DIRECTORY ...     ".to_string(), &rm_entry);
+                    draw_error(rc_tuple.clone(), &format!("ERROR:  NO SUCH FILE OR DIRECTORY - {}",rm_entry1.text().to_string()).to_string(), &rm_entry);
                 }
             }
             else{
@@ -186,7 +186,7 @@ pub fn handle_rm_button(interface: &RustInterface) {
                 if response == RESPONSE_OK_RM {
                     draw_message(&rc_box, &"     DELETE SUCCESSFULLY!    ".to_string(), 0.5);
                 }else if response == ERR_NO_SUCH_OR_DIRECTORY {
-                    draw_error(rc_tuple.clone(), &"      NO SUCH FILE OR DIRECTORY ...     ".to_string(), &rm_entry);
+                    draw_error(rc_tuple.clone(), &format!("ERROR:  NO SUCH FILE OR DIRECTORY - {}",rm_entry1.text().to_string()).to_string(), &rm_entry);
                 }
             }
             rm_entry1.set_text("");
@@ -259,7 +259,7 @@ pub fn handle_ls_tree_button(interface: &RustInterface) {
                 rc_box.set_visible(true);
                 rc_entry.set_text("");
             }else {
-                draw_error(rc_tuple.clone(), &"    ERROR! BRANCH NOT FOUND...  ".to_string(), &rc_entry);
+                draw_error(rc_tuple.clone(), &format!("ERROR:  CANNOT FOUND THE BRANCH {}",rc_entry.text().to_string()).to_string(), &rc_entry);
             }
         }
     });

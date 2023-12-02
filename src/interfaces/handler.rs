@@ -316,7 +316,7 @@ pub fn handle_merge(interface: &RustInterface) {
                 m_entry.set_text("");
                 button.set_sensitive(false);
             }else {
-                draw_error(rc_tuple.clone(), &"    ERROR! BRANCH NOT FOUND...  ".to_string(), &m_entry);
+                draw_error(rc_tuple.clone(), &format!("ERROR:  CANNOT FOUND THE BRANCH {}",m_entry.text().to_string()).to_string(), &m_entry);
             }
             m_entry.set_text("");
             button.set_sensitive(false);
@@ -646,7 +646,7 @@ pub fn handle_tag(interface: &RustInterface) {
             if VersionControlSystem::tag(TagOptions::Delete(&t_entry.text())).is_ok() {
                 draw_message(&tl_box, &"      TAG DELETED SUCCESSFULLY!     ".to_string(), 0.5);
             }else {
-                draw_error(rc_tuple.clone(), &"      THE TAG DOESN'T FOUND...    ".to_string(), &t_entry);
+                draw_error(rc_tuple.clone(), &format!("ERROR:  CANNOT FOUND THE TAG {}",t_entry.text().to_string()).to_string(), &t_entry);
             }
             tl_box.set_visible(true);
             t_entry.set_text("");
@@ -813,7 +813,7 @@ pub fn handle_remote(interface: &RustInterface) {
                 if response == RESPONSE_OK_REMOTE {
                     draw_message(&a_box, &"     ADD REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
                 } else {
-                    draw_error(rc_tuple.clone(), &"CAN'T REMOTE".to_string(), &n_add_entry);
+                    draw_error(rc_tuple.clone(), &"ERROR:  CAN'T REMOTE".to_string(), &n_add_entry);
                 }
                 p_entry.set_text("");
                 n_add_entry.set_text("");
@@ -832,7 +832,7 @@ pub fn handle_remote(interface: &RustInterface) {
                  if response == RESPONSE_OK_REMOTE {
                      draw_message(&r_box, &"     REMOVE REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
                  } else {
-                     draw_error(rc_tuple.clone(), &"CAN'T REMOVE".to_string(), &n_remove_entry);
+                     draw_error(rc_tuple.clone(), &"ERROR:  CAN'T REMOVE IN REMOTE".to_string(), &n_remove_entry);
                  }
                  n_remove_entry.set_text("");
              } 
@@ -849,7 +849,7 @@ pub fn handle_remote(interface: &RustInterface) {
             if let Ok(path) = VersionControlSystem::remote(RemoteOption::Get(n_get_entry.text().as_str())){
                 draw_message(&g_box, &path.to_string(), 0.5);}
             else {
-                draw_error(rc_tuple.clone(), &"CAN'T REMOVE".to_string(), &n_get_entry);
+                draw_error(rc_tuple.clone(), &"ERROR:  CAN'T GET THE REMOTES PATH".to_string(), &n_get_entry);
             }
             n_get_entry.set_text("");
          }
@@ -897,7 +897,7 @@ pub fn handle_rebase(interface: &RustInterface) {
             if VersionControlSystem::rebase(&r_entry.text().to_string()).is_ok() {
                 draw_message(&r_box, &"     REBASE SUCCESSFULLY!    ".to_string(), 0.5);
             }else{
-                draw_error(rc_tuple.clone(), &"      ERROR: THE BRANCH NAME NOT FOUND ...    ".to_string(), &r_entry);
+                draw_error(rc_tuple.clone(), &format!("ERROR:  CANNOT FOUND THE BRANCH NAME {}",r_entry.text().to_string()).to_string(), &r_entry);
             }
             button.set_sensitive(false);
             r_entry.set_text("");
@@ -955,7 +955,7 @@ pub fn handle_clone(interface: &RustInterface) {
                     }
                 });
             }else{
-                draw_error(rc_tuple.clone(), &"      ERROR! CAN'T CLONE THE REPOSITORY...      ".to_string(), &c_entry);
+                draw_error(rc_tuple.clone(), &format!("ERROR:  CAN'T CLONE THE REPOSITORY {}",c_entry.text().to_string()).to_string(), &c_entry);
             }
             c_entry.set_text("");
             button.set_sensitive(false);
