@@ -63,7 +63,6 @@ impl Fetch {
         
         let delta_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 7).cloned().collect();
         for (_, inner_vec) in delta_objects {
-            // Tendria que devolver los commits para agregarlos a commits created
             if let Ok( commits) = Self::process_delta_object( &inner_vec, client_path) {
                 if !commits.is_empty() {
                     for commit in commits {
@@ -440,16 +439,34 @@ impl Fetch {
                 break;
             }
             let objet_type = Self::get_object_type(pack[position]);
+            println!("\nOBJECT TYPE: {}\n", objet_type);
             while Self::is_bit_set(pack[position]) {
                 position += 1;
             }
             position += 1;
 
-            if let Ok(data) = decompress_data(&pack[position..]) {
-                println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
-                println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
-                position += data.1 as usize; 
-                objects.push((objet_type, data.0))   
+            if objet_type == 7 {
+                let mut base_object = pack[position..position+20].to_vec();
+                let hex_representation: String = base_object.iter().map(|b| format!("{:02x}", b)).collect();
+                println!("BASE OBJECT: {}", hex_representation);
+                position += 20;
+                if let Ok(data) = decompress_data(&pack[position..]) {
+                    println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
+                    println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                    println!("DATA EN BYTES: {:?}", data); 
+                    position += data.1 as usize;
+                    base_object.extend_from_slice(&data.0); 
+                    println!("BASE + DATA EN BYTES: {:?}", base_object);
+                    objects.push((objet_type, base_object));   
+                }
+            }
+            else {
+                if let Ok(data) = decompress_data(&pack[position..]) {
+                    println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}", object+1, objet_type, object+1, data.1);
+                    println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                    position += data.1 as usize; 
+                    objects.push((objet_type, data.0))   
+                }   
             }
         }
         objects.sort_by(|a, b| a.0.cmp(&b.0));

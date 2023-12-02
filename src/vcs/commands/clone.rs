@@ -144,7 +144,7 @@ impl Clone{
                 if blob_parts.len() == 3 {
                     let path = Path::new(blob_parts[1]);
                     if let Some(file_name) = path.file_name() {
-                        string_to_send = format!("{}{}-{}-{}\n", string_to_send, blob_parts[0], file_name.to_string_lossy(), blob_parts[2]);  
+                        string_to_send = format!("{}{}-   {}-{}\n", string_to_send, blob_parts[0], file_name.to_string_lossy(), blob_parts[2]);  
                     }
                 }                      
             }
@@ -157,10 +157,11 @@ impl Clone{
                     .iter()
                     .map(|(mode, name, sha1)| {
                         let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
-                        format!("{}-{}-{}", mode, name, hex_string)
+                        format!("{}-  {}-{}", mode, name, hex_string)
                     })
                     .collect::<Vec<String>>()
                     .join("\n");
+                println!("ENTRY STRING: {}", entry_string);
                 (number, entry_string)
             } else {
                 eprintln!("Error decoding the tree object");
@@ -338,7 +339,6 @@ impl Clone{
 
     fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
         let object_number = Self::parse_number(&pack[8..12])?;
-        
         println!("CANTIDAD DE OBJETOS ---> {}\n", object_number);
         println!("ACA EL PACK: {:?}", String::from_utf8_lossy(pack));
         let mut position: usize = 12;
@@ -369,6 +369,7 @@ impl Clone{
                 if let Ok(data) = decompress_data(&pack[position..]) {
                     println!("TIPO OBJETO {}: {:?}, TAMAÑO OBJETO {}: {:?}, ARRANCA EN: {}, TERMINA EN: {}", object+1, objet_type, object+1, data.1, position, position+data.1 as usize);
                     println!("DATA OBJETO {}: {}", object+1, String::from_utf8_lossy(&data.0));
+                    println!("DATA EN BYTES: {:?}", data); 
                     position += data.1 as usize; 
                     objects.push((objet_type, data.0))   
                 }    

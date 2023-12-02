@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{OBJ_REF_DELTA_CODE, COMMIT_CODE}};
+use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{OBJ_REF_DELTA_CODE, COMMIT_CODE, BLOB_CODE, TREE_CODE}};
 
 use super::commit_entity::CommitEntity;
 
@@ -46,7 +46,18 @@ impl RefDeltaEntity{
                 let positions = Self::positions(&ref_delta.data[position..])?;
 
                 println!("POSICIONES: {} - {}", positions.0, positions.1);
-                let copy_content = &base_object_content[positions.0 as usize..positions.1 as usize];
+                let copy_content: &str;
+                if base_object_content.contains("100644") || base_object_content.contains("40000") {
+                    if let Some(text) = Self::get_blob_content(&base_object_content, positions.1 as usize) {
+                        copy_content = &text;
+                    }
+                    else {
+                        return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta blob"));
+                    }
+                }
+                else {
+                    copy_content = &base_object_content[positions.0 as usize..positions.1 as usize];   
+                }
                 delta_file.write_all(copy_content.as_bytes())?;
                 println!("BYTES USADOS: {}  (VIEJOS {})", positions.2, position);
                 position += positions.2;
@@ -61,13 +72,17 @@ impl RefDeltaEntity{
                 println!("APPEND: {}", String::from_utf8_lossy(bytes))
             }
         }
+        
         if base_object_content.contains("tree") && base_object_content.contains("author"){
             let ref_delta_hash = HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, COMMIT_CODE)?;
             let commit_entity = CommitEntity::read(repo_path, &ref_delta_hash)?;
             commit.push((ref_delta_hash, commit_entity));
         }
+        else if base_object_content.contains("100644") || base_object_content.contains("40000") {
+            HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?; 
+        }
         else {
-            HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, OBJ_REF_DELTA_CODE)?;    
+            HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, BLOB_CODE)?;    
         }
         let _ = fs::remove_file(delta_path);
         Ok(commit)
@@ -104,7 +119,17 @@ impl RefDeltaEntity{
         Ok((initial_position,finish_position,bytes_used))
     }
 
-    
+    fn get_blob_content(text: &str, position: usize) -> Option<&str> {
+        if let Some(mut index) = text[position..].find('\n') {
+            index += position;
+            let content = &text[..index+1];
+            Some(content)
+        } else {
+            None
+        }
+    }
+
+
     fn get_hexadecimal(positions: Vec<usize>, bytes: &[u8], option: u8) -> Result<u32, std::io::Error> {
         println!("POSITIONS: {:?}", positions); 
         println!("BYTES IN HEXA: {:?}", bytes);   

@@ -52,7 +52,12 @@ impl Proxy{
     }
 
     pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
-        RefDeltaEntity::write(repo_path, content)
+        if let Ok( entity) = RefDeltaEntity::write(repo_path, content) {
+            return Ok(entity);
+        }
+        else {
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta object"));
+        }
     }
 }
 
