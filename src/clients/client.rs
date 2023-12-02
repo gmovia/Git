@@ -23,7 +23,6 @@ impl Client {
     }
 
     pub fn run_client(address: &str, command: &str, input_repository: &Path) -> Result<(),std::io::Error> {
-        println!("rust_client");
         let stream = TcpStream::connect(address)?;
         let _ = stream.try_clone()?;
 
@@ -52,7 +51,6 @@ impl Client {
     }
 
     pub fn handler_fetch(mut stream: TcpStream, command: &str, input_repository: &Path) -> Result<(),std::io::Error>{
-        println!("CURRENT: {:?}", input_repository);
         let query_to_send = Self::handler_input(command, input_repository)?;
         let pkt_line = to_pkt_line(&query_to_send);
 
