@@ -1,9 +1,8 @@
-use std::{path::Path, fs::{OpenOptions, self, File}, io::{Write, Read, self}};
+use std::{path::Path, fs::{OpenOptions, self, File}, io::{Read, self, Write}};
 
 use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{COMMIT_CODE, BLOB_CODE, TREE_CODE}, proxies::proxy::Proxy};
-
 use super::commit_entity::CommitEntity;
-
+use std::fmt::Write as FmtWrite;
 
 pub enum DeltaOptions{
     Copy,
@@ -115,7 +114,10 @@ impl RefDeltaEntity{
                 let entry_string: String = entries
                     .iter()
                     .map(|(mode, name, sha1)| {
-                        let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
+                        let hex_string: String = sha1.iter().fold(String::new(), |mut acc, byte| {
+                            let _ = FmtWrite::write_fmt(&mut acc, format_args!("{:02x}", byte));
+                            acc
+                        });
                         format!("{}-  {}-{}", mode, name, hex_string)
                     })
                     .collect::<Vec<String>>()

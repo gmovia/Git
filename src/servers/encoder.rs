@@ -28,16 +28,12 @@ impl Encoder {
     
     pub fn init_encoder(path: &Path, messages: (Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let encoder = Encoder { path: path.to_path_buf() };
-        let mut packfile= Vec::new();
-        
         if messages.1.is_empty() || messages.1[0] == "0" {
-            packfile = Self::create_packfile(&encoder.path)?;        
+            Ok(Self::create_packfile(&encoder.path)?)        
         }
         else {
-            packfile = Self::create_fetch_packfile(&encoder.path, &messages)?;
+            Ok(Self::create_fetch_packfile(&encoder.path, &messages)?)
         }
-
-        Ok(packfile)
     }
     
     fn get_objects_number(path: &Path) -> Result<usize, std::io::Error> {
@@ -103,10 +99,6 @@ impl Encoder {
  
     fn create_fetch_packfile(server_path: &Path, messages: &(Vec<String>,Vec<String>)) -> Result<Vec<u8>,std::io::Error> {
         let mut packfile = Vec::new();
-        let mut client_path = String::new();
-        if let Some(path) = server_path.file_name() {
-            client_path = path.to_string_lossy().to_string();
-        };
 
         let mut objects_data: Vec<(String,usize,usize)> = Vec::new();
         for want in &messages.0 {

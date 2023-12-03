@@ -1,6 +1,9 @@
 use std::{net::TcpStream, io::{Read, Write, self}, str::from_utf8, path::Path, fs::OpenOptions, collections::HashMap};
 use crate::{packfiles::{packfile::{read_packet, to_pkt_line, send_done_msg, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, create_tag_folder}}, vcs::{commands::{branch::Branch, checkout::Checkout}, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, proxies::proxy::Proxy, constants::constant::{TREE_CODE_NUMBER, BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, TAG_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init, remote::{Remote, RemoteOption}};
+use std::fmt::Write as FmtWrite;
+
+
 pub struct Clone;
 
 impl Clone{
@@ -109,7 +112,10 @@ impl Clone{
                 let entry_string: String = entries
                     .iter()
                     .map(|(mode, name, sha1)| {
-                        let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
+                        let hex_string: String = sha1.iter().fold(String::new(), |mut acc, byte| {
+                            write!(&mut acc, "{:02x}", byte).expect("Failed to write to String");
+                            acc
+                        });
                         format!("{}-  {}-{}", mode, name, hex_string)
                     })
                     .collect::<Vec<String>>()
@@ -138,7 +144,10 @@ impl Clone{
 
 
     fn process_delta_object(inner_vec: &[u8], repo_path: &Path, blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
-        let hash_base_object: String = (inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
+        let hash_base_object: String = (inner_vec[..20]).iter().fold(String::new(), |mut acc, b| {
+            write!(&mut acc, "{:02x}", b).expect("Failed to write to String");
+            acc
+        });
         let decompres_data = &inner_vec[20..];
     
         let delta_entity = RefDeltaEntity {
@@ -289,7 +298,7 @@ impl Clone{
         let object_number = Self::parse_number(&pack[8..12])?;
         let mut position: usize = 12;
         let mut objects = Vec::new();
-        for object in 0..object_number {
+        for _object in 0..object_number {
             let objet_type = Self::get_object_type(pack[position]);
             while Self::is_bit_set(pack[position]) {
                 position += 1;

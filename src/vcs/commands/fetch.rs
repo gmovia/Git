@@ -1,6 +1,7 @@
 use std::{net::TcpStream, path::Path, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
 use crate::{packfiles::{packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, process_refs_old_new, create_tag_folder}}, vcs::{commands::branch::Branch, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH, BLOB_CODE_NUMBER, TAG_CODE_NUMBER, COMMIT_CODE_NUMBER}, proxies::proxy::Proxy, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
+use std::fmt::Write as FmtWrite;
 
 pub struct Fetch;
 
@@ -44,7 +45,7 @@ impl Fetch {
         Ok(()) 
     }
 
-    fn create_objects(list_refs: &Vec<String> , objects: &Vec<(u8, Vec<u8>)>, client_path: &Path) -> Result<(),std::io::Error> {
+    fn create_objects(list_refs: &Vec<String> , objects: &[(u8, Vec<u8>)], client_path: &Path) -> Result<(),std::io::Error> {
         let mut branchs: HashMap<String, String> = HashMap::new();
 
         let objects_processed = Self::process_folder(objects.to_vec());
@@ -89,7 +90,10 @@ impl Fetch {
     }
 
     fn process_delta_object(inner_vec: &[u8], repo_path: &Path, blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
-        let hash_base_object: String = (inner_vec[..20]).iter().map(|b| format!("{:02x}", b)).collect();
+        let hash_base_object: String = (inner_vec[..20]).iter().fold(String::new(), |mut acc, b| {
+            write!(&mut acc, "{:02x}", b).expect("Failed to write to String");
+            acc
+        });
         let decompres_data = &inner_vec[20..];
     
         let delta_entity = RefDeltaEntity {
@@ -121,7 +125,10 @@ impl Fetch {
                 let entry_string: String = entries
                     .iter()
                     .map(|(mode, name, sha1)| {
-                        let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
+                        let hex_string: String = sha1.iter().fold(String::new(), |mut acc, byte| {
+                            let _ = FmtWrite::write_fmt(&mut acc, format_args!("{:02x}", byte));
+                            acc
+                        });
                         format!("{}-{}-{}", mode, name, hex_string)
                     })
                     .collect::<Vec<String>>()
@@ -414,7 +421,7 @@ impl Fetch {
         let mut position: usize = 12;
         let mut objects = Vec::new();
         let pack_len = pack.len();
-        for object in 0..object_number {
+        for _object in 0..object_number {
             if pack_len <= position {
                 break;
             }
