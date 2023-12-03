@@ -201,18 +201,26 @@ pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &Path, _l
 }
 
 fn sort_hashes(commits_created: &HashMap<String, CommitEntity>) -> Vec<(String, CommitEntity)> {
-    let mut commits_vec: Vec<(String, CommitEntity)> = commits_created.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+    let mut commits_vec: Vec<(String, CommitEntity)> = commits_created
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
 
-    commits_vec.sort_by_key(|( _, commit)| {
-        let date_str = match commit.author.split_whitespace().nth(3){
-            Some(date) => date,
-            None => ""
-        };
-        let date_num = match date_str.parse::<i64>() {
-            Ok(date_num) => date_num,
-            Err(_) => 0
-        };
-        let _ = NaiveDateTime::from_timestamp_opt(date_num, 0);
+    commits_vec.sort_by_key(|(_, commit)| {
+        let date_str = commit
+            .author
+            .split_whitespace()
+            .nth(3).map(|date| date.to_string());
+
+        if let Some(date_str) = date_str {
+            let date_num_result = date_str.parse::<i64>();
+            match date_num_result {
+                Ok(date_num) => NaiveDateTime::from_timestamp_opt(date_num, 0),
+                Err(_) => NaiveDateTime::from_timestamp_opt(0, 0),
+            }
+        } else {
+            NaiveDateTime::from_timestamp_opt(0, 0)
+        }
     });
 
     commits_vec
