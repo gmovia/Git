@@ -41,7 +41,7 @@ pub fn compare_files(file1: &Path, file2: &Path) -> io::Result<bool> {
 
     File::open(file1)?.read_to_end(&mut buf1)?;
     File::open(file2)?.read_to_end(&mut buf2)?;
-
+    println!("ENTRY 1: {}, ENTRY 2: {}", String::from_utf8_lossy(&buf1), String::from_utf8_lossy(&buf2));
     Ok(buf1 == buf2)
 }
 
