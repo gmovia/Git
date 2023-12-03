@@ -25,7 +25,7 @@ use crate::vcs::files::current_commit::CurrentCommit;
 
 
 pub fn start_handler_receive(writer: &mut TcpStream, server_client_path: PathBuf) -> Result<String, std::io::Error> {
-    let old_new_hash_commit = handler_receive_pack(writer)?; // que hago con esto? let _? o lo saco?
+    let _ = handler_receive_pack(writer)?; // que hago con esto? let _? o lo saco?
     
     send_repo_last_commit_for_branch(writer, &server_client_path)?;
     select_update(writer, server_client_path.clone())?;
@@ -204,7 +204,7 @@ pub fn updating_repo( objects: Vec<(u8, Vec<u8>)>, repo_server_client: &Path, _l
 fn sort_hashes(commits_created: &HashMap<String, CommitEntity>) -> Vec<(String, CommitEntity)> {
     let mut commits_vec: Vec<(String, CommitEntity)> = commits_created.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
-    commits_vec.sort_by_key(|(_, commit)| {
+    commits_vec.sort_by_key(|( _, commit)| {
         let date_str = commit.author.split_whitespace().nth(3).unwrap_or("");
         let date_num = date_str.parse::<i64>().unwrap_or(0);
         let _ = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(date_num, 0), Utc);
