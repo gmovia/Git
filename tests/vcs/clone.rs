@@ -19,6 +19,8 @@ mod tests {
         let _ = thread::spawn( || {
             let _ = Server::server("tests/test_folder".to_string());
         });
+
+        
         let _ = VersionControlSystem::init(client_path, Vec::new());
         let _ = handler_clone("git clone tests/clone".to_string());
         assert!(
@@ -28,8 +30,8 @@ mod tests {
         let server = get_number_of_elements(server_path.join("tests").join("clone"));
         let client = get_number_of_elements(client_path.to_path_buf());
         assert_eq!(server,client);
-        fs::remove_dir_all(client_path)?;
-        fs::remove_dir_all(server_path)?;
+        //fs::remove_dir_all(client_path)?;
+        //fs::remove_dir_all(server_path)?;
         Ok(())
     }
 
