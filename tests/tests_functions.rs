@@ -46,15 +46,15 @@ pub fn compare_files(file1: &Path, file2: &Path) -> io::Result<bool> {
 }
 
 pub fn compare_directories(dir1: &Path, dir2: &Path) -> io::Result<bool> {
-    let entries1: Vec<PathBuf> = fs::read_dir(dir1)?.map(|entry| entry.unwrap().path()).collect();
-    let entries2: Vec<PathBuf> = fs::read_dir(dir2)?.map(|entry| entry.unwrap().path()).collect();
+    let entries1: Vec<PathBuf> = fs::read_dir(dir1)?.map(|entry| entry.map(|e| e.path())).collect::<Result<_, _>>()?;
+    let entries2: Vec<PathBuf> = fs::read_dir(dir2)?.map(|entry| entry.map(|e| e.path())).collect::<Result<_, _>>()?;
 
     if entries1.len() != entries2.len() {
         return Ok(false);
     }
 
     for entry1 in entries1 {
-        let entry2 = dir2.join(entry1.file_name().unwrap());
+        let entry2 = dir2.join(entry1.file_name().ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Invalid file name"))?);
 
         if entry1.is_dir() {
             if !compare_directories(&entry1, &entry2)? {

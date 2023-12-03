@@ -205,8 +205,14 @@ fn sort_hashes(commits_created: &HashMap<String, CommitEntity>) -> Vec<(String, 
     let mut commits_vec: Vec<(String, CommitEntity)> = commits_created.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
     commits_vec.sort_by_key(|( _, commit)| {
-        let date_str = commit.author.split_whitespace().nth(3).unwrap_or("");
-        let date_num = date_str.parse::<i64>().unwrap_or(0);
+        let date_str = match commit.author.split_whitespace().nth(3){
+            Some(date) => date,
+            None => ""
+        };
+        let date_num = match date_str.parse::<i64>() {
+            Ok(date_num) => date_num,
+            Err(_) => 0
+        };
         let _ = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(date_num, 0), Utc);
     });
 
