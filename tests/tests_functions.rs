@@ -81,6 +81,17 @@ pub fn commit_one_file(server_path: PathBuf, file_name: &str) {
     }    
 }
 
+pub fn commit_one_file_client(client_path: PathBuf, file_name: &str) {
+    let _ = create_dir_all(&client_path);
+    let test_file_path = client_path.join(file_name);
+    if let Ok(mut archivo) = File::create(test_file_path) {
+        let _ = archivo.write_all(format!("Archivo para hacer prueba de clone: {}", file_name ).as_bytes());
+        let _ = rust_git::vcs::version_control_system::VersionControlSystem::add(&client_path);
+        let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!("{} commit", file_name));
+    }    
+}
+
+
 pub fn commit_one_folder(server_path: PathBuf, folders: &str, file_name: &str) {
     let folder = &server_path.join("tests").join("clone").join(folders);
     let _ = create_dir_all(folder);

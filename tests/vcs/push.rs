@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use std::{path::Path, thread, fs};
+    use std::{path::Path, thread, fs, time::Duration};
 
     use rust_git::{vcs::version_control_system::VersionControlSystem, handlers::{clone::handler_clone, tag::handler_tag}, servers::server::Server};
 
-    use crate::tests_functions::{commit_one_file, compare_directories};
+    use crate::tests_functions::{commit_one_file, compare_directories, commit_one_file_client};
 
     #[test]
     pub fn test_01_push_1_file() -> Result<(), std::io::Error> {
@@ -24,19 +24,20 @@ mod tests {
             let clone = thread::spawn( move || {
                 VersionControlSystem::init( client_path, Vec::new());
                 let _ = handler_clone("git clone tests/clone".to_string());
-                commit_one_file(client_path.to_path_buf(), "test_file.txt");
-                //let _ = VersionControlSystem::push("git push origin".to_string());
+                commit_one_file_client(client_path.to_path_buf(), "test_file_client.txt");
+                let _ = VersionControlSystem::push("git push origin".to_string());
             });
             let _ = clone.join();
 
             println!("CLIENT PATH: {:?}", client_path);
             println!("SERVER PATH: {:?}", server_path);
+            thread::sleep(Duration::from_secs_f64(0.5));
             assert!(
                 compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
                 "Los directorios no son iguales"
             );
-            //fs::remove_dir_all(client_path)?;
-            //fs::remove_dir_all(server_path)?;
+            fs::remove_dir_all(client_path)?;
+            fs::remove_dir_all(server_path)?;
             Ok(())
         }
 
@@ -57,7 +58,7 @@ mod tests {
                 let clone = thread::spawn( move || {
                     VersionControlSystem::init( client_path, Vec::new());
                     let _ = handler_clone("git clone tests/clone".to_string());
-                    commit_one_file(client_path.to_path_buf(), "test_file.txt");
+                    commit_one_file_client(client_path.to_path_buf(), "test_file_client.txt");
                     handler_tag("git tag -a version2 hola".to_string());
                     let _ = VersionControlSystem::push("git push origin".to_string());
                 });
@@ -66,6 +67,7 @@ mod tests {
                 let _ = VersionControlSystem::init(server_path, Vec::new());
                 println!("CLIENT PATH: {:?}", client_path);
                 println!("SERVER PATH: {:?}", server_path);
+                thread::sleep(Duration::from_secs_f64(0.5));
                 assert!(
                     compare_directories(&client_path.join(".rust_git").join("objects"), &server_path.join("tests").join("clone").join(".rust_git").join("objects"))?,
                     "Los directorios no son iguales"
