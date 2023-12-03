@@ -12,8 +12,7 @@ use std::net::Shutdown;
 use std::path::Path;
 use std::{net::TcpStream, path::PathBuf};
 
-use chrono::{DateTime, Utc, NaiveDateTime};
-
+use chrono::NaiveDateTime;
 use crate::packfiles::packfile::{process_line, to_pkt_line};
 
 use crate::utils::files::file::{delete_all_files_and_folders, create_file_and_their_folders};
@@ -213,7 +212,7 @@ fn sort_hashes(commits_created: &HashMap<String, CommitEntity>) -> Vec<(String, 
             Ok(date_num) => date_num,
             Err(_) => 0
         };
-        let _ = DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(date_num, 0), Utc);
+        let _ = NaiveDateTime::from_timestamp_opt(date_num, 0);
     });
 
     commits_vec
