@@ -182,6 +182,7 @@ impl Clone{
                 TAG_CODE_NUMBER =>   if let Err(e) = create_tag_folder(content, repo){
                     println!("Error creating tag {}", e);   
                 },
+                OBJ_REF_DELTA_CODE_NUMBER => {},
                 _ => println!("Type not identify {}", index),
             }
         }

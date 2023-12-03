@@ -1,8 +1,7 @@
 use rust_git::interfaces::login::DrawLogin;
 use rust_git::interfaces::interface::RustInterface;
 use rust_git::vcs::files::config::Config;
-
-
+ 
 fn main() -> Result<(), std::io::Error>{
     let draw_login = DrawLogin::new();
     let result = Config::read_config();
@@ -18,7 +17,6 @@ fn main() -> Result<(), std::io::Error>{
 /* 
 fn main() -> Result<(), std::io::Error>{
     let _ = VersionControlSystem::init(Path::new("test_delta"), Vec::new());
-
     loop{
         let mut input = String::new();
         io::stdout().flush().unwrap();

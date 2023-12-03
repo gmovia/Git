@@ -1,5 +1,5 @@
 use std::{net::TcpStream, path::Path, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
-use crate::{packfiles::{packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, process_refs_old_new, create_tag_folder}}, vcs::{commands::branch::Branch, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH, BLOB_CODE_NUMBER, TAG_CODE_NUMBER, COMMIT_CODE_NUMBER}, proxies::proxy::Proxy, utils::randoms::random::Random};
+use crate::{packfiles::{packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, process_refs_old_new, create_tag_folder}}, vcs::{commands::branch::Branch, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH, BLOB_CODE_NUMBER, TAG_CODE_NUMBER, COMMIT_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, proxies::proxy::Proxy, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
 use std::fmt::Write as FmtWrite;
 
@@ -213,6 +213,7 @@ impl Fetch {
                 TAG_CODE_NUMBER =>   if let Err(e) = create_tag_folder(content, repo){
                     println!("Error creating tag {}", e);   
                 },
+                OBJ_REF_DELTA_CODE_NUMBER => {},
                 _ => println!("Type not identify {}", index),
             }
         }

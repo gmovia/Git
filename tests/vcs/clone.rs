@@ -30,8 +30,8 @@ mod tests {
         let server = get_number_of_elements(server_path.join("tests").join("clone"));
         let client = get_number_of_elements(client_path.to_path_buf());
         assert_eq!(server,client);
-        //fs::remove_dir_all(client_path)?;
-        //fs::remove_dir_all(server_path)?;
+        fs::remove_dir_all(client_path)?;
+        fs::remove_dir_all(server_path)?;
         Ok(())
     }
 
