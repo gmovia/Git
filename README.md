@@ -20,18 +20,18 @@ The first version includes the following functionalities.
 - Implementation of a graphical interface.
 
 ## Second Version
-The second version includes complementary commands: check-ignore, ls-files, ls-tree, show-ref, rebase and tag.
+The second version includes complementary commands: check-ignore, ls-files, ls-tree, show-ref, rebase and tag. Also, includes the config file and the log file.
 
 ## Authors
 
 Name | Code | Email
 ------ | ------| -------------
-[Movia, Guido Alejandro](https://github.com/gmovia) | 102896 | gmovia@fi.uba.ar
 [De Feo, Laura Mailen](https://github.com/ldefeo) | 102831 | ldefeo@fi.uba.a
 [Diaz Calixto, Luz](https://github.com/ldiazcto) | 105122 | ldiazc@fi.uba.ar
 [Moralejo, Agustin](https://github.com/AgustinMoralejo) | 101591 | amoralejo@fi.uba.ar
+[Movia, Guido Alejandro](https://github.com/gmovia) | 102896 | gmovia@fi.uba.ar
 
 ## Docs
-[PPTX First Version](https://docs.google.com/presentation/d/1ItS433G38uea7VKZZSDba7yxDmGYxZAx/edit#slide=id.p1)
-[PPTX Secod Version](https://docs.google.com/presentation/d/1P8Syx5S3MPJGLxoDYLBmzRJVE5fTkq3g2zO2d653LiY/edit#slide=id.g1e842d85b7e_0_39)
-[Paper](https://www.overleaf.com/project/655d589b184827a20a861939)
+[PPTX First Version](https://docs.google.com/presentation/d/1ItS433G38uea7VKZZSDba7yxDmGYxZAx/edit?usp=sharing)
+[PPTX Secod Version](https://docs.google.com/presentation/d/1P8Syx5S3MPJGLxoDYLBmzRJVE5fTkq3g2zO2d653LiY/edit?usp=sharing)
+[Paper](https://www.overleaf.com/read/dfjrtzpyhrgv#af0d1c)
