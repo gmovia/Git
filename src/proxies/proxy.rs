@@ -26,6 +26,7 @@ impl Proxy {
         CommitEntity::write(repo_path, commit)
     }
 
+    /// Recibe el hash de un commit y obtiene su respectiva entidad
     pub fn read_commit(
         repo_path: &Path,
         commit_hash: String,
@@ -33,6 +34,7 @@ impl Proxy {
         CommitEntity::read(repo_path, &commit_hash)
     }
 
+    /// Recibe el contenido de un tree y lo escribe
     pub fn write_tree(repo_path: &Path, content: &str) -> Result<String, std::io::Error> {
         let entity_strings: Vec<&str> = content.split('\n').filter(|&s| !s.is_empty()).collect();
         let tree_path = Path::new(&repo_path).join(Random::random());
@@ -64,18 +66,22 @@ impl Proxy {
         Ok(hash_tree)
     }
 
+    /// Recibe el hash de un tree y obtiene su respectiva entidad
     pub fn read_tree(repo_path: &Path, tree_hash: String) -> Result<Vec<Entity>, std::io::Error> {
         TreeEntity::read(repo_path, tree_hash)
     }
 
+    /// Recibe el contenido de un blob y lo escribe
     pub fn write_blob(repo_path: &Path, content: &String) -> Result<String, std::io::Error> {
         BlobEntity::write(repo_path, content)
     }
 
+    /// Recibe el hash de un blob y obtiene su respectiva entidad
     pub fn read_blob(repo_path: &Path, blob_hash: String) -> Result<String, std::io::Error> {
         BlobEntity::read(repo_path, blob_hash)
     }
 
+    /// Recibe el contenido de un delta y un conjunto de blobs y lo escribe
     pub fn write_ref_delta(
         repo_path: &Path,
         content: RefDeltaEntity,

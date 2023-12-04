@@ -34,7 +34,6 @@ use std::{
 pub struct Clone;
 
 impl Clone {
-
     /// Esta funcion sirve como inicialiazdor del struct Clone.
     pub fn git_clone(stream: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
         Self::receive_pack(stream, repo)?;
@@ -233,7 +232,6 @@ impl Clone {
         let commit = Proxy::write_ref_delta(repo_path, delta_entity, blobs)?;
         Ok(commit)
     }
-
 
     /// Esta funcion se encarga de crear y delegar la creacion de las diferentes carpetas para cada tipo de objeto.
     pub fn create_folders(
@@ -438,7 +436,7 @@ impl Clone {
         }
     }
 
-    /// Este archivo se encarga de parsear y descomprimir la data que respecta a los objetos que recibimos del servidor. 
+    /// Este archivo se encarga de parsear y descomprimir la data que respecta a los objetos que recibimos del servidor.
     fn manage_pack(pack: &[u8]) -> Result<Vec<(u8, Vec<u8>)>, std::io::Error> {
         let object_number = Self::parse_number(&pack[8..12])?;
         let mut position: usize = 12;
@@ -466,7 +464,6 @@ impl Clone {
 
         Ok(objects)
     }
-
 
     /// Esta funcion nos ayuda a obtener un contenido legible en caso de tener un objeto tree.
     fn read_cstring<R: Read>(reader: &mut R) -> io::Result<String> {

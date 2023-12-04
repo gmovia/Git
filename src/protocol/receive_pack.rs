@@ -22,7 +22,6 @@ use crate::vcs::commands::init::Init;
 use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::files::current_commit::CurrentCommit;
 
-
 /// Maneja el inicio de la recepción, incluyendo la inicialización y envío de paquetes.
 /// Recibe un mutable TcpStream `writer` para enviar datos y la ruta del servidor y cliente como `server_client_path`.
 pub fn start_handler_receive(

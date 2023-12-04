@@ -8,9 +8,11 @@ use std::net::TcpStream;
 use std::path::Path;
 
 //comando para levantar el git daemon --> git daemon --base-path=. --export-all --reuseaddr --informative-errors --verbose --verbose
+/// Este struct represeta al cliente
 pub struct Client;
 
 impl Client {
+    /// Esta funcion sirve como inicializadora para el cliente cuando vamos a hacer uso de algun comado remoto.
     pub fn client(command: String, input_repository: &Path) -> Result<(), std::io::Error> {
         let address = format!("{}:{}", HOST, PUERTO);
 
@@ -23,6 +25,7 @@ impl Client {
         Ok(())
     }
 
+    /// Esta funcion se encarga de handlear los diferentes comando remotos posibles
     pub fn run_client(
         address: &str,
         command: &str,
@@ -45,6 +48,7 @@ impl Client {
         }
     }
 
+    /// Esta funcion se encarga de handlear el comando clone
     pub fn handler_clone(
         mut stream: TcpStream,
         command: &str,
@@ -57,6 +61,7 @@ impl Client {
         Ok(())
     }
 
+    /// Esta funcion se encarga de handlear el comando push
     fn handler_push(
         mut stream: TcpStream,
         command: &str,
@@ -69,6 +74,7 @@ impl Client {
         Ok(())
     }
 
+    /// Esta funcion se encarga de handlear el comando fetch
     pub fn handler_fetch(
         mut stream: TcpStream,
         command: &str,
@@ -82,6 +88,7 @@ impl Client {
         Ok(())
     }
 
+    /// Esta funcion se encarga de handlear el input que le vamos  enviar al servidor
     fn handler_input(input: &str, input_repository: &Path) -> Result<String, std::io::Error> {
         match input {
             _ if input.contains("git clone") => {

@@ -9,7 +9,6 @@ pub enum ShowRefOptions {
 }
 
 impl ShowRef {
-
     /// Comando show_ref.
     /// Matchea distintas operaciones y devuelve un hashmap con la informacion leida de refs
     pub fn show_ref(

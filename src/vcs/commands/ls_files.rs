@@ -16,7 +16,6 @@ pub enum LsFilesOptions {
 }
 
 impl LsFiles {
-
     /// Comando ls_files.
     /// Recibe el current path y una option para realizar distintas operaciones
     pub fn ls_files(option: LsFilesOptions, path: &Path) -> Result<Vec<String>, std::io::Error> {
@@ -70,7 +69,6 @@ impl LsFiles {
         Ok(files.to_vec())
     }
 
-
     /// Devuelve los files que fueron agregados al staging_area con el comando add, pero todavia no se committearon
     pub fn get_staging(
         _path: &Path,
@@ -82,7 +80,6 @@ impl LsFiles {
         }
         Ok(files.to_vec())
     }
-
 
     /// Devuelve los files que fueron eliminados luego de committearlos, pero no se volvieron a committear
     pub fn get_deleted(
@@ -97,7 +94,6 @@ impl LsFiles {
         }
         Ok(files.to_vec())
     }
-
 
     /// Devuelve los files creados que todavia no fueron committeados
     pub fn get_untracked(

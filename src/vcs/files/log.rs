@@ -9,7 +9,6 @@ use super::current_repository::CurrentRepository;
 pub struct Log;
 
 impl Log {
-
     /// Escribe el archivo de log ubicado en la carpeta info de la carpeta .rust_git, recibiendo un mensaje de log para escribir
     pub fn write_log(log: &String) -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;

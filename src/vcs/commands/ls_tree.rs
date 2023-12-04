@@ -10,14 +10,12 @@ use std::path::Path;
 pub struct LsTree;
 
 impl LsTree {
-
     /// Comando ls_tree.
     /// Recibe el nombre de una branch y el current path y devuelve informacion de los trees asociados a esa branch
     pub fn ls_tree(branch: &str, path: &Path) -> Result<Vec<String>, std::io::Error> {
         let mut information = Vec::new();
         Self::get_information_branch(branch, path, &mut information)
     }
-
 
     /// Devuelve la informacion de los trees de la branch
     pub fn get_information_branch(
@@ -33,7 +31,6 @@ impl LsTree {
         }
         Ok(information.to_vec())
     }
-
 
     /// Lee el vector entities asociado a los trees y los agrega en el vector de informacion para mostrarlo por interfaz
     pub fn read_entities(content: Vec<Entity>, information: &mut Vec<String>, depth: usize) {

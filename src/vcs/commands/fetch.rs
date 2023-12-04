@@ -30,7 +30,6 @@ use std::{
 pub struct Fetch;
 
 impl Fetch {
-
     /// Esta funcion sirve como inicializadora del comando fetch
     pub fn git_fetch(stream: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
         Self::receive_pack(stream, repo)?;
@@ -69,7 +68,6 @@ impl Fetch {
         Self::create_objects(&packets, &objects, repo)?;
         Ok(())
     }
-
 
     /// Esta funcion se encarga de delegar el manejo que s edebe tener de cada tipo de objeto para la creacion de las carpetasy contenido de las mismas.
     fn create_objects(
@@ -208,7 +206,6 @@ impl Fetch {
         }
     }
 
-
     /// Esta funcion se encarga de delegar el procesamiento de los diferentes objetos recibidos.
     fn process_folder(objects: Vec<(u8, Vec<u8>)>) -> Vec<(u8, String)> {
         let mut objects_processed: Vec<(u8, String)> = Vec::new();
@@ -232,7 +229,7 @@ impl Fetch {
         Ok(entries)
     }
 
-    /// Esta funcion nos ayuda a poder obtener el contenido de un tree de forma legible para el humano. (utf-8) 
+    /// Esta funcion nos ayuda a poder obtener el contenido de un tree de forma legible para el humano. (utf-8)
     fn read_tree_entry<R: Read>(reader: &mut R) -> io::Result<(String, String, Vec<u8>)> {
         let mut mode_bytes = [0; 6];
         reader.read_exact(&mut mode_bytes)?;
@@ -260,7 +257,6 @@ impl Fetch {
         }
         Ok(String::from_utf8_lossy(&buffer).to_string())
     }
-
 
     /// Esta funcion de encarga de delegar la creacion de las carpetas dependiendo del tipo de objeto en cuestion.
     fn create_folders(
@@ -580,7 +576,7 @@ impl Fetch {
         }
     }
 
-    /// Esta funcion se encarga de procesar los diferentes tipos de objetos que recibimos del servidor 
+    /// Esta funcion se encarga de procesar los diferentes tipos de objetos que recibimos del servidor
     fn manage_pack(pack: &[u8]) -> Result<Vec<(u8, Vec<u8>)>, std::io::Error> {
         let object_number = Self::parse_number(&pack[8..12])?;
 

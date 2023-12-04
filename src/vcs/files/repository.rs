@@ -11,12 +11,10 @@ use std::{collections::HashMap, path::PathBuf};
 pub struct Repository;
 
 impl Repository {
-
     /// Devuelve el hashmap del local repository llamando a read()
     pub fn read_repository() -> Result<HashMap<String, String>, std::io::Error> {
         Self::read(&CurrentRepository::read()?)
     }
-
 
     /// Devuelve el hashmap del local repository
     pub fn read(repo_path: &Path) -> Result<HashMap<String, String>, std::io::Error> {

@@ -132,7 +132,7 @@ impl Push {
             ))
         }
     }
-    
+
     /// Analiza un mensaje y extrae la ruta del repositorio actual.
     pub fn parse_query_to_extract_path(message: &str) -> Result<&str, std::io::Error> {
         let parts: Vec<&str> = message.split('\0').collect();

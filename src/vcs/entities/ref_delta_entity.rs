@@ -19,6 +19,7 @@ use crate::{
 };
 use std::fmt::Write as FmtWrite;
 
+/// Este struct representa a los objetos ref delta
 pub enum DeltaOptions {
     Copy,
     Append,
@@ -31,6 +32,7 @@ pub struct RefDeltaEntity {
 }
 
 impl RefDeltaEntity {
+    /// Esta funcion sirve para escribir un objeto del tipo ref delta
     pub fn write(
         repo_path: &Path,
         ref_delta: RefDeltaEntity,
@@ -86,11 +88,13 @@ impl RefDeltaEntity {
         Ok(commit)
     }
 
+    /// Esta funcion determina si el bit mas a la izquierda de un byte es 1 o 0.
     fn is_bit_set(byte: u8) -> bool {
         let mask = 0b10000000;
         (byte & mask) == mask
     }
 
+    /// Esta funcion representa la logita del tipo de accion append.
     fn append_option(
         &self,
         mut position: usize,
@@ -103,6 +107,7 @@ impl RefDeltaEntity {
         Ok(position)
     }
 
+    /// Esta funcion se encarga de posicionar la tira de bytes en la posicion correacta al inicio del procesamiento del objeto.
     fn set_initial_position(&self) -> Result<usize, std::io::Error> {
         let mut position = 0;
         while Self::is_bit_set(self.data[position]) {
@@ -117,6 +122,7 @@ impl RefDeltaEntity {
         Ok(position)
     }
 
+    /// Esta funcion representa la logita del tipo de accion copy.
     fn copy_option(
         &self,
         mut position: usize,
@@ -165,6 +171,7 @@ impl RefDeltaEntity {
         Ok(position)
     }
 
+    /// Esta funcion se encarga de procesar los tipos de objetos tree
     fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
         let mut reader = inner_vec.as_slice();
 
@@ -187,6 +194,7 @@ impl RefDeltaEntity {
         }
     }
 
+    /// Esta funcion nos ayuda a obtener exto legible en un objeto del tipo tree
     fn read_tree_sha1<R: Read>(reader: &mut R) -> io::Result<Vec<(String, String, Vec<u8>)>> {
         let mut entries = Vec::new();
         while let Ok(entry) = Self::read_tree_entry(reader) {
@@ -196,6 +204,7 @@ impl RefDeltaEntity {
         Ok(entries)
     }
 
+    /// Esta funcion nos ayuda a obtener exto legible en un objeto del tipo tree
     fn read_tree_entry<R: Read>(reader: &mut R) -> io::Result<(String, String, Vec<u8>)> {
         let mut mode_bytes = [0; 6];
         reader.read_exact(&mut mode_bytes)?;
@@ -210,6 +219,7 @@ impl RefDeltaEntity {
         Ok((mode_str.to_string(), name, sha1))
     }
 
+    /// Esta funcion nos ayuda a obtener exto legible en un objeto del tipo tree
     fn read_cstring<R: Read>(reader: &mut R) -> io::Result<String> {
         let mut buffer = Vec::new();
         loop {
@@ -223,6 +233,7 @@ impl RefDeltaEntity {
         Ok(String::from_utf8_lossy(&buffer).to_string())
     }
 
+    /// Esta funcion me devuelve la posicion inicial y final de cada accion dentro de un objeto delta.
     fn positions(bytes: &[u8]) -> Result<(u32, u32, usize), std::io::Error> {
         let initial_position: u32;
         let finish_position: u32;
@@ -248,6 +259,7 @@ impl RefDeltaEntity {
         Ok((initial_position, finish_position, bytes_used))
     }
 
+    /// Esta funcion me ayuda a obtener el objeto tree de forma correcta en el caso de que haya un delta de un delta.
     fn get_blob_content(text: &str, position: usize) -> Option<&str> {
         if let Some(mut index) = text[position..].find('\n') {
             index += position;
@@ -258,6 +270,7 @@ impl RefDeltaEntity {
         }
     }
 
+    /// Esta funcion me parsea los bytes depediendo el tipo de accion y me ayuda a calcular las posiciones iniciales y finales.
     fn get_hexadecimal(
         positions: Vec<usize>,
         bytes: &[u8],
@@ -279,6 +292,7 @@ impl RefDeltaEntity {
         }
     }
 
+    /// Logica para el procesamineto del offset
     fn offset_bytes(mut positions: Vec<usize>, bytes: &[u8]) -> String {
         let mut aux = String::new();
         let mut hexa_number = String::new();
@@ -339,6 +353,7 @@ impl RefDeltaEntity {
         hexa_number
     }
 
+    /// Logica para el procesamineto del size
     fn size_bytes(mut positions: Vec<usize>, bytes: &[u8]) -> String {
         let mut aux = 0;
         let mut hexa_number = String::new();
@@ -374,6 +389,7 @@ impl RefDeltaEntity {
         hexa_number
     }
 
+    /// Esta funcion me ayuda a calcular el offser y el size de los objetos de cada accion.
     fn get_bits_positions(byte: u8) -> (Vec<usize>, Vec<usize>) {
         let mut firsts_bits = Vec::new();
         let mut second_bits = Vec::new();

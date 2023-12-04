@@ -18,7 +18,6 @@ pub enum CheckoutOptions<'a> {
 }
 
 impl Checkout {
-
     /// Comando checkout.
     /// Recibe el current path y una option para matchear distintas operaciones
     pub fn checkout(path: &Path, option: CheckoutOptions) -> Result<(), std::io::Error> {

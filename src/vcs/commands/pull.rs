@@ -7,6 +7,7 @@ use super::init::Init;
 pub struct Pull;
 
 impl Pull {
+    /// Esta funcion sirve como inicializador del comando pull
     pub fn pull(message: String) -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
         let branch_name = Init::get_current_branch(&current)?;

@@ -19,7 +19,6 @@ pub enum RemoteOption<'a> {
 }
 
 impl Remote {
-
     /// Realiza operaciones relacionadas con remotos en un repositorio Git según la opción proporcionada.
     pub fn remote(current_repo: &Path, option: RemoteOption) -> Result<String, std::io::Error> {
         match option {

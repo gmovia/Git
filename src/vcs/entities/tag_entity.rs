@@ -27,7 +27,7 @@ pub struct TagEntity {
 }
 
 impl TagEntity {
-    /// Recibe un tag y crea su correspondiente archivo 
+    /// Recibe un tag y crea su correspondiente archivo
     pub fn write(repo_path: &Path, tag: TagEntity) -> Result<String, std::io::Error> {
         let tag_path = Path::new(&repo_path).join(Random::random());
         let mut tag_file = OpenOptions::new()

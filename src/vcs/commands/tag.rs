@@ -19,7 +19,6 @@ pub enum TagOptions<'a> {
 }
 
 impl Tag {
-
     /// Comando tag.
     /// Recibe el current path y una option y matchea las opciones de tag
     pub fn tag(path: &Path, option: TagOptions) -> Result<Vec<String>, std::io::Error> {

@@ -56,7 +56,7 @@ pub fn process_line(stream: &mut TcpStream) -> Result<String, std::io::Error> {
     Ok(result)
 }
 
-/// Esta funcion se encarga de enviarle al servidor los mensajes de done una vez que terminamos de enviar lo que queriamos desde el cliente al servidor. 
+/// Esta funcion se encarga de enviarle al servidor los mensajes de done una vez que terminamos de enviar lo que queriamos desde el cliente al servidor.
 pub fn send_done_msg(socket: &mut TcpStream) -> Result<(), std::io::Error> {
     let msg_done = "0000";
     let _ = socket.write(msg_done.as_bytes());

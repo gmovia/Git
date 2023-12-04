@@ -39,7 +39,7 @@ impl CurrentCommit {
         Ok(hash)
     }
 
-    /// Actualiza el hash en las referencias del repositorios y la rama brindados 
+    /// Actualiza el hash en las referencias del repositorios y la rama brindados
     pub fn write_for_branch(
         repo_path: &Path,
         branch: &str,

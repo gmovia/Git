@@ -24,8 +24,6 @@ pub struct Encoder {
 }
 
 impl Encoder {
-
-
     /// Inicializa un codificador para manejar el envío de información a través de un flujo TCP.
     /// Recibe la ruta del repositorio como `path` y un par de vectores de mensajes como `messages`.
     pub fn init_encoder(
@@ -63,8 +61,8 @@ impl Encoder {
         }
         Ok(total_files)
     }
-/// Procesa el contenido de una entrada de directorio relacionada con etiquetas en un repositorio Git.
-/// Recibe la ruta del repositorio como `path` y una entrada de directorio `entry`.
+    /// Procesa el contenido de una entrada de directorio relacionada con etiquetas en un repositorio Git.
+    /// Recibe la ruta del repositorio como `path` y una entrada de directorio `entry`.
     pub fn process_tag_content(path: &Path, entry: DirEntry) -> Result<bool, std::io::Error> {
         let metadata = entry.metadata()?;
         let mut hash = String::new();
@@ -168,9 +166,9 @@ impl Encoder {
         false
     }
 
-/// Procesa el directorio de objetos en el servidor durante una operación de fetch.
-/// Recibe la ruta del servidor como `server_path`, una referencia mutable a objects_data para almacenar datos de objetos,
-/// el hash del commit como `commit_hash` y un vector de objetos (`haves`).
+    /// Procesa el directorio de objetos en el servidor durante una operación de fetch.
+    /// Recibe la ruta del servidor como `server_path`, una referencia mutable a objects_data para almacenar datos de objetos,
+    /// el hash del commit como `commit_hash` y un vector de objetos (`haves`).
     fn fetch_process_directory(
         server_path: &Path,
         objects_data: &mut Vec<(String, usize, usize)>,
@@ -271,7 +269,7 @@ impl Encoder {
         Ok(())
     }
 
-/// Establece los bits de tipo y longitud de un objeto Git.
+    /// Establece los bits de tipo y longitud de un objeto Git.
     pub fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
         if object_type > 7 {
             return Err(std::io::Error::new(
@@ -311,8 +309,8 @@ impl Encoder {
         let retun = number & mask;
         retun as u8
     }
-/// Crea el encabezado inicial del packfile.
-/// Recibe una referencia mutable al packfile como `packfile` y la ruta del repositorio como `path`.
+    /// Crea el encabezado inicial del packfile.
+    /// Recibe una referencia mutable al packfile como `packfile` y la ruta del repositorio como `path`.
     fn create_header(packfile: &mut Vec<u8>, path: &Path) -> Result<usize, std::io::Error> {
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);
@@ -323,6 +321,9 @@ impl Encoder {
         Ok(objects)
     }
 
+    /// Crea un encabezado de tamaño para el packfile.
+    /// Agrega una firma y versión al packfile, junto con el número de objetos.
+    /// Recibe una referencia mutable al packfile como `packfile` y la cantidad de objetos como `objects`.
     pub fn create_size_header(
         packfile: &mut Vec<u8>,
         objects: usize,
@@ -349,6 +350,8 @@ impl Encoder {
         packfile.extend(number_bytes);
     }
 
+    /// Procesa un archivo en el repositorio Git y determina su tipo y longitud.
+    /// Recibe la ruta del archivo como `file_path`.
     fn process_file(file_path: &Path) -> Result<(String, usize, usize), std::io::Error> {
         let metadata = fs::metadata(file_path)?;
         let mut content = String::new();
@@ -383,6 +386,8 @@ impl Encoder {
         }
     }
 
+    /// Procesa un directorio en el repositorio Git, recorriendo recursivamente sus archivos y subdirectorios.
+    /// Recibe la ruta del directorio como `path` y un vector mutable `objects_data` para almacenar datos de objetos.
     fn process_directory(
         path: &Path,
         objects_data: &mut Vec<(String, usize, usize)>,
@@ -400,6 +405,8 @@ impl Encoder {
         Ok(objects_data.to_vec())
     }
 
+    /// Modifica las entradas de un árbol Git para adaptarse a un formato específico.
+    /// Recibe una cadena de entrada `input` representando el contenido de un árbol Git.
     fn modify_entry_tree(input: &str) -> String {
         let mut output = String::new();
         for line in input.lines() {
@@ -413,7 +420,8 @@ impl Encoder {
         }
         output
     }
-
+    /// Comprime un objeto del repositorio Git utilizando zlib.
+    /// Recibe la ruta del archivo de entrada como `archivo_entrada` y el tipo de objeto como `object_type`.
     pub fn compress_object(
         archivo_entrada: &Path,
         object_type: usize,
