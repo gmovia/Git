@@ -27,7 +27,7 @@ The second version includes complementary commands: check-ignore, ls-files, ls-t
 Name | Code | Email
 ------ | ------| -------------
 [De Feo, Laura Mailen](https://github.com/ldefeo) | 102831 | ldefeo@fi.uba.a
-[Diaz Calixto, Luz](https://github.com/ldiazcto) | 105122 | ldiazc@fi.uba.ar
+[Diaz Calixto, Luz M.](https://github.com/ldiazcto) | 105122 | ldiazc@fi.uba.ar
 [Moralejo, Agustin](https://github.com/AgustinMoralejo) | 101591 | amoralejo@fi.uba.ar
 [Movia, Guido Alejandro](https://github.com/gmovia) | 102896 | gmovia@fi.uba.ar
 
