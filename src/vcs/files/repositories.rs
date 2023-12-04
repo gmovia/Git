@@ -8,6 +8,7 @@ use std::{
 pub struct Repositories;
 
 impl Repositories {
+    /// Escribe el repositorio en el historial de repositorios del usuario
     pub fn write(path: &Path) -> Result<(), std::io::Error> {
         let repositories = Self::read()?;
         if !repositories.contains(&path.to_string_lossy().to_string()) {
@@ -26,6 +27,7 @@ impl Repositories {
         Ok(())
     }
 
+    /// Lee los repositorios asociados al usuario
     pub fn read() -> Result<Vec<String>, std::io::Error> {
         let mut repositories = Vec::new();
         let bdd_path = Path::new(BDD_PATH);

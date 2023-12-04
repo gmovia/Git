@@ -1,5 +1,6 @@
 use crate::vcs::version_control_system::VersionControlSystem;
 
+/// Controlador del comando rebase. Recibe la instruccion junto con una branch y ejecuta el comando.
 pub fn handler_rebase(input: String) -> String {
     let args: Vec<&str> = input.split_whitespace().collect();
 

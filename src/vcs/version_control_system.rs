@@ -36,15 +36,19 @@ use crate::{
 };
 use std::{collections::HashMap, path::Path};
 
+/// El VersionControlSystem es una especie de handler para el llamado de los diferentes comandos disponibles.
 #[derive(Debug, Clone)]
 pub struct VersionControlSystem;
 
 impl VersionControlSystem {
+
+    /// Esta funcion handlea lo que respecta al comando init
     pub fn init(path: &Path, args: Vec<String>) {
         let _ = Repositories::write(path);
         Init::git_init(path, args);
     }
 
+        /// Esta funcion handlea lo que respecta al comando status
     pub fn status() -> Result<
         (
             UntrackedFiles,
@@ -61,14 +65,17 @@ impl VersionControlSystem {
         Ok(Status::status(&files, &staging_area, &repository))
     }
 
+    /// Esta funcion handlea lo que respecta al comando add
     pub fn add(path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Add::add(path)
     }
 
+    /// Esta funcion handlea lo que respecta al comando reset
     pub fn reset(path: &Path) -> Result<HashMap<String, VCSFile>, std::io::Error> {
         Reset::reset(path)
     }
 
+    /// Esta funcion handlea lo que respecta al comando hash_object
     pub fn hash_object(
         path: &Path,
         option: WriteOption,
@@ -79,12 +86,14 @@ impl VersionControlSystem {
         HashObject::hash_object(path, object_path, option, _type)
     }
 
+    /// Esta funcion handlea lo que respecta al comando cat-file
     pub fn cat_file(hash: &str) -> Result<String, std::io::Error> {
         let current = CurrentRepository::read()?;
         let object_path = Init::get_object_path(&current)?;
         CatFile::cat_file(hash, object_path)
     }
 
+    /// Esta funcion handlea lo que respecta al comando rm
     pub fn rm(
         path: &Path,
         option: RemoveOption,

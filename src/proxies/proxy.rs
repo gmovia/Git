@@ -21,6 +21,7 @@ use std::{
 pub struct Proxy;
 
 impl Proxy {
+    /// Recibe una entidad commit y lo escribe
     pub fn write_commit(repo_path: &Path, commit: &CommitEntity) -> Result<String, std::io::Error> {
         CommitEntity::write(repo_path, commit)
     }

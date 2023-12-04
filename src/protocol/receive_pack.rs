@@ -22,11 +22,14 @@ use crate::vcs::commands::init::Init;
 use crate::vcs::entities::commit_entity::CommitEntity;
 use crate::vcs::files::current_commit::CurrentCommit;
 
+
+/// Maneja el inicio de la recepción, incluyendo la inicialización y envío de paquetes.
+/// Recibe un mutable TcpStream `writer` para enviar datos y la ruta del servidor y cliente como `server_client_path`.
 pub fn start_handler_receive(
     writer: &mut TcpStream,
     server_client_path: PathBuf,
 ) -> Result<String, std::io::Error> {
-    let _ = handler_receive_pack(writer)?; // que hago con esto? let _? o lo saco?
+    let _ = handler_receive_pack(writer)?;
 
     send_repo_last_commit_for_branch(writer, &server_client_path)?;
     select_update(writer, server_client_path.clone())?;
@@ -35,6 +38,9 @@ pub fn start_handler_receive(
     Ok("Respuesta desde start_handler_receive".to_string())
 }
 
+/// Extrae el nombre de la rama y el último commit desde una cadena con información de hash antiguo/nuevo.
+/// Recibe  Cadena que contiene información de hash antiguo/nuevo.
+/// Retorna Una tupla con el nombre de la rama y el hash del último commit.
 fn extract_branch_name(old_new_hash_commit: String) -> Result<(String, String), std::io::Error> {
     let parts: Vec<&str> = old_new_hash_commit.split_whitespace().collect();
     let last_commit_client = parts[1];
@@ -43,7 +49,7 @@ fn extract_branch_name(old_new_hash_commit: String) -> Result<(String, String), 
         .trim_end_matches('\n');
     Ok((branch_name.to_owned(), last_commit_client.to_string()))
 }
-
+/// Recupera el último commit para cada rama del repositorio en el servidor.
 fn recovery_last_commit_for_each_branch(
     server_client_path: &Path,
 ) -> Result<Vec<(String, String)>, io::Error> {
@@ -83,6 +89,7 @@ fn extract_last_commit(log_content: &str) -> Result<String, io::Error> {
     Ok(last_commit.to_string())
 }
 
+/// Envía la información del último commit para cada rama y las etiquetas al cliente remoto.
 fn send_repo_last_commit_for_branch(
     writer: &mut TcpStream,
     server_client_path: &Path,
@@ -108,6 +115,7 @@ fn send_repo_last_commit_for_branch(
     Ok(())
 }
 
+/// Maneja la selección de actualizaciones del cliente y realiza las operaciones necesarias.
 fn select_update(
     writer: &mut TcpStream,
     server_client_path: PathBuf,
@@ -294,6 +302,7 @@ fn write_commit_log_push(
     Ok(())
 }
 
+/// Actualiza el contenido del directorio actual con los archivos del repositorio.
 pub fn update_cd(path: &Path) -> Result<(), std::io::Error> {
     let repository_hashmap = read(path)?;
     delete_all_files_and_folders(path)?;

@@ -174,6 +174,7 @@ impl Init {
         Ok(())
     }
 
+    /// Esta funcion se encarga de crear el archivo que corresponde a .gitignore
     fn create_git_ignore(&self) -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
         let ignore_path = current.join(".gitignore");
@@ -185,18 +186,21 @@ impl Init {
         Ok(())
     }
 
+    /// Esta funcion a partir de un path nos devuelve el path completo de la carpeta object
     pub fn get_object_path(path: &Path) -> Result<PathBuf, std::io::Error> {
         let p = Path::new(path);
         let objects_path = p.join(RUST_PATH).join("objects");
         Ok(Path::new(&objects_path).to_path_buf())
     }
 
+    /// Esta funcion a partir de un path nos devuelve el path completo de la rama en la que estamos parados actualmente dentro de logs.
     pub fn get_current_log(path: &Path) -> Result<PathBuf, std::io::Error> {
         let branch = Self::get_current_branch(path)?;
         let log_path = path.join(".rust_git").join("logs").join(branch);
         Ok(log_path)
     }
 
+    /// Esta funcion a partir de un path nos devuelve el path completo de la rama en la que estamos parados actualmente.
     pub fn get_current_head(path: &Path) -> Result<PathBuf, std::io::Error> {
         let branch = Self::get_current_branch(path)?;
         let head_path = path
@@ -207,6 +211,7 @@ impl Init {
         Ok(head_path)
     }
 
+    /// Esta funcion a partir de un path nos devuelve el nombre de la rama actual sobre la que estamos parados.
     pub fn get_current_branch(path: &Path) -> Result<String, std::io::Error> {
         let p = Path::new(path);
 
@@ -223,6 +228,8 @@ impl Init {
             "Can't find the branch",
         ))
     }
+
+    /// Esta funcion nos devuelve el path del archivo de configuracion    
     pub fn get_current_config(path: &Path) -> Result<PathBuf, std::io::Error> {
         let config_path = path.join(".rust_git").join("config");
         Ok(Path::new(&config_path).to_path_buf())

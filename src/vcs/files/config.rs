@@ -9,6 +9,7 @@ use crate::constants::constant::CONFIG_PATH;
 pub struct Config;
 
 impl Config {
+    /// Recibe el nombre del usuario y su correo, y escribe el archivo de configuracion
     pub fn write_config(config: (String, String)) -> Result<(), std::io::Error> {
         let config_path = Path::new(CONFIG_PATH);
         let mut config_file = OpenOptions::new().write(true).open(config_path)?;
@@ -19,6 +20,7 @@ impl Config {
         Ok(())
     }
 
+    /// Lee los datos del archivo de configuracion: su nombre de usuario y correo
     pub fn read_config() -> Result<(String, String), std::io::Error> {
         let config_path = Path::new(CONFIG_PATH);
 

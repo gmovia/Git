@@ -2,6 +2,7 @@ use crate::vcs::{
     commands::show_ref::ShowRefOptions, version_control_system::VersionControlSystem,
 };
 
+/// Controlador del comando show-ref. Recibe la instruccion junto con una opcion y ejecuta el comando.
 pub fn handler_show_ref(input: String) -> String {
     let args: Vec<&str> = input.split_whitespace().collect();
 

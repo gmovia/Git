@@ -8,6 +8,7 @@ use std::{
 pub struct CurrentRepository;
 
 impl CurrentRepository {
+    /// Obtiene el repositorio actual
     pub fn read() -> Result<PathBuf, std::io::Error> {
         let current_path = Path::new(CURRENT_REPOSITORY_PATH);
         let repo_file = OpenOptions::new().read(true).open(current_path)?;

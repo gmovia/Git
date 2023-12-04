@@ -24,6 +24,10 @@ pub struct Encoder {
 }
 
 impl Encoder {
+
+
+    /// Inicializa un codificador para manejar el envío de información a través de un flujo TCP.
+    /// Recibe la ruta del repositorio como `path` y un par de vectores de mensajes como `messages`.
     pub fn init_encoder(
         path: &Path,
         messages: (Vec<String>, Vec<String>),
@@ -59,7 +63,8 @@ impl Encoder {
         }
         Ok(total_files)
     }
-
+/// Procesa el contenido de una entrada de directorio relacionada con etiquetas en un repositorio Git.
+/// Recibe la ruta del repositorio como `path` y una entrada de directorio `entry`.
     pub fn process_tag_content(path: &Path, entry: DirEntry) -> Result<bool, std::io::Error> {
         let metadata = entry.metadata()?;
         let mut hash = String::new();
@@ -163,6 +168,9 @@ impl Encoder {
         false
     }
 
+/// Procesa el directorio de objetos en el servidor durante una operación de fetch.
+/// Recibe la ruta del servidor como `server_path`, una referencia mutable a objects_data para almacenar datos de objetos,
+/// el hash del commit como `commit_hash` y un vector de objetos (`haves`).
     fn fetch_process_directory(
         server_path: &Path,
         objects_data: &mut Vec<(String, usize, usize)>,
@@ -263,6 +271,7 @@ impl Encoder {
         Ok(())
     }
 
+/// Establece los bits de tipo y longitud de un objeto Git.
     pub fn set_bits(object_type: u8, object_len: usize) -> Result<Vec<u8>, std::io::Error> {
         if object_type > 7 {
             return Err(std::io::Error::new(
@@ -302,7 +311,8 @@ impl Encoder {
         let retun = number & mask;
         retun as u8
     }
-
+/// Crea el encabezado inicial del packfile.
+/// Recibe una referencia mutable al packfile como `packfile` y la ruta del repositorio como `path`.
     fn create_header(packfile: &mut Vec<u8>, path: &Path) -> Result<usize, std::io::Error> {
         for &byte in b"0008NAK\nPACK" {
             packfile.push(byte);

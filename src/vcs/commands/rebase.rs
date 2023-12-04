@@ -15,6 +15,9 @@ use std::{
 pub struct Rebase;
 
 impl Rebase {
+
+    /// Comando rebase
+    /// Esta funcion recibe un nombre de una branch para cambiar la base y reordena los commits
     pub fn rebase(branch: &str) -> Result<(), std::io::Error> {
         let current = CurrentRepository::read()?;
         let current_branch = Branch::get_current_branch(&current)?;

@@ -16,6 +16,7 @@ pub struct Change {
     pub state: String,
 }
 
+/// Agrega los cambios al repositorio
 pub fn add_changes(repository: &mut HashMap<String, String>, changes: &HashMap<String, Change>) {
     for change in changes.values() {
         match change.state.as_str() {
@@ -30,6 +31,7 @@ pub fn add_changes(repository: &mut HashMap<String, String>, changes: &HashMap<S
     }
 }
 
+/// Escribe los cambios en un archivo temporal
 pub fn write_changes(conflict: &Conflict) -> Result<File, std::io::Error> {
     let current = CurrentRepository::read()?;
     let temp_path = current.join("temp_merge");
@@ -51,6 +53,7 @@ pub fn write_changes(conflict: &Conflict) -> Result<File, std::io::Error> {
     Ok(currents)
 }
 
+/// Lee los conflictos del archivo
 pub fn read_changes() -> Result<HashMap<String, Conflict>, std::io::Error> {
     let mut conflicts = HashMap::new();
     let current = CurrentRepository::read()?;

@@ -19,6 +19,7 @@ use crate::handlers::push::handler_push;
 use crate::handlers::rm::handler_rm;
 use crate::handlers::status::handler_status;
 
+/// Recibe una instruccion y la delega a su correspondiente instruccion.
 pub fn handler_command(input: &str) -> String {
     let input = input.trim();
     let _: Vec<String> = input

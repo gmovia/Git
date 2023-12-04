@@ -5,6 +5,7 @@ use std::{
     str::from_utf8,
 };
 
+/// Esta funcion se encarga de descomprimir con Zlib la tira de bytes que le enviemos
 pub fn decompress_data(compressed_data: &[u8]) -> Result<(Vec<u8>, u64), std::io::Error> {
     let mut decompressed_data = Vec::new();
     let mut decoder = ZlibDecoder::new(compressed_data);
@@ -12,12 +13,14 @@ pub fn decompress_data(compressed_data: &[u8]) -> Result<(Vec<u8>, u64), std::io
     Ok((decompressed_data, decoder.total_in()))
 }
 
+/// Esta funcion se encarga de modificar un mensaje agregandole su tamalo al comienzo
 pub fn to_pkt_line(msg: &str) -> String {
     let len = msg.len() + 4;
     let hex = format!("{:04x}", len);
     hex + msg
 }
 
+/// Esta funcion se encarga de leer la respuesta del servidor al upload pack.
 pub fn read_packet(stream: &mut TcpStream, len: usize) -> String {
     if len == 0 {
         return "0".to_string();
@@ -53,6 +56,7 @@ pub fn process_line(stream: &mut TcpStream) -> Result<String, std::io::Error> {
     Ok(result)
 }
 
+/// Esta funcion se encarga de enviarle al servidor los mensajes de done una vez que terminamos de enviar lo que queriamos desde el cliente al servidor. 
 pub fn send_done_msg(socket: &mut TcpStream) -> Result<(), std::io::Error> {
     let msg_done = "0000";
     let _ = socket.write(msg_done.as_bytes());

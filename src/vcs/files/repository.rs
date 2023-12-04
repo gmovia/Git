@@ -11,10 +11,14 @@ use std::{collections::HashMap, path::PathBuf};
 pub struct Repository;
 
 impl Repository {
+
+    /// Devuelve el hashmap del local repository llamando a read()
     pub fn read_repository() -> Result<HashMap<String, String>, std::io::Error> {
         Self::read(&CurrentRepository::read()?)
     }
 
+
+    /// Devuelve el hashmap del local repository
     pub fn read(repo_path: &Path) -> Result<HashMap<String, String>, std::io::Error> {
         let current_branch = &Init::get_current_branch(repo_path)?;
 
@@ -29,6 +33,7 @@ impl Repository {
         Ok(local_repository)
     }
 
+    /// Devuelve el repositorio asociado a un commit y a una rama
     pub fn read_repository_of_commit(
         repo_path: PathBuf,
         branch: &str,
@@ -44,6 +49,7 @@ impl Repository {
         Ok(HashMap::new())
     }
 
+    /// Obtiene las entidades asociadas a un commit y las transforma en un repositorio
     pub fn get_repository(
         repo_path: PathBuf,
         commit_hash: &str,
@@ -53,6 +59,7 @@ impl Repository {
         Ok(convert_to_repository(&entities, CurrentRepository::read()?))
     }
 
+    /// Te devuelve el repositorio actual de una branch especifica
     pub fn read_repository_of_branch(
         repo_path: PathBuf,
         branch: &str,

@@ -12,6 +12,10 @@ use crate::{
 
 pub struct Push;
 
+/// Realiza la operación de "push" en un sistema de control de versiones Git.
+/// # Arguments
+/// * `stream` - Referencia mutable al flujo TcpStream para la comunicación con el servidor remoto.
+/// * `current_repo` - Ruta al directorio del repositorio actual.
 impl Push {
     pub fn push(stream: &mut TcpStream, current_repo: &Path) -> Result<(), std::io::Error> {
         let logs_path = current_repo.join(".rust_git").join("logs");
@@ -43,6 +47,7 @@ impl Push {
         Ok(())
     }
 
+    /// Obtiene las entradas de tags del repositorio en la ruta especificada.
     fn get_tags(path: &Path) -> Result<Vec<String>, std::io::Error> {
         let mut log_entries = Vec::new();
         let tags_path = path.join(".rust_git").join("refs").join("tags");
@@ -70,6 +75,7 @@ impl Push {
         Ok(log_entries)
     }
 
+    /// Extrae los hashes antiguo y nuevo de una línea de texto formateada como "old_hash-new_hash".
     fn extract_old_new_commit(line: String) -> String {
         let parts: Vec<&str> = line.split('-').collect();
         let old_hash = parts[1];
@@ -78,6 +84,7 @@ impl Push {
         hashes
     }
 
+    /// Procesa un archivo, devolviendo la última línea del mismo como un Resultado.
     fn process_file(file_path: &Path) -> Result<String, std::io::Error> {
         let file = fs::File::open(file_path)?;
         let reader = io::BufReader::new(file);
@@ -90,6 +97,7 @@ impl Push {
         Ok(last_line)
     }
 
+    /// Obtiene las entradas de commits de las ramas en la ruta especificada.
     fn get_commits_branch(path: &Path) -> Result<Vec<String>, std::io::Error> {
         if path.is_dir() {
             let mut refs = Vec::new();
@@ -124,7 +132,8 @@ impl Push {
             ))
         }
     }
-
+    
+    /// Analiza un mensaje y extrae la ruta del repositorio actual.
     pub fn parse_query_to_extract_path(message: &str) -> Result<&str, std::io::Error> {
         let parts: Vec<&str> = message.split('\0').collect();
         let mut current_repository = "";

@@ -10,6 +10,7 @@ pub struct Conflict {
     pub resolved: String,
 }
 
+/// Busca los conflictos que hay entre ambos conjuntos de modificaciones
 pub fn conflicts_search(
     changes: &HashMap<String, Change>,
     other_changes: &HashMap<String, Change>,
@@ -34,6 +35,7 @@ pub fn conflicts_search(
     conflicts
 }
 
+/// Resuelve los conflictos entre dos conjuntos de cambios
 pub fn resolve_conflicts(
     conflicts: &HashMap<String, Conflict>,
     current_changes: &mut HashMap<String, Change>,

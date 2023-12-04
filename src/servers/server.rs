@@ -14,6 +14,7 @@ use crate::{
 
 use super::upload_pack::start_handler_upload;
 
+/// Este struct representa al nuestro servidor.
 pub struct Server;
 
 impl Server {

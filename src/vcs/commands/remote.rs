@@ -19,6 +19,8 @@ pub enum RemoteOption<'a> {
 }
 
 impl Remote {
+
+    /// Realiza operaciones relacionadas con remotos en un repositorio Git según la opción proporcionada.
     pub fn remote(current_repo: &Path, option: RemoteOption) -> Result<String, std::io::Error> {
         match option {
             RemoteOption::Add(repo_name_to_process, server_repo) => Ok(Remote::write_config(
@@ -35,7 +37,7 @@ impl Remote {
             )?),
         }
     }
-
+    /// Escribe la configuración remota para un nuevo repositorio en el archivo de configuración.
     fn write_config(
         current_repo: &Path,
         new_repo_name: &str,
@@ -70,6 +72,8 @@ impl Remote {
         }
         Ok(false)
     }
+
+    /// Elimina la configuración remota del repositorio especificado en el archivo de configuración.
     fn remote_remove(current_repo: &Path, remove_repo: &str) -> Result<String, std::io::Error> {
         let config_path = Init::get_current_config(current_repo)?;
         let file = File::open(&config_path)?;
@@ -102,6 +106,7 @@ impl Remote {
         Ok(RESPONSE_OK_REMOTE.to_string())
     }
 
+    /// Lee los nombres de los remotos desde el archivo de configuración del repositorio actual.
     pub fn read_remote_names() -> Result<Vec<String>, std::io::Error> {
         let path = CurrentRepository::read()?;
         let path_config = Init::get_current_config(&path)?;

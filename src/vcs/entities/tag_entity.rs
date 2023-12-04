@@ -27,6 +27,7 @@ pub struct TagEntity {
 }
 
 impl TagEntity {
+    /// Recibe un tag y crea su correspondiente archivo 
     pub fn write(repo_path: &Path, tag: TagEntity) -> Result<String, std::io::Error> {
         let tag_path = Path::new(&repo_path).join(Random::random());
         let mut tag_file = OpenOptions::new()
@@ -54,6 +55,7 @@ impl TagEntity {
         Ok(tag_hash)
     }
 
+    /// Recibe el hash del tag y devuelve su correspondiente entidad
     pub fn read(repo_path: &Path, tag_hash: String) -> Result<TagEntity, std::io::Error> {
         let content = CatFile::cat_file(&tag_hash, Init::get_object_path(repo_path)?)?;
 

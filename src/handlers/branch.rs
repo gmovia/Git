@@ -6,6 +6,7 @@ use crate::{
     vcs::{commands::branch::BranchOptions, version_control_system::VersionControlSystem},
 };
 
+/// Controlador del comando branch. Recibe la instruccion junto con una opcion y ejecuta el comando.
 pub fn handler_branch(input: String) -> String {
     let args: Vec<&str> = input.split_whitespace().collect();
     match args.len() {

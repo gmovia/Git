@@ -24,6 +24,7 @@ pub struct CommitEntity {
 }
 
 impl CommitEntity {
+    /// Crea el archivo que representa al commit y devuelve su hash
     pub fn write(repo_path: &Path, commit: &CommitEntity) -> Result<String, std::io::Error> {
         let commit_path = Path::new(repo_path).join(Random::random());
         let mut commit_file = OpenOptions::new()
@@ -60,7 +61,7 @@ impl CommitEntity {
         let _ = fs::remove_file(commit_path);
         Ok(commit_hash)
     }
-
+    /// Recibe el hash y devuelve la entidad commit
     pub fn read(repo_path: &Path, commit_hash: &str) -> Result<CommitEntity, std::io::Error> {
         let commit = CatFile::cat_file(commit_hash, Init::get_object_path(repo_path)?)?;
         let commit_lines: Vec<&str> = commit.split('\n').collect();

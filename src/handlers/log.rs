@@ -5,6 +5,7 @@ use crate::vcs::version_control_system::VersionControlSystem;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+/// Controlador del comando log. Recibe la instruccion y ejecuta el comando.
 pub fn handler_log() -> String {
     if let Ok(current) = CurrentRepository::read() {
         if let Ok(path) = Init::get_current_log(&current) {

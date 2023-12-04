@@ -8,6 +8,7 @@ use crate::{
     },
 };
 
+/// Controlador del comando checkout. Recibe la instruccion junto una opcion y una branch y ejecuta el comando.
 pub fn handler_checkout(input: String) -> String {
     let args: Vec<&str> = input.split_whitespace().collect();
     if let Ok(current) = CurrentRepository::read() {

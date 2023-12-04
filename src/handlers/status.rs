@@ -5,6 +5,7 @@ use crate::{
     vcs::version_control_system::VersionControlSystem,
 };
 
+/// Controlador del comando status. Recibe la instruccion y ejecuta el comando.
 pub fn handler_status() -> String {
     let mut result = String::new();
 

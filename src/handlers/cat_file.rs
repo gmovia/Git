@@ -3,6 +3,7 @@ use crate::{
     vcs::version_control_system::VersionControlSystem,
 };
 
+/// Controlador del comando cat-file. Recibe la instruccion junto con un hash y ejecuta el comando.
 pub fn handler_cat_file(input: String) -> String {
     let args: Vec<&str> = input.split_whitespace().collect();
     if let Ok(result) = VersionControlSystem::cat_file(args[2]) {

@@ -25,6 +25,7 @@ pub struct TreeEntity {
 }
 
 impl TreeEntity {
+    /// Recibe un conjunto de entidades (blobs y trees) y crea su correspondiente arbol
     pub fn write(repo_path: &Path, entities: &Vec<Entity>) -> Result<String, std::io::Error> {
         let tree_path = Path::new(&repo_path).join(Random::random());
         let mut tree_file = OpenOptions::new()
@@ -69,6 +70,7 @@ impl TreeEntity {
         Ok(tree_hash)
     }
 
+    /// Recibe un hash y devuelve la entidad tree asociada
     pub fn read(repo_path: &Path, tree_hash: String) -> Result<Vec<Entity>, std::io::Error> {
         let mut entities: Vec<Entity> = Vec::new();
         let content = CatFile::cat_file(&tree_hash, Init::get_object_path(repo_path)?)?;

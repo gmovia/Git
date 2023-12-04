@@ -26,14 +26,18 @@ use std::{
     str::from_utf8,
 };
 
+/// Este struct representa la funcionalidad del comando fetch de git.
 pub struct Fetch;
 
 impl Fetch {
+
+    /// Esta funcion sirve como inicializadora del comando fetch
     pub fn git_fetch(stream: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
         Self::receive_pack(stream, repo)?;
         Ok(())
     }
 
+    /// Esta funcion se encarga de llevar a cabo la logica central del comando. Recibe la respuesta del servidor al upload_pack, parsea y envia los mensajes want y have, recibe los objetos y delega la creacion de las diferentes carpetas.
     pub fn receive_pack(socket: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
         loop {
@@ -66,6 +70,8 @@ impl Fetch {
         Ok(())
     }
 
+
+    /// Esta funcion se encarga de delegar el manejo que s edebe tener de cada tipo de objeto para la creacion de las carpetasy contenido de las mismas.
     fn create_objects(
         list_refs: &Vec<String>,
         objects: &[(u8, Vec<u8>)],
@@ -128,10 +134,12 @@ impl Fetch {
         Ok(())
     }
 
+    /// Esta funcion se encarga de procesar aquellos objetos que no son de tipo tree ni delta.
     fn process_non_tree_object(number: u8, inner_vec: &[u8]) -> (u8, String) {
         (number, String::from_utf8_lossy(inner_vec).to_string())
     }
 
+    /// Esta funcion se encarga de procesar los archivos de tipo delta.
     fn process_delta_object(
         inner_vec: &[u8],
         repo_path: &Path,
@@ -152,6 +160,7 @@ impl Fetch {
         Ok(commit)
     }
 
+    /// Esta funcion se encarga de procesar los objetos de tipo tree
     fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
         if std::str::from_utf8(inner_vec).is_ok() {
             let blobs: Vec<String> = String::from_utf8_lossy(inner_vec)
@@ -199,6 +208,8 @@ impl Fetch {
         }
     }
 
+
+    /// Esta funcion se encarga de delegar el procesamiento de los diferentes objetos recibidos.
     fn process_folder(objects: Vec<(u8, Vec<u8>)>) -> Vec<(u8, String)> {
         let mut objects_processed: Vec<(u8, String)> = Vec::new();
         for (number, inner_vec) in &objects {
@@ -211,6 +222,7 @@ impl Fetch {
         objects_processed
     }
 
+    /// Esta funcion nos ayuda obtener de manera legible el contenido de un tree.
     fn read_tree_sha1<R: Read>(reader: &mut R) -> io::Result<Vec<(String, String, Vec<u8>)>> {
         let mut entries = Vec::new();
         while let Ok(entry) = Self::read_tree_entry(reader) {
@@ -220,6 +232,7 @@ impl Fetch {
         Ok(entries)
     }
 
+    /// Esta funcion nos ayuda a poder obtener el contenido de un tree de forma legible para el humano. (utf-8) 
     fn read_tree_entry<R: Read>(reader: &mut R) -> io::Result<(String, String, Vec<u8>)> {
         let mut mode_bytes = [0; 6];
         reader.read_exact(&mut mode_bytes)?;
@@ -234,6 +247,7 @@ impl Fetch {
         Ok((mode_str.to_string(), name, sha1))
     }
 
+    /// Esta funcion nos ayuda a poder obtener el contenido de un tree de forma legible para el humano. (utf-8
     fn read_cstring<R: Read>(reader: &mut R) -> io::Result<String> {
         let mut buffer = Vec::new();
         loop {
@@ -247,6 +261,8 @@ impl Fetch {
         Ok(String::from_utf8_lossy(&buffer).to_string())
     }
 
+
+    /// Esta funcion de encarga de delegar la creacion de las carpetas dependiendo del tipo de objeto en cuestion.
     fn create_folders(
         objects: Vec<(u8, String)>,
         repo: &Path,
@@ -281,6 +297,7 @@ impl Fetch {
         Ok(commits_created)
     }
 
+    /// Esta funcion se encarga de armar un hashmap de todos los commmits existentes
     fn add_commits(client_path: &Path) -> Result<HashMap<String, CommitEntity>, std::io::Error> {
         let mut commits: HashMap<String, CommitEntity> = HashMap::new();
         let logs_path = client_path.join(".rust_git").join("logs");
@@ -309,6 +326,7 @@ impl Fetch {
         Ok(commits)
     }
 
+    /// Esta funcion se encarga de crear las carpeta de los objetos de tipo commmit
     fn create_commit_folder(
         content: &str,
         repo: &Path,
@@ -363,14 +381,17 @@ impl Fetch {
         Ok((hash_commit, commit_entity))
     }
 
+    /// Esta funcion se encarga crear los objetos de tipo blob
     fn create_blob_folder(content: &String, repo: &Path) {
         let _ = Proxy::write_blob(repo, content);
     }
 
+    /// Esta funcion se encarga crear los objetos de tipo tree
     fn create_tree_folder(content: &str, repo: &Path) -> Result<String, std::io::Error> {
         Proxy::write_tree(repo, content)
     }
 
+    /// Esta funcion se encarga de escribir y delegar la escritura de la tabla de commmits
     fn write_commit_log(
         repo: &Path,
         branchs: HashMap<String, String>,
@@ -398,6 +419,7 @@ impl Fetch {
         Ok(())
     }
 
+    /// Esta funcion se encarga de escribir la tabla de commmits
     fn complete_commit_table(
         repo: &Path,
         branch_name: &String,
@@ -443,6 +465,7 @@ impl Fetch {
         Ok(())
     }
 
+    /// Esta funcion se encarga de obtener la decha escrita para un commit en particular.
     fn get_date(line: &str) -> &str {
         let start = match line.find('>') {
             Some(pos) => pos + 2,
@@ -477,6 +500,7 @@ impl Fetch {
         Ok(last_commits)
     }
 
+    /// Esta funcion se encarga de enviar los mensajes want y have
     fn send_messages(
         socket: &mut TcpStream,
         message_to_send: (Vec<String>, Vec<String>),
@@ -494,6 +518,7 @@ impl Fetch {
         Ok(())
     }
 
+    /// Esta funcion se encarga de determinar que objetos want y have seran enviados al servidor.
     fn packet_manager(
         last_branch_commit_recieve: Vec<(String, String)>,
         repo: &Path,
@@ -537,6 +562,7 @@ impl Fetch {
         Ok((want_list, have_list))
     }
 
+    /// Esta funcion es quien recive el packfile enviado por el servidors
     fn get_socket_response(socket: &mut TcpStream) -> Result<Vec<(u8, Vec<u8>)>, std::io::Error> {
         let mut buffer = Vec::new();
         match socket.read_to_end(&mut buffer) {
@@ -554,6 +580,7 @@ impl Fetch {
         }
     }
 
+    /// Esta funcion se encarga de procesar los diferentes tipos de objetos que recibimos del servidor 
     fn manage_pack(pack: &[u8]) -> Result<Vec<(u8, Vec<u8>)>, std::io::Error> {
         let object_number = Self::parse_number(&pack[8..12])?;
 
@@ -587,11 +614,13 @@ impl Fetch {
         Ok(objects)
     }
 
+    /// Esta funcion nos indica si un byte en especifico tiene en el bit de mas de la izquierda un 1 o no.
     fn is_bit_set(byte: u8) -> bool {
         let mask = 0b10000000;
         (byte & mask) == mask
     }
 
+    /// Esta funcion a partir de un byte nos devuelve el numero en concreto que se en cuentra en el.
     fn parse_number(bytes: &[u8]) -> Result<u8, std::io::Error> {
         let texto: String = bytes.iter().map(|&b| b.to_string()).collect();
         match texto.parse() {
@@ -603,6 +632,7 @@ impl Fetch {
         }
     }
 
+    /// Esta funcion nos devuelve el tipo de objeto recivido del cliente
     fn get_object_type(bytes: u8) -> u8 {
         let mut bits = Vec::new();
         for i in (0..8).rev() {

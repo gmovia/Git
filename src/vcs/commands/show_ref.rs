@@ -9,6 +9,9 @@ pub enum ShowRefOptions {
 }
 
 impl ShowRef {
+
+    /// Comando show_ref.
+    /// Matchea distintas operaciones y devuelve un hashmap con la informacion leida de refs
     pub fn show_ref(
         repo_path: &Path,
         option: ShowRefOptions,
@@ -20,14 +23,17 @@ impl ShowRef {
         }
     }
 
+    /// Lee la carpeta heads y devuelve un hashmap con los nombres de los archivos (seria informacion de las ramas del repositorio)
     pub fn get_refs_heads(repo_path: &Path) -> Result<HashMap<String, String>, std::io::Error> {
         Self::get_dir_refs(repo_path, "heads")
     }
 
+    /// Lee la carpeta tags y devuelve un hashmap con los tags asociados a los commits
     pub fn get_refs_tags(repo_path: &Path) -> Result<HashMap<String, String>, std::io::Error> {
         Self::get_dir_refs(repo_path, "tags")
     }
 
+    /// Devuelve toda la informacion, tanto heads como tags
     pub fn get_dir_refs(
         repo_path: &Path,
         dir: &str,

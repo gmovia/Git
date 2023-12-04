@@ -8,6 +8,7 @@ use crate::vcs::files::current_repository::CurrentRepository;
 pub struct CheckIgnore;
 
 impl CheckIgnore {
+    /// Recibe una ruta y señala si se encuentra ignorado
     pub fn check_ignore(path: &Path) -> Result<bool, std::io::Error> {
         let current_path = CurrentRepository::read()?;
         let ignore_path = current_path.join(".gitignore");

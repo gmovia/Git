@@ -2,6 +2,7 @@ use crate::{
     constants::constant::RESPONSE_OK_COMMIT, vcs::version_control_system::VersionControlSystem,
 };
 
+/// Handlea el comando commit recibiendo "git commit mensaje"
 pub fn handler_commit(input: String) -> String {
     let mut chain = String::new();
     let mut args: Vec<&str> = input.split(' ').collect();

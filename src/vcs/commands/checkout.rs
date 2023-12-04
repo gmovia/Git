@@ -18,6 +18,9 @@ pub enum CheckoutOptions<'a> {
 }
 
 impl Checkout {
+
+    /// Comando checkout.
+    /// Recibe el current path y una option para matchear distintas operaciones
     pub fn checkout(path: &Path, option: CheckoutOptions) -> Result<(), std::io::Error> {
         match option {
             CheckoutOptions::ChangeBranch(branch_name) => {
@@ -30,6 +33,7 @@ impl Checkout {
         Ok(())
     }
 
+    /// Se usa esta funcion cuando se quiere cambiar a una rama ya creada
     pub fn change_branch(path: &Path, branch_name: &str) -> Result<(), std::io::Error> {
         if !Index::read_index()?.is_empty() {
             return Err(io::Error::new(
@@ -45,6 +49,7 @@ impl Checkout {
         Ok(())
     }
 
+    /// Al crear y cambiar de rama, se actualiza el working directory con archivos y carpetas del repo actual
     pub fn update_cd(path: &Path) -> Result<(), std::io::Error> {
         let repository_hashmap = Repository::read_repository()?;
 
@@ -57,6 +62,7 @@ impl Checkout {
         Ok(())
     }
 
+    /// Se usa esta funcion cuando se quiere crear y cambiar a la rama creada
     pub fn create_and_change_branch(path: &Path, branch_name: &str) -> Result<(), std::io::Error> {
         Branch::create_new_branch(path, branch_name)?;
         Self::change_branch(path, branch_name)?;

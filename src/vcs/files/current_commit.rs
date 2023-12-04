@@ -11,6 +11,7 @@ use super::current_repository::CurrentRepository;
 pub struct CurrentCommit;
 
 impl CurrentCommit {
+    /// Obtiene el hash del commit que se encuentra actulamente en el repositorio y rama actuales
     pub fn read() -> Result<String, std::io::Error> {
         let current_repository = CurrentRepository::read()?;
         let head_path = Init::get_current_head(&current_repository)?;
@@ -18,6 +19,7 @@ impl CurrentCommit {
         Ok(hash)
     }
 
+    /// Actualiza el hash en las referencias del repositorio actual y de la rama actual
     pub fn write(hash: String) -> Result<String, std::io::Error> {
         let head_path = Init::get_current_head(&CurrentRepository::read()?)?;
         let mut head = OpenOptions::new().read(true).write(true).open(head_path)?;
@@ -26,6 +28,7 @@ impl CurrentCommit {
         Ok(hash)
     }
 
+    /// Lee el commit actual de un repositorio y una rama asociada
     pub fn read_for_branch(repo_path: &Path, branch: &str) -> Result<String, std::io::Error> {
         let head_path = repo_path
             .join(".rust_git")
@@ -36,6 +39,7 @@ impl CurrentCommit {
         Ok(hash)
     }
 
+    /// Actualiza el hash en las referencias del repositorios y la rama brindados 
     pub fn write_for_branch(
         repo_path: &Path,
         branch: &str,

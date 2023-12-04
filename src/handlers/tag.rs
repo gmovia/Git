@@ -1,5 +1,6 @@
 use crate::vcs::{commands::tag::TagOptions, version_control_system::VersionControlSystem};
 
+/// Controlador del comando tag. Recibe la instruccion junto con una opcion y/o un mensaje y/o una etiqueta y ejecuta el comando.
 pub fn handler_tag(input: String) -> String {
     let args: Vec<&str> = input.split_whitespace().collect();
 

@@ -13,6 +13,9 @@ use std::collections::HashMap;
 pub struct Merge;
 
 impl Merge {
+
+    /// Comando merge.
+    /// Utiliza la tabla de commits actual y la de una branch especifica y compara la ultima entrada (commit actual)
     pub fn merge(
         branch: &str,
         potential_conflicts: HashMap<String, Conflict>,

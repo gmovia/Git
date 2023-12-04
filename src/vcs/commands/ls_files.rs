@@ -16,6 +16,9 @@ pub enum LsFilesOptions {
 }
 
 impl LsFiles {
+
+    /// Comando ls_files.
+    /// Recibe el current path y una option para realizar distintas operaciones
     pub fn ls_files(option: LsFilesOptions, path: &Path) -> Result<Vec<String>, std::io::Error> {
         let mut files: Vec<String> = Vec::new();
         match option {
@@ -27,6 +30,7 @@ impl LsFiles {
         }
     }
 
+    /// Devuelve todos los files del repositorio
     pub fn get_everything(
         _path: &Path,
         files: &mut Vec<String>,
@@ -52,6 +56,7 @@ impl LsFiles {
         Ok(files.to_vec())
     }
 
+    /// Devuelve los files que fueron modificados luego de committearlos, pero no se volvieron a committear
     pub fn get_modified(
         _path: &Path,
         files: &mut Vec<String>,
@@ -65,6 +70,8 @@ impl LsFiles {
         Ok(files.to_vec())
     }
 
+
+    /// Devuelve los files que fueron agregados al staging_area con el comando add, pero todavia no se committearon
     pub fn get_staging(
         _path: &Path,
         files: &mut Vec<String>,
@@ -76,6 +83,8 @@ impl LsFiles {
         Ok(files.to_vec())
     }
 
+
+    /// Devuelve los files que fueron eliminados luego de committearlos, pero no se volvieron a committear
     pub fn get_deleted(
         _path: &Path,
         files: &mut Vec<String>,
@@ -89,6 +98,8 @@ impl LsFiles {
         Ok(files.to_vec())
     }
 
+
+    /// Devuelve los files creados que todavia no fueron committeados
     pub fn get_untracked(
         _path: &Path,
         files: &mut Vec<String>,

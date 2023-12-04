@@ -30,14 +30,18 @@ use std::{
     str::from_utf8,
 };
 
+/// Este struct implementa el comando clone de git.
 pub struct Clone;
 
 impl Clone {
+
+    /// Esta funcion sirve como inicialiazdor del struct Clone.
     pub fn git_clone(stream: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
         Self::receive_pack(stream, repo)?;
         Ok(())
     }
 
+    /// Esta funcion se encarga de llevar a cabo la logica central del comando. Recibe la respuesta del servidor al upload_pack, parsea y envia los mensajes want y have, recibe los objetos y delega la creacion de las diferentes carpetas a clonar.
     pub fn receive_pack(socket: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
 
@@ -80,6 +84,7 @@ impl Clone {
         Ok(())
     }
 
+    /// Esta funcion se encarga de recorrer todos los objetos recibidos por parte del servidor, procesarlos y crear todas las carpeta necesarias para llevar a cabo el desarrollo del comando correctamente.
     fn init_commits(
         list_refs: &Vec<String>,
         objects: &[(u8, Vec<u8>)],
@@ -140,10 +145,12 @@ impl Clone {
         Ok(())
     }
 
+    /// Esta funcion se encarga de procesar los tipos de objetos que no son tree ni delta.
     fn process_non_tree_object(number: u8, inner_vec: &[u8]) -> (u8, String) {
         (number, String::from_utf8_lossy(inner_vec).to_string())
     }
 
+    /// Esta funcion se encarga de procesar los objetos tree
     fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
         if std::str::from_utf8(inner_vec).is_ok() {
             let blobs: Vec<String> = String::from_utf8_lossy(inner_vec)
@@ -192,6 +199,7 @@ impl Clone {
         }
     }
 
+    /// Esta funcion se encarga de delegar el procesado de las carpetas, separandolas segun su tipo de objeto.
     pub fn process_folder(objects: Vec<(u8, Vec<u8>)>) -> Vec<(u8, String)> {
         let mut objects_processed: Vec<(u8, String)> = Vec::new();
         for (number, inner_vec) in &objects {
@@ -205,6 +213,7 @@ impl Clone {
         objects_processed
     }
 
+    /// Esta funcion se encarga de procesar los objetos delta.
     fn process_delta_object(
         inner_vec: &[u8],
         repo_path: &Path,
@@ -225,6 +234,8 @@ impl Clone {
         Ok(commit)
     }
 
+
+    /// Esta funcion se encarga de crear y delegar la creacion de las diferentes carpetas para cada tipo de objeto.
     pub fn create_folders(
         objects: Vec<(u8, String)>,
         repo: &Path,
@@ -259,6 +270,7 @@ impl Clone {
         commits_created
     }
 
+    /// Esta funcion se encarga de crear las carpetas de los objetos de tipo folder.
     fn create_commit_folder(
         content: &str,
         repo: &Path,
@@ -313,14 +325,17 @@ impl Clone {
         Ok((hash_commit, commit_entity))
     }
 
+    /// Esta funcion se encarga de delegar la creacion de un objeto blob.
     fn create_blob_folder(content: &String, repo: &Path) {
         let _ = Proxy::write_blob(repo, content);
     }
 
+    /// Esta funcion se encarga de delegar la creacion de un objeto tree.
     fn create_tree_folder(content: &str, repo: &Path) -> Result<String, std::io::Error> {
         Proxy::write_tree(repo, content)
     }
 
+    /// Esta funcion se encarga de escribir y delegar la escritura de la tabla de commits
     fn write_commit_log(
         repo: &Path,
         branchs: HashMap<String, String>,
@@ -340,6 +355,7 @@ impl Clone {
         Ok(())
     }
 
+    /// Esta funcion completa el desarrollo correspondiente a la escritura de la tabla de commits.
     fn complete_commit_table(
         repo: &Path,
         branch_name: &String,
@@ -387,6 +403,7 @@ impl Clone {
         Ok(())
     }
 
+    /// Esta funcion se encarga de optener la fecha escrita en una linea de la tabl de commits.
     pub fn get_date(line: &str) -> &str {
         let start = match line.find('>') {
             Some(pos) => pos + 2,
@@ -395,6 +412,7 @@ impl Clone {
         &line[start..]
     }
 
+    /// Esta funcion de encarga de obtener y parsear los mensajes want que luego seran enviados al servidor.
     fn get_want_msgs(commits_list: &Vec<String>) -> Vec<String> {
         let mut want_msgs = Vec::new();
 
@@ -409,6 +427,7 @@ impl Clone {
         want_msgs
     }
 
+    /// Esta funcion se ecarga de recibir el packfile enviado por el servidor con todos los objetos.
     pub fn get_socket_response(
         socket: &mut TcpStream,
     ) -> Result<Vec<(u8, Vec<u8>)>, std::io::Error> {
@@ -419,6 +438,7 @@ impl Clone {
         }
     }
 
+    /// Este archivo se encarga de parsear y descomprimir la data que respecta a los objetos que recibimos del servidor. 
     fn manage_pack(pack: &[u8]) -> Result<Vec<(u8, Vec<u8>)>, std::io::Error> {
         let object_number = Self::parse_number(&pack[8..12])?;
         let mut position: usize = 12;
@@ -447,6 +467,8 @@ impl Clone {
         Ok(objects)
     }
 
+
+    /// Esta funcion nos ayuda a obtener un contenido legible en caso de tener un objeto tree.
     fn read_cstring<R: Read>(reader: &mut R) -> io::Result<String> {
         let mut buffer = Vec::new();
         loop {
@@ -460,6 +482,7 @@ impl Clone {
         Ok(String::from_utf8_lossy(&buffer).to_string())
     }
 
+    /// Esta funcion se encarga de obtener el contenido de forma legible para el humano (UTF-8)
     fn read_tree_entry<R: Read>(reader: &mut R) -> io::Result<(String, String, Vec<u8>)> {
         let mut mode_bytes = [0; 6];
         reader.read_exact(&mut mode_bytes)?;
@@ -474,6 +497,7 @@ impl Clone {
         Ok((mode_str.to_string(), name, sha1))
     }
 
+    /// Esta funcion se encarga de retornarme un numero u8 al recibir un byte.
     fn parse_number(bytes: &[u8]) -> Result<u8, std::io::Error> {
         let texto: String = bytes.iter().map(|&b| b.to_string()).collect();
         match texto.parse() {
@@ -485,6 +509,7 @@ impl Clone {
         }
     }
 
+    /// Esta funcion nos ayuda a leer el contenido de un tree.
     fn read_tree_sha1<R: Read>(reader: &mut R) -> io::Result<Vec<(String, String, Vec<u8>)>> {
         let mut entries = Vec::new();
         while let Ok(entry) = Self::read_tree_entry(reader) {
@@ -494,6 +519,7 @@ impl Clone {
         Ok(entries)
     }
 
+    /// Esta funcio nos retorna el tipo de objeto en concreto recibiendo un byte.
     fn get_object_type(bytes: u8) -> u8 {
         let mut bits = Vec::new();
         for i in (0..8).rev() {
@@ -509,6 +535,7 @@ impl Clone {
         numero
     }
 
+    /// Esta funcion determina si el bit de la izquierda se encuentra en 1 o no.
     fn is_bit_set(byte: u8) -> bool {
         let mask = 0b10000000;
         (byte & mask) == mask

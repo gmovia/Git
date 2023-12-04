@@ -9,7 +9,7 @@ pub enum Entity {
     Blob(BlobEntity),
     Tree(TreeEntity),
 }
-
+/// Convierte un conjunto de entidades (blobs y trees) en un repositorio (path, hash)
 pub fn convert_to_repository(entities: &Vec<Entity>, path: PathBuf) -> HashMap<String, String> {
     let mut local_repository: HashMap<String, String> = HashMap::new();
     for entity in entities {
@@ -26,7 +26,7 @@ pub fn convert_to_repository(entities: &Vec<Entity>, path: PathBuf) -> HashMap<S
     }
     local_repository
 }
-
+/// Convierte un repositorio (path, hash) en un conjunto de entidades (blobs y trees)
 pub fn convert_to_entities(hash_map: &HashMap<String, String>, prefix: &str) -> Vec<Entity> {
     let mut entities = Vec::new();
     let mut processed_paths = HashSet::new();

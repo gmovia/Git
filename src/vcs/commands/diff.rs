@@ -7,6 +7,7 @@ use std::collections::HashMap;
 pub struct Diff;
 
 impl Diff {
+    /// Recibe dos repositorios y devuelva la diferencia que hay entre ambos (archivos creados, modificados y eliminados)
     pub fn diff(
         parent: &HashMap<String, String>,
         current: &HashMap<String, String>,

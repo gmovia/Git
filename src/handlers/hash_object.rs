@@ -5,7 +5,7 @@ use crate::{
         version_control_system::VersionControlSystem,
     },
 };
-
+/// Controlador del comando hash-object. Recibe la instruccion junto con una opcion y un path y ejecuta el comando.
 pub fn handler_hash_object(input: String) -> String {
     let args: Vec<&str> = input.split_whitespace().collect();
     if args.len() == 4 {

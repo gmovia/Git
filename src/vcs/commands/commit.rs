@@ -7,6 +7,7 @@ extern crate chrono;
 pub struct Commit;
 
 impl Commit {
+    /// Recibe un mensaje y realiza un commit
     pub fn commit(message: String) -> Result<HashMap<String, String>, std::io::Error> {
         let mut repository = Repository::read_repository()?;
         let staging_area = Index::read_index()?;

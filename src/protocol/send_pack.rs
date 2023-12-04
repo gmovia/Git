@@ -18,6 +18,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Maneja el envío del paquete al servidor, que incluye el procesamiento de las referencias y la creación del packfile.
+/// Recibe un mutable TcpStream `stream` para la comunicación, la ruta del repositorio actual `current_repo`,
+/// y un slice de entradas de registro `log_entries`.
 pub fn handle_send_pack(
     stream: &mut TcpStream,
     current_repo: &Path,
@@ -56,7 +59,9 @@ pub fn handle_send_pack(
     stream.write_all(msg_done.as_bytes())?;
     Ok(())
 }
-
+/// Procesa las referencias enviadas al servidor para determinar el último commit en el servidor
+/// para la rama actual del repositorio local.
+/// Recibe un vector de referencias `send_ref` y la ruta del repositorio local como `current
 fn process_hash_server(
     send_ref: &Vec<String>,
     current_repo: PathBuf,
@@ -78,6 +83,11 @@ fn process_hash_server(
     Ok(last_commit_server)
 }
 
+// Inicializa un packfile que contiene la información necesaria para enviar al servidor,
+/// incluyendo objetos relacionados con el último commit local, el último commit en el servidor
+/// y nuevas etiquetas a enviar.
+/// Recibe el último commit local como `last_commit_current`, la ruta del repositorio local como `current_repo`,
+/// el hash del último commit en el servidor como `last_commit_server` y un slice de nuevas etiquetas `send_new_tag`.
 fn init_packfile(
     last_commit_current: String,
     current_repo: &Path,
@@ -118,6 +128,11 @@ fn init_packfile(
     }
     Ok(packfile)
 }
+
+/// Procesa el contenido de un directorio para incluir en objects_data las entradas
+/// relacionadas con nuevas etiquetas que se enviarán al servidor.
+/// Recibe la ruta del directorio como `path`, una referencia mutable a objects_data,
+/// un vector de nuevas etiquetas a enviar `send_new_tag` y la ruta del repositorio local como `current_repo`.
 fn process_directory_to_send_new_tag(
     path: &Path,
     objects_data: &mut Vec<(String, usize, usize)>,
@@ -150,6 +165,9 @@ fn process_directory_to_send_new_tag(
     Ok(objects_data.to_vec())
 }
 
+/// Procesa un archivo de etiqueta específico para incluir en el packfile,
+/// obteniendo datos relevantes sobre la etiqueta.
+/// Recibe la ruta del archivo como `file_path` y la ruta para leer objetos como `path_to_read`.
 fn process_particular_tag_to_send(
     file_path: &Path,
     path_to_read: &Path,
@@ -176,6 +194,9 @@ fn process_particular_tag_to_send(
     Ok(("NONE".to_string(), 0, 0))
 }
 
+/// Envía un packfile al servidor a través de un flujo TCPStream, incluyendo información de registro y nuevas etiquetas.
+/// Recibe el packfile como `packfile`, un mutable TcpStream `stream` para la comunicación,
+/// entradas de registro como `log_entries` y un vector de nuevas etiquetas como `send_new_tag`.
 fn send_pack(
     packfile: Vec<u8>,
     stream: &mut TcpStream,

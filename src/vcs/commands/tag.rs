@@ -19,6 +19,9 @@ pub enum TagOptions<'a> {
 }
 
 impl Tag {
+
+    /// Comando tag.
+    /// Recibe el current path y una option y matchea las opciones de tag
     pub fn tag(path: &Path, option: TagOptions) -> Result<Vec<String>, std::io::Error> {
         match option {
             TagOptions::Get => Self::get(path),
@@ -28,6 +31,7 @@ impl Tag {
         }
     }
 
+    /// Genera un tag ligero
     pub fn create_light_tag(path: &Path, tag: &str) -> Result<Vec<String>, std::io::Error> {
         let tags_path = path.join(".rust_git").join("refs").join("tags").join(tag);
         let mut tag_file = OpenOptions::new()
@@ -41,6 +45,7 @@ impl Tag {
         Self::get(path)
     }
 
+    /// Genera un tag con etiqueta y mensaje
     pub fn create_tag(
         path: &Path,
         tag: &str,
@@ -72,6 +77,7 @@ impl Tag {
         Self::get(path)
     }
 
+    /// Elimina un tag
     pub fn delete(path: &Path, tag: &str) -> Result<Vec<String>, std::io::Error> {
         if let Ok(tags) = Self::get(path) {
             if !tags.contains(&tag.to_string()) {
@@ -86,6 +92,7 @@ impl Tag {
         Self::get(path)
     }
 
+    /// Obtiene todos los tags generados
     pub fn get(path: &Path) -> Result<Vec<String>, std::io::Error> {
         let mut tags = Vec::new();
         let tags_path = path.join(".rust_git").join("refs").join("tags");
