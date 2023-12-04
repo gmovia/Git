@@ -30,3 +30,8 @@ Name | Code | Email
 [De Feo, Laura Mailen](https://github.com/ldefeo) | 102831 | ldefeo@fi.uba.a
 [Diaz Calixto, Luz](https://github.com/ldiazcto) | 105122 | ldiazc@fi.uba.ar
 [Moralejo, Agustin](https://github.com/AgustinMoralejo) | 101591 | amoralejo@fi.uba.ar
+
+## Docs
+[PPTX First Version](https://docs.google.com/presentation/d/1ItS433G38uea7VKZZSDba7yxDmGYxZAx/edit#slide=id.p1)
+[PPTX Secod Version](https://docs.google.com/presentation/d/1P8Syx5S3MPJGLxoDYLBmzRJVE5fTkq3g2zO2d653LiY/edit#slide=id.g1e842d85b7e_0_39)
+[Paper](https://www.overleaf.com/project/655d589b184827a20a861939)
