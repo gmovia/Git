@@ -19,6 +19,8 @@ mod tests {
         let _ = thread::spawn( || {
             let _ = Server::server("tests/test_folder".to_string());
         });
+
+        
         let _ = VersionControlSystem::init(client_path, Vec::new());
         let _ = handler_clone("git clone tests/clone".to_string());
         assert!(

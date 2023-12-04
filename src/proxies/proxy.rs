@@ -49,12 +49,12 @@ impl Proxy{
         BlobEntity::read(repo_path, blob_hash)
     }
 
-    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity, mut blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
-        if let Ok( entity) = RefDeltaEntity::write(repo_path, content, &mut blobs) {
-            return Ok(entity);
+    pub fn write_ref_delta(repo_path: &Path, content: RefDeltaEntity, blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error>{
+        if let Ok(entity) = RefDeltaEntity::write(repo_path, content, blobs) {
+            Ok(entity)
         }
         else {
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta object"));
+            Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta object"))
         }
     }
 }

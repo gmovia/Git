@@ -30,7 +30,6 @@ impl Server {
                 }
                 Err(_) => {
                     return Err(std::io::Error::new(std::io::ErrorKind::Other, "fatal error: the path is not correct"));
-                    //eprintln!("Error: {}", e);
                 }
             }
         }
@@ -41,8 +40,6 @@ impl Server {
         loop {
             match process_line(&mut reader) {
                 Ok(message) => {
-                    println!("Received message from client: {}", &message);
-
                     let server_path = Self::extract_path(&message, path)?;
                     if !server_path.exists(){
                         let message_error = "fatal error: the path is not correct";

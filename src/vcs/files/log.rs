@@ -11,7 +11,7 @@ impl Log {
     pub fn write_log(log: &String) -> Result<(), std::io::Error>{
         let current = CurrentRepository::read()?;
         let log_path = current.join(".rust_git").join("info").join("log");
-        let mut log_file = OpenOptions::new().write(true).append(true).open(&log_path)?;
+        let mut log_file = OpenOptions::new().write(true).append(true).open(log_path)?;
 
         log_file.write_all(log.as_bytes())?;
 

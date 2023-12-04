@@ -4,7 +4,7 @@ use crate::{
     types::set_type::{ChangesNotStagedForCommit, ChangesToBeCommited, UntrackedFiles},
     vcs::{commands::{status::Status, add::Add, init::Init, hash_object::HashObject,cat_file::CatFile}, files::repository::Repository}, constants::constant::{RESPONSE_NOK_IGNORE, RESPONSE_OK_IGNORE}, clients::client::Client};
 use super::{commands::{hash_object::WriteOption, rm::{Rm, RemoveOption}, commit::Commit, log::Log, branch::{Branch, BranchOptions}, checkout::{Checkout, CheckoutOptions}, merge::Merge, reset::Reset, ls_files::{LsFilesOptions, LsFiles}, ls_tree::LsTree, check_ignore::CheckIgnore, tag::{TagOptions, Tag}, show_ref::{ShowRefOptions, ShowRef}, remote::{Remote, RemoteOption}, pull::Pull, rebase::Rebase}, entities::conflict::Conflict, files::{repositories::Repositories, current_repository::CurrentRepository}};
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use std::{collections::HashMap, path::Path};
 use super::files::index::Index;
 
 #[derive(Debug, Clone)]
@@ -126,8 +126,7 @@ impl VersionControlSystem {
     pub fn push(message: String)-> Result<(), std::io::Error>{
         let input: Vec<&str>  = message.split_ascii_whitespace().collect();
         let current = CurrentRepository::read()?;
-        let repo_to_push = Remote::get_path_of_repo_remote(&current, input[2].trim_end_matches("\n"))?;
-        println!("REPO TO PUSH ---< {:?}", repo_to_push);
+        let repo_to_push = Remote::get_path_of_repo_remote(&current, input[2].trim_end_matches('\n'))?;
         let _ = Client::client(message, Path::new(&repo_to_push));
         Ok(())
     }

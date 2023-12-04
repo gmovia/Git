@@ -9,9 +9,9 @@ impl Config{
 
     pub fn write_config(config: (String,String)) -> Result<(), std::io::Error>{
         let config_path = Path::new(CONFIG_PATH);
-        let mut config_file = OpenOptions::new().write(true).open(&config_path)?;
+        let mut config_file = OpenOptions::new().write(true).open(config_path)?;
 
-        config_file.write_all(&format!("user.name= {}\nuser.email= {}",config.0,config.1).as_bytes())?;
+        config_file.write_all(format!("user.name= {}\nuser.email= {}",config.0,config.1).as_bytes())?;
 
         Ok(())
     }

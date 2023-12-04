@@ -1,5 +1,5 @@
-use std::{fs::{OpenOptions, self}, io::Write, path::Path};
-use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::{Remote, RemoteOption}}, files::{current_repository::CurrentRepository, log::Log}}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::{clone::handler_clone, remote::handler_remote}};
+use std::{fs::{OpenOptions, self}, io::Write};
+use crate::{vcs::{version_control_system::VersionControlSystem, entities::{conflict::Conflict, change::{write_changes, read_changes, Change}}, commands::{hash_object::WriteOption, tag::TagOptions, show_ref::ShowRefOptions, remote::{Remote, RemoteOption}}, files::{current_repository::CurrentRepository, log::Log}}, constants::constant::{CURRENT, INCOMING, BOTH, BLOB_CODE, RESPONSE_OK_CLONE, RESPONSE_OK_REMOTE}, handlers::clone::handler_clone};
 
 use super::{interface::RustInterface, handler_button::{handle_buttons_branch, handle_button_select_branch, handle_commit_button,  handle_buttons_repository, handle_rm_button, handle_terminal, handle_button_select_repository, handle_ls_files_buttons, handle_ls_tree_button, handle_check_ignore_button}, draw::{changes_and_staging_area, draw_message, draw_error, draw_push_pull_fetch}};
 use gtk::{prelude::*, Button};
@@ -316,7 +316,7 @@ pub fn handle_merge(interface: &RustInterface) {
                 m_entry.set_text("");
                 button.set_sensitive(false);
             }else {
-                draw_error(rc_tuple.clone(), &format!("ERROR:  CANNOT FOUND THE BRANCH {}",m_entry.text().to_string()).to_string(), &m_entry);
+                draw_error(rc_tuple.clone(), format!("ERROR:  CANNOT FOUND THE BRANCH {}",m_entry.text()), &m_entry);
             }
             m_entry.set_text("");
             button.set_sensitive(false);
@@ -646,7 +646,7 @@ pub fn handle_tag(interface: &RustInterface) {
             if VersionControlSystem::tag(TagOptions::Delete(&t_entry.text())).is_ok() {
                 draw_message(&tl_box, &"      TAG DELETED SUCCESSFULLY!     ".to_string(), 0.5);
             }else {
-                draw_error(rc_tuple.clone(), &format!("ERROR:  CANNOT FOUND THE TAG {}",t_entry.text().to_string()).to_string(), &t_entry);
+                draw_error(rc_tuple.clone(), format!("ERROR:  CANNOT FOUND THE TAG {}",t_entry.text()), &t_entry);
             }
             tl_box.set_visible(true);
             t_entry.set_text("");
@@ -656,7 +656,7 @@ pub fn handle_tag(interface: &RustInterface) {
 
     interface.create_tag_button.connect_clicked({
         let t_box = interface.tag_box.clone();
-        move |button| {
+        move |_| {
             t_box.foreach(|child| {
                 t_box.remove(child);
             });
@@ -813,7 +813,7 @@ pub fn handle_remote(interface: &RustInterface) {
                 if response == RESPONSE_OK_REMOTE {
                     draw_message(&a_box, &"     ADD REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
                 } else {
-                    draw_error(rc_tuple.clone(), &"ERROR:  CAN'T REMOTE".to_string(), &n_add_entry);
+                    draw_error(rc_tuple.clone(), "ERROR:  CAN'T REMOTE".to_string(), &n_add_entry);
                 }
                 p_entry.set_text("");
                 n_add_entry.set_text("");
@@ -832,7 +832,7 @@ pub fn handle_remote(interface: &RustInterface) {
                  if response == RESPONSE_OK_REMOTE {
                      draw_message(&r_box, &"     REMOVE REMOTE SUCCESSFULLY!    ".to_string(), 0.5);
                  } else {
-                     draw_error(rc_tuple.clone(), &"ERROR:  CAN'T REMOVE IN REMOTE".to_string(), &n_remove_entry);
+                     draw_error(rc_tuple.clone(), "ERROR:  CAN'T REMOVE IN REMOTE".to_string(), &n_remove_entry);
                  }
                  n_remove_entry.set_text("");
              } 
@@ -849,7 +849,7 @@ pub fn handle_remote(interface: &RustInterface) {
             if let Ok(path) = VersionControlSystem::remote(RemoteOption::Get(n_get_entry.text().as_str())){
                 draw_message(&g_box, &path.to_string(), 0.5);}
             else {
-                draw_error(rc_tuple.clone(), &"ERROR:  CAN'T GET THE REMOTES PATH".to_string(), &n_get_entry);
+                draw_error(rc_tuple.clone(), "ERROR:  CAN'T GET THE REMOTES PATH".to_string(), &n_get_entry);
             }
             n_get_entry.set_text("");
          }
@@ -894,10 +894,10 @@ pub fn handle_rebase(interface: &RustInterface) {
             r_box.foreach(|child| {
                 r_box.remove(child);
             });
-            if VersionControlSystem::rebase(&r_entry.text().to_string()).is_ok() {
+            if VersionControlSystem::rebase(&r_entry.text()).is_ok() {
                 draw_message(&r_box, &"     REBASE SUCCESSFULLY!    ".to_string(), 0.5);
             }else{
-                draw_error(rc_tuple.clone(), &format!("ERROR:  CANNOT FOUND THE BRANCH NAME {}",r_entry.text().to_string()).to_string(), &r_entry);
+                draw_error(rc_tuple.clone(), format!("ERROR:  CANNOT FOUND THE BRANCH NAME {}",r_entry.text()), &r_entry);
             }
             button.set_sensitive(false);
             r_entry.set_text("");
@@ -955,7 +955,7 @@ pub fn handle_clone(interface: &RustInterface) {
                     }
                 });
             }else{
-                draw_error(rc_tuple.clone(), &format!("ERROR:  CAN'T CLONE THE REPOSITORY {}",c_entry.text().to_string()).to_string(), &c_entry);
+                draw_error(rc_tuple.clone(), format!("ERROR:  CAN'T CLONE THE REPOSITORY {}",c_entry.text()).to_string(), &c_entry);
             }
             c_entry.set_text("");
             button.set_sensitive(false);
@@ -1004,7 +1004,7 @@ pub fn handle_fetch(interface: &RustInterface) {
         let rc_box = interface.pull_push_fetch_box.clone();
         let button = interface.pull_push_fetch_close.clone();
         move |_| {
-            draw_push_pull_fetch(&rc_branch, format!("git fetch {}", r_entry.text().to_string()),&rc_box, &"FETCH".to_string(),&rc_dialog, &button);
+            draw_push_pull_fetch(&rc_branch, format!("git fetch {}", r_entry.text()),&rc_box, &"FETCH".to_string(),&rc_dialog, &button);
         } 
     });
 }
@@ -1047,7 +1047,7 @@ pub fn handle_pull(interface: &RustInterface) {
         let button = interface.pull_push_fetch_close.clone();
         move |_| {
 
-            draw_push_pull_fetch(&rc_branch, format!("git pull {}", r_entry.text().to_string()),&rc_box, &"PULL".to_string(), &rc_dialog, &button);
+            draw_push_pull_fetch(&rc_branch, format!("git pull {}", r_entry.text()),&rc_box, &"PULL".to_string(), &rc_dialog, &button);
         } 
     });
 }
@@ -1090,7 +1090,7 @@ pub fn handle_push(interface: &RustInterface) {
         let rc_box = interface.pull_push_fetch_box.clone();
         let button = interface.pull_push_fetch_close.clone();
         move |_| {
-            draw_push_pull_fetch(&rc_branch, format!("git push {}", r_entry.text().to_string()),&rc_box, &"PUSH".to_string(), &rc_dialog, &button);
+            draw_push_pull_fetch(&rc_branch, format!("git push {}", r_entry.text()),&rc_box, &"PUSH".to_string(), &rc_dialog, &button);
         } 
     });
 

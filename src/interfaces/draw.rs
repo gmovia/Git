@@ -37,8 +37,6 @@ pub fn changes_and_staging_area(grid: &gtk::Grid, grid_staging: &gtk::Grid) -> R
 }
 
 pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_staging: &gtk::Grid){
-
-    //let mut index = 0;
     for (index,(path, state)) in changes.iter().enumerate() {
         let path_label = gtk::Label::new(Some(path));
         path_label.set_visible(true);
@@ -85,8 +83,6 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
         grid.attach(&state_label, 1, index as i32, 1, 1);
         grid.attach(&add_button, 2, index as i32, 1, 1);
         
-        //index += 1;
-
         let path_clone = path.clone(); 
         let reset_button = reset_button.clone();
         let path_label = path_label.clone();
@@ -122,8 +118,6 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
 }
 
 pub fn draw_staging_area(staging_area: &[String], grid: &gtk::Grid){
-
-    //let mut index = 0;
     for (index,path) in staging_area.iter().enumerate() {
         let label = gtk::Label::new(Some(path));
         label.set_visible(true);
@@ -143,7 +137,6 @@ pub fn draw_staging_area(staging_area: &[String], grid: &gtk::Grid){
         grid.attach(&label, 0, index as i32, 1, 1);
         grid.attach(&reset_button, 1, index as i32, 1, 1);
         
-        //index += 1;
         let path_clone = path.clone(); 
         reset_button.connect_clicked({
             let rc_grid = grid.clone();
@@ -180,7 +173,7 @@ pub fn draw_message(m_changes: &gtk::Box, message: &String, align: f32) {
     m_changes.add(&label);
 }
 
-pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: &String, c_entry: &gtk::Entry) {
+pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: String, c_entry: &gtk::Entry) {
     let _ = Log::write_log(&format!("'{}'\n",message.to_uppercase().clone()));
     errors.1.foreach(|child| {
         errors.1.remove(child);
@@ -202,7 +195,7 @@ pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: 
     match message.as_str() {
         "PUSH" => {
             let _ = VersionControlSystem::push(input);
-            draw_info_box(info, &message, &dialog);
+            draw_info_box(info, message, dialog);
             button.connect_clicked({
                 let rc_dialog = dialog.clone();
                 move |_| {
@@ -213,8 +206,8 @@ pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: 
         "PULL" => {
             let _ = VersionControlSystem::pull(input);
             rc_branch.remove_all();
-            let _ = branches(&rc_branch);            
-            draw_info_box(info, &message, &dialog);
+            let _ = branches(rc_branch);            
+            draw_info_box(info, message, dialog);
             button.connect_clicked({
                 let rc_dialog = dialog.clone();
                 move |_| {
@@ -225,8 +218,8 @@ pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: 
         "FETCH" => {
             let _ = VersionControlSystem::fetch(input);
             rc_branch.remove_all();
-            let _ = branches(&rc_branch);            
-            draw_info_box(info, &message, &dialog);
+            let _ = branches(rc_branch);            
+            draw_info_box(info, message, dialog);
             button.connect_clicked({
                 let rc_dialog = dialog.clone();
                 move |_| {
@@ -242,7 +235,7 @@ pub fn draw_info_box(info: &gtk::Box, message: &String, dialog: &gtk::Dialog) {
     info.foreach(|child| {
         info.remove(child);
     });
-    draw_message(&info, &format!("    {} SUCCESSFULLY!     ",message).to_string(), 0.5);
+    draw_message(info, &format!("    {} SUCCESSFULLY!     ",message).to_string(), 0.5);
     dialog.run();
     dialog.hide();
 }

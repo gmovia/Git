@@ -6,7 +6,7 @@ mod tests {
     use crate::tests_functions::{create_file, set_up};
 
     #[test]
-    pub fn test_01_reset() -> Result<(), std::io::Error>{ // git add file1.txt
+    pub fn test_01_reset() -> Result<(), std::io::Error>{
         let temp_dir = set_up();
         let path = create_file(&temp_dir, "file1.txt");        
 

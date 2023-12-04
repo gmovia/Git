@@ -1,9 +1,8 @@
-use std::{path::Path, fs::{OpenOptions, self, File}, io::{Write, Read, self}};
+use std::{path::Path, fs::{OpenOptions, self, File}, io::{Read, self, Write}};
 
-use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{OBJ_REF_DELTA_CODE, COMMIT_CODE, BLOB_CODE, TREE_CODE}, proxies::proxy::Proxy};
-
+use crate::{utils::randoms::random::Random, vcs::{commands::{hash_object::{HashObject, WriteOption}, init::Init}, version_control_system::VersionControlSystem}, constants::constant::{COMMIT_CODE, BLOB_CODE, TREE_CODE}, proxies::proxy::Proxy};
 use super::commit_entity::CommitEntity;
-
+use std::fmt::Write as FmtWrite;
 
 pub enum DeltaOptions{
     Copy,
@@ -56,7 +55,7 @@ impl RefDeltaEntity{
     
     fn append_option(&self, mut position: usize, delta_file: &mut File) -> Result<usize,std::io::Error> {
         let size = self.data[position];
-        let bytes = &self.data[(position+1 as usize)..(position+1+(size as usize))];
+        let bytes = &self.data[(position + 1_usize)..(position+1+(size as usize))];
         position += 1 + size as usize;
         delta_file.write_all(bytes)?;
         Ok(position)
@@ -80,7 +79,6 @@ impl RefDeltaEntity{
         let positions = Self::positions(&self.data[position..])?;
         let mut copy_content: &str = "";
         if base_object_content.contains("100644") || base_object_content.contains("40000") {
-            let mut counter = 0;
             for (iter, blob) in blobs.clone().iter().enumerate() {
                 let new_blob = Self::process_tree_object(blob.0, &blob.1);
                 let hash = Proxy::write_tree(repo_path, &new_blob.1)?;
@@ -88,13 +86,12 @@ impl RefDeltaEntity{
                     let content_bytes = &blob.1[..positions.1 as usize];
                     let content = Self::process_tree_object(blob.0, &content_bytes.to_vec());
                     Proxy::write_tree(repo_path, &content.1)?;
-                    counter += 1;
                     break;
-                }else if iter == blobs.len()+counter-1{
-                    if let Some(text) = Self::get_blob_content(&base_object_content, positions.1 as usize) {
-                        copy_content = &text;
+                }else if iter == blobs.len()-1{
+                    if let Some(text) = Self::get_blob_content(base_object_content, positions.1 as usize) {
+                        copy_content = text;
                         delta_file.write_all(copy_content.as_bytes())?;
-                        HashObject::hash_object(&delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?; 
+                        HashObject::hash_object(delta_path, Init::get_object_path(repo_path)?, WriteOption::Write, TREE_CODE)?; 
                     }
                     else {
                         return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error parsing delta blob"));
@@ -117,7 +114,10 @@ impl RefDeltaEntity{
                 let entry_string: String = entries
                     .iter()
                     .map(|(mode, name, sha1)| {
-                        let hex_string: String = sha1.iter().map(|byte| format!("{:02x}", byte)).collect();
+                        let hex_string: String = sha1.iter().fold(String::new(), |mut acc, byte| {
+                            let _ = FmtWrite::write_fmt(&mut acc, format_args!("{:02x}", byte));
+                            acc
+                        });
                         format!("{}-  {}-{}", mode, name, hex_string)
                     })
                     .collect::<Vec<String>>()
@@ -172,14 +172,14 @@ impl RefDeltaEntity{
         let finish_position: u32;
         let mut bytes_used: usize  = 0;
         let bits_position = Self::get_bits_positions(bytes[0]);
-        if (&bits_position.0).is_empty() {
+        if bits_position.0.is_empty() {
             initial_position = 0;
             let bytes_to_use = bits_position.1.len();
             let finish_bytes = &bytes[1..bytes_to_use+1];
             bytes_used += bytes_to_use+1;
             finish_position = Self::get_hexadecimal(bits_position.1, finish_bytes, 2)?;
         } else {
-            let in_numeber_bytes_to_use = (&bits_position.0).len();
+            let in_numeber_bytes_to_use = bits_position.0.len();
             let in_bytes_to_use = &bytes[1..in_numeber_bytes_to_use+1];
             initial_position = Self::get_hexadecimal(bits_position.0, in_bytes_to_use, 1)?;
             let fin_numeber_bytes_to_use = bits_position.1.len();
@@ -202,18 +202,18 @@ impl RefDeltaEntity{
 
 
     fn get_hexadecimal(positions: Vec<usize>, bytes: &[u8], option: u8) -> Result<u32, std::io::Error> {
-        let mut hexa_number = String::new();
-        if option == 2 {
-            hexa_number = Self::size_bytes(positions, bytes);
+        let hexa_number = if option == 2 {
+            Self::size_bytes(positions, bytes)
         }
         else {
-            hexa_number = Self::offset_bytes(positions, bytes);
-        }       
+            Self::offset_bytes(positions, bytes)
+        };
+
         if let Ok(decimal) = u32::from_str_radix(&hexa_number, 16) {
-            return Ok(decimal);
+            Ok(decimal)
         }
         else {
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Cast delta hexa failed"));
+            Err(std::io::Error::new(std::io::ErrorKind::Other, "Cast delta hexa failed"))
         }
     }
 
@@ -256,39 +256,33 @@ impl RefDeltaEntity{
                 }
                 aux.push('2')
             }
+            else if aux.contains('0') && !aux.contains('1') && !aux.contains('2') {
+                let number = format!("{:X}", bytes[1]);
+                hexa_number = format!("{}0000{}",number, hexa_number);
+            }   
+            else if aux.contains('1') && !aux.contains('0') && !aux.contains('2') {
+                let number = format!("{:X}", bytes[1]);
+                hexa_number = format!("{}00{}",number, hexa_number);
+            }                
+            else if aux.contains('2') && !aux.contains('1') && !aux.contains('0') {
+                let number = format!("{:X}", bytes[1]);
+                hexa_number = format!("{}{}",number, hexa_number);
+            }
+            else if aux.contains('0') && aux.contains('1') && !aux.contains('2') {
+                let number = format!("{:X}", bytes[2]);
+                hexa_number = format!("{}00{}",number, hexa_number);
+            }
+            else if (aux.contains('0') && aux.contains('2') && !aux.contains('1')) || (aux.contains('2') && aux.contains('1') && !aux.contains('0')) {
+                let number = format!("{:X}", bytes[2]);
+                hexa_number = format!("{}{}",number, hexa_number);
+            }
+            else if aux.contains('0') && aux.contains('1') && aux.contains('2') {
+                let number = format!("{:X}", bytes[3]);
+                hexa_number = format!("{}{}",number, hexa_number);
+            }
             else {
-                if aux.contains('0') && !aux.contains('1') && !aux.contains('2') {
-                    let number = format!("{:X}", bytes[1]);
-                    hexa_number = format!("{}0000{}",number, hexa_number);
-                }   
-                else if aux.contains('1') && !aux.contains('0') && !aux.contains('2') {
-                    let number = format!("{:X}", bytes[1]);
-                    hexa_number = format!("{}00{}",number, hexa_number);
-                }                
-                else if aux.contains('2') && !aux.contains('1') && !aux.contains('0') {
-                    let number = format!("{:X}", bytes[1]);
-                    hexa_number = format!("{}{}",number, hexa_number);
-                }
-                else if aux.contains('0') && aux.contains('1') && !aux.contains('2') {
-                    let number = format!("{:X}", bytes[2]);
-                    hexa_number = format!("{}00{}",number, hexa_number);
-                }
-                else if aux.contains('0') && aux.contains('2') && !aux.contains('1') {
-                    let number = format!("{:X}", bytes[2]);
-                    hexa_number = format!("{}{}",number, hexa_number);
-                }
-                else if aux.contains('2') && aux.contains('1') && !aux.contains('0') {
-                    let number = format!("{:X}", bytes[2]);
-                    hexa_number = format!("{}{}",number, hexa_number);
-                }
-                else if aux.contains('0') && aux.contains('1') && aux.contains('2') {
-                    let number = format!("{:X}", bytes[3]);
-                    hexa_number = format!("{}{}",number, hexa_number);
-                }
-                else {
-                    let number = format!("{:X}", bytes[0]);
-                    hexa_number = format!("{}000000",number);
-                }
+                let number = format!("{:X}", bytes[0]);
+                hexa_number = format!("{}000000",number);
             }
         }
         hexa_number
@@ -316,23 +310,21 @@ impl RefDeltaEntity{
                     aux = 5;
                 }
             }
+            else if aux == 5 {
+                let number = format!("{:X}", bytes[1]);
+                hexa_number = format!("{}{}",number,hexa_number);
+            }
+            else if aux == 4 {
+                let number = format!("{:X}", bytes[1]);
+                hexa_number = format!("{}00{}",number,hexa_number);
+            }
+            else if aux == 9 {
+                let number = format!("{:X}", bytes[2]);
+                hexa_number = format!("{}{}",number,hexa_number);
+            }
             else {
-                if aux == 5 {
-                    let number = format!("{:X}", bytes[1]);
-                    hexa_number = format!("{}{}",number,hexa_number);
-                }
-                else if aux == 4 {
-                    let number = format!("{:X}", bytes[1]);
-                    hexa_number = format!("{}00{}",number,hexa_number);
-                }
-                else if aux == 9 {
-                    let number = format!("{:X}", bytes[2]);
-                    hexa_number = format!("{}{}",number,hexa_number);
-                }
-                else {
-                    let number = format!("{:X}", bytes[0]);
-                    hexa_number = format!("{}0000",number);
-                }
+                let number = format!("{:X}", bytes[0]);
+                hexa_number = format!("{}0000",number);
             }
         }
         hexa_number

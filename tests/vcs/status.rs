@@ -73,7 +73,6 @@ mod tests {
         
         let file_1 = create_file(&temp_dir, "file1.txt");
         let file_3 = create_file(&temp_dir, "file3.txt"); 
-        //let file_3 = Path::new("file3.txt");
         
         VersionControlSystem::add(&file_3)?;
         VersionControlSystem::commit("file_3".to_string())?;
@@ -92,7 +91,6 @@ mod tests {
         let file_1 = create_file(&temp_dir, "file1.txt");
         let file_2 = create_file(&temp_dir, "file2.txt");
         let file_3 = create_file(&temp_dir, "file3.txt");
-        //let file_3 = Path::new("file3.txt");
         
         VersionControlSystem::add(&file_2)?;
         let mut file = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_2)?;
@@ -146,7 +144,7 @@ mod tests {
     
     #[test]
     pub fn test_10_changes_not_staged_for_commit_contain_file_1() -> Result<(), std::io::Error> {
-        let temp_dir = set_up(); // SI SACAS TEMP_DIR ROMPE!
+        let temp_dir = set_up();
         let path = create_file(&temp_dir, "file1.txt");   
         
         VersionControlSystem::add(&path)?;

@@ -1,4 +1,4 @@
-use std::{path::{Path, PathBuf}, fs::{OpenOptions, self, File}, io::{Write, Read, BufReader, BufRead, self}};
+use std::{path::{Path, PathBuf}, fs::{OpenOptions, self, File}, io::{Write, BufReader, BufRead, self}};
 
 use crate::{vcs::files::current_repository::CurrentRepository, constants::constant::RESPONSE_OK_REMOTE};
 
@@ -13,17 +13,16 @@ pub enum RemoteOption<'a>{
 }
 
 impl Remote{
-    //git remote add origin repo1
     pub fn remote(current_repo: &Path, option:RemoteOption) -> Result<String, std::io::Error>{
         match option{
-            RemoteOption::Add(repo_name_to_process,server_repo) => {Ok(Remote::write_config(current_repo, &repo_name_to_process, Path::new(server_repo))?)},
+            RemoteOption::Add(repo_name_to_process,server_repo) => {Ok(Remote::write_config(current_repo, repo_name_to_process, Path::new(server_repo))?)},
             RemoteOption::Remove(repo_name_to_process) => {Ok(Remote::remote_remove(current_repo, repo_name_to_process)?)},
-            RemoteOption::Get(repo_name_to_process) => {Ok(Remote::get_path_of_repo_remote(current_repo, &repo_name_to_process)?)}
+            RemoteOption::Get(repo_name_to_process) => {Ok(Remote::get_path_of_repo_remote(current_repo, repo_name_to_process)?)}
         }
     }
 
     fn write_config(current_repo: &Path, new_repo_name: &str, server_repo: &Path) -> Result<String, std::io::Error>{
-        let mut config_file = OpenOptions::new().write(true).create(true).append(true).open(Init::get_current_config(&current_repo.to_path_buf())?)?; 
+        let mut config_file = OpenOptions::new().write(true).create(true).append(true).open(Init::get_current_config(current_repo)?)?; 
         let path_repo_cow = server_repo.to_string_lossy();
         let mut path_repo = path_repo_cow.into_owned();
         
@@ -48,7 +47,6 @@ impl Remote{
         }
         Ok(false)
     }
-    //git remote remove origin
     fn remote_remove(current_repo: &Path, remove_repo: &str) -> Result<String, std::io::Error>{
         let config_path = Init::get_current_config(current_repo)?;
         let file = File::open(&config_path)?;
@@ -93,7 +91,7 @@ impl Remote{
 
             if trimmed_line.starts_with("[remote ") {
                 if let Some(remote_section) = trimmed_line.strip_prefix("[remote ") {
-                    if let Some(remote_name) = remote_section.strip_suffix("]") {
+                    if let Some(remote_name) = remote_section.strip_suffix(']') {
                         let remote_name = remote_name.trim_end_matches("path = ");
                         remote_names.push(remote_name.to_string());
                     }
@@ -108,7 +106,7 @@ impl Remote{
         let path = Init::get_current_config(current_repo)?;    
         let content = fs::read_to_string(path)?;
 
-        let content_split: Vec<&str> = content.split("\n").collect();
+        let content_split: Vec<&str> = content.split('\n').collect();
         for (index, line) in content_split.iter().enumerate(){
             if line.contains(repo_name){
                 let parts: Vec<&str> = content_split[index+1].split('=').map(|s| s.trim()).collect();

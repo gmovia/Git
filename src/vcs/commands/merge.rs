@@ -38,7 +38,7 @@ impl Merge {
 
             conflicts = conflicts_search(&changes_current_repository, &changes_branch_repository);
 
-            if conflicts.is_empty() { // FUSION AUTOMATICA
+            if conflicts.is_empty() {
                 add_changes(&mut repository, &changes_current_repository);
                 add_changes(&mut repository, &changes_branch_repository);
                 CommitsTable::write( &MERGE.to_string(), &repository)?;

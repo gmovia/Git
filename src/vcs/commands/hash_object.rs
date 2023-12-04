@@ -30,7 +30,7 @@ impl HashObject{
     /// Recibe una ruta y una opcion. 
     /// Si la opcion es Write entonces escribe en el archivo objects, cuya ruta se calcula a partir del hash.
     /// Devuelve el hash del archivo.
-    pub fn hash_object(path: &Path, object_path: PathBuf, option: WriteOption, entity_type: &str) -> Result<String, std::io::Error>{ // mejorar el char
+    pub fn hash_object(path: &Path, object_path: PathBuf, option: WriteOption, entity_type: &str) -> Result<String, std::io::Error>{
         if path.is_dir(){
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "The path is an directory"));
         }
@@ -43,7 +43,7 @@ impl HashObject{
         let hash = Self::hash(&content, entity_type)?;
 
         match option{
-            WriteOption::Write => HashObject::write_object(&hash, object_path, content.as_bytes())?, // aca rompe
+            WriteOption::Write => HashObject::write_object(&hash, object_path, content.as_bytes())?,
             WriteOption::NoWrite => ()
         }
 
@@ -54,7 +54,7 @@ impl HashObject{
         let mut tree_entries: Vec<u8> = Vec::new();
 
         for entry in entries{
-            let entry_split: Vec<&str> = entry.split_whitespace().collect(); // modo tipo hash filename
+            let entry_split: Vec<&str> = entry.split_whitespace().collect();
             if !entry_split.is_empty(){
                 if let Ok(hash_bytes) = Self::decode_hex(entry_split[2]){
                     tree_entries.extend_from_slice(format!("{} {}\0", entry_split[0], entry_split[3]).as_bytes());

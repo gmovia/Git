@@ -78,7 +78,9 @@ mod tests {
         VersionControlSystem::add(&dir_path)?;
         VersionControlSystem::commit("first_commit".to_string())?;
         
-        let _ = VersionControlSystem::rm(&dir_path, RemoveOption::NoDirectory).unwrap_or(HashMap::new());        
+        if let Err( _ ) = VersionControlSystem::rm(&dir_path, RemoveOption::NoDirectory) {
+            let _ = HashMap::<String,String>::new();
+        }        
         
         let staging_area = Index::read_index()?;
 

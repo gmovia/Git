@@ -41,7 +41,7 @@ impl Tag {
         let format = format!("tagger {} <{}> 1700522965 -0300",config.0,config.1);
         let tagger = format.as_str();
         
-        let tag_entity = TagEntity{commit_hash: commit_hash, typef: typef.to_string(), tagger: tagger.to_string(), tag: tag.to_string(), message: message.to_string()};
+        let tag_entity = TagEntity{commit_hash, typef: typef.to_string(), tagger: tagger.to_string(), tag: tag.to_string(), message: message.to_string()};
         let hash_tag = TagEntity::write(path, tag_entity)?;
         let tags_path = path.join(".rust_git").join("refs").join("tags").join(tag);
         

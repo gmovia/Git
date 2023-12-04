@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use crate::{constants::constant::{RESPONSE_OK_REMOTE, RESPONSE_NOK_REMOTE}, vcs::{version_control_system::VersionControlSystem, commands::remote::RemoteOption}};
 
 
@@ -19,8 +17,4 @@ pub fn handler_remote(input: String) -> String {
         _ => {RESPONSE_NOK_REMOTE.to_string()},
     }
 }
-
-//git remote add origin repo1  LEN = 4
-//git remote get origin ---> repo1  LEN = 4
-//git remote remove origin  --> elimina [remote "origin"] path ....  LEN = 4
 

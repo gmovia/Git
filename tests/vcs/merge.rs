@@ -40,10 +40,10 @@ mod tests {
         VersionControlSystem::add(&file_3)?;
         VersionControlSystem::commit("first commit".to_string())?;
 
-        VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?; // f1 f2 f3
+        VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
         VersionControlSystem::checkout(CheckoutOptions::ChangeBranch("master"))?;
         
-        let file_4 = create_file(&temp_dir, "file4.txt"); // f1 f2 f3 f4
+        let file_4 = create_file(&temp_dir, "file4.txt");
         VersionControlSystem::add(&file_4)?;
         VersionControlSystem::commit("second commit".to_string())?;
 

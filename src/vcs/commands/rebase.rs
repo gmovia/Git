@@ -1,6 +1,6 @@
-use std::{fs::{OpenOptions, self}, io::{Read, Write, self, BufRead}, collections::HashMap};
-use crate::{vcs::{files::{current_repository::CurrentRepository, commits_table::CommitsTable, repository::Repository, current_commit::CurrentCommit}, entities::commit_table_entry::CommitTableEntry, commands::checkout::Checkout}, constants::constant::{STATE_CREATED, STATE_MODIFIED}, utils::randoms::random::Random};
-use super::{branch::Branch, diff::Diff};
+use std::{fs::{OpenOptions, self}, io::{Write, self}, collections::HashMap};
+use crate::vcs::{files::{current_repository::CurrentRepository, commits_table::CommitsTable, repository::Repository, current_commit::CurrentCommit}, commands::checkout::Checkout};
+use super::branch::Branch;
 
 pub struct Rebase;
 

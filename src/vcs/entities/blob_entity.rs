@@ -4,7 +4,7 @@ use crate::{vcs::commands::{hash_object::{HashObject, WriteOption}, init::Init, 
 
 #[derive(Debug, Clone)]
 
-pub struct BlobEntity{ // content
+pub struct BlobEntity{
     pub content_type: String,
     pub path: String,
     pub blob_hash: String   

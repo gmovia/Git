@@ -1,13 +1,12 @@
-use std::{path::Path, io::{self, Write}};
-use rust_git::{vcs::{version_control_system::VersionControlSystem, files::config::Config}, handlers::commands::handler_command, interfaces::login::DrawLogin};
+use rust_git::interfaces::login::DrawLogin;
 use rust_git::interfaces::interface::RustInterface;
-
-
+use rust_git::vcs::files::config::Config;
+ 
 fn main() -> Result<(), std::io::Error>{
     let draw_login = DrawLogin::new();
     let result = Config::read_config();
     if result.is_err() {
-        let _ = draw_login.impl_login();
+        draw_login.impl_login();
     }else {
         let interface = RustInterface::new();
         let _ = interface.impl_interface();
@@ -18,7 +17,6 @@ fn main() -> Result<(), std::io::Error>{
 /* 
 fn main() -> Result<(), std::io::Error>{
     let _ = VersionControlSystem::init(Path::new("test_delta"), Vec::new());
-
     loop{
         let mut input = String::new();
         io::stdout().flush().unwrap();

@@ -47,7 +47,7 @@ impl CommitsTable{
         let committer = format!( "committer {} <{}> {} -0300" , config.0, config.1, current_timestamp );
         
         let current = CurrentRepository::read()?;
-        let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_current_log(&current)?)?; //abro la tabla de commits para escribir - si no existe, la creo
+        let mut commits_file = OpenOptions::new().write(true).append(true).open(Init::get_current_log(&current)?)?;
         
         let entities = convert_to_entities(repository, &format!("{}/", &current.display().to_string()));
         let tree_hash = TreeEntity::write(&current, &entities)?;
