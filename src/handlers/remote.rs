@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use crate::{
     constants::constant::{RESPONSE_NOK_REMOTE, RESPONSE_OK_REMOTE},
     vcs::{commands::remote::RemoteOption, version_control_system::VersionControlSystem},

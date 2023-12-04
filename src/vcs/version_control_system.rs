@@ -105,7 +105,6 @@ impl VersionControlSystem {
         Commit::commit(message)
     }
 
-    //
     /// Esta funcion handlea lo que respecta al comando log
     pub fn log() -> Result<String, std::io::Error> {
         Log::log()
