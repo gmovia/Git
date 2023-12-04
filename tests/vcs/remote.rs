@@ -2,7 +2,7 @@
 mod tests {
     use std::{path::Path, thread, time::Duration, fs};
 
-    use rust_git::{vcs::{version_control_system::VersionControlSystem, commands::remote::{Remote, RemoteOption}, files::current_repository::CurrentRepository}, handlers::{remote::handler_remote, clone::handler_clone}, servers::server::Server};
+    use rust_git::{vcs::{version_control_system::VersionControlSystem, commands::remote::{Remote, RemoteOption}}, handlers::clone::handler_clone, servers::server::Server};
 
     use crate::tests_functions::{commit_one_file, compare_directories, commit_one_file_client};
 
