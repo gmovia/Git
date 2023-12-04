@@ -8,11 +8,11 @@ use std::io::{BufRead, BufReader};
 pub fn handler_log() -> String {
     if let Ok(current) = CurrentRepository::read() {
         if let Ok(path) = Init::get_current_log(&current) {
-            if let Ok(commits_file) = File::open(path){
+            if let Ok(commits_file) = File::open(path) {
                 let reader = BufReader::new(commits_file);
                 let has_commits = reader.lines().count() > 0;
                 if has_commits {
-                    if let Ok(result) = VersionControlSystem::log(){
+                    if let Ok(result) = VersionControlSystem::log() {
                         return result;
                     }
                 }

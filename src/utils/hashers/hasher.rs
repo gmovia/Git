@@ -3,8 +3,8 @@ use std::fmt::Write as FmtWrite;
 
 pub struct Hasher;
 
-impl Hasher{
-    pub fn hash(input: &Vec<u8>) -> String{
+impl Hasher {
+    pub fn hash(input: &Vec<u8>) -> String {
         let mut sha1 = Sha1::new();
         sha1.update(input);
 

@@ -1,5 +1,13 @@
-use rust_git::{vcs::files::vcs_file::VCSFile, vcs::{version_control_system::VersionControlSystem, files::config::Config}};
-use std::{collections::HashMap, path::{Path, PathBuf}, fs::{File, self, create_dir_all}, io::{Read, self, Write}};
+use rust_git::{
+    vcs::files::vcs_file::VCSFile,
+    vcs::{files::config::Config, version_control_system::VersionControlSystem},
+};
+use std::{
+    collections::HashMap,
+    fs::{self, create_dir_all, File},
+    io::{self, Read, Write},
+    path::{Path, PathBuf},
+};
 use tempdir::TempDir;
 
 pub fn equals(staging_area: HashMap<String, VCSFile>, path: &Path, state: &str) -> bool {
@@ -9,9 +17,10 @@ pub fn equals(staging_area: HashMap<String, VCSFile>, path: &Path, state: &str) 
     false
 }
 
-pub fn set_up() -> TempDir{
-    let temp_dir = TempDir::new("test_version_control_system").expect("Failed to create temp directory");
-    let _ = Config::write_config(("temp_dir_name".to_string(),"temp_dir_email".to_string()));
+pub fn set_up() -> TempDir {
+    let temp_dir =
+        TempDir::new("test_version_control_system").expect("Failed to create temp directory");
+    let _ = Config::write_config(("temp_dir_name".to_string(), "temp_dir_email".to_string()));
     VersionControlSystem::init(temp_dir.path(), Vec::new());
     temp_dir
 }
@@ -41,20 +50,32 @@ pub fn compare_files(file1: &Path, file2: &Path) -> io::Result<bool> {
 
     File::open(file1)?.read_to_end(&mut buf1)?;
     File::open(file2)?.read_to_end(&mut buf2)?;
-    println!("ENTRY 1: {}, ENTRY 2: {}", String::from_utf8_lossy(&buf1), String::from_utf8_lossy(&buf2));
+    println!(
+        "ENTRY 1: {}, ENTRY 2: {}",
+        String::from_utf8_lossy(&buf1),
+        String::from_utf8_lossy(&buf2)
+    );
     Ok(buf1 == buf2)
 }
 
 pub fn compare_directories(dir1: &Path, dir2: &Path) -> io::Result<bool> {
-    let entries1: Vec<PathBuf> = fs::read_dir(dir1)?.map(|entry| entry.map(|e| e.path())).collect::<Result<_, _>>()?;
-    let entries2: Vec<PathBuf> = fs::read_dir(dir2)?.map(|entry| entry.map(|e| e.path())).collect::<Result<_, _>>()?;
+    let entries1: Vec<PathBuf> = fs::read_dir(dir1)?
+        .map(|entry| entry.map(|e| e.path()))
+        .collect::<Result<_, _>>()?;
+    let entries2: Vec<PathBuf> = fs::read_dir(dir2)?
+        .map(|entry| entry.map(|e| e.path()))
+        .collect::<Result<_, _>>()?;
 
     if entries1.len() != entries2.len() {
         return Ok(false);
     }
 
     for entry1 in entries1 {
-        let entry2 = dir2.join(entry1.file_name().ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Invalid file name"))?);
+        let entry2 = dir2.join(
+            entry1
+                .file_name()
+                .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Invalid file name"))?,
+        );
 
         if entry1.is_dir() {
             if !compare_directories(&entry1, &entry2)? {
@@ -75,34 +96,44 @@ pub fn commit_one_file(server_path: PathBuf, file_name: &str) {
     let _ = create_dir_all(folder);
     let test_file_path = folder.join(file_name);
     if let Ok(mut archivo) = File::create(test_file_path) {
-        let _ = archivo.write_all(format!("Archivo para hacer prueba de clone: {}", file_name ).as_bytes());
+        let _ = archivo
+            .write_all(format!("Archivo para hacer prueba de clone: {}", file_name).as_bytes());
         let _ = rust_git::vcs::version_control_system::VersionControlSystem::add(&server_path);
-        let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!("{} commit", file_name));
-    }    
+        let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!(
+            "{} commit",
+            file_name
+        ));
+    }
 }
 
 pub fn commit_one_file_client(client_path: PathBuf, file_name: &str) {
     let _ = create_dir_all(&client_path);
     let test_file_path = client_path.join(file_name);
     if let Ok(mut archivo) = File::create(test_file_path) {
-        let _ = archivo.write_all(format!("Archivo para hacer prueba de clone: {}", file_name ).as_bytes());
+        let _ = archivo
+            .write_all(format!("Archivo para hacer prueba de clone: {}", file_name).as_bytes());
         let _ = rust_git::vcs::version_control_system::VersionControlSystem::add(&client_path);
-        let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!("{} commit", file_name));
-    }    
+        let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!(
+            "{} commit",
+            file_name
+        ));
+    }
 }
-
 
 pub fn commit_one_folder(server_path: PathBuf, folders: &str, file_name: &str) {
     let folder = &server_path.join("tests").join("clone").join(folders);
     let _ = create_dir_all(folder);
     let test_file_path = folder.join(file_name);
     if let Ok(mut archivo) = File::create(test_file_path) {
-        let _ = archivo.write_all(format!("Archivo para hacer prueba de clone: {}", file_name ).as_bytes());
+        let _ = archivo
+            .write_all(format!("Archivo para hacer prueba de clone: {}", file_name).as_bytes());
         let _ = rust_git::vcs::version_control_system::VersionControlSystem::add(&server_path);
-        let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!("{} commit", file_name));
-    }    
+        let _ = rust_git::vcs::version_control_system::VersionControlSystem::commit(format!(
+            "{} commit",
+            file_name
+        ));
+    }
 }
-
 
 pub fn get_number_of_elements(path: PathBuf) -> usize {
     let mut archivos = 0;

@@ -1,31 +1,39 @@
-use std::{net::TcpStream, path::Path, io::{Write, self, BufRead}, fs};
+use std::{
+    fs,
+    io::{self, BufRead, Write},
+    net::TcpStream,
+    path::Path,
+};
 
-use crate::{ packfiles::packfile::to_pkt_line, servers::upload_pack::process_tag_content ,protocol::send_pack::handle_send_pack, vcs::commands::branch::Branch};
+use crate::{
+    packfiles::packfile::to_pkt_line, protocol::send_pack::handle_send_pack,
+    servers::upload_pack::process_tag_content, vcs::commands::branch::Branch,
+};
 
 pub struct Push;
 
-impl Push{
-    pub fn push(stream: &mut TcpStream, current_repo: &Path) -> Result<(),std::io::Error> {
+impl Push {
+    pub fn push(stream: &mut TcpStream, current_repo: &Path) -> Result<(), std::io::Error> {
         let logs_path = current_repo.join(".rust_git").join("logs");
         let mut log_entries = Self::get_commits_branch(&logs_path)?;
         let mut tag_entries = Self::get_tags(current_repo)?;
-        let mut entry_to_send:Vec<String> = Vec::new();
-        
+        let mut entry_to_send: Vec<String> = Vec::new();
+
         if !tag_entries.is_empty() {
             log_entries.append(&mut tag_entries);
         }
-        let current_branch:String = Branch::get_current_branch(current_repo)?;
-        for entries in &log_entries{
+        let current_branch: String = Branch::get_current_branch(current_repo)?;
+        for entries in &log_entries {
             let entry: Vec<&str> = entries.split_whitespace().collect();
 
             if entry.len() == 3 {
                 let refs_name: Vec<&str> = entry[2].split('/').collect();
-                if refs_name[2].trim_end_matches('\n') == current_branch.trim_end_matches('\n'){
+                if refs_name[2].trim_end_matches('\n') == current_branch.trim_end_matches('\n') {
                     entry_to_send.push(entries.to_string());
                     let ref_to_pkt = to_pkt_line(entries);
                     stream.write_all(ref_to_pkt.as_bytes())?;
                 }
-            }else{
+            } else {
                 entry_to_send.push(entries.to_string());
                 let ref_to_pkt = to_pkt_line(entries);
                 stream.write_all(ref_to_pkt.as_bytes())?;
@@ -35,20 +43,25 @@ impl Push{
         Ok(())
     }
 
-    fn get_tags(path: &Path) -> Result<Vec<String>, std::io::Error>{
+    fn get_tags(path: &Path) -> Result<Vec<String>, std::io::Error> {
         let mut log_entries = Vec::new();
         let tags_path = path.join(".rust_git").join("refs").join("tags");
         let entries_tag = fs::read_dir(tags_path)?;
 
-        for entry in entries_tag{
+        for entry in entries_tag {
             let tag_file: fs::DirEntry = entry?;
             let _ = fs::File::open(tag_file.path())?;
             if let Some(tag_name) = tag_file.path().file_name() {
-                let tag_hash  = fs::read_to_string(tag_file.path())?;
+                let tag_hash = fs::read_to_string(tag_file.path())?;
                 let is_comun = process_tag_content(tag_hash.clone(), path)?;
-                let format_tag = if is_comun{
-                    format!("{} refs/tags/{}^{}", tag_hash, tag_name.to_string_lossy(), "{}")
-                }else {
+                let format_tag = if is_comun {
+                    format!(
+                        "{} refs/tags/{}^{}",
+                        tag_hash,
+                        tag_name.to_string_lossy(),
+                        "{}"
+                    )
+                } else {
                     format!("{} refs/tags/{}", tag_hash, tag_name.to_string_lossy())
                 };
                 log_entries.push(format_tag);
@@ -57,7 +70,7 @@ impl Push{
         Ok(log_entries)
     }
 
-    fn extract_old_new_commit(line: String) -> String{
+    fn extract_old_new_commit(line: String) -> String {
         let parts: Vec<&str> = line.split('-').collect();
         let old_hash = parts[1];
         let new_hash = parts[2];
@@ -69,22 +82,22 @@ impl Push{
         let file = fs::File::open(file_path)?;
         let reader = io::BufReader::new(file);
         let mut last_line = String::new();
-    
+
         for line in reader.lines() {
             last_line = line?;
         }
-    
+
         Ok(last_line)
     }
-    
+
     fn get_commits_branch(path: &Path) -> Result<Vec<String>, std::io::Error> {
         if path.is_dir() {
             let mut refs = Vec::new();
-    
+
             for entry in fs::read_dir(path)? {
                 let entry = entry?;
                 let file_path = entry.path();
-    
+
                 if file_path.is_file() {
                     let last_line = Self::process_file(&file_path)?;
                     let hashes = Self::extract_old_new_commit(last_line);
@@ -123,5 +136,4 @@ impl Push{
         }
         Ok(current_repository)
     }
-    
 }

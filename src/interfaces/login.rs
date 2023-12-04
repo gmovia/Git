@@ -1,9 +1,11 @@
 use crate::vcs::files::config::Config;
 
-use super::{interface::RustInterface, css::{init_css, set_styles_css_in_login}};
+use super::{
+    css::{init_css, set_styles_css_in_login},
+    interface::RustInterface,
+};
 
 use gtk::prelude::*;
-
 
 #[derive(Debug, Clone, Default)]
 pub struct DrawLogin {
@@ -16,8 +18,6 @@ pub struct DrawLogin {
 }
 
 impl DrawLogin {
-
-
     pub fn new() -> DrawLogin {
         if gtk::init().is_err() {
             println!("Failed to initialize GTK.");
@@ -28,7 +28,7 @@ impl DrawLogin {
 
         init_css();
 
-        DrawLogin { 
+        DrawLogin {
             login_window: builder.object("login-window").unwrap(),
             title_login: builder.object("title-login").unwrap(),
             login_email: builder.object("login-email").unwrap(),
@@ -36,11 +36,9 @@ impl DrawLogin {
             login_enter: builder.object("login-enter").unwrap(),
             login_close: builder.object("login-close").unwrap(),
         }
-    
     }
 
     pub fn impl_login(&self) {
-
         let interface = RustInterface::new();
 
         set_styles_css_in_login(self);
@@ -54,19 +52,17 @@ impl DrawLogin {
                 let _ = Config::write_config(config);
                 log_window.close();
                 let _ = interface.impl_interface();
-            
             }
         });
 
         self.login_close.connect_clicked({
             let log_window = self.login_window.clone();
-            move |_|{
+            move |_| {
                 log_window.close();
             }
         });
-        
+
         self.login_window.show_all();
         gtk::main();
-        
     }
 }

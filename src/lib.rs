@@ -1,65 +1,65 @@
-pub mod constants{
+pub mod constants {
     pub mod constant;
 }
 
-pub mod handlers{
-    pub mod commands;
-    pub mod status;
-    pub mod hash_object;
+pub mod handlers {
     pub mod add;
-    pub mod rm;
-    pub mod cat_file;
     pub mod branch;
+    pub mod cat_file;
     pub mod checkout;
-    pub mod log;
-    pub mod commit;
-    pub mod merge;
     pub mod clone;
-    pub mod ls_files;
+    pub mod commands;
+    pub mod commit;
     pub mod fetch;
+    pub mod hash_object;
+    pub mod log;
+    pub mod ls_files;
     pub mod ls_tree;
+    pub mod merge;
     pub mod pull;
     pub mod push;
-    pub mod tag;
-    pub mod remote;
-    pub mod show_ref;
     pub mod rebase;
+    pub mod remote;
+    pub mod rm;
+    pub mod show_ref;
+    pub mod status;
+    pub mod tag;
 }
 
-pub mod proxies{
+pub mod proxies {
     pub mod proxy;
 }
 
-pub mod clients{
+pub mod clients {
     pub mod client;
 }
 
-pub mod servers{
+pub mod servers {
+    pub mod encoder;
     pub mod server;
     pub mod upload_pack;
-    pub mod encoder;
 }
 
-pub mod packfiles{
+pub mod packfiles {
     pub mod packfile;
     pub mod tag_file;
 }
 
-pub mod interfaces{
-    pub mod interface;
+pub mod interfaces {
+    pub mod css;
     pub mod draw;
     pub mod handler;
-    pub mod css;
     pub mod handler_button;
+    pub mod interface;
     pub mod login;
 }
 
-pub mod protocol{
-    pub mod send_pack;
+pub mod protocol {
     pub mod receive_pack;
+    pub mod send_pack;
 }
 
-pub mod types{
+pub mod types {
     pub mod set_type;
 }
 
@@ -72,70 +72,69 @@ pub mod utils {
         pub mod set;
     }
 
-    pub mod hashers{
+    pub mod hashers {
         pub mod hasher;
     }
-    pub mod randoms{
+    pub mod randoms {
         pub mod random;
     }
-
 }
 
-pub mod vcs{
-    pub mod files{
-        pub mod vcs_file;
-        pub mod index;
-        pub mod repository;
-        pub mod current_repository;
-        pub mod current_commit;
+pub mod vcs {
+    pub mod files {
         pub mod commits_table;
-        pub mod repositories;
         pub mod config;
+        pub mod current_commit;
+        pub mod current_repository;
+        pub mod index;
         pub mod log;
+        pub mod repositories;
+        pub mod repository;
+        pub mod vcs_file;
     }
 
-    pub mod commands{
-        pub mod init;
-        pub mod hash_object;
-        pub mod cat_file;
-        pub mod status;
+    pub mod commands {
         pub mod add;
-        pub mod rm;
-        pub mod commit;
-        pub mod log;
         pub mod branch;
-        pub mod checkout;
-        pub mod merge;
-        pub mod diff;
-        pub mod reset;
-        pub mod clone;
-        pub mod ls_files;
-        pub mod push;
-        pub mod fetch;
-        pub mod ls_tree;
+        pub mod cat_file;
         pub mod check_ignore;
-        pub mod tag;
-        pub mod remote;
-        pub mod show_ref;
-        pub mod rebase;
+        pub mod checkout;
+        pub mod clone;
+        pub mod commit;
+        pub mod diff;
+        pub mod fetch;
+        pub mod hash_object;
+        pub mod init;
+        pub mod log;
+        pub mod ls_files;
+        pub mod ls_tree;
+        pub mod merge;
         pub mod pull;
+        pub mod push;
+        pub mod rebase;
+        pub mod remote;
+        pub mod reset;
+        pub mod rm;
+        pub mod show_ref;
+        pub mod status;
+        pub mod tag;
     }
 
-    pub mod sets{
+    pub mod sets {
         pub mod set;
     }
 
-    pub mod entities{
-        pub mod entity;
-        pub mod commit_table_entry;
-        pub mod commit_entity;
-        pub mod tree_entity;
+    pub mod entities {
         pub mod blob_entity;
         pub mod change;
+        pub mod commit_entity;
+        pub mod commit_table_entry;
         pub mod conflict;
-        pub mod tag_entity;
+        pub mod entity;
         pub mod ref_delta_entity;
+        pub mod tag_entity;
+        pub mod tree_entity;
     }
-  
+
     pub mod version_control_system;
 }

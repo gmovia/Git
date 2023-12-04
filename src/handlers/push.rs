@@ -1,7 +1,8 @@
+use crate::{
+    constants::constant::RESPONSE_OK_PUSH, vcs::version_control_system::VersionControlSystem,
+};
 
-use crate::{vcs::version_control_system::VersionControlSystem, constants::constant::RESPONSE_OK_PUSH, };
-
-pub fn handler_push(input: String) -> String{
-    let _ =  VersionControlSystem::push(input);
+pub fn handler_push(input: String) -> String {
+    let _ = VersionControlSystem::push(input);
     RESPONSE_OK_PUSH.to_string()
 }

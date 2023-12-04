@@ -1,8 +1,13 @@
-use std::{path::Path, fs::{self, OpenOptions}, io::{Write, self}};
+use std::{
+    fs::{self, OpenOptions},
+    io::{self, Write},
+    path::Path,
+};
 
-use crate::vcs::{files::{current_commit::CurrentCommit, config::Config}, entities::tag_entity::TagEntity};
-
-
+use crate::vcs::{
+    entities::tag_entity::TagEntity,
+    files::{config::Config, current_commit::CurrentCommit},
+};
 
 pub struct Tag;
 
@@ -14,47 +19,66 @@ pub enum TagOptions<'a> {
 }
 
 impl Tag {
-
     pub fn tag(path: &Path, option: TagOptions) -> Result<Vec<String>, std::io::Error> {
         match option {
-            TagOptions::Get => {Self::get(path)},
-            TagOptions::CreateLight(tag) => {Self::create_light_tag(path, tag)},
-            TagOptions::Create(tag, message) => {Self::create_tag(path, tag, message)}
-            TagOptions::Delete(tag) => {Self::delete(path, tag)},
+            TagOptions::Get => Self::get(path),
+            TagOptions::CreateLight(tag) => Self::create_light_tag(path, tag),
+            TagOptions::Create(tag, message) => Self::create_tag(path, tag, message),
+            TagOptions::Delete(tag) => Self::delete(path, tag),
         }
-        
     }
 
-    pub fn create_light_tag(path: &Path, tag: &str) -> Result<Vec<String>, std::io::Error>{
+    pub fn create_light_tag(path: &Path, tag: &str) -> Result<Vec<String>, std::io::Error> {
         let tags_path = path.join(".rust_git").join("refs").join("tags").join(tag);
-        let mut tag_file = OpenOptions::new().write(true).create(true).append(true).open(tags_path)?;
+        let mut tag_file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(tags_path)?;
         let commit_hash = CurrentCommit::read()?;
         tag_file.write_all(commit_hash.as_bytes())?;
-        
+
         Self::get(path)
     }
-    
-    pub fn create_tag(path: &Path, tag: &str, message: &str) -> Result<Vec<String>, std::io::Error>{
+
+    pub fn create_tag(
+        path: &Path,
+        tag: &str,
+        message: &str,
+    ) -> Result<Vec<String>, std::io::Error> {
         let commit_hash = CurrentCommit::read()?;
         let config = Config::read_config()?;
         let typef = "commit";
-        let format = format!("tagger {} <{}> 1700522965 -0300",config.0,config.1);
+        let format = format!("tagger {} <{}> 1700522965 -0300", config.0, config.1);
         let tagger = format.as_str();
-        
-        let tag_entity = TagEntity{commit_hash, typef: typef.to_string(), tagger: tagger.to_string(), tag: tag.to_string(), message: message.to_string()};
+
+        let tag_entity = TagEntity {
+            commit_hash,
+            typef: typef.to_string(),
+            tagger: tagger.to_string(),
+            tag: tag.to_string(),
+            message: message.to_string(),
+        };
         let hash_tag = TagEntity::write(path, tag_entity)?;
         let tags_path = path.join(".rust_git").join("refs").join("tags").join(tag);
-        
-        let mut tag_file = OpenOptions::new().write(true).create(true).append(true).open(tags_path)?;
+
+        let mut tag_file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(tags_path)?;
         tag_file.write_all(hash_tag.as_bytes())?;
 
         Self::get(path)
     }
-    
-    pub fn delete(path: &Path, tag: &str) -> Result<Vec<String>, std::io::Error>{
+
+    pub fn delete(path: &Path, tag: &str) -> Result<Vec<String>, std::io::Error> {
         if let Ok(tags) = Self::get(path) {
             if !tags.contains(&tag.to_string()) {
-                return Err(io::Error::new(io::ErrorKind::NotFound, "Can't find the tag"));
+                return Err(io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "Can't find the tag",
+                ));
             }
         }
         let tags_path = path.join(".rust_git").join("refs").join("tags").join(tag);
@@ -62,8 +86,7 @@ impl Tag {
         Self::get(path)
     }
 
-    
-    pub fn get(path: &Path) -> Result<Vec<String>, std::io::Error>{
+    pub fn get(path: &Path) -> Result<Vec<String>, std::io::Error> {
         let mut tags = Vec::new();
         let tags_path = path.join(".rust_git").join("refs").join("tags");
         if let Ok(entries) = fs::read_dir(tags_path) {

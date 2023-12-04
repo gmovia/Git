@@ -3,7 +3,7 @@ pub const BDD_PATH: &str = "repositories.txt";
 pub const NULL_PATH: &str = "null_path";
 pub const CURRENT_REPOSITORY_PATH: &str = "current_repository.txt";
 pub const RUST_PATH: &str = ".rust_git";
-pub const  CONFIG_PATH: &str = "config.txt";
+pub const CONFIG_PATH: &str = "config.txt";
 
 // CODES
 pub const TREE_CODE: &str = "tree";
@@ -64,7 +64,8 @@ pub const RESPONSE_OK_COMMIT: &str = "Commit created succesfully.";
 pub const RESPONSE_OK_MERGE: &str = "Merged successfully";
 
 pub const RESPONSE_OK_IGNORE: &str = "The path is ignored as per the rules in the .gitignore file.";
-pub const RESPONSE_NOK_IGNORE: &str = "The path is not ignored or is not listed in the .gitignore file.";
+pub const RESPONSE_NOK_IGNORE: &str =
+    "The path is not ignored or is not listed in the .gitignore file.";
 
 pub const RESPONSE_OK_CLONE: &str = "Clone successfully";
 pub const RESPONSE_OK_PUSH: &str = "Push successfully";
@@ -76,12 +77,12 @@ pub const RESPONSE_OK_PULL: &str = "Pull successfully";
 pub const RESPONSE_OK_REMOTE: &str = "Remote successfully";
 pub const RESPONSE_NOK_REMOTE: &str = "Can't Remote";
 
-
 // ERRORS
 pub const ERR_INVALID_PARAMETERS: &str = "Invalid parameters.";
 pub const ERR_GET_BRANCHES: &str = "Error getting the branches.";
 pub const ERR_NO_SUCH_OR_DIRECTORY: &str = "No such file or directory";
-pub const ERR_PATH_IS_NOT_DIRECTORY_OR_NO_SUCH_OR_DIRECTORY: &str = "The path is an directory or no such file or directory.";
+pub const ERR_PATH_IS_NOT_DIRECTORY_OR_NO_SUCH_OR_DIRECTORY: &str =
+    "The path is an directory or no such file or directory.";
 pub const ERR_COMMIT_IS_NOT_EXIST: &str = "No commits exist.";
 pub const ERR_STATUS: &str = "Failed to get status";
 pub const ERR_MERGE: &str = "There are conflicts";

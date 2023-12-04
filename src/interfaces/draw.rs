@@ -1,30 +1,37 @@
-use std::{path::Path, collections::HashMap};
+use crate::vcs::{
+    commands::branch::BranchOptions,
+    files::{log::Log, repositories::Repositories},
+    version_control_system::VersionControlSystem,
+};
 use gtk::{prelude::*, Button, ComboBoxText};
-use crate::vcs::{version_control_system::VersionControlSystem, commands::branch::BranchOptions, files::{repositories::Repositories, log::Log}};
+use std::{collections::HashMap, path::Path};
 
-
-pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
+pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error> {
     let branches = VersionControlSystem::branch(BranchOptions::GetBranches)?;
     draw_branches(&branches, combo_box);
     Ok(())
 }
 
-pub fn repositories(combo_box: &ComboBoxText) -> Result<(), std::io::Error>{
+pub fn repositories(combo_box: &ComboBoxText) -> Result<(), std::io::Error> {
     let repositories = Repositories::read()?;
     draw_repositories(&repositories, combo_box);
     Ok(())
 }
 
-pub fn changes_and_staging_area(grid: &gtk::Grid, grid_staging: &gtk::Grid) -> Result<(), std::io::Error>{
-    grid.foreach(|child|{
+pub fn changes_and_staging_area(
+    grid: &gtk::Grid,
+    grid_staging: &gtk::Grid,
+) -> Result<(), std::io::Error> {
+    grid.foreach(|child| {
         grid.remove(child);
     });
-    
-    grid_staging.foreach(|child|{
+
+    grid_staging.foreach(|child| {
         grid_staging.remove(child);
     });
 
-    let (untracked_files, changes_not_be_commited, changes_to_be_commited) = VersionControlSystem::status()?;
+    let (untracked_files, changes_not_be_commited, changes_to_be_commited) =
+        VersionControlSystem::status()?;
 
     let staging_area: Vec<String> = changes_to_be_commited.keys().cloned().collect();
 
@@ -36,54 +43,55 @@ pub fn changes_and_staging_area(grid: &gtk::Grid, grid_staging: &gtk::Grid) -> R
     Ok(())
 }
 
-pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_staging: &gtk::Grid){
-    for (index,(path, state)) in changes.iter().enumerate() {
+pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_staging: &gtk::Grid) {
+    for (index, (path, state)) in changes.iter().enumerate() {
         let path_label = gtk::Label::new(Some(path));
         path_label.set_visible(true);
-        path_label.set_xalign(2.0); 
-        path_label.set_yalign(0.5); 
+        path_label.set_xalign(2.0);
+        path_label.set_yalign(0.5);
 
         path_label.style_context().add_class("custom-label-message");
 
         let state_label = gtk::Label::new(Some(state));
         state_label.set_visible(true);
-        state_label.set_xalign(2.0); 
-        state_label.set_yalign(0.5); 
+        state_label.set_xalign(2.0);
+        state_label.set_yalign(0.5);
 
         path_label.style_context().add_class("custom-add-label");
 
-        if state == "CREATED"{
-            state_label.style_context().add_class("custom-changes-label-created");
+        if state == "CREATED" {
+            state_label
+                .style_context()
+                .add_class("custom-changes-label-created");
         }
-        if state == "MODIFIED"{
-            state_label.style_context().add_class("custom-changes-label-modified");
+        if state == "MODIFIED" {
+            state_label
+                .style_context()
+                .add_class("custom-changes-label-modified");
         }
-        if state == "DELETED"{
-            state_label.style_context().add_class("custom-changes-label-deleted");
+        if state == "DELETED" {
+            state_label
+                .style_context()
+                .add_class("custom-changes-label-deleted");
         }
 
-        let add_button = Button::builder()
-        .margin_start(10)
-        .label("+")
-        .build();
+        let add_button = Button::builder().margin_start(10).label("+").build();
         add_button.set_visible(true);
 
-        
         add_button.style_context().add_class("custom-add-button");
-        
-        let reset_button = Button::builder()
-        .margin_start(10)
-        .label("-")
-        .build();
+
+        let reset_button = Button::builder().margin_start(10).label("-").build();
 
         reset_button.set_visible(true);
-        reset_button.style_context().add_class("custom-reset-button");
+        reset_button
+            .style_context()
+            .add_class("custom-reset-button");
 
         grid.attach(&path_label, 0, index as i32, 1, 1);
         grid.attach(&state_label, 1, index as i32, 1, 1);
         grid.attach(&add_button, 2, index as i32, 1, 1);
-        
-        let path_clone = path.clone(); 
+
+        let path_clone = path.clone();
         let reset_button = reset_button.clone();
         let path_label = path_label.clone();
         add_button.connect_clicked({
@@ -91,34 +99,34 @@ pub fn draw_changes(changes: &HashMap<String, String>, grid: &gtk::Grid, grid_st
             let rc_grid = grid.clone();
             let rc_add = grid_staging.clone();
             let path_label = path_label.clone();
-            move |widget|{ 
-
-                let _ = VersionControlSystem::add(Path::new(&path_clone)); 
+            move |widget| {
+                let _ = VersionControlSystem::add(Path::new(&path_clone));
                 rc_grid.remove(widget);
                 rc_grid.remove(&path_label);
                 rc_grid.remove(&state_label);
                 rc_add.attach(&path_label, 0, index as i32, 1, 1);
                 rc_add.attach(&reset_button, 1, index as i32, 1, 1);
-        }});
+            }
+        });
 
         let reset_button = reset_button.clone();
-        let path_clone = path.clone(); 
+        let path_clone = path.clone();
         let path_label = path_label.clone();
         reset_button.connect_clicked({
             let rc_grid = grid_staging.clone();
-            let path_clone = path_clone.clone(); 
+            let path_clone = path_clone.clone();
             let path_label = path_label.clone();
-            move |widget|{ 
+            move |widget| {
                 let _ = VersionControlSystem::reset(Path::new(&path_clone));
                 rc_grid.remove(widget);
                 rc_grid.remove(&path_label);
-        }});
-        
+            }
+        });
     }
 }
 
-pub fn draw_staging_area(staging_area: &[String], grid: &gtk::Grid){
-    for (index,path) in staging_area.iter().enumerate() {
+pub fn draw_staging_area(staging_area: &[String], grid: &gtk::Grid) {
+    for (index, path) in staging_area.iter().enumerate() {
         let label = gtk::Label::new(Some(path));
         label.set_visible(true);
         label.set_xalign(2.0);
@@ -126,29 +134,29 @@ pub fn draw_staging_area(staging_area: &[String], grid: &gtk::Grid){
 
         label.style_context().add_class("custom-label-message");
 
-        let reset_button = Button::builder()
-        .margin_start(10)
-        .label("-")
-        .build();
+        let reset_button = Button::builder().margin_start(10).label("-").build();
 
         reset_button.set_visible(true);
-        reset_button.style_context().add_class("custom-reset-button");
+        reset_button
+            .style_context()
+            .add_class("custom-reset-button");
 
         grid.attach(&label, 0, index as i32, 1, 1);
         grid.attach(&reset_button, 1, index as i32, 1, 1);
-        
-        let path_clone = path.clone(); 
+
+        let path_clone = path.clone();
         reset_button.connect_clicked({
             let rc_grid = grid.clone();
-            move |widget|{ 
+            move |widget| {
                 let _ = VersionControlSystem::reset(Path::new(&path_clone));
                 rc_grid.remove(widget);
                 rc_grid.remove(&label);
-        }});
-     }
+            }
+        });
+    }
 }
 
-pub fn draw_repositories(repositories: &Vec<String>, combo_box: &ComboBoxText){
+pub fn draw_repositories(repositories: &Vec<String>, combo_box: &ComboBoxText) {
     for repository in repositories {
         let label = gtk::Label::new(Some(repository));
         label.set_visible(true);
@@ -156,7 +164,7 @@ pub fn draw_repositories(repositories: &Vec<String>, combo_box: &ComboBoxText){
     }
 }
 
-pub fn draw_branches(branches: &Vec<String>, combo_box: &ComboBoxText){
+pub fn draw_branches(branches: &Vec<String>, combo_box: &ComboBoxText) {
     for branch in branches {
         let label = gtk::Label::new(Some(branch));
         label.set_visible(true);
@@ -174,7 +182,7 @@ pub fn draw_message(m_changes: &gtk::Box, message: &String, align: f32) {
 }
 
 pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: String, c_entry: &gtk::Entry) {
-    let _ = Log::write_log(&format!("'{}'\n",message.to_uppercase().clone()));
+    let _ = Log::write_log(&format!("'{}'\n", message.to_uppercase().clone()));
     errors.1.foreach(|child| {
         errors.1.remove(child);
     });
@@ -188,10 +196,19 @@ pub fn draw_error(errors: (gtk::MessageDialog, gtk::Box), message: String, c_ent
     c_entry.set_text("");
 }
 
-pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: &gtk::Box, message: &String, dialog: &gtk::Dialog, button: &gtk::Button) {
-    info.foreach({|child|{
-        info.remove(child);
-    }});
+pub fn draw_push_pull_fetch(
+    rc_branch: &gtk::ComboBoxText,
+    input: String,
+    info: &gtk::Box,
+    message: &String,
+    dialog: &gtk::Dialog,
+    button: &gtk::Button,
+) {
+    info.foreach({
+        |child| {
+            info.remove(child);
+        }
+    });
     match message.as_str() {
         "PUSH" => {
             let _ = VersionControlSystem::push(input);
@@ -202,23 +219,11 @@ pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: 
                     rc_dialog.hide();
                 }
             });
-        },
+        }
         "PULL" => {
             let _ = VersionControlSystem::pull(input);
             rc_branch.remove_all();
-            let _ = branches(rc_branch);            
-            draw_info_box(info, message, dialog);
-            button.connect_clicked({
-                let rc_dialog = dialog.clone();
-                move |_| {
-                    rc_dialog.hide();
-                }
-            });
-        },
-        "FETCH" => {
-            let _ = VersionControlSystem::fetch(input);
-            rc_branch.remove_all();
-            let _ = branches(rc_branch);            
+            let _ = branches(rc_branch);
             draw_info_box(info, message, dialog);
             button.connect_clicked({
                 let rc_dialog = dialog.clone();
@@ -227,7 +232,19 @@ pub fn draw_push_pull_fetch(rc_branch: &gtk::ComboBoxText, input: String, info: 
                 }
             });
         }
-        _ => {},
+        "FETCH" => {
+            let _ = VersionControlSystem::fetch(input);
+            rc_branch.remove_all();
+            let _ = branches(rc_branch);
+            draw_info_box(info, message, dialog);
+            button.connect_clicked({
+                let rc_dialog = dialog.clone();
+                move |_| {
+                    rc_dialog.hide();
+                }
+            });
+        }
+        _ => {}
     }
 }
 
@@ -235,7 +252,11 @@ pub fn draw_info_box(info: &gtk::Box, message: &String, dialog: &gtk::Dialog) {
     info.foreach(|child| {
         info.remove(child);
     });
-    draw_message(info, &format!("    {} SUCCESSFULLY!     ",message).to_string(), 0.5);
+    draw_message(
+        info,
+        &format!("    {} SUCCESSFULLY!     ", message).to_string(),
+        0.5,
+    );
     dialog.run();
     dialog.hide();
 }

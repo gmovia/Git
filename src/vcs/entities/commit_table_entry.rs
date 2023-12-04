@@ -1,5 +1,5 @@
 #[derive(Debug, Clone)]
-pub struct CommitTableEntry{
+pub struct CommitTableEntry {
     pub id: String,
     pub last_hash: String,
     pub hash: String,

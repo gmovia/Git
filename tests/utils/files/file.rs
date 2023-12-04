@@ -1,16 +1,16 @@
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, path::Path};
-    use rust_git::utils::files::file::read;
     use crate::tests_functions::{create_file, set_up};
+    use rust_git::utils::files::file::read;
+    use std::{fs::File, path::Path};
 
     #[test]
-    fn test_01_contain_file_1() -> Result<(),std::io::Error>{
+    fn test_01_contain_file_1() -> Result<(), std::io::Error> {
         let temp_dir = set_up();
         let file = create_file(&temp_dir, "file1.txt");
         let files = read(temp_dir.path())?;
 
-        assert_eq!(true,files.contains_key(&file.display().to_string()));
+        assert_eq!(true, files.contains_key(&file.display().to_string()));
         Ok(())
     }
 
@@ -28,19 +28,19 @@ mod tests {
         let temp_dir = set_up();
         let folder_path = temp_dir.path().join("folder");
         std::fs::create_dir(&folder_path)?;
-    
+
         let file_path = folder_path.join("file1.txt");
         let _ = File::create(&file_path)?;
-    
+
         let result = read(temp_dir.path())?;
         assert_eq!(result.contains_key(&file_path.display().to_string()), true);
-    
+
         Ok(())
     }
 
     #[test]
     fn test_04_not_contain_folder() {
-       let directory = Path::new("tests/utils/files");
+        let directory = Path::new("tests/utils/files");
         let path = directory.join("folder");
         assert!(
             matches!(read(directory), Ok(files) if !files.contains_key(&path.display().to_string()))
@@ -51,7 +51,9 @@ mod tests {
     fn test_05_contain_file_1() {
         let temp_dir = set_up();
         let path = create_file(&temp_dir, "file1.txt");
-        assert!(matches!(read(&path), Ok(files) if files.contains_key(&path.display().to_string())));
+        assert!(
+            matches!(read(&path), Ok(files) if files.contains_key(&path.display().to_string()))
+        );
     }
 
     #[test]
@@ -63,7 +65,7 @@ mod tests {
     }
 
     #[test]
-    fn test_07_not_contain_file_4(){
+    fn test_07_not_contain_file_4() {
         let temp_dir = set_up();
         assert!(
             !matches!(read(temp_dir.path()), Ok(files) if files.contains_key("tests/utils/files/file4.txt"))
@@ -71,14 +73,14 @@ mod tests {
     }
 
     #[test]
-    fn test_08_contain_one_files()  -> Result<(), std::io::Error>{
+    fn test_08_contain_one_files() -> Result<(), std::io::Error> {
         let temp_dir = set_up();
         let folder_path = temp_dir.path().join("folder");
         std::fs::create_dir(&folder_path)?;
-    
+
         let file_path = folder_path.join("file1.txt");
         let _ = File::create(&file_path)?;
-    
+
         let result = read(temp_dir.path())?;
         assert_eq!(result.len(), 1);
         Ok(())
@@ -105,6 +107,8 @@ mod tests {
     fn test_11_contain_file_1() {
         let temp_dir = set_up();
         let file = create_file(&temp_dir, "file1.txt");
-        assert!(matches!(read(temp_dir.path()), Ok(files) if files.contains_key(&file.display().to_string())));
+        assert!(
+            matches!(read(temp_dir.path()), Ok(files) if files.contains_key(&file.display().to_string()))
+        );
     }
 }

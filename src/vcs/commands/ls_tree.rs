@@ -1,19 +1,27 @@
+use crate::{
+    constants::constant::COMMIT_INIT_HASH,
+    vcs::{
+        entities::{commit_entity::CommitEntity, entity::Entity, tree_entity::TreeEntity},
+        files::current_commit::CurrentCommit,
+    },
+};
 use std::path::Path;
-use crate::{vcs::{files::current_commit::CurrentCommit, entities::{tree_entity::TreeEntity, commit_entity::CommitEntity, entity::Entity}}, constants::constant::COMMIT_INIT_HASH};
-
 
 pub struct LsTree;
 
 impl LsTree {
-
-    pub fn ls_tree(branch: &str, path: &Path) -> Result<Vec<String>, std::io::Error>{
+    pub fn ls_tree(branch: &str, path: &Path) -> Result<Vec<String>, std::io::Error> {
         let mut information = Vec::new();
         Self::get_information_branch(branch, path, &mut information)
-    } 
+    }
 
-    pub fn get_information_branch(branch: &str, path: &Path, information: &mut Vec<String>) -> Result<Vec<String>, std::io::Error>{
+    pub fn get_information_branch(
+        branch: &str,
+        path: &Path,
+        information: &mut Vec<String>,
+    ) -> Result<Vec<String>, std::io::Error> {
         let commit_hash = CurrentCommit::read_for_branch(path, branch)?;
-        if commit_hash != COMMIT_INIT_HASH{
+        if commit_hash != COMMIT_INIT_HASH {
             let commit = CommitEntity::read(path, &commit_hash)?;
             let entities = TreeEntity::read(path, commit.tree_hash.clone())?;
             Self::read_entities(entities, information, 0);
@@ -46,5 +54,4 @@ impl LsTree {
             }
         }
     }
-    
 }

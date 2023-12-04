@@ -1,22 +1,43 @@
-use std::{net::TcpStream, path::Path, io::{Read, Write, self, BufRead}, str::from_utf8, collections::HashMap, fs::{File, OpenOptions, self}};
-use crate::{packfiles::{packfile::{read_packet, send_done_msg, to_pkt_line, decompress_data}, tag_file::{exclude_tag_ref, create_tag_files, process_refs_old_new, create_tag_folder}}, vcs::{commands::branch::Branch, entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity}, files::current_repository::CurrentRepository}, constants::constant::{TREE_CODE_NUMBER, COMMIT_INIT_HASH, BLOB_CODE_NUMBER, TAG_CODE_NUMBER, COMMIT_CODE_NUMBER, OBJ_REF_DELTA_CODE_NUMBER}, proxies::proxy::Proxy, utils::randoms::random::Random};
 use super::{cat_file::CatFile, init::Init};
+use crate::{
+    constants::constant::{
+        BLOB_CODE_NUMBER, COMMIT_CODE_NUMBER, COMMIT_INIT_HASH, OBJ_REF_DELTA_CODE_NUMBER,
+        TAG_CODE_NUMBER, TREE_CODE_NUMBER,
+    },
+    packfiles::{
+        packfile::{decompress_data, read_packet, send_done_msg, to_pkt_line},
+        tag_file::{create_tag_files, create_tag_folder, exclude_tag_ref, process_refs_old_new},
+    },
+    proxies::proxy::Proxy,
+    utils::randoms::random::Random,
+    vcs::{
+        commands::branch::Branch,
+        entities::{commit_entity::CommitEntity, ref_delta_entity::RefDeltaEntity},
+        files::current_repository::CurrentRepository,
+    },
+};
 use std::fmt::Write as FmtWrite;
+use std::{
+    collections::HashMap,
+    fs::{self, File, OpenOptions},
+    io::{self, BufRead, Read, Write},
+    net::TcpStream,
+    path::Path,
+    str::from_utf8,
+};
 
 pub struct Fetch;
 
 impl Fetch {
-
-    pub fn git_fetch(stream: &mut TcpStream, repo: &Path) -> Result<(),std::io::Error> {
+    pub fn git_fetch(stream: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
         Self::receive_pack(stream, repo)?;
         Ok(())
     }
 
-
     pub fn receive_pack(socket: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
         loop {
-            let mut len_buf = [0; 4]; 
+            let mut len_buf = [0; 4];
             if socket.read_exact(&mut len_buf).is_ok() {
                 if let Ok(len_str) = from_utf8(&len_buf) {
                     if let Ok(len) = usize::from_str_radix(len_str, 16) {
@@ -29,33 +50,46 @@ impl Fetch {
                 }
             }
         }
-        let last_commit_per_branch= Self::format_packet(&packets)?;
+        let last_commit_per_branch = Self::format_packet(&packets)?;
         let mut message_to_send = Self::packet_manager(last_commit_per_branch, repo)?;
-        
+
         let (tags_received, _) = exclude_tag_ref(packets.clone())?;
         let want_tag_to_send = process_refs_old_new(tags_received, repo)?;
         message_to_send.0.append(&mut want_tag_to_send.clone());
-        
+
         Self::send_messages(socket, message_to_send)?;
 
         let objects = Self::get_socket_response(socket)?;
-        
+
         let _ = create_tag_files(want_tag_to_send, &CurrentRepository::read()?);
-        Self::create_objects(&packets , &objects, repo)?;
-        Ok(()) 
+        Self::create_objects(&packets, &objects, repo)?;
+        Ok(())
     }
 
-    fn create_objects(list_refs: &Vec<String> , objects: &[(u8, Vec<u8>)], client_path: &Path) -> Result<(),std::io::Error> {
+    fn create_objects(
+        list_refs: &Vec<String>,
+        objects: &[(u8, Vec<u8>)],
+        client_path: &Path,
+    ) -> Result<(), std::io::Error> {
         let mut branchs: HashMap<String, String> = HashMap::new();
 
         let objects_processed = Self::process_folder(objects.to_vec());
         let mut commits_created = Self::create_folders(objects_processed.clone(), client_path)?;
-        
-        
-        let delta_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 7).cloned().collect();
-        let mut blob_objects: Vec<(u8, Vec<u8>)> = objects.iter().filter(|&&(first, _)| first == 2).cloned().collect();
+
+        let delta_objects: Vec<(u8, Vec<u8>)> = objects
+            .iter()
+            .filter(|&&(first, _)| first == 7)
+            .cloned()
+            .collect();
+        let mut blob_objects: Vec<(u8, Vec<u8>)> = objects
+            .iter()
+            .filter(|&&(first, _)| first == 2)
+            .cloned()
+            .collect();
         for (_, inner_vec) in delta_objects {
-            if let Ok(commits) = Self::process_delta_object(&inner_vec, client_path, &mut blob_objects) {
+            if let Ok(commits) =
+                Self::process_delta_object(&inner_vec, client_path, &mut blob_objects)
+            {
                 if !commits.is_empty() {
                     for commit in commits {
                         commits_created.insert(commit.0, commit.1);
@@ -64,24 +98,33 @@ impl Fetch {
             }
         }
 
-
         for item in list_refs {
             if item.contains("HEAD") {
                 continue;
             }
-            let parts: Vec<&str> = item.splitn(2, ' ').collect(); 
+            let parts: Vec<&str> = item.splitn(2, ' ').collect();
             if parts.len() == 2 {
                 let commit = parts[0];
                 let ref_part = parts[1];
-                    if ref_part.starts_with("refs/") {
-                        let branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
-                        let format_branch_name = format!("origin_{}",branch_name.trim_end_matches('\n'));
-                        let _ = Branch::create_new_branch_with_hash(client_path, &format_branch_name, commit);
-                        branchs.insert(branch_name, commit.to_owned());
+                if ref_part.starts_with("refs/") {
+                    let branch_name = ref_part.trim_start_matches("refs/heads/").to_string();
+                    let format_branch_name =
+                        format!("origin_{}", branch_name.trim_end_matches('\n'));
+                    let _ = Branch::create_new_branch_with_hash(
+                        client_path,
+                        &format_branch_name,
+                        commit,
+                    );
+                    branchs.insert(branch_name, commit.to_owned());
                 }
             }
         }
-        let _ = Self::write_commit_log(client_path, branchs.clone(), &commits_created, objects_processed.clone());
+        let _ = Self::write_commit_log(
+            client_path,
+            branchs.clone(),
+            &commits_created,
+            objects_processed.clone(),
+        );
         Ok(())
     }
 
@@ -89,46 +132,61 @@ impl Fetch {
         (number, String::from_utf8_lossy(inner_vec).to_string())
     }
 
-    fn process_delta_object(inner_vec: &[u8], repo_path: &Path, blobs: &mut Vec<(u8, Vec<u8>)>) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
-        let hash_base_object: String = (inner_vec[..20]).iter().fold(String::new(), |mut acc, b| {
-            write!(&mut acc, "{:02x}", b).expect("Failed to write to String");
-            acc
-        });
+    fn process_delta_object(
+        inner_vec: &[u8],
+        repo_path: &Path,
+        blobs: &mut Vec<(u8, Vec<u8>)>,
+    ) -> Result<Vec<(String, CommitEntity)>, std::io::Error> {
+        let hash_base_object: String =
+            (inner_vec[..20]).iter().fold(String::new(), |mut acc, b| {
+                write!(&mut acc, "{:02x}", b).expect("Failed to write to String");
+                acc
+            });
         let decompres_data = &inner_vec[20..];
-    
+
         let delta_entity = RefDeltaEntity {
-                base_object_hash: hash_base_object.clone(),
-                data: decompres_data.to_vec(), 
-            };
+            base_object_hash: hash_base_object.clone(),
+            data: decompres_data.to_vec(),
+        };
         let commit = Proxy::write_ref_delta(repo_path, delta_entity, blobs)?;
         Ok(commit)
     }
 
     fn process_tree_object(number: u8, inner_vec: &Vec<u8>) -> (u8, String) {
         if std::str::from_utf8(inner_vec).is_ok() {
-            let blobs: Vec<String> = String::from_utf8_lossy(inner_vec).split('\n').map(String::from).collect();
+            let blobs: Vec<String> = String::from_utf8_lossy(inner_vec)
+                .split('\n')
+                .map(String::from)
+                .collect();
             let mut string_to_send = String::new();
             for blob in &blobs {
                 let blob_parts: Vec<&str> = blob.split(' ').collect();
                 if blob_parts.len() == 3 {
                     let path = Path::new(blob_parts[1]);
                     if let Some(file_name) = path.file_name() {
-                        string_to_send = format!("{}{}-   {}-{}\n", string_to_send, blob_parts[0], file_name.to_string_lossy(), blob_parts[2]);  
+                        string_to_send = format!(
+                            "{}{}-   {}-{}\n",
+                            string_to_send,
+                            blob_parts[0],
+                            file_name.to_string_lossy(),
+                            blob_parts[2]
+                        );
                     }
-                }                      
+                }
             }
             (number, string_to_send)
         } else {
             let mut reader = inner_vec.as_slice();
-        
+
             if let Ok(entries) = Self::read_tree_sha1(&mut reader) {
                 let entry_string: String = entries
                     .iter()
                     .map(|(mode, name, sha1)| {
-                        let hex_string: String = sha1.iter().fold(String::new(), |mut acc, byte| {
-                            let _ = FmtWrite::write_fmt(&mut acc, format_args!("{:02x}", byte));
-                            acc
-                        });
+                        let hex_string: String =
+                            sha1.iter().fold(String::new(), |mut acc, byte| {
+                                let _ = FmtWrite::write_fmt(&mut acc, format_args!("{:02x}", byte));
+                                acc
+                            });
                         format!("{}-{}-{}", mode, name, hex_string)
                     })
                     .collect::<Vec<String>>()
@@ -141,12 +199,12 @@ impl Fetch {
         }
     }
 
-    fn process_folder(objects: Vec<(u8,Vec<u8>)>) -> Vec<(u8, String)> {
-        let mut objects_processed : Vec<(u8, String)> = Vec::new();
+    fn process_folder(objects: Vec<(u8, Vec<u8>)>) -> Vec<(u8, String)> {
+        let mut objects_processed: Vec<(u8, String)> = Vec::new();
         for (number, inner_vec) in &objects {
             if *number != TREE_CODE_NUMBER {
                 objects_processed.push(Self::process_non_tree_object(*number, inner_vec));
-            }else{
+            } else {
                 objects_processed.push(Self::process_tree_object(*number, inner_vec));
             }
         }
@@ -158,18 +216,18 @@ impl Fetch {
         while let Ok(entry) = Self::read_tree_entry(reader) {
             entries.push(entry);
         }
-    
+
         Ok(entries)
     }
 
     fn read_tree_entry<R: Read>(reader: &mut R) -> io::Result<(String, String, Vec<u8>)> {
         let mut mode_bytes = [0; 6];
         reader.read_exact(&mut mode_bytes)?;
-    
+
         let binding = String::from_utf8_lossy(&mode_bytes[..]);
-        let mode_str = binding.trim();    
+        let mode_str = binding.trim();
         let name = Self::read_cstring(reader)?;
-    
+
         let mut sha1 = vec![0; 20];
         reader.read_exact(&mut sha1)?;
 
@@ -189,37 +247,40 @@ impl Fetch {
         Ok(String::from_utf8_lossy(&buffer).to_string())
     }
 
-    fn create_folders(objects: Vec<(u8, String)>, repo: &Path) -> Result<HashMap<String, CommitEntity>, std::io::Error>{
+    fn create_folders(
+        objects: Vec<(u8, String)>,
+        repo: &Path,
+    ) -> Result<HashMap<String, CommitEntity>, std::io::Error> {
         let mut commits_created: HashMap<String, CommitEntity> = Self::add_commits(repo)?;
 
         for (index, content) in objects.iter() {
             match *index {
-                COMMIT_CODE_NUMBER => {
-                    match Self::create_commit_folder(content, repo) {
-                        Ok((hash, commit_entity)) => {
-                            commits_created.insert(hash.clone(), commit_entity);
-                        },
-                        Err(e) => {
-                            println!("Error creating commit: {}", e);
-                        },
+                COMMIT_CODE_NUMBER => match Self::create_commit_folder(content, repo) {
+                    Ok((hash, commit_entity)) => {
+                        commits_created.insert(hash.clone(), commit_entity);
                     }
-                }
+                    Err(e) => {
+                        println!("Error creating commit: {}", e);
+                    }
+                },
                 TREE_CODE_NUMBER => {
                     if let Err(e) = Self::create_tree_folder(content, repo) {
                         println!("Error creating tree {}", e);
                     }
-                },
+                }
                 BLOB_CODE_NUMBER => Self::create_blob_folder(content, repo),
-                TAG_CODE_NUMBER =>   if let Err(e) = create_tag_folder(content, repo){
-                    println!("Error creating tag {}", e);   
-                },
-                OBJ_REF_DELTA_CODE_NUMBER => {},
+                TAG_CODE_NUMBER => {
+                    if let Err(e) = create_tag_folder(content, repo) {
+                        println!("Error creating tag {}", e);
+                    }
+                }
+                OBJ_REF_DELTA_CODE_NUMBER => {}
                 _ => println!("Type not identify {}", index),
             }
         }
         Ok(commits_created)
     }
-    
+
     fn add_commits(client_path: &Path) -> Result<HashMap<String, CommitEntity>, std::io::Error> {
         let mut commits: HashMap<String, CommitEntity> = HashMap::new();
         let logs_path = client_path.join(".rust_git").join("logs");
@@ -238,85 +299,145 @@ impl Fetch {
                         }
                     }
                 }
-                
             }
         } else {
-            return Err(std::io::Error::new(io::ErrorKind::NotFound, "Directory not found"));
+            return Err(std::io::Error::new(
+                io::ErrorKind::NotFound,
+                "Directory not found",
+            ));
         }
         Ok(commits)
     }
 
-
-    fn create_commit_folder(content: &str, repo: &Path) -> Result<(String, CommitEntity), std::io::Error>{
+    fn create_commit_folder(
+        content: &str,
+        repo: &Path,
+    ) -> Result<(String, CommitEntity), std::io::Error> {
         let partes: Vec<&str> = content.split('\n').collect();
-        
-        let commit_entity = if !content.contains("parent"){
-            CommitEntity{
+
+        let commit_entity = if !content.contains("parent") {
+            CommitEntity {
                 content_type: "commit".trim_end_matches('\n').to_string(),
-                tree_hash: partes[0].trim_end_matches('\n').trim_start_matches("tree ").to_string(),
-                message: partes[4..].join("\n").trim_start_matches('\n').trim_end_matches('\n').to_string(), 
-                author: partes[1].trim_end_matches('\n').trim_start_matches('\n').to_string(), 
+                tree_hash: partes[0]
+                    .trim_end_matches('\n')
+                    .trim_start_matches("tree ")
+                    .to_string(),
+                message: partes[4..]
+                    .join("\n")
+                    .trim_start_matches('\n')
+                    .trim_end_matches('\n')
+                    .to_string(),
+                author: partes[1]
+                    .trim_end_matches('\n')
+                    .trim_start_matches('\n')
+                    .to_string(),
                 committer: partes[2].trim_end_matches('\n').to_string(),
                 parent_hash: COMMIT_INIT_HASH.to_string(),
             }
-        }else{
-            CommitEntity{
+        } else {
+            CommitEntity {
                 content_type: "commit".to_string(),
-                tree_hash: partes[0].trim_end_matches('\n').trim_start_matches("tree ").to_string(),
-                message: partes[5..].join("\n").trim_start_matches('\n').trim_end_matches('\n').to_string(), 
-                author: partes[2].trim_end_matches('\n').trim_start_matches('\n').to_string(), 
+                tree_hash: partes[0]
+                    .trim_end_matches('\n')
+                    .trim_start_matches("tree ")
+                    .to_string(),
+                message: partes[5..]
+                    .join("\n")
+                    .trim_start_matches('\n')
+                    .trim_end_matches('\n')
+                    .to_string(),
+                author: partes[2]
+                    .trim_end_matches('\n')
+                    .trim_start_matches('\n')
+                    .to_string(),
                 committer: partes[3].trim_end_matches('\n').to_string(),
-                parent_hash: partes[1].trim_end_matches('\n').trim_start_matches('\n').trim_start_matches("parent ").to_string(),
+                parent_hash: partes[1]
+                    .trim_end_matches('\n')
+                    .trim_start_matches('\n')
+                    .trim_start_matches("parent ")
+                    .to_string(),
             }
         };
         let hash_commit = Proxy::write_commit(repo, &commit_entity)?;
 
         Ok((hash_commit, commit_entity))
     }
-    
 
-    fn create_blob_folder(content: &String, repo: &Path){
-        let _ = Proxy::write_blob(repo,content);
+    fn create_blob_folder(content: &String, repo: &Path) {
+        let _ = Proxy::write_blob(repo, content);
     }
 
     fn create_tree_folder(content: &str, repo: &Path) -> Result<String, std::io::Error> {
         Proxy::write_tree(repo, content)
     }
 
-    fn write_commit_log( repo: &Path, branchs: HashMap<String, String>, commits_created:  &HashMap<String, CommitEntity>, _objects: Vec<(u8, String)>) -> Result<(), std::io::Error> {
-        for (branch_name, hash_commit_branch) in &branchs{
+    fn write_commit_log(
+        repo: &Path,
+        branchs: HashMap<String, String>,
+        commits_created: &HashMap<String, CommitEntity>,
+        _objects: Vec<(u8, String)>,
+    ) -> Result<(), std::io::Error> {
+        for (branch_name, hash_commit_branch) in &branchs {
             if commits_created.contains_key(hash_commit_branch) {
                 let format = format!("origin_{}", branch_name.trim_end_matches('\n'));
                 let logs_path = repo.join(".rust_git").join("logs").join(format);
-                let file = OpenOptions::new().create(true).write(true).append(true).open(&logs_path)?;
+                let file = OpenOptions::new()
+                    .create(true)
+                    .write(true)
+                    .append(true)
+                    .open(&logs_path)?;
                 file.set_len(0)?;
-                let _ = Self::complete_commit_table(repo, &branch_name.to_string(), &hash_commit_branch.to_string(), commits_created);
+                let _ = Self::complete_commit_table(
+                    repo,
+                    &branch_name.to_string(),
+                    &hash_commit_branch.to_string(),
+                    commits_created,
+                );
             }
         }
         Ok(())
     }
 
-    fn complete_commit_table(repo: &Path, branch_name: &String, hash_commit_branch: &String, commits_created:  &HashMap<String, CommitEntity>) -> Result<(), std::io::Error> {
+    fn complete_commit_table(
+        repo: &Path,
+        branch_name: &String,
+        hash_commit_branch: &String,
+        commits_created: &HashMap<String, CommitEntity>,
+    ) -> Result<(), std::io::Error> {
         let format = format!("origin_{}", branch_name.trim_end_matches('\n'));
         let logs_path = repo.join(".rust_git").join("logs").join(format);
-        let mut file = OpenOptions::new().create(true).write(true).append(true).open(logs_path)?;
-        
+        let mut file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .append(true)
+            .open(logs_path)?;
 
         let content = CatFile::cat_file(hash_commit_branch, Init::get_object_path(repo)?)?;
         let id = Random::random();
 
-        if content.contains("parent"){
-            let part:Vec<&str> = content.split('\n').collect();
+        if content.contains("parent") {
+            let part: Vec<&str> = content.split('\n').collect();
             let hash_parent = part[1].trim_start_matches("parent ");
-            if let Some(commit_entity) = commits_created.get(hash_commit_branch){
+            if let Some(commit_entity) = commits_created.get(hash_commit_branch) {
                 let date = Self::get_date(&commit_entity.author);
-                let format_commit = format!("{}-{}-{}-{}-{}\n", id, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
-                let _ = Self::complete_commit_table(repo, branch_name, &hash_parent.to_string(), commits_created);
+                let format_commit = format!(
+                    "{}-{}-{}-{}-{}\n",
+                    id, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date
+                );
+                let _ = Self::complete_commit_table(
+                    repo,
+                    branch_name,
+                    &hash_parent.to_string(),
+                    commits_created,
+                );
                 let _ = file.write(format_commit.as_bytes());
             }
-        }else if let Some(commit_entity) = commits_created.get(hash_commit_branch){
+        } else if let Some(commit_entity) = commits_created.get(hash_commit_branch) {
             let date = Self::get_date(&commit_entity.author);
-            let format_commit = format!("{}-{}-{}-{}-{}\n", id, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date);
+            let format_commit = format!(
+                "{}-{}-{}-{}-{}\n",
+                id, commit_entity.parent_hash, hash_commit_branch, commit_entity.message, date
+            );
             let _ = file.write(format_commit.as_bytes());
         }
         Ok(())
@@ -324,21 +445,23 @@ impl Fetch {
 
     fn get_date(line: &str) -> &str {
         let start = match line.find('>') {
-            Some(pos) => pos + 2, 
-            None => 0, 
+            Some(pos) => pos + 2,
+            None => 0,
         };
-        &line[start..] 
+        &line[start..]
     }
-
 
     /// Esta funcion se encarga de parsear la respuesta del servidor al upload pack. Devuelve la rama y el ultimo commit
     fn format_packet(packets: &Vec<String>) -> Result<Vec<(String, String)>, std::io::Error> {
-        let mut branch_commit: Vec<(String,String)> = Vec::new();
+        let mut branch_commit: Vec<(String, String)> = Vec::new();
 
         for packet in packets {
             let parts: Vec<&str> = packet.splitn(2, ' ').collect();
-            if !packet.contains("tag"){
-                branch_commit.push((parts[1].trim_start_matches("refs/heads/").to_owned(), parts[0].to_owned()));
+            if !packet.contains("tag") {
+                branch_commit.push((
+                    parts[1].trim_start_matches("refs/heads/").to_owned(),
+                    parts[0].to_owned(),
+                ));
             }
         }
         let mut last_entries: HashMap<&String, &String> = std::collections::HashMap::new();
@@ -354,7 +477,10 @@ impl Fetch {
         Ok(last_commits)
     }
 
-    fn send_messages(socket: &mut TcpStream, message_to_send: (Vec<String>,Vec<String>)) -> Result<(), std::io::Error> {
+    fn send_messages(
+        socket: &mut TcpStream,
+        message_to_send: (Vec<String>, Vec<String>),
+    ) -> Result<(), std::io::Error> {
         for want in &message_to_send.0 {
             let _ = socket.write(want.as_bytes());
         }
@@ -368,57 +494,69 @@ impl Fetch {
         Ok(())
     }
 
-    fn packet_manager(last_branch_commit_recieve: Vec<(String,String)>, repo: &Path) -> Result<(Vec<String>,Vec<String>), std::io::Error>{
+    fn packet_manager(
+        last_branch_commit_recieve: Vec<(String, String)>,
+        repo: &Path,
+    ) -> Result<(Vec<String>, Vec<String>), std::io::Error> {
         let mut want_list: Vec<String> = Vec::new();
         let mut have_list: Vec<String> = Vec::new();
         for packet in &last_branch_commit_recieve {
-            match File::open(&repo.join(".rust_git").join("logs").join(&packet.0)) { 
+            match File::open(&repo.join(".rust_git").join("logs").join(&packet.0)) {
                 Ok(file) => {
                     let reader = io::BufReader::new(file);
-            
+
                     let mut last_line = String::new();
                     for line in reader.lines() {
                         last_line = line?;
                     }
                     let parts: Vec<&str> = last_line.split('-').collect();
                     if parts[2] == packet.1 {
-                        have_list.push(to_pkt_line(&format!("have {} refs/heads/{}", packet.1, &packet.0)));
-                    }
-                    else {
-                        want_list.push(to_pkt_line(&format!("want {} refs/heads/{}", packet.1, &packet.0)));
-                        have_list.push(to_pkt_line(&format!("have {} refs/heads/{}", parts[2], &packet.0)));
+                        have_list.push(to_pkt_line(&format!(
+                            "have {} refs/heads/{}",
+                            packet.1, &packet.0
+                        )));
+                    } else {
+                        want_list.push(to_pkt_line(&format!(
+                            "want {} refs/heads/{}",
+                            packet.1, &packet.0
+                        )));
+                        have_list.push(to_pkt_line(&format!(
+                            "have {} refs/heads/{}",
+                            parts[2], &packet.0
+                        )));
                     }
                 }
                 Err(_) => {
-                    want_list.push(to_pkt_line(&format!("want {} refs/heads/{}", packet.1, &packet.0)));    
+                    want_list.push(to_pkt_line(&format!(
+                        "want {} refs/heads/{}",
+                        packet.1, &packet.0
+                    )));
                 }
-            }            
+            }
         }
-        Ok((want_list,have_list))
+        Ok((want_list, have_list))
     }
 
-    fn get_socket_response(socket: &mut TcpStream) -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
+    fn get_socket_response(socket: &mut TcpStream) -> Result<Vec<(u8, Vec<u8>)>, std::io::Error> {
         let mut buffer = Vec::new();
-            match socket.read_to_end(&mut buffer) {
-                Ok(_) => {
-                    if buffer.is_empty() {
-                        Ok(Vec::new())
-                    }
-                    else {
-                        Self::manage_pack(&buffer[8..])
-                    }
-                    
+        match socket.read_to_end(&mut buffer) {
+            Ok(_) => {
+                if buffer.is_empty() {
+                    Ok(Vec::new())
+                } else {
+                    Self::manage_pack(&buffer[8..])
                 }
-                Err(e) => {
-                    println!("Failed to receive data: {}\n", e);
-                    Err(e)
-                }
-            } 
+            }
+            Err(e) => {
+                println!("Failed to receive data: {}\n", e);
+                Err(e)
+            }
+        }
     }
 
-    fn manage_pack(pack: &[u8])  -> Result<Vec<(u8,Vec<u8>)>,std::io::Error> {
+    fn manage_pack(pack: &[u8]) -> Result<Vec<(u8, Vec<u8>)>, std::io::Error> {
         let object_number = Self::parse_number(&pack[8..12])?;
-        
+
         let mut position: usize = 12;
         let mut objects = Vec::new();
         let pack_len = pack.len();
@@ -433,23 +571,21 @@ impl Fetch {
             position += 1;
 
             if objet_type == 7 {
-                let mut base_object = pack[position..position+20].to_vec();
+                let mut base_object = pack[position..position + 20].to_vec();
                 position += 20;
                 if let Ok(data) = decompress_data(&pack[position..]) {
                     position += data.1 as usize;
-                    base_object.extend_from_slice(&data.0); 
-                    objects.push((objet_type, base_object));   
+                    base_object.extend_from_slice(&data.0);
+                    objects.push((objet_type, base_object));
                 }
-            }
-            else if let Ok(data) = decompress_data(&pack[position..]) {
-                    position += data.1 as usize; 
-                    objects.push((objet_type, data.0))      
+            } else if let Ok(data) = decompress_data(&pack[position..]) {
+                position += data.1 as usize;
+                objects.push((objet_type, data.0))
             }
         }
         objects.sort_by(|a, b| a.0.cmp(&b.0));
         Ok(objects)
     }
-
 
     fn is_bit_set(byte: u8) -> bool {
         let mask = 0b10000000;
@@ -460,7 +596,10 @@ impl Fetch {
         let texto: String = bytes.iter().map(|&b| b.to_string()).collect();
         match texto.parse() {
             Ok(numero) => Ok(numero),
-            Err(_) => Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Can not parse number")),
+            Err(_) => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Can not parse number",
+            )),
         }
     }
 
@@ -470,7 +609,7 @@ impl Fetch {
             if i == 4 || i == 5 || i == 6 {
                 let bit = (bytes >> i) & 1;
                 bits.push(bit);
-            } 
+            }
         }
         let mut numero = 0;
         for bit in &bits {
@@ -478,5 +617,4 @@ impl Fetch {
         }
         numero
     }
-
 }

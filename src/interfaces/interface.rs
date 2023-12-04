@@ -2,10 +2,14 @@ use std::path::Path;
 
 use gtk::prelude::*;
 
-use crate::vcs::version_control_system::VersionControlSystem;
-use crate::interfaces::draw::{repositories, branches, changes_and_staging_area};
 use super::css::{init_css, set_styles_css_in_interface};
-use super::handler::{handle_branch, handle_commit, handle_status, handle_log, handle_repository, handle_command, handle_rm, handle_merge, handle_other_commands, handle_clone, handle_fetch, handle_pull, handle_push, handle_logs_errors};
+use super::handler::{
+    handle_branch, handle_clone, handle_command, handle_commit, handle_fetch, handle_log,
+    handle_logs_errors, handle_merge, handle_other_commands, handle_pull, handle_push,
+    handle_repository, handle_rm, handle_status,
+};
+use crate::interfaces::draw::{branches, changes_and_staging_area, repositories};
+use crate::vcs::version_control_system::VersionControlSystem;
 
 #[derive(Debug, Default)]
 pub struct RustInterface {
@@ -100,8 +104,8 @@ pub struct RustInterface {
     pub tag_light_entry: gtk::Entry,
     pub tag_entry: gtk::Entry,
     pub tag_message_entry: gtk::Entry,
-    pub tag_box: gtk::Box, 
-    pub tag_light_box: gtk::Box, 
+    pub tag_box: gtk::Box,
+    pub tag_light_box: gtk::Box,
     pub create_tag_button: gtk::Button,
     pub create_light_button: gtk::Button,
     pub delete_tag_button: gtk::Button,
@@ -163,8 +167,6 @@ pub struct RustInterface {
 }
 
 impl RustInterface {
-
-
     pub fn new() -> RustInterface {
         if gtk::init().is_err() {
             println!("Failed to initialize GTK.");
@@ -172,7 +174,7 @@ impl RustInterface {
 
         let glade_src = include_str!("interface.glade");
         let builder = gtk::Builder::from_string(glade_src);
-        
+
         init_css();
 
         RustInterface {
@@ -329,16 +331,15 @@ impl RustInterface {
             logs_errors_close: builder.object("logs-errors-close").unwrap(),
         }
     }
-    
-    pub fn impl_interface(&self) -> Result<(), std::io::Error>{    
 
+    pub fn impl_interface(&self) -> Result<(), std::io::Error> {
         set_styles_css_in_interface(self);
-        
+
         VersionControlSystem::init(Path::new("server"), Vec::new());
 
         let _ = changes_and_staging_area(&self.grid, &self.grid_staging);
-        repositories( &self.select_repository)?;
-        branches( &self.select_branch)?;
+        repositories(&self.select_repository)?;
+        branches(&self.select_branch)?;
         handle_branch(self);
         handle_commit(self);
         handle_status(self);
@@ -354,7 +355,7 @@ impl RustInterface {
         handle_push(self);
         handle_logs_errors(self);
 
-        self.window.show_all();   
+        self.window.show_all();
         gtk::main();
 
         Ok(())

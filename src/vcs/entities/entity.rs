@@ -1,23 +1,26 @@
-use std::{collections::{HashMap, HashSet}, path::PathBuf};
 use super::{blob_entity::BlobEntity, tree_entity::TreeEntity};
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
 #[derive(Debug, Clone)]
 
-pub enum Entity{
+pub enum Entity {
     Blob(BlobEntity),
     Tree(TreeEntity),
 }
 
-pub fn convert_to_repository(entities: &Vec<Entity>, path: PathBuf) -> HashMap<String, String>{
+pub fn convert_to_repository(entities: &Vec<Entity>, path: PathBuf) -> HashMap<String, String> {
     let mut local_repository: HashMap<String, String> = HashMap::new();
-    for entity in entities{
-        match entity{
-            Entity::Blob(blob) => { 
+    for entity in entities {
+        match entity {
+            Entity::Blob(blob) => {
                 let file_path = path.join(blob.path.clone()).display().to_string();
-                local_repository.insert(file_path, blob.blob_hash.clone()); 
+                local_repository.insert(file_path, blob.blob_hash.clone());
             }
-            Entity::Tree(tree) => { 
+            Entity::Tree(tree) => {
                 let folder_path = path.join(tree.path.clone());
-                local_repository.extend(convert_to_repository(&tree.entities, folder_path)); 
+                local_repository.extend(convert_to_repository(&tree.entities, folder_path));
             }
         }
     }

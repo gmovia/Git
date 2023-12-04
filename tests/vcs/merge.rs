@@ -3,7 +3,11 @@ mod tests {
 
     use std::{fs, io::Write};
 
-    use rust_git::vcs::{commands::{checkout::CheckoutOptions, rm::RemoveOption}, files::repository::Repository, version_control_system::VersionControlSystem};
+    use rust_git::vcs::{
+        commands::{checkout::CheckoutOptions, rm::RemoveOption},
+        files::repository::Repository,
+        version_control_system::VersionControlSystem,
+    };
 
     use crate::tests_functions::{create_file, set_up};
 
@@ -42,7 +46,7 @@ mod tests {
 
         VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
         VersionControlSystem::checkout(CheckoutOptions::ChangeBranch("master"))?;
-        
+
         let file_4 = create_file(&temp_dir, "file4.txt");
         VersionControlSystem::add(&file_4)?;
         VersionControlSystem::commit("second commit".to_string())?;
@@ -53,7 +57,7 @@ mod tests {
         let repository = Repository::read_repository()?;
 
         assert_eq!(repository.len(), 4);
-        Ok(())    
+        Ok(())
     }
 
     #[test]
@@ -64,23 +68,23 @@ mod tests {
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::add(&file_2)?;
         VersionControlSystem::commit("first commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
         let file_4 = create_file(&temp_dir, "file4.txt");
         VersionControlSystem::add(&file_4)?;
         VersionControlSystem::commit("second commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::ChangeBranch("master"))?;
-        
+
         let file_5 = create_file(&temp_dir, "file5.txt");
         VersionControlSystem::add(&file_5)?;
         VersionControlSystem::commit("third commit".to_string())?;
-        
+
         let conflicts = VersionControlSystem::merge("new_branch")?;
         assert_eq!(conflicts.len(), 0);
 
         let repository = Repository::read_repository()?;
-        assert_eq!(repository.len(), 4);        
+        assert_eq!(repository.len(), 4);
         Ok(())
     }
 
@@ -92,22 +96,22 @@ mod tests {
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::add(&file_2)?;
         VersionControlSystem::commit("first commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
         let file_4 = create_file(&temp_dir, "file4.txt");
         VersionControlSystem::add(&file_4)?;
         VersionControlSystem::commit("second commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::ChangeBranch("master"))?;
-        
+
         VersionControlSystem::rm(&file_1, RemoveOption::NoDirectory)?;
         VersionControlSystem::commit("third commit".to_string())?;
-        
+
         let conflicts = VersionControlSystem::merge("new_branch")?;
         assert_eq!(conflicts.len(), 0);
 
         let repository = Repository::read_repository()?;
-        assert_eq!(repository.len(), 2);        
+        assert_eq!(repository.len(), 2);
         Ok(())
     }
 
@@ -119,28 +123,36 @@ mod tests {
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::add(&file_2)?;
         VersionControlSystem::commit("first commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
 
-        let mut file2 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_2)?;
+        let mut file2 = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(&file_2)?;
         let _ = file2.write_all(b"contenido");
-        
+
         VersionControlSystem::add(&file_2)?;
         VersionControlSystem::commit("second commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::ChangeBranch("master"))?;
 
-        let mut file1 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_1)?;
+        let mut file1 = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(&file_1)?;
         let _ = file1.write_all(b"contenido");
-        
+
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("third commit".to_string())?;
-        
+
         let conflicts = VersionControlSystem::merge("new_branch")?;
         assert_eq!(conflicts.len(), 0);
 
         let repository = Repository::read_repository()?;
-        assert_eq!(repository.len(), 2);        
+        assert_eq!(repository.len(), 2);
         Ok(())
     }
 
@@ -150,23 +162,22 @@ mod tests {
         let file_1 = create_file(&temp_dir, "file1.txt");
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("first commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
 
         let file_2 = create_file(&temp_dir, "file2.txt");
         VersionControlSystem::add(&file_2)?;
         VersionControlSystem::commit("second commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::ChangeBranch("master"))?;
-    
 
         let conflicts = VersionControlSystem::merge("new_branch")?;
         assert_eq!(conflicts.len(), 0);
-    
+
         let repository = Repository::read_repository()?;
-        assert_eq!(repository.len(), 2);        
+        assert_eq!(repository.len(), 2);
         Ok(())
-    }    
+    }
 
     #[test]
     pub fn test_07_merge() -> Result<(), std::io::Error> {
@@ -174,20 +185,20 @@ mod tests {
         let file_1 = create_file(&temp_dir, "file1.txt");
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("first commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
 
         let file_2 = create_file(&temp_dir, "file2.txt");
         VersionControlSystem::add(&file_2)?;
         VersionControlSystem::commit("second commit".to_string())?;
-            
+
         let conflicts = VersionControlSystem::merge("master")?;
         assert_eq!(conflicts.len(), 0);
 
         let repository = Repository::read_repository()?;
-        assert_eq!(repository.len(), 2);        
+        assert_eq!(repository.len(), 2);
         Ok(())
-    } 
+    }
 
     #[test]
     pub fn test_08_merge() -> Result<(), std::io::Error> {
@@ -195,20 +206,20 @@ mod tests {
         let file_1 = create_file(&temp_dir, "file1.txt");
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("first commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
 
         let file_2 = create_file(&temp_dir, "file2.txt");
         VersionControlSystem::add(&file_2)?;
         VersionControlSystem::commit("second commit".to_string())?;
-            
+
         let conflicts = VersionControlSystem::merge("master")?;
         assert_eq!(conflicts.len(), 0);
 
         let repository = Repository::read_repository()?;
-        assert_eq!(repository.len(), 2);        
+        assert_eq!(repository.len(), 2);
         Ok(())
-    } 
+    }
 
     #[test]
     pub fn test_09_conflict() -> Result<(), std::io::Error> {
@@ -217,17 +228,25 @@ mod tests {
 
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("first commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
 
-        let mut file1 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_1)?;
+        let mut file1 = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(&file_1)?;
         let _ = file1.write_all(b"content");
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("second commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::ChangeBranch("master"))?;
 
-        let mut file1 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_1)?;
+        let mut file1 = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(&file_1)?;
         let _ = file1.write_all(b"other content");
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("third commit".to_string())?;
@@ -245,17 +264,25 @@ mod tests {
 
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("first commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::CreateAndChangeBranch("new_branch"))?;
 
-        let mut file1 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_1)?;
+        let mut file1 = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(&file_1)?;
         let _ = file1.write_all(b"content");
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("second commit".to_string())?;
-        
+
         VersionControlSystem::checkout(CheckoutOptions::ChangeBranch("master"))?;
 
-        let mut file1 = fs::OpenOptions::new().write(true).create(true).append(true).open(&file_1)?;
+        let mut file1 = fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(&file_1)?;
         let _ = file1.write_all(b"other content");
         VersionControlSystem::add(&file_1)?;
         VersionControlSystem::commit("third commit".to_string())?;
