@@ -1,5 +1,3 @@
-use std::fs;
-
 use gtk::prelude::*;
 
 use super::css::{init_css, set_styles_css_in_interface};
