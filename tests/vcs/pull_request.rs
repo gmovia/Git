@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use std::{path::Path, fs};
+    use std::path::Path;
 
     use rust_git::pull_request::{schemas::schemas::CreatePullRequest, controllers::pull_request::PullRequest};
 
