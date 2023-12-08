@@ -1,6 +1,7 @@
-use std::path::Path;
+use std::{path::Path, io};
 
-use crate::pull_request::schemas::schemas::CreatePullRequest;
+use crate::pull_request::{schemas::schemas::CreatePullRequest, validator::validator::Validator, db::queries::Query};
+
 pub struct PullRequest;
 
 /*
@@ -25,13 +26,15 @@ En el caso de existir algun error de validacion deberiamos devolverlo. Si el pro
 podemos crear el PR en la base de datos y devolverle al usuario un identificador.
 */
 
-impl PullRequest {
+impl PullRequest { 
     pub fn create(server: &Path, pr: CreatePullRequest) -> Result<String, std::io::Error>{
-        // Validar los parametros que me llegan del PR
-            // Tengo que fijarme si los repositorios head_repo y base_repo existen
-            // Tengo que fijarme si las ramas head y base existen
-            // Si hay algun error devuelvo un mensaje descriptivo
-        // Si esta todo OK llamo al metodo de la BDD que cree la entrada y devuelvo un ID
-        Ok("Hello World".to_string())
+        if Validator::validate_create_pull_request(server, &pr).is_err(){
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "The pull request is not valid",
+            ));
+        }
+
+        Ok(Query::create_pull_request(server,pr)?.to_string())
     }
 }
