@@ -40,6 +40,10 @@ pub mod servers {
     pub mod upload_pack;
 }
 
+pub mod server_http {
+    pub mod web_server;
+}
+
 pub mod packfiles {
     pub mod packfile;
     pub mod tag_file;
