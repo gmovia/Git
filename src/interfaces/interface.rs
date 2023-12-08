@@ -334,7 +334,6 @@ impl RustInterface {
     pub fn impl_interface(&self) -> Result<(), std::io::Error> {
         set_styles_css_in_interface(self);
 
-        fs::create_dir("server")?;
         let _ = changes_and_staging_area(&self.grid, &self.grid_staging);
         repositories(&self.select_repository)?;
         branches(&self.select_branch)?;
