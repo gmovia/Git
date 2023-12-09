@@ -2,7 +2,6 @@ use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Serialize, Deserialize)]
 pub struct Mensaje {
@@ -48,11 +47,11 @@ impl WebServer {
                     if let Ok(mensaje) = serde_json::from_str::<Mensaje>(json_body) {
                         println!("El mensaje es: {}", mensaje.mensaje);
     
-                        let response = format!("HTTP/1.1 200 OK\r\n\r\nMensaje recibido: {}\r\n", mensaje.mensaje);
+                        let response = format!("HTTP/1.1 200 OK\r\n\r\nMensaje recibido: {} devuelto ;)\r\n", mensaje.mensaje);
                         let _ = stream.write(response.as_bytes());
                     } else {
                         println!("Error al deserializar el mensaje: trailing characters");
-                        let response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
+                        let response = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n";
                         let _ = stream.write(response.as_bytes());
                     }
                 } else {
