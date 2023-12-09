@@ -9,7 +9,7 @@ use crate::{
     constants::constant::{HOST, PUERTO},
     packfiles::packfile::{process_line, to_pkt_line},
     protocol::receive_pack::start_handler_receive,
-    vcs::commands::push::Push,
+    vcs::commands::push::Push, server_http::web_server::WebServer,
 };
 
 use super::upload_pack::start_handler_upload;
@@ -20,8 +20,8 @@ pub struct Server;
 impl Server {
     /// Esta funcion sirve para inicializar el servidor. Espera por nuevas conexiones por parte del cliente
     pub fn server(server_path: String) -> Result<(), std::io::Error> {
+        Self::conect_web_server();
         let adress = format!("{}:{}", HOST, PUERTO);
-
         let listener = TcpListener::bind(&adress).expect("Failed to bind to address");
         let path = Path::new(&server_path);
         for stream in listener.incoming() {
@@ -46,6 +46,12 @@ impl Server {
             }
         }
         Ok(())
+    }
+
+    fn conect_web_server() {
+        let _ = thread::spawn(move || {
+            let _ = WebServer::new();
+        });
     }
 
     fn handle_client(
