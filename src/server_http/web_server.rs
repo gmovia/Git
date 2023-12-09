@@ -1,5 +1,7 @@
-use std::io::prelude::*;
+use std::fs::File;
+use std::io::{prelude::*, self};
 use std::net::{TcpListener, TcpStream};
+use std::path::Path;
 use std::thread;
 use serde::{Deserialize, Serialize};
 
@@ -12,9 +14,10 @@ pub struct WebServer;
 impl WebServer {
 
     pub fn new() -> Result<(),std::io::Error>{
-        let listener = TcpListener::bind("127.0.0.1:8080").expect("Error getting port");
+        let port = Self::get_config()?;
+        let listener = TcpListener::bind(&port).expect("Error getting port");
 
-        println!("Web server listening on http://127.0.0.1:8080");
+        println!("Web server listening on port: {}", port);
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
@@ -30,6 +33,25 @@ impl WebServer {
         Ok(())
     }
     
+    fn get_config() -> Result<String,std::io::Error>{
+        let mut port = String::new();
+        
+        let path = Path::new("src/server_http/web_server_config.txt");
+        let file = File::open(&path)?;
+    
+        let reader = io::BufReader::new(file);
+    
+        for line in reader.lines() {
+            let line_str = line?;
+
+            if line_str.contains("port") {
+                let port_vec: Vec<&str> = line_str.split("=").collect();
+                port = port_vec[1].to_owned();
+            }
+        }
+        Ok(port)
+    }
+
     fn handle_client(mut stream: TcpStream) {
         let mut buffer = [0; 1024];
     
