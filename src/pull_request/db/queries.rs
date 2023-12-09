@@ -19,10 +19,11 @@ impl Query{
 
         let title = pr.title.clone().map_or("None".to_string(), |u| u);
         let body = pr.body.clone().map_or("None".to_string(), |u| u);
-        
+        let merge_commit_sha = pr.merge_commit_sha.clone().map_or("None".to_string(), |u| u);
+
         id_file.write_all(
             format!(
-                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
                 id,
                 title, 
                 pr.head_repo,
@@ -31,7 +32,9 @@ impl Query{
                 pr.base,
                 pr.username,
                 "open",
-                body
+                body,
+                pr.mergeable,
+                merge_commit_sha
             ).as_bytes()
         )?;
 
@@ -73,6 +76,12 @@ impl Query{
 
     pub fn parse_pr(content: String) -> PullRequestEntry{
         let array: Vec<&str> = content.split_whitespace().collect();
+
+        let mergeable = match array[9].parse::<bool>() {
+            Ok(value) => value,
+            Err(_) => false,
+        };
+
         PullRequestEntry { 
             id: array[0].to_string(), 
             title: array[1].to_string(),
@@ -82,7 +91,9 @@ impl Query{
             base: array[5].to_string(),
             username: array[6].to_string(),
             status: array[7].to_string(),
-            body: array[8].to_string()
+            body: array[8].to_string(),
+            mergeable: mergeable,
+            merge_commit_sha: array[10].to_string()
         }
     }
 

@@ -63,12 +63,14 @@ impl CommitsTable {
     /// Escribe la tabla de commits, crea el tree y los blobs relacionados al commit
     pub fn write(
         repo_path: &Path,
+        branch: &str,
         message: &String,
+        config: (String, String),
         repository: &HashMap<String, String>,
     ) -> Result<(), std::io::Error> {
         let id = Random::random();
-        let last_commit_hash = CurrentCommit::read_for_repo(repo_path)?;
-        let config = Config::read_config()?;
+        let last_commit_hash = CurrentCommit::read_for_branch(repo_path, branch)?;
+        //let config = Config::read_config()?;
         let current_timestamp = Local::now().timestamp();
 
         let author = format!(
@@ -83,7 +85,7 @@ impl CommitsTable {
         let mut commits_file = OpenOptions::new()
             .write(true)
             .append(true)
-            .open(Init::get_current_log(&repo_path)?)?;
+            .open(repo_path.join(".rust_git").join("logs").join(branch))?;
 
         let entities =
             convert_to_entities(repository, &format!("{}/", &repo_path.display().to_string()));
@@ -104,7 +106,7 @@ impl CommitsTable {
         );
 
         commits_file.write_all(commit.as_bytes())?;
-        CurrentCommit::write_for_repo(repo_path, commit_hash)?;
+        CurrentCommit::write_for_branch(repo_path, branch, commit_hash)?;
 
         Ok(())
     }

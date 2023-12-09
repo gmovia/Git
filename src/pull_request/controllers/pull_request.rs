@@ -1,47 +1,39 @@
-use std::path::Path;
+use std::{path::Path, collections::HashMap};
 
-use crate::pull_request::{schemas::schemas::{CreatePullRequest, PullRequestEntry, FindPullRequests, FindPullRequest}, validator::validator::Validator, db::queries::Query};
+use crate::{pull_request::{schemas::schemas::{CreatePullRequest, PullRequestEntry, FindPullRequests, FindPullRequest}, validator::validator::Validator, db::queries::Query}, vcs::{commands::{branch::Branch, merge::Merge}, files::current_commit::CurrentCommit}};
 
 pub struct PullRequest;
 
 impl PullRequest { 
 
     /// POST
-    pub fn create(server: &Path, pr: CreatePullRequest) -> Result<String, String>{
-        if let Err(err) = Validator::validate_create_pull_request(server, &pr){
-            return Err(err.to_string());
+    pub fn create(server: &Path, mut pr: CreatePullRequest) -> Result<String, std::io::Error>{
+        Validator::validate_create_pull_request(server, &pr)?;
+
+        let hash = CurrentCommit::read_for_branch(&server.join(&pr.base_repo), &pr.base)?;
+
+        let base_repo = server.join(&pr.base_repo);
+        let head_repo = server.join(&pr.head_repo);
+        let _ = Branch::create_new_branch_with_hash(&base_repo, "temp_branch", &hash);
+
+        let conflicts = Merge::merge_pr(&pr.username, &pr.head, "temp_branch", &head_repo,&base_repo, HashMap::new())?;
+        if conflicts.is_empty(){
+            pr.mergeable = true;
+            pr.merge_commit_sha = Some(CurrentCommit::read_for_branch(&server.join(&pr.base_repo), "temp_branch")?);
         }
 
-        if let Ok(id) = Query::create_pull_request(server, &pr){
-            return Ok(id);
-        }
-
-        Err(String::from("500: Internal Server Error"))
+        Query::create_pull_request(server, &pr)
     }
 
     /// GET ALL
-    pub fn find_all(server: &Path, query: FindPullRequests) -> Result<Vec<PullRequestEntry>, String>{
-        if let Err(err) = Validator::validate_find_pull_requests(server, &query){
-            return Err(err.to_string());
-        }
-
-        if let Ok(prs) = Query::find_pull_requests(server, &query){
-            return Ok(prs);
-        }
-
-        Err(String::from("500: Internal Server Error"))
+    pub fn find_all(server: &Path, query: FindPullRequests) -> Result<Vec<PullRequestEntry>, std::io::Error>{
+        Validator::validate_find_pull_requests(server, &query)?;
+        Query::find_pull_requests(server, &query)
     }
 
     /// GET
-    pub fn find_one(server: &Path, query: FindPullRequest) -> Result<PullRequestEntry, String> {
-        if let Err(err) = Validator::validate_find_a_pull_request(server, &query){
-            return Err(err.to_string());
-        }
-
-        if let Ok(prs) = Query::find_a_pull_request(server, &query){
-            return Ok(prs);
-        }
-
-        Err(String::from("500: Internal Server Error"))
+    pub fn find_one(server: &Path, query: FindPullRequest) -> Result<PullRequestEntry, std::io::Error> {
+        Validator::validate_find_a_pull_request(server, &query)?;
+        Query::find_a_pull_request(server, &query)
     }
 }

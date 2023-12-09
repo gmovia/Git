@@ -14,6 +14,8 @@ mod tests {
             head: String::from("new_branch"),
             base: String::from("master"),
             username: String::from("ldefeo"),
+            mergeable: false,
+            merge_commit_sha: None
         };
 
         assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), pr).is_ok(), true);
@@ -30,6 +32,8 @@ mod tests {
             head: String::from("new_branch"),
             base: String::from("master"),
             username: String::from("ldefeo"),
+            mergeable: false,
+            merge_commit_sha: None
         };
 
         assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), pr).is_err(), true);
@@ -46,6 +50,8 @@ mod tests {
             head: String::from("new_branch2"),
             base: String::from("master"),
             username: String::from("ldefeo"),
+            mergeable: false,
+            merge_commit_sha: None
         };
 
         assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), pr).is_err(), true);
@@ -53,7 +59,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_04_get() -> Result<(), String> {
+    pub fn test_04_get() -> Result<(), std::io::Error> {
         let pr = CreatePullRequest{
             title: Some(String::from("Title")),
             body: Some(String::from("Description")),
@@ -62,6 +68,8 @@ mod tests {
             head: String::from("new_branch"),
             base: String::from("master"),
             username: String::from("ldefeo"),
+            mergeable: false,
+            merge_commit_sha: None
         };
 
         let server = Path::new("tests/pull_request/server_test");
@@ -83,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_05_get_one() -> Result<(), String> {
+    pub fn test_05_get_one() -> Result<(), std::io::Error> {
         let pr = CreatePullRequest{
             title: Some(String::from("Title")),
             body: Some(String::from("Description")),
@@ -92,6 +100,8 @@ mod tests {
             head: String::from("new_branch"),
             base: String::from("master"),
             username: String::from("ldefeo"),
+            mergeable: false,
+            merge_commit_sha: None
         };
 
         let server = Path::new("tests/pull_request/server_test");
