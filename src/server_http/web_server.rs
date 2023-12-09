@@ -11,10 +11,10 @@ pub struct WebServer;
 
 impl WebServer {
 
-    pub fn new() -> Result<String,String>{
-        let listener = TcpListener::bind("127.0.0.1:8080").expect("Error al vincular el puerto");
+    pub fn new() -> Result<(),std::io::Error>{
+        let listener = TcpListener::bind("127.0.0.1:8080").expect("Error getting port");
 
-        println!("Servidor escuchando en http://127.0.0.1:8080");
+        println!("Web server listening on http://127.0.0.1:8080");
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
@@ -22,12 +22,12 @@ impl WebServer {
                         Self::handle_client(stream);
                     });
                 }
-                Err(e) => {
-                    println!("Error al aceptar la conexión: {}", e);
+                Err(_) => {
+                    std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "Error conecting to web server");
                 }
             }
         };
-        Ok("Okey".to_string())
+        Ok(())
     }
     
     fn handle_client(mut stream: TcpStream) {
@@ -61,7 +61,7 @@ impl WebServer {
                 }
             }
             Err(e) => {
-                println!("Error al leer del stream: {}", e);
+                println!("Error: {}", e);
             }
         }
     }

@@ -50,7 +50,9 @@ impl Server {
 
     fn conect_web_server() {
         let _ = thread::spawn(move || {
-            let _ = WebServer::new();
+            if let Err( e ) = WebServer::new() {
+                println!("Error conecting with Web Server: {}",e)
+            }
         });
     }
 
