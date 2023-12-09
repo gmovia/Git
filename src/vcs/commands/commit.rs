@@ -1,4 +1,5 @@
 use crate::constants::constant::{STATE_CREATED, STATE_DELETED, STATE_MODIFIED};
+use crate::vcs::files::current_repository::CurrentRepository;
 use crate::vcs::files::{commits_table::CommitsTable, index::Index, repository::Repository};
 use std::collections::HashMap;
 use std::io;
@@ -32,7 +33,7 @@ impl Commit {
             }
         }
 
-        CommitsTable::write(&message, &repository)?;
+        CommitsTable::write(&CurrentRepository::read()?, &message, &repository)?;
         Index::clear()?;
         Ok(repository)
     }

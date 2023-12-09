@@ -56,7 +56,7 @@ impl Rebase {
             let repository_commit: HashMap<String, String> =
                 Repository::get_repository(current.clone(), &commit.hash)?;
             repository_last_commit.extend(repository_commit);
-            CommitsTable::write(&commit.message, &repository_last_commit)?;
+            CommitsTable::write(&current, &commit.message, &repository_last_commit)?;
         }
 
         Checkout::update_cd(&current)?;
