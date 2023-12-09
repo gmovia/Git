@@ -14,8 +14,7 @@ mod tests {
             head: String::from("new_branch"),
             base: String::from("master"),
             username: String::from("ldefeo"),
-            mergeable: false,
-            merge_commit_sha: None
+            mergeable: false
         };
 
         assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), pr).is_ok(), true);
@@ -32,8 +31,7 @@ mod tests {
             head: String::from("new_branch"),
             base: String::from("master"),
             username: String::from("ldefeo"),
-            mergeable: false,
-            merge_commit_sha: None
+            mergeable: false
         };
 
         assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), pr).is_err(), true);
@@ -50,8 +48,7 @@ mod tests {
             head: String::from("new_branch2"),
             base: String::from("master"),
             username: String::from("ldefeo"),
-            mergeable: false,
-            merge_commit_sha: None
+            mergeable: false
         };
 
         assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), pr).is_err(), true);
@@ -68,8 +65,7 @@ mod tests {
             head: String::from("new_branch"),
             base: String::from("master"),
             username: String::from("ldefeo"),
-            mergeable: false,
-            merge_commit_sha: None
+            mergeable: false
         };
 
         let server = Path::new("tests/pull_request/server_test");
@@ -100,8 +96,7 @@ mod tests {
             head: String::from("new_branch"),
             base: String::from("master"),
             username: String::from("ldefeo"),
-            mergeable: false,
-            merge_commit_sha: None
+            mergeable: false
         };
 
         let server = Path::new("tests/pull_request/server_test");

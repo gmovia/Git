@@ -129,4 +129,42 @@ impl Merge {
 
         Ok(conflicts)
     }
+
+    pub fn are_conflicts(head: &str, base: &str, head_path: &Path, base_path: &Path) -> Result<bool, std::io::Error> {
+        let base_commits_table = CommitsTable::read(base_path.to_path_buf(), &base)?;
+        let head_commits_table = CommitsTable::read(head_path.to_path_buf(), head)?;
+        
+        let current_commit_of_base_commits_table = CurrentCommit::read_for_branch(&base_path, &base)?;
+        let current_commit_of_head_commits_table = CurrentCommit::read_for_branch(&head_path, head)?;
+
+        if let Some(parent_commit) = CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table){
+            let base_repository = Repository::read_repository_of_commit(
+                base_path.to_path_buf(),
+                &base,
+                &current_commit_of_base_commits_table,
+            )?;
+
+            let head_repository = Repository::read_repository_of_commit(
+                head_path.to_path_buf(),
+                head,
+                &current_commit_of_head_commits_table,
+            )?;
+
+            let parent_repository = Repository::read_repository_of_commit(
+                base_path.to_path_buf(),
+                &base,
+                &parent_commit.hash,
+            )?;
+
+            let changes_base_repository =
+                Diff::diff(&parent_repository, &base_repository);
+            let changes_head_repository = Diff::diff(&parent_repository, &head_repository);
+
+            let conflicts: HashMap<String, Conflict> = conflicts_search(&changes_base_repository, &changes_head_repository);
+
+            return Ok(!conflicts.is_empty());
+        }
+
+        Ok(true)
+    }
 }

@@ -9,7 +9,6 @@ pub struct PullRequestEntry{
     pub username: String,
     pub status: String,
     pub mergeable: bool,
-    pub merge_commit_sha: String
 }
 
 pub struct CreatePullRequest{
@@ -21,7 +20,6 @@ pub struct CreatePullRequest{
     pub base: String,
     pub username: String,
     pub mergeable: bool,
-    pub merge_commit_sha: Option<String>
 }
 
 pub struct FindPullRequests{

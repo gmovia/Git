@@ -10,16 +10,11 @@ impl PullRequest {
     pub fn create(server: &Path, mut pr: CreatePullRequest) -> Result<String, std::io::Error>{
         Validator::validate_create_pull_request(server, &pr)?;
 
-        let hash = CurrentCommit::read_for_branch(&server.join(&pr.base_repo), &pr.base)?;
-
         let base_repo = server.join(&pr.base_repo);
         let head_repo = server.join(&pr.head_repo);
-        let _ = Branch::create_new_branch_with_hash(&base_repo, "temp_branch", &hash);
 
-        let conflicts = Merge::merge_pr(&pr.username, &pr.head, "temp_branch", &head_repo,&base_repo, HashMap::new())?;
-        if conflicts.is_empty(){
+        if !Merge::are_conflicts(&pr.head, &pr.base, &head_repo, &base_repo)?{
             pr.mergeable = true;
-            pr.merge_commit_sha = Some(CurrentCommit::read_for_branch(&server.join(&pr.base_repo), "temp_branch")?);
         }
 
         Query::create_pull_request(server, &pr)
