@@ -1,6 +1,6 @@
 use std::{path::Path, io};
 
-use crate::{pull_request::schemas::schemas::CreatePullRequest, vcs::commands::branch::Branch};
+use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequest}, vcs::commands::branch::Branch};
 
 pub struct Validator;
 
@@ -18,13 +18,18 @@ impl Validator{
         Ok(())
     }
 
+    pub fn validate_find_pull_requests(server: &Path, query: &FindPullRequest) -> Result<(), std::io::Error>{
+        let base_repo = server.join(&query.base_repo);
+        Self::validate_repo(&base_repo)
+    }
+
     /// valida si la branch existe
     pub fn validate_branch(repo: &Path, branch: &str) -> Result<(), std::io::Error>{
         let branches = Branch::get_branches(&repo)?;
         if !branches.contains(&branch.to_string()){
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                "Can't find the branch",
+                "422: Can't find the branch",
             ));
         }
         Ok(())
@@ -35,7 +40,7 @@ impl Validator{
         if !repo.exists() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                "Can't find the repository",
+                "422: Can't find the repository",
             ));
         }
         Ok(())
