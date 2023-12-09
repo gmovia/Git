@@ -2,6 +2,7 @@ use std::io::prelude::*;
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize)]
 pub struct Mensaje {
@@ -15,8 +16,6 @@ impl WebServer {
         let listener = TcpListener::bind("127.0.0.1:8080").expect("Error al vincular el puerto");
 
         println!("Servidor escuchando en http://127.0.0.1:8080");
-
-        // Aceptar conexiones y manejarlas en hilos separados
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
@@ -31,33 +30,35 @@ impl WebServer {
         };
         Ok("Okey".to_string())
     }
-
+    
     fn handle_client(mut stream: TcpStream) {
         let mut buffer = [0; 1024];
     
-        // Leer los datos del stream
         match stream.read(&mut buffer) {
-            Ok(_) => {
-                // Deserializar el mensaje JSON
-                let json_str = String::from_utf8_lossy(&buffer).to_string();
-                println!("DES: {}", json_str);
-                
-                if let Some(start_index) = json_str.find("\n\n") {
-                    let remaining_part = &json_str[start_index + 2..];
-                    
-                    println!("Parte después del primer doble salto de línea: {}", remaining_part);
-                    if let Ok(mensaje) = serde_json::from_str::<Mensaje>(&remaining_part) {
+            Ok(bytes_read) => {
+                let request_str = String::from_utf8_lossy(&buffer[..bytes_read]).to_string();
+                println!("Received request: {}", request_str);
+    
+                if let Some(header_end) = request_str.find("\r\n\r\n") {
+                    let body_start = header_end + 4; 
+    
+                        let json_body = &request_str[body_start..];
+                    println!("JSON Body: {}", json_body);
+    
+                    if let Ok(mensaje) = serde_json::from_str::<Mensaje>(json_body) {
                         println!("El mensaje es: {}", mensaje.mensaje);
+    
                         let response = format!("HTTP/1.1 200 OK\r\n\r\nMensaje recibido: {}\r\n", mensaje.mensaje);
-                        // Enviar la respuesta de vuelta al cliente
-                        stream.write(response.as_bytes()).unwrap();
+                        let _ = stream.write(response.as_bytes());
                     } else {
-                        // Manejar errores de deserialización
-                        println!("Error al deserializar el mensaje");
-                        stream.write(b"Error al deserializar el mensaje").unwrap();
+                        println!("Error al deserializar el mensaje: trailing characters");
+                        let response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
+                        let _ = stream.write(response.as_bytes());
                     }
                 } else {
-                    println!("No se encontró el primer doble salto de línea en la cadena.");
+                    println!("No se encontró el final de las cabeceras en la cadena.");
+                    let response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
+                    let _ = stream.write(response.as_bytes());
                 }
             }
             Err(e) => {
@@ -65,5 +66,5 @@ impl WebServer {
             }
         }
     }
-
+    
 }
