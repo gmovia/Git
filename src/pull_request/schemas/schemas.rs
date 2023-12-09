@@ -20,11 +20,17 @@ pub struct CreatePullRequest{
     pub username: String
 }
 
-pub struct FindPullRequest{
+pub struct FindPullRequests{
     pub base_repo: String,
     pub state: Option<String>,
     pub head: Option<String>,
     pub base: Option<String>,
     pub username: Option<String>,
     pub per_page: Option<i32> // default 30
+}
+
+
+pub struct FindPullRequest{
+    pub base_repo: String,
+    pub id: String,
 }

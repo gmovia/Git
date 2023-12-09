@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequest, PullRequestEntry}, utils::randoms::random::Random, vcs::commands::pull::Pull};
+use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry, FindPullRequest}, utils::randoms::random::Random};
 
 pub struct Query;
 
@@ -38,7 +38,7 @@ impl Query{
         Ok(id)
     }  
 
-    pub fn find_pull_requests(server: &Path, query: &FindPullRequest) -> Result<Vec<PullRequestEntry>, std::io::Error>{
+    pub fn find_pull_requests(server: &Path, query: &FindPullRequests) -> Result<Vec<PullRequestEntry>, std::io::Error>{
         let folder_path = server.join("pull_requests").join(&query.base_repo);
         let mut prs = Self::read_all_pr_in_repo(&folder_path)?;
 
@@ -99,6 +99,11 @@ impl Query{
             }
         }
         Ok(prs)
+    }
+
+    pub fn find_a_pull_request(server: &Path, query: &FindPullRequest) -> Result<PullRequestEntry, std::io::Error>{
+        let folder_path = server.join("pull_requests").join(&query.base_repo).join(&query.id);
+        Ok(Self::parse_pr(fs::read_to_string(folder_path)?))
     }
 }
 

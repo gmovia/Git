@@ -1,6 +1,6 @@
 use std::{path::Path, io};
 
-use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequest}, vcs::commands::branch::Branch};
+use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, FindPullRequest}, vcs::commands::branch::Branch};
 
 pub struct Validator;
 
@@ -18,7 +18,7 @@ impl Validator{
         Ok(())
     }
 
-    pub fn validate_find_pull_requests(server: &Path, query: &FindPullRequest) -> Result<(), std::io::Error>{
+    pub fn validate_find_pull_requests(server: &Path, query: &FindPullRequests) -> Result<(), std::io::Error>{
         let base_repo = server.join(&query.base_repo);
         Self::validate_repo(&base_repo)
     }
@@ -43,6 +43,24 @@ impl Validator{
                 "422: Can't find the repository",
             ));
         }
+        Ok(())
+    }
+
+    pub fn validate_id(id: &Path) -> Result<(), std::io::Error> {
+        if !id.exists() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "404: Id not found",
+            ));
+        }
+        Ok(())
+        }
+
+    pub fn validate_find_a_pull_request(server: &Path, query: &FindPullRequest) -> Result<(), std::io::Error> {
+        let base_repo = server.join(&query.base_repo);
+        let id = server.join("pull_requests").join(&query.base_repo).join(&query.id);
+        Self::validate_id(&id)?;
+        Self::validate_repo(&base_repo)?;
         Ok(())
     }
 }
