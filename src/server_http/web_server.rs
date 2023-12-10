@@ -61,21 +61,7 @@ impl WebServer {
                 println!("Received request: {}", request_str);
     
                 if let Some(header_end) = request_str.find("\r\n\r\n") {
-                    let body_start = header_end + 4; 
-    
-                        let json_body = &request_str[body_start..];
-                    println!("JSON Body: {}", json_body);
-    
-                    if let Ok(mensaje) = serde_json::from_str::<Mensaje>(json_body) {
-                        println!("El mensaje es: {}", mensaje.mensaje);
-    
-                        let response = format!("HTTP/1.1 200 OK\r\n\r\nMensaje recibido: {} devuelto ;)\r\n", mensaje.mensaje);
-                        let _ = stream.write(response.as_bytes());
-                    } else {
-                        println!("Error al deserializar el mensaje: trailing characters");
-                        let response = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n";
-                        let _ = stream.write(response.as_bytes());
-                    }
+                    Self::parse_request(header_end, &request_str, stream);
                 } else {
                     println!("No se encontró el final de las cabeceras en la cadena.");
                     let response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
@@ -85,6 +71,40 @@ impl WebServer {
             Err(e) => {
                 println!("Error: {}", e);
             }
+        }
+    }
+
+    fn parse_request(header_end: usize, request_str: &str, stream: TcpStream) -> Result<(), std::io::Error> {
+        let json_header = &request_str[..header_end]; 
+        let json_body = &request_str[header_end + 4..];
+
+        let received_request = Self::get_received_request(json_header)?;
+        let received_vec: Vec<&str> = received_request.split_whitespace().collect();
+        let path = received_vec[1];
+
+        println!("            -----> {}", received_request);
+        println!("PATH: {}", path);
+        Self::send_mesagge(json_body, stream);
+        Ok(())
+    }
+
+    fn get_received_request(header: &str) -> Result<String, std::io::Error> {
+        let header_vec: Vec<&str> = header.split("\n").collect();
+        let receive_request = header_vec[0];
+        Ok(receive_request.to_string()) 
+    }
+
+    fn send_mesagge(json_body: &str, mut stream: TcpStream) {
+        println!("JSON Body: {}", json_body);
+        if let Ok(mensaje) = serde_json::from_str::<Mensaje>(json_body) {
+            println!("El mensaje es: {}", mensaje.mensaje);
+
+            let response = format!("HTTP/1.1 200 OK\r\n\r\nMensaje recibido: {} devuelto ;)\r\n", mensaje.mensaje);
+            let _ = stream.write(response.as_bytes());
+        } else {
+            println!("Error al deserializar el mensaje: trailing characters");
+            let response = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n";
+            let _ = stream.write(response.as_bytes());
         }
     }
     
