@@ -1,5 +1,7 @@
 use std::{path::Path, io, fs};
 
+use chrono::format;
+
 use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, FindPullRequest}, vcs::commands::branch::Branch};
 
 pub struct Validator;
@@ -42,7 +44,7 @@ impl Validator{
             for entry in entries.flatten() {
                 let content = fs::read_to_string(entry.path())?;
                 let parts: Vec<&str> = content.split('\n').collect();
-                if parts[4] == pr.head.as_str() && parts[5] == pr.base.as_str(){
+                if parts[2] == pr.head_repo.as_str() && parts[3] == pr.base_repo.as_str() && parts[4] == pr.head.as_str() && parts[5] == pr.base.as_str(){
                     return Err(io::Error::new(
                         io::ErrorKind::Other,
                         "403: The requested pr has already been created",
