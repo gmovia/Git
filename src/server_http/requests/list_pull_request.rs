@@ -19,7 +19,7 @@ pub struct ListPullRequests{
 impl ListPullRequests {
 
     pub fn response_list_pull_request_object(json_body: &str, stream: &mut TcpStream) -> Result<ListPullRequests, std::io::Error> {
-        println!("JSON Body: {}", json_body);
+        println!("JSON Body de response_list_pull_request_object:  {}", json_body);
         if let Ok(request) = serde_json::from_str::<ListPullRequests>(json_body) {            
             send_response(stream, "RESPUESTA FUNCIONALIDAD".to_string());
             return Ok(request)

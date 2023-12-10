@@ -87,8 +87,7 @@ impl WebServer {
         let received_request = Self::get_received_request(json_header)?;
         let received_vec: Vec<&str> = received_request.split_whitespace().collect();
         let path: Vec<&str> = received_vec[1].split("/").collect();
-        println!("ES ESTE EL RECEIVE_VECCC en 0{:?}\n", received_vec[0]);
-    
+        println!("PATH LEN: {}",path.len());
         match (received_vec[0], path.len() - 1) {
             ("POST", 3) => {let _ = CreatePullRequest::response_create_pull_request_object(json_body, stream);},
             ("GET", 3) => {let _ = ListPullRequests::response_list_pull_request_object(json_body, stream);},
@@ -100,7 +99,6 @@ impl WebServer {
     
         println!("            -----> {}", received_request);
         println!("PATH: {:?}", path);
-        Self::send_mesagge(json_body, stream);
         Ok(())
     }
 
@@ -108,20 +106,6 @@ impl WebServer {
         let header_vec: Vec<&str> = header.split("\n").collect();
         let receive_request = header_vec[0];
         Ok(receive_request.to_string()) 
-    }
-
-    fn send_mesagge(json_body: &str, stream: &mut TcpStream) {
-        println!("JSON Body: {}", json_body);
-        if let Ok(mensaje) = serde_json::from_str::<Mensaje>(json_body) {
-            println!("El mensaje es: {}", mensaje.mensaje);
-
-            let response = format!("HTTP/1.1 200 OK\r\n\r\nMensaje recibido: {} devuelto ;)\r\n", mensaje.mensaje);
-            let _ = stream.write(response.as_bytes());
-        } else {
-            println!("Error al deserializar el mensaje: trailing characters");
-            let response = "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n";
-            let _ = stream.write(response.as_bytes());
-        }
     }
     
 }

@@ -15,6 +15,7 @@ pub struct GetPullRequest{
 impl GetPullRequest {
 
     pub fn get_pull_request(json_body: &str, stream: &mut TcpStream) -> Result<GetPullRequest, std::io::Error> {
+        println!("hola");
         println!("JSON Body: {}", json_body);
         if let Ok(request) = serde_json::from_str::<GetPullRequest>(json_body) {            
             send_response(stream, "RESPUESTA FUNCIONALIDAD".to_string());
