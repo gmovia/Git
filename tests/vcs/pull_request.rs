@@ -6,7 +6,7 @@ mod tests {
 
     #[test]
     pub fn test_01_create_repo_with_valid_parameters() -> Result<(), std::io::Error> {
-        let pr = CreatePullRequest{
+        let mut pr = CreatePullRequest{
             title: Some(String::from("Title")),
             body: Some(String::from("Description")),
             head_repo: String::from("gmovia/test_create_pr"),
@@ -17,13 +17,13 @@ mod tests {
             mergeable: false
         };
 
-        assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), pr).is_ok(), true);
+        assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), &mut pr).is_ok(), true);
         Ok(())
     }
 
     #[test]
     pub fn test_02_cant_create_repo_with_invalid_name() -> Result<(), std::io::Error> {
-        let pr = CreatePullRequest{
+        let mut pr = CreatePullRequest{
             title: Some(String::from("Title")),
             body: Some(String::from("Description")),
             head_repo: String::from("gmovia/algo3"),
@@ -34,13 +34,13 @@ mod tests {
             mergeable: false
         };
 
-        assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), pr).is_err(), true);
+        assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), &mut pr).is_err(), true);
         Ok(())
     }
 
     #[test]
     pub fn test_03_cant_create_repo_with_invalid_branch() -> Result<(), std::io::Error> {
-        let pr = CreatePullRequest{
+        let mut pr = CreatePullRequest{
             title: Some(String::from("Title")),
             body: Some(String::from("Description")),
             head_repo: String::from("gmovia/test_create_pr"),
@@ -51,13 +51,13 @@ mod tests {
             mergeable: false
         };
 
-        assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), pr).is_err(), true);
+        assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), &mut pr).is_err(), true);
         Ok(())
     }
 
     #[test]
     pub fn test_04_get() -> Result<(), std::io::Error> {
-        let pr = CreatePullRequest{
+        let mut pr = CreatePullRequest{
             title: Some(String::from("Title")),
             body: Some(String::from("Description")),
             head_repo: String::from("gmovia/test_create_pr"),
@@ -69,7 +69,7 @@ mod tests {
         };
 
         let server = Path::new("tests/pull_request/server_test");
-        PullRequest::create(server, pr)?;
+        PullRequest::create(server, &mut pr)?;
 
         let query = FindPullRequests{
             base_repo: String::from("gmovia/test_create_pr"),
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     pub fn test_05_get_one() -> Result<(), std::io::Error> {
-        let pr = CreatePullRequest{
+        let mut pr = CreatePullRequest{
             title: Some(String::from("Title")),
             body: Some(String::from("Description")),
             head_repo: String::from("gmovia/test_create_pr"),
@@ -100,7 +100,7 @@ mod tests {
         };
 
         let server = Path::new("tests/pull_request/server_test");
-        let id = PullRequest::create(server, pr)?;
+        let id = PullRequest::create(server, &mut pr)?;
 
 
         let query = FindPullRequest {

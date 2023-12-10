@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry, FindPullRequest}, utils::randoms::random::Random};
+use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry, FindPullRequest}, utils::randoms::random::Random, vcs::commands::pull::Pull};
 
 pub struct Query;
 
@@ -39,9 +39,22 @@ impl Query{
         Ok(id)
     }  
 
-    pub fn find_pull_requests(server: &Path, query: &FindPullRequests) -> Result<Vec<PullRequestEntry>, std::io::Error>{
-        let folder_path = server.join("pull_requests").join(&query.base_repo);
-        let mut prs = Self::read_all_pr_in_repo(&folder_path)?;
+    pub fn find_all_pull_requests(prs_path: &Path) -> Result<Vec<PullRequestEntry>, std::io::Error>{
+        let mut prs: Vec<PullRequestEntry> = Vec::new();
+        
+        if let Ok(entries) = fs::read_dir(prs_path) {
+            for entry in entries{
+                if let Ok(entry) = entry{
+                    let pr = Self::read_pull_request(&entry.path())?;
+                    prs.push(pr);
+                }
+            }
+        }
+        Ok(prs)
+    }
+
+    pub fn find_pull_requests(prs_path: &Path, query: &FindPullRequests) -> Result<Vec<PullRequestEntry>, std::io::Error>{
+        let mut prs = Self::find_all_pull_requests(&prs_path)?;
 
         for index in 0..prs.len(){
             if let Some(state) = query.state.clone(){
@@ -72,15 +85,20 @@ impl Query{
         Ok(prs)
     }
 
-    pub fn parse_pr(content: String) -> PullRequestEntry{
-        let array: Vec<&str> = content.split_whitespace().collect();
+    pub fn find_a_pull_request(id: &Path) -> Result<PullRequestEntry, std::io::Error>{
+        Self::read_pull_request(id)
+    }
 
+    pub fn read_pull_request(id: &Path) -> Result<PullRequestEntry, std::io::Error>{
+        let content = fs::read_to_string(id)?;
+        let array: Vec<&str> = content.split_whitespace().collect();
+    
         let mergeable = match array[9].parse::<bool>() {
             Ok(value) => value,
             Err(_) => false,
         };
-
-        PullRequestEntry { 
+    
+        let pr = PullRequestEntry { 
             id: array[0].to_string(), 
             title: array[1].to_string(),
             head_repo: array[2].to_string(),
@@ -91,27 +109,37 @@ impl Query{
             status: array[7].to_string(),
             body: array[8].to_string(),
             mergeable: mergeable
-        }
+        };
+        
+        Ok(pr)
     }
 
-    pub fn read_all_pr_in_repo(repo: &Path) -> Result<Vec<PullRequestEntry>, std::io::Error>{
-        let mut prs: Vec<PullRequestEntry> = Vec::new();
+    pub fn write_pull_request(id: &Path, pr: PullRequestEntry) -> Result<(), std::io::Error>{
+        let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open(id)?;
 
-        if let Ok(entries) = fs::read_dir(repo) {
-            for entry in entries{
-                if let Ok(entry) = entry{
-                    let content = fs::read_to_string(entry.path())?;
-                    let pr = Query::parse_pr(content);
-                    prs.push(pr);
-                }
-            }
-        }
-        Ok(prs)
-    }
+        file.set_len(0)?;
 
-    pub fn find_a_pull_request(server: &Path, query: &FindPullRequest) -> Result<PullRequestEntry, std::io::Error>{
-        let folder_path = server.join("pull_requests").join(&query.base_repo).join(&query.id);
-        Ok(Self::parse_pr(fs::read_to_string(folder_path)?))
+        file.write_all(
+            format!(
+                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+                pr.id,
+                pr.title, 
+                pr.head_repo,
+                pr.base_repo,
+                pr.head,
+                pr.base,
+                pr.username,
+                pr.status,
+                pr.body,
+                pr.mergeable
+            ).as_bytes()
+        )?;
+
+        Ok(())
     }
 }
 
