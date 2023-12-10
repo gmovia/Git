@@ -42,6 +42,7 @@ pub mod servers {
 
 pub mod server_http {
     pub mod web_server;
+    pub mod validation;
 }
 
 pub mod packfiles {

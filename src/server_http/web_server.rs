@@ -5,6 +5,8 @@ use std::path::Path;
 use std::thread;
 use serde::{Deserialize, Serialize};
 
+use crate::server_http::validation::send_bad_request_msg;
+
 #[derive(Serialize, Deserialize)]
 pub struct Mensaje {
     mensaje: String,
@@ -20,9 +22,9 @@ impl WebServer {
         println!("Web server listening on port: {}", port);
         for stream in listener.incoming() {
             match stream {
-                Ok(stream) => {
-                    thread::spawn(|| {
-                        Self::handle_client(stream);
+                Ok(mut stream) => {
+                    thread::spawn(move || {
+                        Self::handle_client(&mut stream);
                     });
                 }
                 Err(_) => {
@@ -52,7 +54,7 @@ impl WebServer {
         Ok(port)
     }
 
-    fn handle_client(mut stream: TcpStream) {
+    fn handle_client(stream: &mut TcpStream) {
         let mut buffer = [0; 1024];
     
         match stream.read(&mut buffer) {
@@ -61,11 +63,10 @@ impl WebServer {
                 println!("Received request: {}", request_str);
     
                 if let Some(header_end) = request_str.find("\r\n\r\n") {
-                    Self::parse_request(header_end, &request_str, stream);
+                    let _ = Self::parse_request(header_end, &request_str, stream);
                 } else {
                     println!("No se encontró el final de las cabeceras en la cadena.");
-                    let response = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
-                    let _ = stream.write(response.as_bytes());
+                    send_bad_request_msg(stream);
                 }
             }
             Err(e) => {
@@ -74,30 +75,24 @@ impl WebServer {
         }
     }
 
-    fn parse_request(header_end: usize, request_str: &str, stream: TcpStream) -> Result<(), std::io::Error> {
+    fn parse_request(header_end: usize, request_str: &str, stream: &mut TcpStream) -> Result<(), std::io::Error> {
         let json_header = &request_str[..header_end]; 
         let json_body = &request_str[header_end + 4..];
-
+    
         let received_request = Self::get_received_request(json_header)?;
         let received_vec: Vec<&str> = received_request.split_whitespace().collect();
         let path: Vec<&str> = received_vec[1].split("/").collect();
-
-        if received_vec[0] == "POST" && (path.len()-1) == 3 {
-            println!("CREAR UN PULL REQUEST")
-        } 
-        else if received_vec[0] == "GET" && (path.len()-1) == 3 {
-            println!("LISTAR PULL REQUEST")
+        println!("ES ESTE EL RECEIVE_VECCC en 0{:?}\n", received_vec[0]);
+    
+        match (received_vec[0], path.len() - 1) {
+            ("POST", 3) => println!("CREAR UN PULL REQUEST"),
+            ("GET", 3) => println!("LISTAR PULL REQUEST"),
+            ("GET", 4) => println!("OBTENER UN PULL REQUEST"),
+            ("GET", 5) => println!("LISTAR COMMIT EN UN PULL REQUEST"),
+            ("PUT", 5) => println!("LISTAR COMMIT EN UN PULL REQUEST"),
+            _ => send_bad_request_msg(&stream),
         }
-        else if received_vec[0] == "GET" && (path.len()-1) == 4 {
-            println!("OBTENER UN PULL REQUEST")
-        }
-        else if received_vec[0] == "GET" && (path.len()-1) == 5 {
-            println!("LISTAR COMMIT EN UN PULL REQUEST")
-        }
-        else if received_vec[0] == "PUT" && (path.len()-1) == 5 {
-            println!("LISTAR COMMIT EN UN PULL REQUEST")
-        }
-
+    
         println!("            -----> {}", received_request);
         println!("PATH: {:?}", path);
         Self::send_mesagge(json_body, stream);
@@ -110,7 +105,7 @@ impl WebServer {
         Ok(receive_request.to_string()) 
     }
 
-    fn send_mesagge(json_body: &str, mut stream: TcpStream) {
+    fn send_mesagge(json_body: &str, stream: &mut TcpStream) {
         println!("JSON Body: {}", json_body);
         if let Ok(mensaje) = serde_json::from_str::<Mensaje>(json_body) {
             println!("El mensaje es: {}", mensaje.mensaje);
@@ -125,3 +120,4 @@ impl WebServer {
     }
     
 }
+
