@@ -43,6 +43,13 @@ pub mod servers {
 pub mod server_http {
     pub mod web_server;
     pub mod validation;
+    pub mod requests {
+        pub mod create_pull_request;
+        pub mod get_pull_request;
+        pub mod list_commit;
+        pub mod list_pull_request;
+        pub mod merge_pull_request;
+    }
 }
 
 pub mod packfiles {
@@ -140,6 +147,7 @@ pub mod vcs {
         pub mod tag_entity;
         pub mod tree_entity;
     }
+
 
     pub mod version_control_system;
 }

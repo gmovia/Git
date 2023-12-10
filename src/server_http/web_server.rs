@@ -5,6 +5,11 @@ use std::path::Path;
 use std::thread;
 use serde::{Deserialize, Serialize};
 
+use crate::server_http::requests::create_pull_request::CreatePullRequest;
+use crate::server_http::requests::get_pull_request::GetPullRequest;
+use crate::server_http::requests::list_commit::ListCommitsPullRequest;
+use crate::server_http::requests::list_pull_request::ListPullRequests;
+use crate::server_http::requests::merge_pull_request::MergePullRequest;
 use crate::server_http::validation::send_bad_request_msg;
 
 #[derive(Serialize, Deserialize)]
@@ -85,11 +90,11 @@ impl WebServer {
         println!("ES ESTE EL RECEIVE_VECCC en 0{:?}\n", received_vec[0]);
     
         match (received_vec[0], path.len() - 1) {
-            ("POST", 3) => println!("CREAR UN PULL REQUEST"),
-            ("GET", 3) => println!("LISTAR PULL REQUEST"),
-            ("GET", 4) => println!("OBTENER UN PULL REQUEST"),
-            ("GET", 5) => println!("LISTAR COMMIT EN UN PULL REQUEST"),
-            ("PUT", 5) => println!("LISTAR COMMIT EN UN PULL REQUEST"),
+            ("POST", 3) => {let _ = CreatePullRequest::response_create_pull_request_object(json_body);},
+            ("GET", 3) => {let _ = ListPullRequests::response_list_pull_request_object(json_body);},
+            ("GET", 4) => {let _ = GetPullRequest::get_pull_request(json_body);},
+            ("GET", 5) => {let _ = ListCommitsPullRequest::list_commits_pull_request(json_body);},
+            ("PUT", 5) => {let _ = MergePullRequest::merge_pull_request(json_body);},
             _ => send_bad_request_msg(&stream),
         }
     
