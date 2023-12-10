@@ -1,4 +1,4 @@
-use std::{path::Path, io};
+use std::{path::Path, io, fs};
 
 use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, FindPullRequest}, vcs::commands::branch::Branch};
 
@@ -11,6 +11,7 @@ impl Validator{
         let base_repo = server.join(&pr.base_repo);
         let head_repo = server.join(&pr.head_repo);
 
+        Self::validate_creation_pr(&server, &pr)?;
         Self::validate_repo(&base_repo)?; 
         Self::validate_repo(&head_repo)?;
         Self::validate_branch(&base_repo, &pr.base)?;
@@ -31,6 +32,23 @@ impl Validator{
                 io::ErrorKind::NotFound,
                 "422: Can't find the branch",
             ));
+        }
+        Ok(())
+    }
+
+    pub fn validate_creation_pr(server: &Path, pr: &CreatePullRequest) -> Result<(), std::io::Error> {
+        let prs_path = server.join("pull_requests").join(&pr.base_repo);
+        if let Ok(entries) = fs::read_dir(prs_path) {
+            for entry in entries.flatten() {
+                let content = fs::read_to_string(entry.path())?;
+                let parts: Vec<&str> = content.split('\n').collect();
+                if parts[4] == pr.head.as_str() && parts[5] == pr.base.as_str(){
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        "403: The requested pr has already been created",
+                    ));
+                }
+            }
         }
         Ok(())
     }
