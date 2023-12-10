@@ -80,10 +80,26 @@ impl WebServer {
 
         let received_request = Self::get_received_request(json_header)?;
         let received_vec: Vec<&str> = received_request.split_whitespace().collect();
-        let path = received_vec[1];
+        let path: Vec<&str> = received_vec[1].split("/").collect();
+
+        if received_vec[0] == "POST" && (path.len()-1) == 3 {
+            println!("CREAR UN PULL REQUEST")
+        } 
+        else if received_vec[0] == "GET" && (path.len()-1) == 3 {
+            println!("LISTAR PULL REQUEST")
+        }
+        else if received_vec[0] == "GET" && (path.len()-1) == 4 {
+            println!("OBTENER UN PULL REQUEST")
+        }
+        else if received_vec[0] == "GET" && (path.len()-1) == 5 {
+            println!("LISTAR COMMIT EN UN PULL REQUEST")
+        }
+        else if received_vec[0] == "PUT" && (path.len()-1) == 5 {
+            println!("LISTAR COMMIT EN UN PULL REQUEST")
+        }
 
         println!("            -----> {}", received_request);
-        println!("PATH: {}", path);
+        println!("PATH: {:?}", path);
         Self::send_mesagge(json_body, stream);
         Ok(())
     }
