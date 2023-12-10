@@ -90,11 +90,11 @@ impl WebServer {
         println!("ES ESTE EL RECEIVE_VECCC en 0{:?}\n", received_vec[0]);
     
         match (received_vec[0], path.len() - 1) {
-            ("POST", 3) => {let _ = CreatePullRequest::response_create_pull_request_object(json_body);},
-            ("GET", 3) => {let _ = ListPullRequests::response_list_pull_request_object(json_body);},
-            ("GET", 4) => {let _ = GetPullRequest::get_pull_request(json_body);},
-            ("GET", 5) => {let _ = ListCommitsPullRequest::list_commits_pull_request(json_body);},
-            ("PUT", 5) => {let _ = MergePullRequest::merge_pull_request(json_body);},
+            ("POST", 3) => {let _ = CreatePullRequest::response_create_pull_request_object(json_body, stream);},
+            ("GET", 3) => {let _ = ListPullRequests::response_list_pull_request_object(json_body, stream);},
+            ("GET", 4) => {let _ = GetPullRequest::get_pull_request(json_body, stream);},
+            ("GET", 5) => {let _ = ListCommitsPullRequest::list_commits_pull_request(json_body, stream);},
+            ("PUT", 5) => {let _ = MergePullRequest::merge_pull_request(json_body, stream);},
             _ => send_bad_request_msg(&stream),
         }
     
