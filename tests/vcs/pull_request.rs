@@ -112,4 +112,34 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    pub fn test_06_cant_create_pr_that_has_already_been_created() -> Result<(), std::io::Error> {
+        let mut pr = CreatePullRequest{
+            title: Some(String::from("Title")),
+            body: Some(String::from("Description")),
+            head_repo: String::from("gmovia/test_create_pr"),
+            base_repo: String::from("gmovia/test_create_pr"),
+            head: String::from("new_branch"),
+            base: String::from("master"),
+            username: String::from("ldefeo"),
+            mergeable: false
+        };
+
+        let _ = PullRequest::create(Path::new("tests/pull_request/server_test"), &mut pr);
+
+        let mut pr1 = CreatePullRequest{
+            title: Some(String::from("Title")),
+            body: Some(String::from("Description")),
+            head_repo: String::from("gmovia/test_create_pr"),
+            base_repo: String::from("gmovia/test_create_pr"),
+            head: String::from("new_branch"),
+            base: String::from("master"),
+            username: String::from("ldefeo"),
+            mergeable: false
+        };
+
+        assert_eq!(PullRequest::create(Path::new("tests/pull_request/server_test"), &mut pr1).is_err(), true);
+        Ok(())
+    }
 }
