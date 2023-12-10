@@ -114,7 +114,7 @@ impl Query{
         Ok(pr)
     }
 
-    pub fn write_pull_request(id: &Path, pr: PullRequestEntry) -> Result<(), std::io::Error>{
+    pub fn write_pull_request(id: &Path, pr: &PullRequestEntry) -> Result<(), std::io::Error>{
         let mut file = OpenOptions::new()
         .write(true)
         .create(true)
