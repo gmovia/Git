@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::{pull_request::{schemas::schemas::{CreatePullRequest, PullRequestEntry, FindPullRequests, FindPullRequest}, validator::validator::Validator, db::queries::Query}, vcs::commands::merge::Merge};
+use crate::{pull_request::{schemas::schemas::{CreatePullRequest, PullRequestEntry, FindPullRequests, FindPullRequest, CommitsPullRequest}, validator::validator::Validator, db::queries::Query}, vcs::commands::merge::Merge};
 
 pub struct PullRequest{
     server: PathBuf
@@ -42,12 +42,11 @@ impl PullRequest {
         Query::find_a_pull_request(&id)
     }
 
-    //pub fn find_commits(server: &Path, query: FindPullRequest) -> Result<Vec<CommitsPullRequest>, std::io::Error> {
-        //Validator::validate_find_a_pull_request(server, &query)?;
-        //let path = server.join(&query.base_repo);
-        //let id = server.join("pull_requests").join(&query.base_repo).join(&query.id);
-        //Query::get_commits_pull_request(&path, &id)
-    //  }
+    pub fn find_commits(&self, query: FindPullRequest) -> Result<Vec<CommitsPullRequest>, std::io::Error> {
+        Validator::validate_find_a_pull_request(&self.server, &query)?;
+        let id = self.server.join("pull_requests").join(&query.base_repo).join(&query.id);
+        Query::get_commits_pull_request(&self.server,&id)
+     }
 
     // SE USA PARA ACTUALIZAR EL ESTADO MERGEABLE EN EL CASO DE QUE SE HAGAN NUEVOS COMMTIS!
     // vos escribis la primera vez y si no tenes conflictos te queda true

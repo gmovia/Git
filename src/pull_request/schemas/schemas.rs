@@ -37,3 +37,13 @@ pub struct FindPullRequest{
     pub base_repo: String,
     pub id: String,
 }
+
+
+#[derive(Debug, Clone)]
+pub struct CommitsPullRequest {
+    pub id: String,
+    pub parent: String,
+    pub hash: String,
+    pub message: String,
+    pub info: String,
+}

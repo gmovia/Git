@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry}, utils::randoms::random::Random, vcs::files::commits_table::CommitsTable};
+use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry, CommitsPullRequest}, utils::randoms::random::Random, vcs::files::commits_table::CommitsTable};
 
 pub struct Query;
 
@@ -183,17 +183,45 @@ impl Query{
         Ok(())
     }
 
-    // pub fn get_commits_pull_request(path: &Path, id: &Path) -> Result<Vec<CommitsPullRequest>, std::io::Error>{
-    //     let pr_entry = Self::find_a_pull_request(id)?;
-    //     let base_path = path.join(".rust_git").join("logs").join(pr_entry.base);
-    //     let head_path = path.join(".rust_git").join("logs").join(pr_entry.head);
-    //     let content = fs::read_to_string(pr_path)?;
-    //     let parts:Vec<&str> = content.split('\n').collect();
-    //     for line in parts {
-    //         let part = line.split('-').collect();
-    //         if 
-    //     }
+    pub fn get_commits_pull_request(server: &Path, id: &Path) -> Result<Vec<CommitsPullRequest>, std::io::Error>{
+        let mut commits: Vec<CommitsPullRequest> = Vec::new();
+        let pr_entry = Self::find_a_pull_request(id)?;
+        let init_commit = pr_entry.init_commit;
+        let last_commit = pr_entry.last_commit;
 
-    // }
+        let head_repo = server.join(&pr_entry.head_repo);
+        let head_commits_table = CommitsTable::read(head_repo.clone(), &pr_entry.head)?;
+        
+        let mut found_init_commit = false;
+
+        for (index,entry) in head_commits_table.iter().enumerate() {
+            if entry.hash == init_commit {
+                found_init_commit = true;
+            }
+    
+            if found_init_commit {
+                if last_commit.is_none() && index == head_commits_table.len() {
+                    break;
+                }
+                let commit = CommitsPullRequest{
+                    id: entry.id.clone(),
+                    parent: entry.last_hash.clone(),
+                    hash: entry.hash.clone(),
+                    message: entry.message.clone(),
+                    info: entry.date.clone()
+                };
+                commits.push(commit);
+            }
+    
+            if let Some(last_commit_hash) = last_commit.clone() {
+                if entry.hash == last_commit_hash {
+                    break;
+                }
+            }
+
+        }
+        
+        Ok(commits)
+    }
 }
 
