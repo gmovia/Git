@@ -1,0 +1,92 @@
+use std::{path::Path, io, fs};
+
+use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, FindPullRequest}, vcs::commands::branch::Branch};
+
+pub struct Validator;
+
+impl Validator{
+
+    /// Hace las validaciones pertinentes
+    pub fn validate_create_pull_request(server: &Path, pr: &CreatePullRequest) -> Result<(), std::io::Error>{
+        let base_repo = server.join(&pr.base_repo);
+        let head_repo = server.join(&pr.head_repo);
+
+        Self::validate_creation_pr(&server, &pr)?;
+        Self::validate_repo(&base_repo)?;
+        Self::validate_repo(&head_repo)?;
+        Self::validate_branch(&base_repo, &pr.base)?;
+        Self::validate_branch(&head_repo, &pr.head)?;
+        Ok(())
+    }
+
+    pub fn validate_find_pull_requests(server: &Path, query: &FindPullRequests) -> Result<(), std::io::Error>{
+        let base_repo = server.join(&query.base_repo);
+        Self::validate_repo(&base_repo)
+    }
+
+    /// valida si la branch existe
+    pub fn validate_branch(repo: &Path, branch: &str) -> Result<(), std::io::Error>{
+        let branches = Branch::get_branches(&repo)?;
+        if !branches.contains(&branch.to_string()){
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "422: Can't find the branch",
+            ));
+        }
+        Ok(())
+    }
+
+    /// Valida si el pr ya fue creado y sigue abierto
+    pub fn validate_creation_pr(server: &Path, pr: &CreatePullRequest) -> Result<(), std::io::Error> {
+        let prs_path = server.join("pull_requests").join(&pr.base_repo);
+        if let Ok(entries) = fs::read_dir(prs_path) {
+            for entry in entries.flatten() {
+                let content = fs::read_to_string(entry.path())?;
+                let parts: Vec<&str> = content.split('\n').collect();
+                if parts[0] == "PR" {
+                    if parts[8] == "open" && 
+                    parts[3] == pr.head_repo.as_str() && 
+                    parts[4] == pr.base_repo.as_str() && 
+                    parts[5] == pr.head.as_str() && 
+                    parts[6] == pr.base.as_str(){
+                        return Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            "403: The requested pr has already been created",
+                        ));
+                }
+                }
+                
+            }
+        }
+        Ok(())
+    }
+
+    /// valida si el repositorio existe
+    pub fn validate_repo(repo: &Path) -> Result<(), std::io::Error>{ 
+        if !repo.exists() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "422: Can't find the repository",
+            ));
+        }
+        Ok(())
+    }
+
+    pub fn validate_id(id: &Path) -> Result<(), std::io::Error> {
+        if !id.exists() {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "404: Id not found",
+            ));
+        }
+        Ok(())
+        }
+
+    pub fn validate_find_a_pull_request(server: &Path, query: &FindPullRequest) -> Result<(), std::io::Error> {
+        let base_repo = server.join(&query.base_repo);
+        let id = server.join("pull_requests").join(&query.base_repo).join(&query.id);
+        Self::validate_id(&id)?;
+        Self::validate_repo(&base_repo)?;
+        Ok(())
+    }
+}

@@ -2,6 +2,21 @@ pub mod constants {
     pub mod constant;
 }
 
+pub mod pull_request{
+    pub mod db{
+        pub mod queries;
+    }
+    pub mod controllers{
+        pub mod pull_request;
+    }
+    pub mod schemas{
+        pub mod schemas;
+    }
+    pub mod validator{
+        pub mod validator;
+    }
+}
+
 pub mod handlers {
     pub mod add;
     pub mod branch;

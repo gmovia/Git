@@ -7,8 +7,9 @@ use gtk::{prelude::*, Button, ComboBoxText};
 use std::{collections::HashMap, path::Path};
 
 pub fn branches(combo_box: &ComboBoxText) -> Result<(), std::io::Error> {
-    let branches = VersionControlSystem::branch(BranchOptions::GetBranches)?;
-    draw_branches(&branches, combo_box);
+    if let Ok(branches) = VersionControlSystem::branch(BranchOptions::GetBranches){
+        draw_branches(&branches, combo_box);
+    }
     Ok(())
 }
 

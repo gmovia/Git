@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use gtk::prelude::*;
 
 use super::css::{init_css, set_styles_css_in_interface};
@@ -9,7 +7,6 @@ use super::handler::{
     handle_repository, handle_rm, handle_status,
 };
 use crate::interfaces::draw::{branches, changes_and_staging_area, repositories};
-use crate::vcs::version_control_system::VersionControlSystem;
 
 #[derive(Debug, Default)]
 pub struct RustInterface {
@@ -335,8 +332,6 @@ impl RustInterface {
     pub fn impl_interface(&self) -> Result<(), std::io::Error> {
         set_styles_css_in_interface(self);
 
-        VersionControlSystem::init(Path::new("server"), Vec::new());
-
         let _ = changes_and_staging_area(&self.grid, &self.grid_staging);
         repositories(&self.select_repository)?;
         branches(&self.select_branch)?;
@@ -354,7 +349,7 @@ impl RustInterface {
         handle_pull(self);
         handle_push(self);
         handle_logs_errors(self);
-
+        
         self.window.show_all();
         gtk::main();
 

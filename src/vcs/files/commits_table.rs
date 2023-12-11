@@ -1,13 +1,11 @@
-use super::{config::Config, current_commit::CurrentCommit, current_repository::CurrentRepository};
+use super::{current_commit::CurrentCommit, current_repository::CurrentRepository};
 use crate::{
     utils::randoms::random::Random,
-    vcs::{
-        commands::init::Init,
+    vcs::
         entities::{
             commit_entity::CommitEntity, commit_table_entry::CommitTableEntry,
             entity::convert_to_entities, tree_entity::TreeEntity,
         },
-    },
 };
 use chrono::Local;
 use std::{
@@ -62,12 +60,15 @@ impl CommitsTable {
     /// Recibe un mensaje y el conjunto de blobs que va a almacenar el commits
     /// Escribe la tabla de commits, crea el tree y los blobs relacionados al commit
     pub fn write(
+        repo_path: &Path,
+        branch: &str,
         message: &String,
+        config: (String, String),
         repository: &HashMap<String, String>,
     ) -> Result<(), std::io::Error> {
         let id = Random::random();
-        let last_commit_hash = CurrentCommit::read()?;
-        let config = Config::read_config()?;
+        let last_commit_hash = CurrentCommit::read_for_branch(repo_path, branch)?;
+        //let config = Config::read_config()?;
         let current_timestamp = Local::now().timestamp();
 
         let author = format!(
@@ -79,15 +80,14 @@ impl CommitsTable {
             config.0, config.1, current_timestamp
         );
 
-        let current = CurrentRepository::read()?;
         let mut commits_file = OpenOptions::new()
             .write(true)
             .append(true)
-            .open(Init::get_current_log(&current)?)?;
+            .open(repo_path.join(".rust_git").join("logs").join(branch))?;
 
         let entities =
-            convert_to_entities(repository, &format!("{}/", &current.display().to_string()));
-        let tree_hash = TreeEntity::write(&current, &entities)?;
+            convert_to_entities(repository, &format!("{}/", &repo_path.display().to_string()));
+        let tree_hash = TreeEntity::write(&repo_path, &entities)?;
 
         let commit_entity = CommitEntity {
             content_type: "commit".to_string(),
@@ -97,14 +97,14 @@ impl CommitsTable {
             committer: committer.to_string(),
             message: message.clone(),
         };
-        let commit_hash = CommitEntity::write(&current, &commit_entity)?;
+        let commit_hash = CommitEntity::write(&repo_path, &commit_entity)?;
         let commit = format!(
             "{}-{}-{}-{}-{} -300\n",
             id, last_commit_hash, commit_hash, message, current_timestamp
         );
 
         commits_file.write_all(commit.as_bytes())?;
-        CurrentCommit::write(commit_hash)?;
+        CurrentCommit::write_for_branch(repo_path, branch, commit_hash)?;
 
         Ok(())
     }
