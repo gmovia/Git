@@ -147,4 +147,32 @@ mod tests {
         assert_eq!(pull_request_server.create(&mut pr1).is_err(), true);
         Ok(())
     }
+
+    #[test]
+    pub fn test_07_get_commits_of_a_pull_request() -> Result<(), std::io::Error> {
+        let pull_request_server = PullRequest::init(Path::new("tests/pull_request/server_test"));
+
+        let mut pr = CreatePullRequest{
+            title: Some(String::from("Title")),
+            body: Some(String::from("Description")),
+            head_repo: String::from("gmovia/test_create_pr"),
+            base_repo: String::from("gmovia/test_create_pr"),
+            head: String::from("new_branch"),
+            base: String::from("master"),
+            username: String::from("ldefeo"),
+            mergeable: false
+        };
+
+        let id = pull_request_server.create(&mut pr)?;
+
+        let query = FindPullRequest {
+            base_repo: String::from("gmovia/test_create_pr"),
+            id,
+        };
+
+        let commits = pull_request_server.find_commits(query)?;
+        
+        assert_eq!(commits.len(), 2);
+        Ok(())
+    }
 }
