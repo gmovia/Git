@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry, CommitsPullRequest}, utils::randoms::random::Random, vcs::files::commits_table::CommitsTable};
+use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry, CommitsPullRequest}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}};
 
 pub struct Query;
 
@@ -203,12 +203,16 @@ impl Query{
                 if last_commit.is_none() && index == head_commits_table.len() {
                     break;
                 }
+
+                let info = CommitEntity::read(&head_repo,&entry.hash)?;
+
                 let commit = CommitsPullRequest{
                     id: entry.id.clone(),
                     parent: entry.last_hash.clone(),
                     hash: entry.hash.clone(),
                     message: entry.message.clone(),
-                    info: entry.date.clone()
+                    date: entry.date.clone(),
+                    info: info
                 };
                 commits.push(commit);
             }

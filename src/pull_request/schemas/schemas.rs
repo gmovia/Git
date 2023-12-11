@@ -1,3 +1,5 @@
+use crate::vcs::entities::commit_entity::CommitEntity;
+
 pub struct PullRequestEntry{
     pub id: String,
     pub title: String,
@@ -45,5 +47,6 @@ pub struct CommitsPullRequest {
     pub parent: String,
     pub hash: String,
     pub message: String,
-    pub info: String,
+    pub date: String,
+    pub info: CommitEntity
 }
