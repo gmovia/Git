@@ -1,7 +1,5 @@
 use std::{path::Path, io, fs};
 
-use chrono::format;
-
 use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, FindPullRequest}, vcs::commands::branch::Branch};
 
 pub struct Validator;
@@ -14,7 +12,7 @@ impl Validator{
         let head_repo = server.join(&pr.head_repo);
 
         Self::validate_creation_pr(&server, &pr)?;
-        Self::validate_repo(&base_repo)?; 
+        Self::validate_repo(&base_repo)?;
         Self::validate_repo(&head_repo)?;
         Self::validate_branch(&base_repo, &pr.base)?;
         Self::validate_branch(&head_repo, &pr.head)?;
@@ -38,23 +36,26 @@ impl Validator{
         Ok(())
     }
 
+    /// Valida si el pr ya fue creado y sigue abierto
     pub fn validate_creation_pr(server: &Path, pr: &CreatePullRequest) -> Result<(), std::io::Error> {
         let prs_path = server.join("pull_requests").join(&pr.base_repo);
         if let Ok(entries) = fs::read_dir(prs_path) {
             for entry in entries.flatten() {
                 let content = fs::read_to_string(entry.path())?;
                 let parts: Vec<&str> = content.split('\n').collect();
-                if parts[7] == "open" && 
-                    parts[2] == pr.head_repo.as_str() && 
-                    parts[3] == pr.base_repo.as_str() && 
-                    parts[4] == pr.head.as_str() && 
-                    parts[5] == pr.base.as_str(){
-
+                if parts[0] == "PR" {
+                    if parts[8] == "open" && 
+                    parts[3] == pr.head_repo.as_str() && 
+                    parts[4] == pr.base_repo.as_str() && 
+                    parts[5] == pr.head.as_str() && 
+                    parts[6] == pr.base.as_str(){
                         return Err(io::Error::new(
                             io::ErrorKind::Other,
                             "403: The requested pr has already been created",
                         ));
                 }
+                }
+                
             }
         }
         Ok(())

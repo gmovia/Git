@@ -1,6 +1,5 @@
 use super::checkout::Checkout;
 use super::diff::Diff;
-use super::init::Init;
 use crate::constants::constant::MERGE;
 use crate::vcs::commands::branch::Branch;
 use crate::vcs::entities::change::add_changes;

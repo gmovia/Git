@@ -1,43 +1,82 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry, FindPullRequest}, utils::randoms::random::Random, vcs::commands::pull::Pull};
+use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry}, utils::randoms::random::Random, vcs::files::commits_table::CommitsTable};
 
 pub struct Query;
 
 impl Query{
     /// Almacena el PR en la base de datos y devuelve un identificador unico.
     pub fn create_pull_request(server: &Path, pr: &CreatePullRequest) -> Result<String,  std::io::Error>{
-        let id = Random::random();
         let folder_path = server.join("pull_requests").join(&pr.base_repo);
-        fs::create_dir_all(&folder_path)?;
-        let pr_path = folder_path.join(&id);
-        let mut id_file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .append(true)
-            .open(pr_path)?;
-
+        fs::create_dir_all(&folder_path)?;        
+        
+        let id = Random::random();
         let title = pr.title.clone().map_or("None".to_string(), |u| u);
         let body = pr.body.clone().map_or("None".to_string(), |u| u);
 
-        id_file.write_all(
-            format!(
-                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
-                id,
-                title, 
-                pr.head_repo,
-                pr.base_repo,
-                pr.head,
-                pr.base,
-                pr.username,
-                "open",
-                body,
-                pr.mergeable
-            ).as_bytes()
-        )?;
+        let head_repo: Vec<&str> = pr.head_repo.split("/").collect();
+        let format = format!("{}_{}_{}", head_repo[1], pr.head, pr.base);
+        let table = folder_path.join(format);
+        let mut file = OpenOptions::new().write(true).create(true).append(true).open(&table)?;
 
+        let init_commit = Self::get_init_commit(&server, &pr, &table)?;
+
+        let pr_entry = PullRequestEntry{
+            id: id.clone(),
+            title, 
+            head_repo: pr.head_repo.clone(),
+            base_repo: pr.base_repo.clone(),
+            head: pr.head.clone(),
+            base: pr.base.clone(),
+            username: pr.username.clone(),
+            status: "open".to_string(),
+            body,
+            mergeable: pr.mergeable,
+            init_commit: init_commit.clone(),
+            last_commit: None,
+        };
+
+        Self::write_pull_request(&folder_path.join(&id), &pr_entry)?;
+        file.write_all(format!("{}\n",id).as_bytes())?;
         Ok(id)
     }  
+
+    pub fn get_init_commit(server: &Path, pr: &CreatePullRequest, table: &Path)-> Result<String, std::io::Error>{
+        let base_repo = server.join(&pr.base_repo);
+        let head_repo = server.join(&pr.head_repo);
+
+        let base_commits_table = CommitsTable::read(base_repo.clone(), &pr.base)?;
+        let head_commits_table = CommitsTable::read(head_repo.clone(), &pr.head)?;
+
+        
+        let content = fs::read_to_string(table)?;
+
+        if let Some(parent_commit) = CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table){
+            if !table.exists() || content.is_empty(){
+
+                for commit in head_commits_table{
+                    if commit.last_hash == parent_commit.hash{
+                        return Ok(commit.hash);
+                    }
+                }
+            }else{
+                let ids: Vec<&str> = content.split('\n').collect();
+                let path_id = server.join("pull_requests").join(&pr.base_repo).join(ids[ids.len()-1]);
+                let pr_entry = Query::find_a_pull_request(&path_id)?;
+                for commit in head_commits_table{
+                    if let Some(last_hash) = pr_entry.last_commit.clone() {
+                        if commit.hash == last_hash{
+                            return Ok(commit.hash);
+                        }
+                    }
+                    
+                }
+                                
+            }
+        }
+
+        Ok("None".to_string())
+    }
 
     pub fn find_all_pull_requests(prs_path: &Path) -> Result<Vec<PullRequestEntry>, std::io::Error>{
         let mut prs: Vec<PullRequestEntry> = Vec::new();
@@ -45,7 +84,7 @@ impl Query{
         if let Ok(entries) = fs::read_dir(prs_path) {
             for entry in entries{
                 if let Ok(entry) = entry{
-                    let pr = Self::read_pull_request(&entry.path())?;
+                    let pr = Self::find_a_pull_request(&entry.path())?;
                     prs.push(pr);
                 }
             }
@@ -85,30 +124,29 @@ impl Query{
         Ok(prs)
     }
 
-    pub fn find_a_pull_request(id: &Path) -> Result<PullRequestEntry, std::io::Error>{
-        Self::read_pull_request(id)
-    }
 
-    pub fn read_pull_request(id: &Path) -> Result<PullRequestEntry, std::io::Error>{
+    pub fn find_a_pull_request(id: &Path) -> Result<PullRequestEntry, std::io::Error>{
         let content = fs::read_to_string(id)?;
         let array: Vec<&str> = content.split_whitespace().collect();
     
-        let mergeable = match array[9].parse::<bool>() {
+        let mergeable = match array[10].parse::<bool>() {
             Ok(value) => value,
             Err(_) => false,
         };
     
         let pr = PullRequestEntry { 
-            id: array[0].to_string(), 
-            title: array[1].to_string(),
-            head_repo: array[2].to_string(),
-            base_repo: array[3].to_string(),
-            head: array[4].to_string(),
-            base: array[5].to_string(),
-            username: array[6].to_string(),
-            status: array[7].to_string(),
-            body: array[8].to_string(),
-            mergeable: mergeable
+            id: array[1].to_string(), 
+            title: array[2].to_string(),
+            head_repo: array[3].to_string(),
+            base_repo: array[4].to_string(),
+            head: array[5].to_string(),
+            base: array[6].to_string(),
+            username: array[7].to_string(),
+            status: array[8].to_string(),
+            body: array[9].to_string(),
+            mergeable,
+            init_commit: array[11].to_string(),
+            last_commit: Some(array[12].to_string())
         };
         
         Ok(pr)
@@ -125,7 +163,8 @@ impl Query{
 
         file.write_all(
             format!(
-                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
+                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{:?}",
+                "PR",
                 pr.id,
                 pr.title, 
                 pr.head_repo,
@@ -135,11 +174,26 @@ impl Query{
                 pr.username,
                 pr.status,
                 pr.body,
-                pr.mergeable
+                pr.mergeable,
+                pr.init_commit,
+                pr.last_commit,
             ).as_bytes()
         )?;
 
         Ok(())
     }
+
+    // pub fn get_commits_pull_request(path: &Path, id: &Path) -> Result<Vec<CommitsPullRequest>, std::io::Error>{
+    //     let pr_entry = Self::find_a_pull_request(id)?;
+    //     let base_path = path.join(".rust_git").join("logs").join(pr_entry.base);
+    //     let head_path = path.join(".rust_git").join("logs").join(pr_entry.head);
+    //     let content = fs::read_to_string(pr_path)?;
+    //     let parts:Vec<&str> = content.split('\n').collect();
+    //     for line in parts {
+    //         let part = line.split('-').collect();
+    //         if 
+    //     }
+
+    // }
 }
 
