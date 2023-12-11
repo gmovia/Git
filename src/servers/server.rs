@@ -20,10 +20,10 @@ pub struct Server;
 impl Server {
     /// Esta funcion sirve para inicializar el servidor. Espera por nuevas conexiones por parte del cliente
     pub fn server(server_path: String) -> Result<(), std::io::Error> {
-        Self::conect_web_server();
+        let path = Path::new(&server_path);
+        Self::conect_web_server((&path).to_path_buf());
         let adress = format!("{}:{}", HOST, PUERTO);
         let listener = TcpListener::bind(&adress).expect("Failed to bind to address");
-        let path = Path::new(&server_path);
         for stream in listener.incoming() {
             match stream {
                 Ok(client) => {
@@ -48,9 +48,9 @@ impl Server {
         Ok(())
     }
 
-    fn conect_web_server() {
+    fn conect_web_server(server_path: PathBuf) {
         let _ = thread::spawn(move || {
-            if let Err( e ) = WebServer::new() {
+            if let Err( e ) = WebServer::new(server_path) {
                 println!("Error conecting with Web Server: {}",e)
             }
         });

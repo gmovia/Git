@@ -2,7 +2,8 @@
 mod tests {
     use std::path::Path;
 
-    use rust_git::pull_request::{schemas::schemas::{CreatePullRequest, FindPullRequests, FindPullRequest}, controllers::pull_request::PullRequest};
+    use rust_git::{pull_request::{schemas::schemas::{FindPullRequests}, controllers::pull_request::PullRequest}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+    use rust_git::server_http::requests::get_pull_request::GetPullRequest;
 
     #[test]
     pub fn test_01_create_repo_with_valid_parameters() -> Result<(), std::io::Error> {
@@ -75,9 +76,9 @@ mod tests {
 
         pull_request_server.create(&mut pr)?;
 
-        let query = FindPullRequests{
+        let query = ListPullRequests {
             base_repo: String::from("gmovia/test_create_pr"),
-            state: None,
+            status: None,
             head: None,
             base: None,
             username: None,
@@ -107,7 +108,7 @@ mod tests {
         let id = pull_request_server.create(&mut pr)?;
 
 
-        let query = FindPullRequest {
+        let query = GetPullRequest {
             base_repo: String::from("gmovia/test_create_pr"),
             id,
         };
@@ -165,7 +166,7 @@ mod tests {
 
         let id = pull_request_server.create(&mut pr)?;
 
-        let query = FindPullRequest {
+        let query = GetPullRequest {
             base_repo: String::from("gmovia/test_create_pr"),
             id,
         };

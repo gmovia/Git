@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 
-use crate::{pull_request::{schemas::schemas::{CreatePullRequest, PullRequestEntry, FindPullRequests, FindPullRequest, CommitsPullRequest}, validator::validator::Validator, db::queries::Query}, vcs::commands::merge::Merge};
+use crate::{pull_request::{schemas::schemas::{PullRequestEntry, FindPullRequests, CommitsPullRequest}, validator::validator::Validator, db::queries::Query}, vcs::commands::merge::Merge, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::server_http::requests::get_pull_request::GetPullRequest;
 
 pub struct PullRequest{
     server: PathBuf
@@ -29,20 +30,20 @@ impl PullRequest {
     }
 
     /// GET ALL
-    pub fn find_all(&self, query: FindPullRequests) -> Result<Vec<PullRequestEntry>, std::io::Error>{
+    pub fn find_all(&self, query: ListPullRequests) -> Result<Vec<PullRequestEntry>, std::io::Error>{
         Validator::validate_find_pull_requests(&self.server, &query)?;
         let prs_path = self.server.join("pull_requests").join(&query.base_repo);
         Query::find_pull_requests(&prs_path, &query)
     }
 
     /// GET
-    pub fn find_one(&self, query: FindPullRequest) -> Result<PullRequestEntry, std::io::Error> {
+    pub fn find_one(&self, query: GetPullRequest) -> Result<PullRequestEntry, std::io::Error> {
         Validator::validate_find_a_pull_request(&self.server, &query)?;
         let id = self.server.join("pull_requests").join(&query.base_repo).join(&query.id);
         Query::find_a_pull_request(&id)
     }
 
-    pub fn find_commits(&self, query: FindPullRequest) -> Result<Vec<CommitsPullRequest>, std::io::Error> {
+    pub fn find_commits(&self, query: GetPullRequest) -> Result<Vec<CommitsPullRequest>, std::io::Error> {
         Validator::validate_find_a_pull_request(&self.server, &query)?;
         let id = self.server.join("pull_requests").join(&query.base_repo).join(&query.id);
         Query::get_commits_pull_request(&self.server,&id)

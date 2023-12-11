@@ -1,7 +1,7 @@
 use std::{path::Path, io, fs};
 
-use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, FindPullRequest}, vcs::commands::branch::Branch};
-
+use crate::{pull_request::schemas::schemas::{FindPullRequests}, vcs::commands::branch::Branch, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::server_http::requests::get_pull_request::GetPullRequest;
 pub struct Validator;
 
 impl Validator{
@@ -19,7 +19,7 @@ impl Validator{
         Ok(())
     }
 
-    pub fn validate_find_pull_requests(server: &Path, query: &FindPullRequests) -> Result<(), std::io::Error>{
+    pub fn validate_find_pull_requests(server: &Path, query: &ListPullRequests) -> Result<(), std::io::Error>{
         let base_repo = server.join(&query.base_repo);
         Self::validate_repo(&base_repo)
     }
@@ -30,7 +30,7 @@ impl Validator{
         if !branches.contains(&branch.to_string()){
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                "422: Can't find the branch",
+                "422 Can't find the branch",
             ));
         }
         Ok(())
@@ -51,7 +51,7 @@ impl Validator{
                     parts[6] == pr.base.as_str(){
                         return Err(io::Error::new(
                             io::ErrorKind::Other,
-                            "403: The requested pr has already been created",
+                            "403 The requested pr has already been created",
                         ));
                 }
                 }
@@ -66,7 +66,7 @@ impl Validator{
         if !repo.exists() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                "422: Can't find the repository",
+                "422 Can't find the repository",
             ));
         }
         Ok(())
@@ -76,13 +76,13 @@ impl Validator{
         if !id.exists() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                "404: Id not found",
+                "404 Id not found",
             ));
         }
         Ok(())
         }
 
-    pub fn validate_find_a_pull_request(server: &Path, query: &FindPullRequest) -> Result<(), std::io::Error> {
+    pub fn validate_find_a_pull_request(server: &Path, query: &GetPullRequest) -> Result<(), std::io::Error> {
         let base_repo = server.join(&query.base_repo);
         let id = server.join("pull_requests").join(&query.base_repo).join(&query.id);
         Self::validate_id(&id)?;

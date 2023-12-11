@@ -3,33 +3,16 @@ use std::net::TcpStream;
 
 use serde::{Serialize, Deserialize};
 
-use crate::server_http::validation::{send_server_error_msg, send_response};
-/* 
-pub struct InputCreatePR{
-    title: Option
-    body: Option
-    head_repo: Option
-    head: String
-    base: String
-}
-*/
-/* POST /gmovia/algo1 (base_repo)
-{
-    head: 'gmovia:new_branch' 
-    base: 'master'
-}
+use crate::{server_http::{validation::{send_server_error_msg, send_response, send_error}}, pull_request::{controllers::pull_request::PullRequest}};
 
-CreatePullRequest{
-    title: None
-    description: None
-    head_repo: gmovia/algo1
-    base_repo: gmovia/algo1
-    head: gmovia:new_branch
-    username: gmovia
-    base: master
-    mergeable: false
+#[derive(Serialize, Deserialize)]
+pub struct JsonCreatePR{
+    title: Option<String>,
+    body: Option<String>,
+    head_repo: Option<String>,
+    head: String,
+    base: String,
 }
-*/
 
 #[derive(Serialize, Deserialize)]
 pub struct CreatePullRequest{
@@ -43,6 +26,10 @@ pub struct CreatePullRequest{
     pub mergeable: bool,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ResponseOkCreatePullRequest {
+    id: String
+}
 
 impl CreatePullRequest {
 
@@ -60,11 +47,32 @@ impl CreatePullRequest {
         //if json.contains(pat)
     }
 
-    pub fn response_create_pull_request_object(json_body: &str, stream: &mut TcpStream) -> Result<CreatePullRequest, std::io::Error> {
+    pub fn response_create_pull_request_object(json_body: &str, path: String, stream: &mut TcpStream, pull_request: PullRequest) -> Result<CreatePullRequest, std::io::Error> {
         println!("JSON Body: {}", json_body);
-        if let Ok(request) = serde_json::from_str::<CreatePullRequest>(json_body) {            
-            send_response(stream, "RESPUESTA FUNCIONALIDAD".to_string());
-            return Ok(request)
+        if let Ok(request) = serde_json::from_str::<JsonCreatePR>(json_body) {            
+            let head_vec: Vec<&str> = request.head.split(":").collect();
+
+            let mut create = CreatePullRequest {
+                title: request.title,
+                body: request.body,
+                head_repo: "amoralejo/algo1".to_string(),
+                base_repo: path,
+                head: head_vec[1].to_owned(),
+                base: request.base,
+                username: head_vec[0].to_owned(),
+                mergeable: false,
+            };
+
+            if request.head_repo.is_none() {
+                create.head_repo = create.base_repo.clone()
+            }
+
+            match pull_request.create(&mut create) {
+                Ok( response ) => { send_response(stream, ResponseOkCreatePullRequest { id: response})},
+                Err( error_code ) => { send_error(stream, error_code.to_string()) }
+            }; 
+            
+            return Ok(create)
         } else {
             println!("Error al deserializar el mensaje: trailing characters");
             send_server_error_msg(stream);
