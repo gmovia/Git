@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{pull_request::schemas::schemas::{CreatePullRequest, FindPullRequests, PullRequestEntry, CommitsPullRequest}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}};
+use crate::{pull_request::schemas::schemas::{FindPullRequests, PullRequestEntry, CommitsPullRequest}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
 
 pub struct Query;
 
@@ -84,19 +84,23 @@ impl Query{
         if let Ok(entries) = fs::read_dir(prs_path) {
             for entry in entries{
                 if let Ok(entry) = entry{
-                    let pr = Self::find_a_pull_request(&entry.path())?;
-                    prs.push(pr);
+                    let content = fs::read_to_string(entry.path())?;
+                    let array: Vec<&str> = content.split("\n").collect();
+                    if array[0] == "PR" {
+                        let pr = Self::find_a_pull_request(&entry.path())?;
+                        prs.push(pr);
+                    }
                 }
             }
         }
         Ok(prs)
     }
 
-    pub fn find_pull_requests(prs_path: &Path, query: &FindPullRequests) -> Result<Vec<PullRequestEntry>, std::io::Error>{
+    pub fn find_pull_requests(prs_path: &Path, query: &ListPullRequests) -> Result<Vec<PullRequestEntry>, std::io::Error>{
         let mut prs = Self::find_all_pull_requests(&prs_path)?;
 
         for index in 0..prs.len(){
-            if let Some(state) = query.state.clone(){
+            if let Some(state) = query.status.clone(){
                 if prs[index].status != state{
                     prs.remove(index);
                 }
@@ -127,8 +131,8 @@ impl Query{
 
     pub fn find_a_pull_request(id: &Path) -> Result<PullRequestEntry, std::io::Error>{
         let content = fs::read_to_string(id)?;
-        let array: Vec<&str> = content.split_whitespace().collect();
-    
+        let array: Vec<&str> = content.split("\n").collect();
+        println!("ARRAY: {:?}", array);
         let mergeable = match array[10].parse::<bool>() {
             Ok(value) => value,
             Err(_) => false,
