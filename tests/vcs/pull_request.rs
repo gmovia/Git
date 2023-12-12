@@ -2,7 +2,7 @@
 mod tests {
     use std::path::Path;
 
-    use rust_git::{pull_request::{schemas::schemas::{FindPullRequests}, controllers::pull_request::PullRequest}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+    use rust_git::{pull_request::controllers::pull_request::PullRequest, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
     use rust_git::server_http::requests::get_pull_request::GetPullRequest;
 
     #[test]

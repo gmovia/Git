@@ -13,10 +13,6 @@ path = "src/main.rs"
 name = "server"
 path = "src/main_server.rs"
 
-[[bin]]
-name = "http-server"
-path = "src/main_http_server.rs"
-
 [dependencies]
 tempdir = "0.3.7"
 crypto = "0.5.1"
