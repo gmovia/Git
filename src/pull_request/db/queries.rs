@@ -1,22 +1,17 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{pull_request::schemas::schemas::{PullRequestEntry, CommitsPullRequest, UpdatePullRequest}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::{pull_request::{schemas::schemas::{PullRequestEntry, CommitsPullRequest, UpdatePullRequest}, utils::path::{create_prs_file, create_table}}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
 
 pub struct Query;
 
 impl Query{
-    pub fn create_pull_request(server: &Path, pr: &CreatePullRequest) -> Result<String,  std::io::Error>{
-        let folder_path = server.join("pull_requests").join(&pr.base_repo);
-        fs::create_dir_all(&folder_path)?;        
-        
+    pub fn create_pull_request(server: &Path, pr: &CreatePullRequest) -> Result<String,  std::io::Error>{        
         let id = Random::random();
         let title = pr.title.clone().map_or("None".to_string(), |u| u);
         let body = pr.body.clone().map_or("None".to_string(), |u| u);
 
-        let head_repo: Vec<&str> = pr.head_repo.split("/").collect();
-        let format = format!("{}_{}_{}", head_repo[1], pr.head, pr.base);
-        let table = folder_path.join(format);
-        let mut file = OpenOptions::new().write(true).create(true).append(true).open(&table)?;
+        let folder_path = create_prs_file(server, &pr.base_repo);
+        let table = create_table(&folder_path, &id, &pr)?;
 
         let init_commit = Self::get_init_commit(&server, &pr, &table)?;
 
@@ -36,7 +31,6 @@ impl Query{
         };
 
         Self::write_pull_request(&folder_path.join(&id), &pr_entry)?;
-        file.write_all(format!("{}\n",id).as_bytes())?;
         Ok(id)
     }
 
@@ -69,12 +63,13 @@ impl Query{
 
         let base_commits_table = CommitsTable::read(base_repo.clone(), &pr.base)?;
         let head_commits_table = CommitsTable::read(head_repo.clone(), &pr.head)?;
-
         
         let content = fs::read_to_string(table)?;
 
         if let Some(parent_commit) = CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table){
-            if !table.exists() || content.is_empty(){
+            let array: Vec<&str> = content.split('\n').collect();
+
+            if !table.exists() || content.is_empty() || array.len() == 2{
 
                 for commit in head_commits_table{
                     if commit.last_hash == parent_commit.hash{
