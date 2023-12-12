@@ -3,7 +3,7 @@ use std::net::TcpStream;
 
 use serde::{Serialize, Deserialize};
 
-use crate::{server_http::validation::{send_response, send_error}, pull_request::controllers::pull_request::PullRequest};
+use crate::{server_http::sender::{send_response, send_error}, pull_request::controllers::pull_request::PullRequest};
 
 #[derive(Serialize, Deserialize)]
 pub struct JsonListPR{
@@ -28,7 +28,6 @@ pub struct ListPullRequests{
 impl ListPullRequests {
 
     pub fn response_list_pull_request_object(json_body: &str, stream: &mut TcpStream,  base_repo: String, pull_request: PullRequest) -> Result<(), std::io::Error> {
-        println!("JSON Body de response_list_pull_request_object:  {}", json_body);
         if let Ok(request) = serde_json::from_str::<JsonListPR>(json_body) {            
             let list = ListPullRequests {
                 base_repo: base_repo,

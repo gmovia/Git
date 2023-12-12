@@ -3,7 +3,7 @@ use std::net::TcpStream;
 
 use serde::{Serialize, Deserialize};
 
-use crate::{server_http::{validation::{send_server_error_msg, send_response, send_error}}, pull_request::{controllers::pull_request::PullRequest}};
+use crate::{server_http::{sender::{send_server_error_msg, send_response, send_error}}, pull_request::{controllers::pull_request::PullRequest}};
 
 #[derive(Serialize, Deserialize)]
 pub struct JsonCreatePR{
@@ -32,20 +32,6 @@ pub struct ResponseOkCreatePullRequest {
 }
 
 impl CreatePullRequest {
-
-    pub fn parser(json: &str, arg_path: Vec<&str>){
-        // Si tiene titulo lo agarro y sino seteo en None
-        // Si tiene body lo agarro y sino seteo en None
-        // Si tiene head_repo lo agarro y sino lo igualo al arg_path
-        // Base repo es OBLIGATORIO, es igual a arg_path
-        // Head es OBLIGATORIO
-        // Base es OBLIGATORIO  => te va a llegar username:nombre_rama, tenes que dividirlo haciendo split de :
-        // Username viene con base asi que es obligatorio
-        // mergeable siempre false => no viene por parametro, es un atributo nuestro
-
-        // POST /repos/{repo}/pulls
-        //if json.contains(pat)
-    }
 
     pub fn response_create_pull_request_object(json_body: &str, path: String, stream: &mut TcpStream, pull_request: PullRequest) -> Result<CreatePullRequest, std::io::Error> {
         println!("JSON Body: {}", json_body);

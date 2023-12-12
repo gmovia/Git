@@ -13,7 +13,7 @@ use crate::server_http::requests::get_pull_request::GetPullRequest;
 use crate::server_http::requests::list_commit::ListCommitsPullRequest;
 use crate::server_http::requests::list_pull_request::ListPullRequests;
 use crate::server_http::requests::merge_pull_request::MergePullRequest;
-use crate::server_http::validation::send_bad_request_msg;
+use crate::server_http::sender::send_bad_request_msg;
 
 #[derive(Serialize, Deserialize)]
 pub struct Mensaje {

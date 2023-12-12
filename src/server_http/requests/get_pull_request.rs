@@ -3,7 +3,7 @@ use std::net::TcpStream;
 
 use serde::{Serialize, Deserialize};
 
-use crate::{server_http::validation::{send_response, send_error}, pull_request::controllers::pull_request::PullRequest};
+use crate::{server_http::sender::{send_response, send_error}, pull_request::controllers::pull_request::PullRequest};
 
 
 #[derive(Serialize, Deserialize)]

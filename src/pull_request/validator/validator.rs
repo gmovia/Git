@@ -1,6 +1,6 @@
-use std::{path::Path, io, fs};
+use std::{path::{Path, PathBuf}, io, fs};
 
-use crate::{pull_request::schemas::schemas::{FindPullRequests}, vcs::commands::branch::Branch, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::{pull_request::utils::path::{get_pr_path, get_prs_path}, vcs::commands::branch::Branch, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
 use crate::server_http::requests::get_pull_request::GetPullRequest;
 pub struct Validator;
 
@@ -19,21 +19,18 @@ impl Validator{
         Ok(())
     }
 
-    pub fn validate_find_pull_requests(server: &Path, query: &ListPullRequests) -> Result<(), std::io::Error>{
+    pub fn validate_find_pull_requests(server: &Path, query: &ListPullRequests) -> Result<PathBuf, std::io::Error>{
         let base_repo = server.join(&query.base_repo);
-        Self::validate_repo(&base_repo)
+        Self::validate_repo(&base_repo)?;
+        Ok(get_prs_path(server, &query.base_repo)) // Si pasa la validacion, devuelve la ruta que tiene todos los PRs
     }
 
-    /// valida si la branch existe
-    pub fn validate_branch(repo: &Path, branch: &str) -> Result<(), std::io::Error>{
-        let branches = Branch::get_branches(&repo)?;
-        if !branches.contains(&branch.to_string()){
-            return Err(io::Error::new(
-                io::ErrorKind::NotFound,
-                "422 Can't find the branch",
-            ));
-        }
-        Ok(())
+    pub fn validate_find_a_pull_request(server: &Path, query: &GetPullRequest) -> Result<PathBuf, std::io::Error> {
+        let base_repo = server.join(&query.base_repo);
+        let id = get_pr_path(server, &query.base_repo, &query.id);
+        Self::validate_id(&id)?;
+        Self::validate_repo(&base_repo)?;
+        Ok(id) // Si pasa la validacion, devuelve la ruta del PR
     }
 
     /// Valida si el pr ya fue creado y sigue abierto
@@ -82,11 +79,15 @@ impl Validator{
         Ok(())
         }
 
-    pub fn validate_find_a_pull_request(server: &Path, query: &GetPullRequest) -> Result<(), std::io::Error> {
-        let base_repo = server.join(&query.base_repo);
-        let id = server.join("pull_requests").join(&query.base_repo).join(&query.id);
-        Self::validate_id(&id)?;
-        Self::validate_repo(&base_repo)?;
+    /// valida si la branch existe
+    pub fn validate_branch(repo: &Path, branch: &str) -> Result<(), std::io::Error>{
+        let branches = Branch::get_branches(&repo)?;
+        if !branches.contains(&branch.to_string()){
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "422 Can't find the branch",
+            ));
+        }
         Ok(())
     }
 }

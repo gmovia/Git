@@ -15,6 +15,10 @@ pub mod pull_request{
     pub mod validator{
         pub mod validator;
     }
+    pub mod utils{
+        pub mod path;
+        pub mod refresh;
+    }
 }
 
 pub mod handlers {
@@ -57,7 +61,7 @@ pub mod servers {
 
 pub mod server_http {
     pub mod web_server;
-    pub mod validation;
+    pub mod sender;
     pub mod requests {
         pub mod create_pull_request;
         pub mod get_pull_request;

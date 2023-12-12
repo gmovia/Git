@@ -3,8 +3,6 @@ use std::net::TcpStream;
 
 use serde::{Serialize, Deserialize};
 
-use crate::server_http::validation::send_response;
-
 #[derive(Serialize, Deserialize)]
 pub struct MergePullRequest{
     repo: String,
