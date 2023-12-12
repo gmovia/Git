@@ -1,11 +1,10 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{pull_request::schemas::schemas::{FindPullRequests, PullRequestEntry, CommitsPullRequest}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::{pull_request::schemas::schemas::{PullRequestEntry, CommitsPullRequest}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
 
 pub struct Query;
 
 impl Query{
-    /// Almacena el PR en la base de datos y devuelve un identificador unico.
     pub fn create_pull_request(server: &Path, pr: &CreatePullRequest) -> Result<String,  std::io::Error>{
         let folder_path = server.join("pull_requests").join(&pr.base_repo);
         fs::create_dir_all(&folder_path)?;        

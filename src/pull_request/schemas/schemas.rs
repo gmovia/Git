@@ -18,17 +18,6 @@ pub struct PullRequestEntry{
     pub last_commit: Option<String>,
 }
 
-
-pub struct FindPullRequests{
-    pub base_repo: String,
-    pub state: Option<String>,
-    pub head: Option<String>,
-    pub base: Option<String>,
-    pub username: Option<String>,
-    pub per_page: Option<i32> // default 30
-}
-
-
 #[derive(Debug, Clone)]
 pub struct CommitsPullRequest {
     pub id: String,
