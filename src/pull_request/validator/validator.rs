@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, io, fs};
 
-use crate::{pull_request::utils::path::{get_pr_path, get_prs_path}, vcs::commands::branch::Branch, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::{pull_request::{utils::path::{get_pr_path, get_prs_path}, schemas::schemas::UpdatePullRequest}, vcs::commands::branch::Branch, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
 use crate::server_http::requests::get_pull_request::GetPullRequest;
 pub struct Validator;
 
@@ -16,6 +16,17 @@ impl Validator{
         Self::validate_branch(&base_repo, &pr.base)?;
         Self::validate_branch(&head_repo, &pr.head)?;
         Ok(())
+    }
+    
+    pub fn validate_update_pull_request(server: &Path, pr: &UpdatePullRequest) -> Result<PathBuf, std::io::Error>{
+        let base_repo = server.join(&pr.base_repo);
+        let id = get_pr_path(server, &pr.base_repo, &pr.id);
+        Self::validate_id(&id)?;
+        Self::validate_repo(&base_repo)?;
+        if let Some(base) = &pr.base{
+            Self::validate_branch(&base_repo, &base)?;
+        }
+        Ok(id)
     }
 
     pub fn validate_find_pull_requests(server: &Path, query: &ListPullRequests) -> Result<PathBuf, std::io::Error>{

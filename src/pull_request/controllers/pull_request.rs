@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::{pull_request::{schemas::schemas::{PullRequestEntry, CommitsPullRequest}, validator::validator::Validator, db::queries::Query}, vcs::commands::merge::Merge, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::{pull_request::{schemas::schemas::{PullRequestEntry, CommitsPullRequest, UpdatePullRequest}, validator::validator::Validator, db::queries::Query}, vcs::commands::merge::Merge, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
 use crate::server_http::requests::get_pull_request::GetPullRequest;
 
 pub struct PullRequest{
@@ -41,5 +41,10 @@ impl PullRequest {
         let id = Query::create_pull_request(&self.server, &pr)?;
     
         Ok(id)
+    }
+
+    pub fn update(&self, pr: &UpdatePullRequest) -> Result<String, std::io::Error>{
+        let id = Validator::validate_update_pull_request(&self.server, &pr)?;
+        Query::update_pull_request(&id, &pr)
     }
 }

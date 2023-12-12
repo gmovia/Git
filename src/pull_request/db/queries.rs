@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::Write};
 
-use crate::{pull_request::schemas::schemas::{PullRequestEntry, CommitsPullRequest}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::{pull_request::schemas::schemas::{PullRequestEntry, CommitsPullRequest, UpdatePullRequest}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
 
 pub struct Query;
 
@@ -38,6 +38,29 @@ impl Query{
         Self::write_pull_request(&folder_path.join(&id), &pr_entry)?;
         file.write_all(format!("{}\n",id).as_bytes())?;
         Ok(id)
+    }
+
+    pub fn update_pull_request(id: &Path, pr: &UpdatePullRequest) -> Result<String, std::io::Error>{
+        let mut old_pr = Query::find_a_pull_request(&id)?;
+
+        if let Some(title) = &pr.title{
+            old_pr.title = title.to_string();
+        }
+
+        if let Some(body) = &pr.body{
+            old_pr.body = body.to_string();
+        }
+
+        if let Some(status) = &pr.status{
+            old_pr.status = status.to_string();
+        }
+
+        if let Some(base) = &pr.base{
+            old_pr.base = base.to_string();
+        }
+
+        Self::write_pull_request(id, &old_pr)?;
+        Ok("Pull Request is updated successfully".to_string())
     }  
 
     pub fn get_init_commit(server: &Path, pr: &CreatePullRequest, table: &Path)-> Result<String, std::io::Error>{

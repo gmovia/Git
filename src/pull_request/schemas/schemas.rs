@@ -27,3 +27,12 @@ pub struct CommitsPullRequest {
     pub date: String,
     pub info: CommitEntity
 }
+
+pub struct UpdatePullRequest{
+    pub id: String,
+    pub base_repo: String,
+    pub title: Option<String>,
+    pub body: Option<String>,
+    pub status: Option<String>,
+    pub base: Option<String>,
+}
