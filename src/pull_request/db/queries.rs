@@ -27,7 +27,7 @@ impl Query{
             body,
             mergeable: pr.mergeable,
             init_commit: init_commit.clone(),
-            last_commit: None,
+            end_commit: None,
         };
 
         Self::write_pull_request(&folder_path.join(&id), &pr_entry)?;
@@ -64,34 +64,29 @@ impl Query{
         let base_commits_table = CommitsTable::read(base_repo.clone(), &pr.base)?;
         let head_commits_table = CommitsTable::read(head_repo.clone(), &pr.head)?;
         
+
         let content = fs::read_to_string(table)?;
 
         if let Some(parent_commit) = CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table){
             let array: Vec<&str> = content.split('\n').collect();
 
-            if !table.exists() || content.is_empty() || array.len() == 2{
-
-                for commit in head_commits_table{
-                    if commit.last_hash == parent_commit.hash{
-                        return Ok(commit.hash);
-                    }
-                }
-            }else{
-                let ids: Vec<&str> = content.split('\n').collect();
-                let path_id = server.join("pull_requests").join(&pr.base_repo).join(ids[ids.len()-1]);
-                let pr_entry = Query::find_a_pull_request(&path_id)?;
-                for commit in head_commits_table{
-                    if let Some(last_hash) = pr_entry.last_commit.clone() {
-                        if commit.hash == last_hash{
-                            return Ok(commit.hash);
-                        }
-                    }
-                    
-                }
-                                
+            if !table.exists() || array.len() <= 2{
+                return Ok(parent_commit.hash);
             }
-        }
 
+            let ids: Vec<&str> = content.split('\n').collect();
+            let path_id = server.join("pull_requests").join(&pr.base_repo).join(ids[ids.len()-1]);
+            let pr_entry = Query::find_a_pull_request(&path_id)?;
+            
+            for commit in head_commits_table{
+                if let Some(hash) = pr_entry.end_commit.clone() {
+                    if commit.last_hash == hash{
+                        return Ok(commit.hash);
+                    } 
+                }
+            }      
+        } 
+        
         Ok("None".to_string())
     }
 
@@ -167,7 +162,7 @@ impl Query{
             body: array[9].to_string(),
             mergeable,
             init_commit: array[11].to_string(),
-            last_commit: Some(array[12].to_string())
+            end_commit: Some(array[12].to_string())
         };
         
         Ok(pr)
@@ -197,7 +192,7 @@ impl Query{
                 pr.body,
                 pr.mergeable,
                 pr.init_commit,
-                pr.last_commit,
+                pr.end_commit,
             ).as_bytes()
         )?;
 
@@ -208,7 +203,7 @@ impl Query{
         let mut commits: Vec<CommitsPullRequest> = Vec::new();
         let pr_entry = Self::find_a_pull_request(id)?;
         let init_commit = pr_entry.init_commit;
-        let last_commit = pr_entry.last_commit;
+        let end_commit = pr_entry.end_commit;
 
         let head_repo = server.join(&pr_entry.head_repo);
         let head_commits_table = CommitsTable::read(head_repo.clone(), &pr_entry.head)?;
@@ -221,7 +216,7 @@ impl Query{
             }
     
             if found_init_commit {
-                if last_commit.is_none() && index == head_commits_table.len() {
+                if end_commit.is_none() && index == head_commits_table.len() {
                     break;
                 }
 
@@ -238,7 +233,7 @@ impl Query{
                 commits.push(commit);
             }
     
-            if let Some(last_commit_hash) = last_commit.clone() {
+            if let Some(last_commit_hash) = end_commit.clone() {
                 if entry.hash == last_commit_hash {
                     break;
                 }

@@ -15,7 +15,7 @@ pub struct PullRequestEntry{
     pub status: String,
     pub mergeable: bool,
     pub init_commit: String,
-    pub last_commit: Option<String>,
+    pub end_commit: Option<String>,
 }
 
 #[derive(Debug, Clone)]
