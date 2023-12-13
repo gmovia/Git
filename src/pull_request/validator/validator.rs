@@ -9,8 +9,19 @@ impl Validator{
     pub fn validate_create_pull_request(server: &Path, pr: &CreatePullRequest) -> Result<(), std::io::Error>{
         let base_repo = server.join(&pr.base_repo);
         let head_repo = server.join(&pr.head_repo);
-        let base_commits_table = CommitsTable::read(base_repo.clone(), &pr.base)?;
-        let head_commits_table = CommitsTable::read(head_repo.clone(), &pr.head)?;
+
+        Self::validate_repo(&base_repo)?;
+        Self::validate_repo(&head_repo)?;
+        Self::validate_branch(&base_repo, &pr.base)?;
+        Self::validate_branch(&head_repo, &pr.head)?;
+        Self::validate_creation_pr(&server, &pr)?;
+        Self::validate_not_changes(&base_repo, &head_repo, pr)?;
+        Ok(())
+    }
+    
+    pub fn validate_not_changes(base_repo: &Path, head_repo: &Path, pr: &CreatePullRequest) -> Result<(), std::io::Error>{
+        let base_commits_table = CommitsTable::read(base_repo.to_path_buf(), &pr.base)?;
+        let head_commits_table = CommitsTable::read(head_repo.to_path_buf(), &pr.head)?;
         let current_commit_base = base_commits_table.last();
         let current_commit_head = head_commits_table.last();
         if let ( Some(commit_base), Some(commit_head) ) = (current_commit_base, current_commit_head) {
@@ -21,22 +32,19 @@ impl Validator{
                 ));
             }                
         }    
-        Self::validate_creation_pr(&server, &pr)?;
-        Self::validate_repo(&base_repo)?;
-        Self::validate_repo(&head_repo)?;
-        Self::validate_branch(&base_repo, &pr.base)?;
-        Self::validate_branch(&head_repo, &pr.head)?;
         Ok(())
     }
-    
+
     pub fn validate_update_pull_request(server: &Path, pr: &UpdatePullRequest) -> Result<PathBuf, std::io::Error>{
         let base_repo = server.join(&pr.base_repo);
         let id = get_pr_path(server, &pr.base_repo, &pr.id);
-        Self::validate_id(&id)?;
         Self::validate_repo(&base_repo)?;
+        Self::validate_id(&id)?;
+        
         if let Some(base) = &pr.base{
             Self::validate_branch(&base_repo, &base)?;
         }
+        
         Ok(id)
     }
 
