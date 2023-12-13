@@ -15,7 +15,7 @@ pub struct PullRequestEntry{
     pub status: String,
     pub mergeable: bool,
     pub init_commit: String,
-    pub end_commit: Option<String>,
+    pub end_commit: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,11 +28,3 @@ pub struct CommitsPullRequest {
     pub info: CommitEntity
 }
 
-pub struct UpdatePullRequest{
-    pub id: String,
-    pub base_repo: String,
-    pub title: Option<String>,
-    pub body: Option<String>,
-    pub status: Option<String>,
-    pub base: Option<String>,
-}

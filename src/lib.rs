@@ -68,6 +68,7 @@ pub mod server_http {
         pub mod list_commit;
         pub mod list_pull_request;
         pub mod merge_pull_request;
+        pub mod update_pull_request;
     }
 }
 

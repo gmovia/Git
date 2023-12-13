@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::{Write, self}};
 
-use crate::{pull_request::{schemas::schemas::{PullRequestEntry, CommitsPullRequest, UpdatePullRequest}, utils::path::{create_prs_file, create_table}}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::{pull_request::{schemas::schemas::{PullRequestEntry, CommitsPullRequest}, utils::path::{create_prs_file, create_table}}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests, update_pull_request::UpdatePullRequest}};
 
 pub struct Query;
 
@@ -28,7 +28,7 @@ impl Query{
             body,
             mergeable: pr.mergeable,
             init_commit: init_commit.clone(),
-            end_commit: None,
+            end_commit: "None".to_string(),
         };
 
         Self::write_pull_request(&folder_path.join(&id), &pr_entry)?;
@@ -82,11 +82,10 @@ impl Query{
             let path_id = server.join("pull_requests").join(&pr.base_repo).join(ids[ids.len()-3]);
             let pr_entry = Query::find_a_pull_request(&path_id)?;
             for commit in head_commits_table{
-                if let Some(hash) = pr_entry.end_commit.clone() {
-                    if commit.last_hash == hash{
-                        return Ok(commit.hash);
-                    } 
-                }
+                if commit.last_hash == pr_entry.end_commit.clone(){
+                    return Ok(commit.hash);
+                } 
+                
             }      
         } 
         
@@ -166,25 +165,25 @@ impl Query{
             body: array[9].to_string(),
             mergeable,
             init_commit: array[11].to_string(),
-            end_commit: Some(array[12].to_string())
+            end_commit: array[12].to_string()
         };
         
         Ok(pr)
     }
 
     pub fn write_pull_request(id: &Path, pr: &PullRequestEntry) -> Result<(), std::io::Error>{
-        println!("ENTRO EN WRITE PULL");
+
         let mut file = OpenOptions::new()
         .write(true)
         .create(true)
         .append(true)
         .open(id)?;
-        println!("SALGO EN WRITE PULL. ID. {:?}", id);
+
         file.set_len(0)?;
 
         file.write_all(
             format!(
-                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{:?}",
+                "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
                 "PR",
                 pr.id,
                 pr.title, 
@@ -221,7 +220,7 @@ impl Query{
             }
     
             if found_init_commit {
-                if end_commit.is_none() && index == head_commits_table.len() {
+                if end_commit == "None".to_string() && index == head_commits_table.len() {
                     break;
                 }
 
@@ -238,11 +237,11 @@ impl Query{
                 commits.push(commit);
             }
     
-            if let Some(last_commit_hash) = end_commit.clone() {
-                if entry.hash == last_commit_hash {
-                    break;
-                }
+            
+            if entry.hash == end_commit.clone() {
+                break;
             }
+            
 
         }
         

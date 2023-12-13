@@ -13,6 +13,7 @@ use crate::server_http::requests::get_pull_request::GetPullRequest;
 use crate::server_http::requests::list_commit::ListCommitsPullRequest;
 use crate::server_http::requests::list_pull_request::ListPullRequests;
 use crate::server_http::requests::merge_pull_request::MergePullRequest;
+use crate::server_http::requests::update_pull_request::UpdatePullRequest;
 use crate::server_http::sender::send_bad_request_msg;
 
 #[derive(Serialize, Deserialize)]
@@ -100,6 +101,7 @@ impl WebServer {
             ("GET", 5) => {let _ = GetPullRequest::get_pull_request(stream, pull_request, format!("{}/{}",path[2],path[3]), path[5].to_owned());},
             ("GET", 6) => {let _ = ListCommitsPullRequest::list_commits_pull_request(stream, pull_request, format!("{}/{}",path[2],path[3]), path[5].to_string());},
             ("PUT", 6) => {let _ = MergePullRequest::merge_pull_request(json_body, stream);},
+            ("PATCH", 5) => {let _ = UpdatePullRequest::update_pull_request(json_body, stream, format!("{}/{}",path[2],path[3]), path[5].to_owned(), pull_request);},
             _ => send_bad_request_msg(&stream),
         }
     

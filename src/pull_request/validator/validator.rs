@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, io, fs};
 
-use crate::{pull_request::{utils::path::{get_pr_path, get_prs_path}, schemas::schemas::UpdatePullRequest}, vcs::{commands::branch::Branch, files::commits_table::CommitsTable}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::{pull_request::utils::path::{get_pr_path, get_prs_path}, vcs::{commands::branch::Branch, files::commits_table::CommitsTable}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests, update_pull_request::UpdatePullRequest}};
 use crate::server_http::requests::get_pull_request::GetPullRequest;
 pub struct Validator;
 
