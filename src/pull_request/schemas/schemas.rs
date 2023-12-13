@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 use crate::vcs::entities::commit_entity::CommitEntity;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PullRequestEntry{
     pub id: String,
     pub title: String,
@@ -18,7 +18,7 @@ pub struct PullRequestEntry{
     pub end_commit: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommitsPullRequest {
     pub id: String,
     pub parent: String,

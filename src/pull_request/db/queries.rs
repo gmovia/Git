@@ -69,15 +69,26 @@ impl Query{
 
         if let Some(parent_commit) = CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table){
             let array: Vec<&str> = content.split('\n').collect();
-
-            if !table.exists() || array.len() <= 2{
-                return Ok(parent_commit.hash);
-            }
+            let current_commit_base = base_commits_table.last();
+            let current_commit_head = head_commits_table.last();
+            
+            if let ( Some(commit_base), Some(commit_head) ) = (current_commit_base, current_commit_head) {
+                if commit_base.hash == commit_head.hash || !table.exists() {
+                    return Ok("None".to_owned());
+                }                
+            } 
 
             let ids: Vec<&str> = content.split('\n').collect();
-            let path_id = server.join("pull_requests").join(&pr.base_repo).join(ids[ids.len()-1]);
+            if ids.len() <= 2 {
+                for commit in &head_commits_table {
+                    if commit.last_hash == parent_commit.hash {
+                        return Ok(commit.hash.clone())
+                    }
+                }    
+            }
+
+            let path_id = server.join("pull_requests").join(&pr.base_repo).join(ids[ids.len()-2]);
             let pr_entry = Query::find_a_pull_request(&path_id)?;
-            
             for commit in head_commits_table{
                 if let Some(hash) = pr_entry.end_commit.clone() {
                     if commit.last_hash == hash{
@@ -143,6 +154,7 @@ impl Query{
 
     pub fn find_a_pull_request(id: &Path) -> Result<PullRequestEntry, std::io::Error>{
         let content = fs::read_to_string(id)?;
+        println!("CONTENT: {}", content);
         let array: Vec<&str> = content.split("\n").collect();
         println!("ARRAY: {:?}", array);
         let mergeable = match array[10].parse::<bool>() {
@@ -169,12 +181,13 @@ impl Query{
     }
 
     pub fn write_pull_request(id: &Path, pr: &PullRequestEntry) -> Result<(), std::io::Error>{
+        println!("ENTRO EN WRITE PULL");
         let mut file = OpenOptions::new()
         .write(true)
         .create(true)
         .append(true)
         .open(id)?;
-
+        println!("SALGO EN WRITE PULL. ID. {:?}", id);
         file.set_len(0)?;
 
         file.write_all(
@@ -204,6 +217,10 @@ impl Query{
         let pr_entry = Self::find_a_pull_request(id)?;
         let init_commit = pr_entry.init_commit;
         let end_commit = pr_entry.end_commit;
+
+        if init_commit == "None".to_string() {
+            return Ok(Vec::new())
+        }
 
         let head_repo = server.join(&pr_entry.head_repo);
         let head_commits_table = CommitsTable::read(head_repo.clone(), &pr_entry.head)?;
