@@ -1,11 +1,12 @@
-use std::{path::Path, fs::{OpenOptions, self}, io::Write};
+use std::{path::Path, fs::{OpenOptions, self}, io::{Write, self}};
 
 use crate::{pull_request::{schemas::schemas::{PullRequestEntry, CommitsPullRequest, UpdatePullRequest}, utils::path::{create_prs_file, create_table}}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
 
 pub struct Query;
 
 impl Query{
-    pub fn create_pull_request(server: &Path, pr: &CreatePullRequest) -> Result<String,  std::io::Error>{        
+    pub fn create_pull_request(server: &Path, pr: &CreatePullRequest) -> Result<String, std::io::Error>{     
+        
         let id = Random::random();
         let title = pr.title.clone().map_or("None".to_string(), |u| u);
         let body = pr.body.clone().map_or("None".to_string(), |u| u);
@@ -68,18 +69,9 @@ impl Query{
         let content = fs::read_to_string(table)?;
 
         if let Some(parent_commit) = CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table){
-            let array: Vec<&str> = content.split('\n').collect();
-            let current_commit_base = base_commits_table.last();
-            let current_commit_head = head_commits_table.last();
-            
-            if let ( Some(commit_base), Some(commit_head) ) = (current_commit_base, current_commit_head) {
-                if commit_base.hash == commit_head.hash || !table.exists() {
-                    return Ok("None".to_owned());
-                }                
-            } 
-
             let ids: Vec<&str> = content.split('\n').collect();
-            if ids.len() <= 2 {
+
+            if ids.len() <= 2 || !table.exists() {
                 for commit in &head_commits_table {
                     if commit.last_hash == parent_commit.hash {
                         return Ok(commit.hash.clone())
@@ -87,7 +79,7 @@ impl Query{
                 }    
             }
 
-            let path_id = server.join("pull_requests").join(&pr.base_repo).join(ids[ids.len()-2]);
+            let path_id = server.join("pull_requests").join(&pr.base_repo).join(ids[ids.len()-3]);
             let pr_entry = Query::find_a_pull_request(&path_id)?;
             for commit in head_commits_table{
                 if let Some(hash) = pr_entry.end_commit.clone() {
@@ -217,10 +209,6 @@ impl Query{
         let pr_entry = Self::find_a_pull_request(id)?;
         let init_commit = pr_entry.init_commit;
         let end_commit = pr_entry.end_commit;
-
-        if init_commit == "None".to_string() {
-            return Ok(Vec::new())
-        }
 
         let head_repo = server.join(&pr_entry.head_repo);
         let head_commits_table = CommitsTable::read(head_repo.clone(), &pr_entry.head)?;

@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, io, fs};
 
-use crate::{pull_request::{utils::path::{get_pr_path, get_prs_path}, schemas::schemas::UpdatePullRequest}, vcs::commands::branch::Branch, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
+use crate::{pull_request::{utils::path::{get_pr_path, get_prs_path}, schemas::schemas::UpdatePullRequest}, vcs::{commands::branch::Branch, files::commits_table::CommitsTable}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}};
 use crate::server_http::requests::get_pull_request::GetPullRequest;
 pub struct Validator;
 
@@ -9,7 +9,18 @@ impl Validator{
     pub fn validate_create_pull_request(server: &Path, pr: &CreatePullRequest) -> Result<(), std::io::Error>{
         let base_repo = server.join(&pr.base_repo);
         let head_repo = server.join(&pr.head_repo);
-
+        let base_commits_table = CommitsTable::read(base_repo.clone(), &pr.base)?;
+        let head_commits_table = CommitsTable::read(head_repo.clone(), &pr.head)?;
+        let current_commit_base = base_commits_table.last();
+        let current_commit_head = head_commits_table.last();
+        if let ( Some(commit_base), Some(commit_head) ) = (current_commit_base, current_commit_head) {
+            if commit_base.hash == commit_head.hash {
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "422 Head and Base only shared equal commits",
+                ));
+            }                
+        }    
         Self::validate_creation_pr(&server, &pr)?;
         Self::validate_repo(&base_repo)?;
         Self::validate_repo(&head_repo)?;
