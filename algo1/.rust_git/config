@@ -1,0 +1,9 @@
+[core]
+    repostiryformatversion = 0
+    filemode = false
+    bare = false
+[user]
+    user.name= ldiazc
+    user.email= ldiazc@fi.uba.ar
+[remote origin]
+	path = ldiazc/algo1
