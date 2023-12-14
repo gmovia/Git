@@ -1,3 +1,0 @@
-server/ldiazc/algo1
-ldiazc/algo1
-algo1
