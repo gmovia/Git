@@ -103,7 +103,6 @@ impl CreatePullRequest {
         pull_request: PullRequest,
     ) -> Result<CreatePullRequest, std::io::Error> {
         if let Ok(request) = xml_from_str::<StructCreatePR>(xml_body) {
-            println!("XMLLL");
             let head_vec: Vec<&str> = request.head.split(':').collect();
 
             let mut create = CreatePullRequest {
