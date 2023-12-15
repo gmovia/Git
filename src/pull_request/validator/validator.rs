@@ -1,6 +1,6 @@
 use std::{path::{Path, PathBuf}, io, fs};
 
-use crate::{pull_request::utils::path::{get_pr_path, get_prs_path}, vcs::{commands::branch::Branch, files::commits_table::CommitsTable}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests, update_pull_request::UpdatePullRequest}};
+use crate::{pull_request::utils::path::{get_pr_path, get_prs_path}, vcs::{commands::branch::Branch, files::commits_table::CommitsTable}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests, update_pull_request::UpdatePullRequest, merge_pull_request::MergePullRequest}};
 use crate::server_http::requests::get_pull_request::GetPullRequest;
 pub struct Validator;
 
@@ -60,6 +60,23 @@ impl Validator{
         Self::validate_id(&id)?;
         Self::validate_repo(&base_repo)?;
         Ok(id) // Si pasa la validacion, devuelve la ruta del PR
+    }
+
+    pub fn validate_merge_pr(server: &Path, query: &MergePullRequest) -> Result<PathBuf, std::io::Error> {
+        let base_repo = server.join(&query.base_repo);
+        let id = get_pr_path(server, &query.base_repo, &query.id);
+        Self::validate_repo(&base_repo)?;
+        let response = Self::validate_id(&id);
+        if response.is_ok() {
+            let content = fs::read_to_string(&id)?;
+            let parts: Vec<&str> = content.split('\n').collect();
+            if parts[10] == true.to_string(){
+                return Ok(id)
+            }
+        }
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            "422 The requested pr is not ready to merge"))
     }
 
     pub fn validate_creation_pr(server: &Path, pr: &CreatePullRequest) -> Result<(), std::io::Error> {
