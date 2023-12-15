@@ -1,0 +1,9 @@
+[core]
+    repostiryformatversion = 0
+    filemode = false
+    bare = false
+[user]
+    user.name= gmovia
+    user.email= gmovia@fi.uba.ar
+[remote origin]
+	path = gmovia/algo1
