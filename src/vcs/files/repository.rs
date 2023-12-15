@@ -20,7 +20,7 @@ impl Repository {
     pub fn read(repo_path: &Path) -> Result<HashMap<String, String>, std::io::Error> {
         let current_branch = &Init::get_current_branch(repo_path)?;
 
-        let current_commit_hash = CurrentCommit::read()?;
+        let current_commit_hash = CurrentCommit::read_for_branch(repo_path, current_branch)?;
 
         let mut local_repository: HashMap<String, String> = HashMap::new();
         local_repository.extend(Repository::read_repository_of_commit(
@@ -54,7 +54,7 @@ impl Repository {
     ) -> Result<HashMap<String, String>, std::io::Error> {
         let commit_entity = CommitEntity::read(&repo_path, commit_hash)?;
         let entities = TreeEntity::read(&repo_path, commit_entity.tree_hash)?;
-        Ok(convert_to_repository(&entities, CurrentRepository::read()?))
+        Ok(convert_to_repository(&entities, repo_path))
     }
 
     /// Te devuelve el repositorio actual de una branch especifica

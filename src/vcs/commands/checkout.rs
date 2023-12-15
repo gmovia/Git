@@ -50,7 +50,7 @@ impl Checkout {
 
     /// Al crear y cambiar de rama, se actualiza el working directory con archivos y carpetas del repo actual
     pub fn update_cd(path: &Path) -> Result<(), std::io::Error> {
-        let repository_hashmap = Repository::read_repository()?;
+        let repository_hashmap = Repository::read(path)?;
 
         delete_all_files_and_folders(path)?;
 

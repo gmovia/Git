@@ -11,21 +11,17 @@ use super::current_repository::CurrentRepository;
 pub struct CurrentCommit;
 
 impl CurrentCommit {
-    /// Obtiene el hash del commit que se encuentra actulamente en el repositorio y rama actuales
-    pub fn read() -> Result<String, std::io::Error> {
+
+    pub fn read() -> Result<String, std::io::Error>{
         let current_repository = CurrentRepository::read()?;
-        let head_path = Init::get_current_head(&current_repository)?;
-        let hash = fs::read_to_string(head_path)?;
-        Ok(hash)
+        let current_branch = &Init::get_current_branch(&current_repository)?;
+        Self::read_for_branch(&current_repository, &current_branch)
     }
 
-    /// Actualiza el hash en las referencias del repositorio actual y de la rama actual
-    pub fn write(hash: String) -> Result<String, std::io::Error> {
-        let head_path = Init::get_current_head(&CurrentRepository::read()?)?;
-        let mut head = OpenOptions::new().read(true).write(true).open(head_path)?;
-        head.set_len(0)?;
-        head.write_all(hash.as_bytes())?;
-        Ok(hash)
+    pub fn write(hash: String) -> Result<String, std::io::Error>{
+        let current_repository = CurrentRepository::read()?;
+        let current_branch = &Init::get_current_branch(&current_repository)?;
+        Self::write_for_branch(&current_repository, &current_branch, hash)
     }
 
     /// Lee el commit actual de un repositorio y una rama asociada

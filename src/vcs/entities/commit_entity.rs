@@ -1,3 +1,5 @@
+use serde::{Serialize, Deserialize};
+
 use crate::{
     constants::constant::{COMMIT_CODE, COMMIT_INIT_HASH},
     utils::randoms::random::Random,
@@ -12,7 +14,8 @@ use std::{
     io::Write,
     path::Path,
 };
-#[derive(Debug, Clone)]
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 
 pub struct CommitEntity {
     pub content_type: String,
