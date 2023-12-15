@@ -2,14 +2,14 @@
 
 #[cfg(test)]
 mod tests {
-    use std::{fs, path::Path, thread, net::TcpStream, io::{Write, Read}, time::Duration};
+    use std::{fs, path::Path, thread, net::TcpStream, io::{Write, Read}};
 
     use rust_git::{
         servers::server::Server,
-        vcs::version_control_system::VersionControlSystem,
+        vcs::{version_control_system::VersionControlSystem, files::config::Config},
     };
 
-    use crate::tests_functions::{commit_one_file, commit_one_file_client};
+    use crate::tests_functions::commit_one_file_client;
 
     #[test]
     pub fn test_01_test_400_bad_request() -> Result<(), std::io::Error> {
@@ -43,6 +43,7 @@ mod tests {
         });
 
         VersionControlSystem::init(server_path, Vec::new());
+        Config::write_config(("Agus".to_owned(),"amoralejo@fi.uba.ar".to_owned()))?;
         commit_one_file_client(server_path.to_path_buf(), "test_file_1.txt");
         let _ = VersionControlSystem::checkout(rust_git::vcs::commands::checkout::CheckoutOptions::CreateAndChangeBranch("new_branch"));
         commit_one_file_client(server_path.to_path_buf(), "test_file_2.txt");
@@ -74,6 +75,7 @@ mod tests {
         });
 
         VersionControlSystem::init(server_path, Vec::new());
+        Config::write_config(("Agus".to_owned(),"amoralejo@fi.uba.ar".to_owned()))?;
         commit_one_file_client(server_path.to_path_buf(), "test_file_1.txt");
         let _ = VersionControlSystem::checkout(rust_git::vcs::commands::checkout::CheckoutOptions::CreateAndChangeBranch("bad_branch"));
         commit_one_file_client(server_path.to_path_buf(), "test_file_2.txt");
@@ -105,6 +107,7 @@ mod tests {
         });
 
         VersionControlSystem::init(server_path, Vec::new());
+        Config::write_config(("Agus".to_owned(),"amoralejo@fi.uba.ar".to_owned()))?;
         commit_one_file_client(server_path.to_path_buf(), "test_file_1.txt");
         let _ = VersionControlSystem::checkout(rust_git::vcs::commands::checkout::CheckoutOptions::CreateAndChangeBranch("new_branch"));
         commit_one_file_client(server_path.to_path_buf(), "test_file_2.txt");
@@ -148,6 +151,7 @@ mod tests {
         });
 
         VersionControlSystem::init(server_path, Vec::new());
+        Config::write_config(("Agus".to_owned(),"amoralejo@fi.uba.ar".to_owned()))?;
         commit_one_file_client(server_path.to_path_buf(), "test_file_1.txt");
         let _ = VersionControlSystem::checkout(rust_git::vcs::commands::checkout::CheckoutOptions::CreateAndChangeBranch("new_branch"));
         
