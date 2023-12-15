@@ -8,6 +8,10 @@ pub mod utils {
     }
 }
 
+pub mod server_http {
+    pub mod web_server;
+}
+
 pub mod vcs {
     pub mod add;
     pub mod branch;
