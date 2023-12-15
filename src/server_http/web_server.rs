@@ -102,7 +102,7 @@ impl WebServer {
 
         match (received_vec[0], path.len() - 1) {
             ("POST", 4) => {let _ = CreatePullRequest::response_create_pull_request_object(json_body, format!("{}/{}",path[2],path[3]),stream,pull_request, &media_type);},
-            ("GET", 4) => {let _ = ListPullRequests::response_list_pull_request_object(json_body, stream, format!("{}/{}",path[2],path[3]),pull_request);},
+            ("GET", 4) => {let _ = ListPullRequests::response_list_pull_request_object(json_body, stream, format!("{}/{}",path[2],path[3]),pull_request, &media_type);},
             ("GET", 5) => {let _ = GetPullRequest::get_pull_request(stream, pull_request, format!("{}/{}",path[2],path[3]), path[5].to_owned());},
             ("GET", 6) => {let _ = ListCommitsPullRequest::list_commits_pull_request(stream, pull_request, format!("{}/{}",path[2],path[3]), path[5].to_string());},
             ("PUT", 6) => {let _ = MergePullRequest::merge_pull_request(json_body, stream);},
