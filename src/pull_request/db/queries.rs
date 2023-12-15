@@ -1,6 +1,6 @@
-use std::{path::Path, fs::{OpenOptions, self}, io::{Write, self}};
+use std::{path::Path, fs::{OpenOptions, self}, io::{Write, self}, collections::HashMap};
 
-use crate::{pull_request::{schemas::schemas::{PullRequestEntry, CommitsPullRequest}, utils::path::{create_prs_file, create_table}}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests, update_pull_request::UpdatePullRequest}};
+use crate::{pull_request::{schemas::schemas::{PullRequestEntry, CommitsPullRequest}, utils::path::{create_prs_file, create_table}}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity, commands::merge::Merge}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests, update_pull_request::UpdatePullRequest}};
 
 pub struct Query;
 
@@ -246,6 +246,34 @@ impl Query{
         }
         
         Ok(commits)
+    }
+
+
+    pub fn merge_pull_request(server: &Path, id: &Path) -> Result<String, std::io::Error> {
+        let mut pr_entry = Self::find_a_pull_request(id)?;
+        
+        let head_repo = server.join(&pr_entry.head_repo);
+        let base_repo = server.join(&pr_entry.base_repo);
+
+        if Merge::are_conflicts(&pr_entry.head, &pr_entry.base, &head_repo.clone(), &base_repo.clone())?{
+            return Err(io::Error::new(
+                io::ErrorKind::Other,"405 Method Not Allowed if merge cannot be performed"))
+        }
+
+        let head_commits_table = CommitsTable::read(head_repo.clone(), &pr_entry.head)?;
+        let response = Merge::merge_pr(&pr_entry.username, &pr_entry.head, &pr_entry.base, &head_repo, &base_repo,HashMap::new());
+        if response.is_ok() {
+            if let Some(commit) = head_commits_table.iter().last() {
+                pr_entry.end_commit = commit.hash.clone();
+            }
+            pr_entry.status = "close".to_string();
+            Self::write_pull_request(id, &pr_entry)?;
+            return Ok("200 Merge successfully".to_string())
+        }else{
+            return Err(io::Error::new(
+                io::ErrorKind::Other,"405 Method Not Allowed if merge cannot be performed"))
+        }
+        
     }
 }
 
