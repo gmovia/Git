@@ -43,10 +43,12 @@ impl PullRequest {
         Ok(id)
     }
 
-    pub fn merge_pr(&self, query: MergePullRequest) -> Result<String, std::io::Error> {
+    pub fn merge_pr(&self, mut query: MergePullRequest) -> Result<String, std::io::Error> {
         let id = Validator::validate_merge_pr(&self.server, &query)?;
-
-        Query::merge_pull_request(&self.server, &id)
+        if query.merge_method.is_none() {
+            query.merge_method = Some("merge".to_string());
+        }
+        Query::merge_pull_request(&self.server, &id, &mut query.merge_method)
     }
 
     pub fn update(&self, pr: &UpdatePullRequest) -> Result<String, std::io::Error>{
