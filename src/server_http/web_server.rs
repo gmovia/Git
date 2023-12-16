@@ -5,6 +5,8 @@ use std::path::{Path, PathBuf};
 use std::thread;
 
 use crate::pull_request::controllers::pull_request::PullRequest;
+use crate::pull_request::utils::path::get_prs_path;
+use crate::pull_request::utils::refresh::refresh;
 use crate::server_http::requests::create_pull_request::CreatePullRequest;
 use crate::server_http::requests::get_pull_request::GetPullRequest;
 use crate::server_http::requests::list_commit::ListCommitsPullRequest;
@@ -94,6 +96,9 @@ impl WebServer {
         let path: Vec<&str> = received_vec[1].split('/').collect();
         println!("PATH LEN: {}",path.len());
 
+        refresh(&server_path, &format!("{}/{}", path[2], path[3]))?;
+        
+        println!("IMPRIMIME ESTO: {:?}", get_prs_path(&server_path, &format!("{}/{}", path[2], path[3])));
         match (received_vec[0], path.len() - 1) {
             ("POST", 4) => {let _ = CreatePullRequest::response_create_pull_request_object(json_body, format!("{}/{}",path[2],path[3]),stream,pull_request, &media_type);},
             ("GET", 4) => {let _ = ListPullRequests::response_list_pull_request_object(json_body, stream, format!("{}/{}",path[2],path[3]),pull_request, &media_type);},
