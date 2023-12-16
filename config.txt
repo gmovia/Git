@@ -1,2 +1,0 @@
-user.name= gmovia
-user.email= gmovia@fi.uba.ar
