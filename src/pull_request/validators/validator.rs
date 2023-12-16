@@ -70,8 +70,12 @@ impl Validator{
         if response.is_ok() {
             let content = fs::read_to_string(&id)?;
             let parts: Vec<&str> = content.split('\n').collect();
-            if parts[10] == true.to_string(){
+            if parts[10] == true.to_string() && parts[8] == "open"{
                 return Ok(id)
+            }else if parts[8] == "close"{
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "405 The requested pr to merge is close"))
             }
         }
         Err(io::Error::new(
