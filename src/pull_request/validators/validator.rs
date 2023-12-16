@@ -85,17 +85,14 @@ impl Validator{
             for entry in entries.flatten() {
                 let content = fs::read_to_string(entry.path())?;
                 let parts: Vec<&str> = content.split('\n').collect();
-                if parts[0] == "PR" {
-                    if parts[8] == "open" && 
-                    parts[3] == pr.head_repo.as_str() && 
-                    parts[4] == pr.base_repo.as_str() && 
-                    parts[5] == pr.head.as_str() && 
-                    parts[6] == pr.base.as_str(){
-                        return Err(io::Error::new(
-                            io::ErrorKind::Other,
-                            "403 The requested pr has already been created",
-                        ));
-                }
+                if parts[0] == "PR" && parts[8] == "open" && 
+                parts[3] == pr.head_repo.as_str() && 
+                parts[4] == pr.base_repo.as_str() && 
+                parts[5] == pr.head.as_str() && parts[6] == pr.base.as_str(){
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        "403 The requested pr has already been created",
+                    ));
                 }
                 
             }

@@ -2,7 +2,7 @@ use std::net::TcpStream;
 
 use serde::{Serialize, Deserialize};
 
-use crate::{pull_request::controllers::pull_request::PullRequest, server_http::sender::{send_response, send_error, send_server_error_msg}};
+use crate::{pull_request::controllers::pull_request::PullRequest, server_http::sender::{send_response, send_error}};
 
 #[derive(Serialize, Deserialize)]
 pub struct JsonMergePR{

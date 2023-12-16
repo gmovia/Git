@@ -20,7 +20,7 @@ pub fn create_table(prs_path: &Path, id: &String, pr: &CreatePullRequest) -> Res
     let head_repo: Vec<&str> = pr.head_repo.split("/").collect();
     let format = format!("{}_{}_{}", head_repo[1], pr.head, pr.base);
     let table = prs_path.join(format);
-    let mut file = OpenOptions::new()
+    let _ = OpenOptions::new()
         .write(true)
         .create(true)
         .append(true)

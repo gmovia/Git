@@ -4,9 +4,6 @@ use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::thread;
 use serde::{Deserialize, Serialize};
-
-use crate::handlers::pull;
-use crate::pull_request;
 use crate::pull_request::controllers::pull_request::PullRequest;
 use crate::server_http::requests::create_pull_request::CreatePullRequest;
 use crate::server_http::requests::get_pull_request::GetPullRequest;
