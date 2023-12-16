@@ -15,13 +15,13 @@ impl CurrentCommit {
     pub fn read() -> Result<String, std::io::Error>{
         let current_repository = CurrentRepository::read()?;
         let current_branch = &Init::get_current_branch(&current_repository)?;
-        Self::read_for_branch(&current_repository, &current_branch)
+        Self::read_for_branch(&current_repository, current_branch)
     }
 
     pub fn write(hash: String) -> Result<String, std::io::Error>{
         let current_repository = CurrentRepository::read()?;
         let current_branch = &Init::get_current_branch(&current_repository)?;
-        Self::write_for_branch(&current_repository, &current_branch, hash)
+        Self::write_for_branch(&current_repository, current_branch, hash)
     }
 
     /// Lee el commit actual de un repositorio y una rama asociada

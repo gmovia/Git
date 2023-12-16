@@ -17,7 +17,7 @@ pub struct WebServer;
 
 impl WebServer {
 
-    pub fn new(server_path: PathBuf) -> Result<(),std::io::Error>{
+    pub fn new_listen(server_path: PathBuf) -> Result<(),std::io::Error>{
         let port = Self::get_config()?;
         let listener = TcpListener::bind(&port).expect("Error getting port");
 
@@ -43,7 +43,7 @@ impl WebServer {
         let mut port = String::new();
         
         let path = Path::new("src/server_http/web_server_config.txt");
-        let file = File::open(&path)?;
+        let file = File::open(path)?;
     
         let reader = io::BufReader::new(file);
     
@@ -51,7 +51,7 @@ impl WebServer {
             let line_str = line?;
 
             if line_str.contains("port") {
-                let port_vec: Vec<&str> = line_str.split("=").collect();
+                let port_vec: Vec<&str> = line_str.split('=').collect();
                 port = port_vec[1].to_owned();
             }
         }
@@ -87,16 +87,16 @@ impl WebServer {
     
         let received_request = Self::get_received_request(json_header)?;
         let received_vec: Vec<&str> = received_request.split_whitespace().collect();
-        let path: Vec<&str> = received_vec[1].split("/").collect();
+        let path: Vec<&str> = received_vec[1].split('/').collect();
         println!("PATH LEN: {}",path.len());
         match (received_vec[0], path.len() - 1) {
             ("POST", 4) => {let _ = CreatePullRequest::response_create_pull_request_object(json_body, format!("{}/{}",path[2],path[3]),stream,pull_request);},
             ("GET", 4) => {let _ = ListPullRequests::response_list_pull_request_object(json_body, stream, format!("{}/{}",path[2],path[3]),pull_request);},
             ("GET", 5) => {let _ = GetPullRequest::get_pull_request(stream, pull_request, format!("{}/{}",path[2],path[3]), path[5].to_owned());},
             ("GET", 6) => {let _ = ListCommitsPullRequest::list_commits_pull_request(stream, pull_request, format!("{}/{}",path[2],path[3]), path[5].to_string());},
-            ("PUT", 6) => {let _ = MergePullRequest::merge_pull_request(json_body, stream);},
+            ("PUT", 6) => {let _ = MergePullRequest::merge_pull_request(json_body, stream, format!("{}/{}",path[2],path[3]), path[5].to_string(), pull_request);},
             ("PATCH", 5) => {let _ = UpdatePullRequest::update_pull_request(json_body, stream, format!("{}/{}",path[2],path[3]), path[5].to_owned(), pull_request);},
-            _ => send_bad_request_msg(&stream),
+            _ => send_bad_request_msg(stream),
         }
     
         println!("            -----> {}", received_request);
@@ -105,7 +105,7 @@ impl WebServer {
     }
 
     fn get_received_request(header: &str) -> Result<String, std::io::Error> {
-        let header_vec: Vec<&str> = header.split("\n").collect();
+        let header_vec: Vec<&str> = header.split('\n').collect();
         let receive_request = header_vec[0];
         Ok(receive_request.to_string()) 
     }
