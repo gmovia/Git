@@ -267,9 +267,9 @@ impl Query{
                                 }
                 },
                 "rebase" => {let response = Rebase::rebase_pr(&pr_entry.username, &pr_entry.head, &pr_entry.base, &head_repo, &base_repo);
-                            let base_commits_table = CommitsTable::read(base_repo.clone(), &pr_entry.base)?;
+                            let head_commits_table = CommitsTable::read(head_repo.clone(), &pr_entry.head)?;
                                 if response.is_ok() {
-                                    Self::update_pr(base_commits_table, &mut pr_entry, id)
+                                    Self::update_pr(head_commits_table, &mut pr_entry, id)
                                 }else{
                                     Err(io::Error::new(
                                         io::ErrorKind::Other,"405 Method Not Allowed if merge cannot be performed"))
