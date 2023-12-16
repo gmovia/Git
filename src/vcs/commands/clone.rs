@@ -35,13 +35,13 @@ pub struct Clone;
 
 impl Clone {
     /// Esta funcion sirve como inicialiazdor del struct Clone.
-    pub fn git_clone(stream: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
-        Self::receive_pack(stream, repo)?;
+    pub fn git_clone(stream: &mut TcpStream, repo: &Path, owner_repo: &Path) -> Result<(), std::io::Error> {
+        Self::receive_pack(stream, repo, owner_repo)?;
         Ok(())
     }
 
     /// Esta funcion se encarga de llevar a cabo la logica central del comando. Recibe la respuesta del servidor al upload_pack, parsea y envia los mensajes want y have, recibe los objetos y delega la creacion de las diferentes carpetas a clonar.
-    pub fn receive_pack(socket: &mut TcpStream, repo: &Path) -> Result<(), std::io::Error> {
+    pub fn receive_pack(socket: &mut TcpStream, repo: &Path, owner_repo: &Path) -> Result<(), std::io::Error> {
         let mut packets = Vec::new();
 
         loop {
@@ -78,7 +78,7 @@ impl Clone {
         Self::init_commits(&list_refs, &objects, repo)?;
         Remote::remote(
             &CurrentRepository::read()?,
-            RemoteOption::Add("origin", repo.to_string_lossy().to_string().as_str()),
+            RemoteOption::Add("origin", owner_repo.to_string_lossy().to_string().as_str()),
         )?;
         Ok(())
     }
