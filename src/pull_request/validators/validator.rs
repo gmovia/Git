@@ -14,7 +14,7 @@ impl Validator{
         Self::validate_repo(&head_repo)?;
         Self::validate_branch(&base_repo, &pr.base)?;
         Self::validate_branch(&head_repo, &pr.head)?;
-        Self::validate_creation_pr(&server, &pr)?;
+        Self::validate_creation_pr(server, pr)?;
         Self::validate_not_changes(&base_repo, &head_repo, pr)?;
         Ok(())
     }
@@ -42,7 +42,7 @@ impl Validator{
         Self::validate_id(&id)?;
         
         if let Some(base) = &pr.base{
-            Self::validate_branch(&base_repo, &base)?;
+            Self::validate_branch(&base_repo, base)?;
         }
         
         Ok(id)
@@ -85,17 +85,14 @@ impl Validator{
             for entry in entries.flatten() {
                 let content = fs::read_to_string(entry.path())?;
                 let parts: Vec<&str> = content.split('\n').collect();
-                if parts[0] == "PR" {
-                    if parts[8] == "open" && 
-                    parts[3] == pr.head_repo.as_str() && 
-                    parts[4] == pr.base_repo.as_str() && 
-                    parts[5] == pr.head.as_str() && 
-                    parts[6] == pr.base.as_str(){
-                        return Err(io::Error::new(
-                            io::ErrorKind::Other,
-                            "403 The requested pr has already been created",
-                        ));
-                }
+                if parts[0] == "PR" && parts[8] == "open" && 
+                parts[3] == pr.head_repo.as_str() && 
+                parts[4] == pr.base_repo.as_str() && 
+                parts[5] == pr.head.as_str() && parts[6] == pr.base.as_str(){
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        "403 The requested pr has already been created",
+                    ));
                 }
                 
             }
@@ -124,7 +121,7 @@ impl Validator{
         }
 
     pub fn validate_branch(repo: &Path, branch: &str) -> Result<(), std::io::Error>{
-        let branches = Branch::get_branches(&repo)?;
+        let branches = Branch::get_branches(repo)?;
         if !branches.contains(&branch.to_string()){
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,

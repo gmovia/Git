@@ -30,7 +30,7 @@ impl ListPullRequests {
     pub fn response_list_pull_request_object(json_body: &str, stream: &mut TcpStream,  base_repo: String, pull_request: PullRequest) -> Result<(), std::io::Error> {
         if let Ok(request) = serde_json::from_str::<JsonListPR>(json_body) {            
             let list = ListPullRequests {
-                base_repo: base_repo,
+                base_repo,
                 status: request.status,
                 head: request.head,
                 base: request.base,
@@ -41,10 +41,10 @@ impl ListPullRequests {
                 Ok( response ) => send_response(stream, response),
                 Err( code_error ) => send_error(stream, code_error.to_string()),
             }
-            return Ok(())
+            Ok(())
         } else {
             let list = ListPullRequests {
-                base_repo: base_repo,
+                base_repo,
                 status: None,
                 head: None,
                 base: None,
@@ -55,8 +55,8 @@ impl ListPullRequests {
                 Ok( response ) => send_response(stream, response),
                 Err( code_error ) => send_error(stream, code_error.to_string()),
             }
-            return Ok(())
-        };
+            Ok(())
+        }
     }
 
 

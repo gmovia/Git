@@ -3,7 +3,8 @@ use std::net::TcpStream;
 
 use serde::{Serialize, Deserialize};
 
-use crate::{server_http::{sender::{send_server_error_msg, send_response, send_error}}, pull_request::{controllers::pull_request::PullRequest}};
+use crate::{pull_request::controllers::pull_request::PullRequest, server_http::sender::{send_response, send_error, send_server_error_msg}};
+
 
 #[derive(Serialize, Deserialize)]
 pub struct JsonCreatePR{
@@ -36,7 +37,7 @@ impl CreatePullRequest {
     pub fn response_create_pull_request_object(json_body: &str, path: String, stream: &mut TcpStream, pull_request: PullRequest) -> Result<CreatePullRequest, std::io::Error> {
         println!("JSON Body: {}", json_body);
         if let Ok(request) = serde_json::from_str::<JsonCreatePR>(json_body) {            
-            let head_vec: Vec<&str> = request.head.split(":").collect();
+            let head_vec: Vec<&str> = request.head.split(':').collect();
 
             let mut create = CreatePullRequest {
                 title: request.title,
@@ -58,12 +59,12 @@ impl CreatePullRequest {
                 Err( error_code ) => { send_error(stream, error_code.to_string()) }
             }; 
             
-            return Ok(create)
+            Ok(create)
         } else {
             println!("Error al deserializar el mensaje: trailing characters");
             send_server_error_msg(stream);
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Error parsing request"))
-        };
+            Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Error parsing request"))
+        }
     }
 
 }
