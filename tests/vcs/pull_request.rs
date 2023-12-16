@@ -2,7 +2,7 @@
 mod tests {
     use std::path::Path;
 
-    use rust_git::{pull_request::controllers::pull_request::PullRequest, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests}}; 
+    use rust_git::{pull_request::controllers::pull_request::PullRequest, server_http::requests::create_pull_request::CreatePullRequest}; 
 
     #[test]
     pub fn test_01_cant_create_repo_with_invalid_name() -> Result<(), std::io::Error> {
