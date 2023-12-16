@@ -1,6 +1,6 @@
 use std::{path::Path, fs::{OpenOptions, self}, io::{Write, self}, collections::HashMap};
 
-use crate::{pull_request::{schemas::schemas::{PullRequestEntry, CommitsPullRequest}, utils::path::{create_prs_file, create_table}}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::commit_entity::CommitEntity, commands::merge::Merge}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests, update_pull_request::UpdatePullRequest}};
+use crate::{pull_request::{schemas::schema::{PullRequestEntry, CommitsPullRequest}, utils::path::{create_prs_file, create_table}}, utils::randoms::random::Random, vcs::{files::commits_table::CommitsTable, entities::{commit_entity::CommitEntity, commit_table_entry::CommitTableEntry}, commands::{merge::Merge, rebase::Rebase}}, server_http::requests::{create_pull_request::CreatePullRequest, list_pull_request::ListPullRequests, update_pull_request::UpdatePullRequest}};
 
 pub struct Query;
 
@@ -12,9 +12,9 @@ impl Query{
         let body = pr.body.clone().map_or("None".to_string(), |u| u);
 
         let folder_path = create_prs_file(server, &pr.base_repo);
-        let table = create_table(&folder_path, &id, &pr)?;
+        let table = create_table(&folder_path, &id, pr)?;
 
-        let init_commit = Self::get_init_commit(&server, &pr, &table)?;
+        let init_commit = Self::get_init_commit(server, pr, &table)?;
 
         let pr_entry = PullRequestEntry{
             id: id.clone(),
@@ -36,7 +36,7 @@ impl Query{
     }
 
     pub fn update_pull_request(id: &Path, pr: &UpdatePullRequest) -> Result<String, std::io::Error>{
-        let mut old_pr = Query::find_a_pull_request(&id)?;
+        let mut old_pr = Query::find_a_pull_request(id)?;
 
         if let Some(title) = &pr.title{
             old_pr.title = title.to_string();
@@ -96,14 +96,12 @@ impl Query{
         let mut prs: Vec<PullRequestEntry> = Vec::new();
         
         if let Ok(entries) = fs::read_dir(prs_path) {
-            for entry in entries{
-                if let Ok(entry) = entry{
-                    let content = fs::read_to_string(entry.path())?;
-                    let array: Vec<&str> = content.split("\n").collect();
-                    if array[0] == "PR" {
-                        let pr = Self::find_a_pull_request(&entry.path())?;
-                        prs.push(pr);
-                    }
+            for entry in entries.flatten(){
+                let content = fs::read_to_string(entry.path())?;
+                let array: Vec<&str> = content.split('\n').collect();
+                if array[0] == "PR" {
+                    let pr = Self::find_a_pull_request(&entry.path())?;
+                    prs.push(pr);
                 }
             }
         }
@@ -111,7 +109,7 @@ impl Query{
     }
 
     pub fn find_pull_requests(prs_path: &Path, query: &ListPullRequests) -> Result<Vec<PullRequestEntry>, std::io::Error>{
-        let mut prs = Self::find_all_pull_requests(&prs_path)?;
+        let mut prs = Self::find_all_pull_requests(prs_path)?;
 
         for index in 0..prs.len(){
             if let Some(state) = query.status.clone(){
@@ -145,13 +143,10 @@ impl Query{
 
     pub fn find_a_pull_request(id: &Path) -> Result<PullRequestEntry, std::io::Error>{
         let content = fs::read_to_string(id)?;
-        println!("CONTENT: {}", content);
-        let array: Vec<&str> = content.split("\n").collect();
-        println!("ARRAY: {:?}", array);
-        let mergeable = match array[10].parse::<bool>() {
-            Ok(value) => value,
-            Err(_) => false,
-        };
+
+        let array: Vec<&str> = content.split('\n').collect();
+
+        let mergeable = array[10].parse::<bool>().unwrap_or(false);
     
         let pr = PullRequestEntry { 
             id: array[1].to_string(), 
@@ -220,7 +215,7 @@ impl Query{
             }
     
             if found_init_commit {
-                if end_commit == "None".to_string() && index == head_commits_table.len() {
+                if end_commit == *"None" && index == head_commits_table.len() {
                     break;
                 }
 
@@ -232,7 +227,7 @@ impl Query{
                     hash: entry.hash.clone(),
                     message: entry.message.clone(),
                     date: entry.date.clone(),
-                    info: info
+                    info
                 };
                 commits.push(commit);
             }
@@ -249,7 +244,7 @@ impl Query{
     }
 
 
-    pub fn merge_pull_request(server: &Path, id: &Path) -> Result<String, std::io::Error> {
+    pub fn merge_pull_request(server: &Path, id: &Path, merge_method: &mut Option<String>) -> Result<String, std::io::Error> {
         let mut pr_entry = Self::find_a_pull_request(id)?;
         
         let head_repo = server.join(&pr_entry.head_repo);
@@ -260,20 +255,42 @@ impl Query{
                 io::ErrorKind::Other,"405 Method Not Allowed if merge cannot be performed"))
         }
 
-        let head_commits_table = CommitsTable::read(head_repo.clone(), &pr_entry.head)?;
-        let response = Merge::merge_pr(&pr_entry.username, &pr_entry.head, &pr_entry.base, &head_repo, &base_repo,HashMap::new());
-        if response.is_ok() {
-            if let Some(commit) = head_commits_table.iter().last() {
-                pr_entry.end_commit = commit.hash.clone();
+        if let Some(method) = merge_method {
+            let head_commits_table = CommitsTable::read(head_repo.clone(), &pr_entry.head)?;
+            match method.as_str() {
+                "merge" => {let response = Merge::merge_pr(&pr_entry.username, &pr_entry.head, &pr_entry.base, &head_repo, &base_repo,HashMap::new());
+                                if response.is_ok() {
+                                    Self::update_pr(head_commits_table, &mut pr_entry, id)
+                                }else{
+                                    Err(io::Error::new(
+                                        io::ErrorKind::Other,"405 Method Not Allowed if merge cannot be performed"))
+                                }
+                },
+                "rebase" => {let response = Rebase::rebase_pr(&pr_entry.username, &pr_entry.head, &pr_entry.base, &head_repo, &base_repo);
+                            let base_commits_table = CommitsTable::read(base_repo.clone(), &pr_entry.base)?;
+                                if response.is_ok() {
+                                    Self::update_pr(base_commits_table, &mut pr_entry, id)
+                                }else{
+                                    Err(io::Error::new(
+                                        io::ErrorKind::Other,"405 Method Not Allowed if merge cannot be performed"))
+                                }
+                },
+                _ => {Err(io::Error::new(
+                    io::ErrorKind::Other,"422 The method is wrong for merge a pull request"))}
             }
-            pr_entry.status = "close".to_string();
-            Self::write_pull_request(id, &pr_entry)?;
-            return Ok("200 Merge successfully".to_string())
-        }else{
-            return Err(io::Error::new(
+        }else {
+            Err(io::Error::new(
                 io::ErrorKind::Other,"405 Method Not Allowed if merge cannot be performed"))
         }
-        
+    }
+
+    pub fn update_pr(base_commits_table: Vec<CommitTableEntry>, pr_entry: &mut PullRequestEntry, id: &Path) -> Result<String, std::io::Error>{
+        if let Some(commit) = base_commits_table.iter().last() {
+            pr_entry.end_commit = commit.hash.clone();
+            }
+        pr_entry.status = "close".to_string();
+        Self::write_pull_request(id, pr_entry)?;
+        Ok("200 Merge successfully".to_string())
     }
 }
 

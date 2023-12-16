@@ -1,5 +1,5 @@
 use std::net::TcpStream;
-use crate::{pull_request::controllers::pull_request::PullRequest, handlers::pull, server_http::{requests::get_pull_request::GetPullRequest, sender::send_response}};
+use crate::{pull_request::controllers::pull_request::PullRequest, server_http::{requests::get_pull_request::GetPullRequest, sender::send_response}};
 
 pub struct ListCommitsPullRequest;
 

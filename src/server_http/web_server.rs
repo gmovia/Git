@@ -4,9 +4,6 @@ use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::thread;
 use serde::{Deserialize, Serialize};
-
-use crate::handlers::pull;
-use crate::pull_request;
 use crate::pull_request::controllers::pull_request::PullRequest;
 use crate::server_http::requests::create_pull_request::CreatePullRequest;
 use crate::server_http::requests::get_pull_request::GetPullRequest;
@@ -24,7 +21,7 @@ pub struct WebServer;
 
 impl WebServer {
 
-    pub fn new(server_path: PathBuf) -> Result<(),std::io::Error>{
+    pub fn new_listen(server_path: PathBuf) -> Result<(),std::io::Error>{
         let port = Self::get_config()?;
         let listener = TcpListener::bind(&port).expect("Error getting port");
 
@@ -50,7 +47,7 @@ impl WebServer {
         let mut port = String::new();
         
         let path = Path::new("src/server_http/web_server_config.txt");
-        let file = File::open(&path)?;
+        let file = File::open(path)?;
     
         let reader = io::BufReader::new(file);
     
@@ -58,7 +55,7 @@ impl WebServer {
             let line_str = line?;
 
             if line_str.contains("port") {
-                let port_vec: Vec<&str> = line_str.split("=").collect();
+                let port_vec: Vec<&str> = line_str.split('=').collect();
                 port = port_vec[1].to_owned();
             }
         }
@@ -97,7 +94,7 @@ impl WebServer {
         let media_type = Self::get_content_type(json_header);
         let received_request = Self::get_received_request(json_header)?;
         let received_vec: Vec<&str> = received_request.split_whitespace().collect();
-        let path: Vec<&str> = received_vec[1].split("/").collect();
+        let path: Vec<&str> = received_vec[1].split('/').collect();
         println!("PATH LEN: {}",path.len());
 
         match (received_vec[0], path.len() - 1) {
@@ -128,7 +125,7 @@ impl WebServer {
     }
 
     fn get_received_request(header: &str) -> Result<String, std::io::Error> {
-        let header_vec: Vec<&str> = header.split("\n").collect();
+        let header_vec: Vec<&str> = header.split('\n').collect();
         let receive_request = header_vec[0];
         Ok(receive_request.to_string()) 
     }

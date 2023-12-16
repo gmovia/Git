@@ -54,7 +54,7 @@ impl ListPullRequests {
             })
         } else {
             let list = ListPullRequests {
-                base_repo: base_repo,
+                base_repo,
                 status: None,
                 head: None,
                 base: None,

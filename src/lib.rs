@@ -10,9 +10,9 @@ pub mod pull_request{
         pub mod pull_request;
     }
     pub mod schemas{
-        pub mod schemas;
+        pub mod schema;
     }
-    pub mod validator{
+    pub mod validators{
         pub mod validator;
     }
     pub mod utils{

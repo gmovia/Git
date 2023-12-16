@@ -9,7 +9,7 @@ use crate::vcs::{
 use std::{
     collections::HashMap,
     fs::{self, OpenOptions},
-    io::{self, Write},
+    io::{self, Write}, path::Path,
 };
 
 pub struct Rebase;
@@ -62,6 +62,43 @@ impl Rebase {
 
         Checkout::update_cd(&current)?;
 
+        Ok(())
+    }
+
+
+    pub fn rebase_pr(username: &str, head: &str, base: &str, head_path: &Path, base_path: &Path) -> Result<(), std::io::Error> {
+
+        let base_commits_table = CommitsTable::read(base_path.to_path_buf(), base)?;
+        let head_commits_table = CommitsTable::read(head_path.to_path_buf(),head)?;
+
+        let mut base_file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(base_path.join(".rust_git").join("logs").join(base))?;
+
+        let content = fs::read_to_string(head_path.join(".rust_git").join("logs").join(head))?;
+        base_file.set_len(0)?;
+        base_file.write_all(content.as_bytes())?;
+        CurrentCommit::write_for_branch(base_path, base, CurrentCommit::read_for_branch(head_path, head)?)?;
+
+        let mut commits_rebase = Vec::new();
+        for commit in base_commits_table {
+            if !CommitsTable::contains(&head_commits_table, &commit) {
+                commits_rebase.push(commit);
+            }
+        }
+
+        for commit in commits_rebase {
+            let mut repository_last_commit: HashMap<String, String> =
+                Repository::read_repository_of_branch(head_path.to_path_buf(), head)?;
+            let repository_commit: HashMap<String, String> =
+                Repository::get_repository(base_path.to_path_buf(), &commit.hash)?;
+            repository_last_commit.extend(repository_commit);
+            CommitsTable::write(base_path, base, &commit.message, (username.to_string(), username.to_string()), &repository_last_commit)?;
+        }
+
+        Checkout::update_cd(base_path)?;
         Ok(())
     }
 }

@@ -87,7 +87,7 @@ impl CommitsTable {
 
         let entities =
             convert_to_entities(repository, &format!("{}/", &repo_path.display().to_string()));
-        let tree_hash = TreeEntity::write(&repo_path, &entities)?;
+        let tree_hash = TreeEntity::write(repo_path, &entities)?;
 
         let commit_entity = CommitEntity {
             content_type: "commit".to_string(),
@@ -97,7 +97,7 @@ impl CommitsTable {
             committer: committer.to_string(),
             message: message.clone(),
         };
-        let commit_hash = CommitEntity::write(&repo_path, &commit_entity)?;
+        let commit_hash = CommitEntity::write(repo_path, &commit_entity)?;
         let commit = format!(
             "{}-{}-{}-{}-{} -300\n",
             id, last_commit_hash, commit_hash, message, current_timestamp
