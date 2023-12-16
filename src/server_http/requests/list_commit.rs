@@ -1,5 +1,5 @@
 use std::net::TcpStream;
-use crate::{pull_request::controllers::pull_request::PullRequest, server_http::{requests::get_pull_request::GetPullRequest, sender::send_response}};
+use crate::{pull_request::controllers::pull_request::PullRequest, server_http::{requests::get_pull_request::GetPullRequest, sender::{send_response, send_error}}};
 
 pub struct ListCommitsPullRequest;
 
@@ -10,8 +10,12 @@ impl ListCommitsPullRequest {
             base_repo,
             id,
         };
-        let reponse = pull_request.find_commits(list_commits)?;
-        send_response(stream, reponse);
+
+        match pull_request.find_commits(list_commits){
+            Ok(response) => send_response(stream, response),
+            Err(error_code) => send_error(stream, error_code.to_string())
+        }
+
         Ok(())
     }
 }

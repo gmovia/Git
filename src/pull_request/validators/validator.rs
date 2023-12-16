@@ -57,8 +57,8 @@ impl Validator{
     pub fn validate_find_a_pull_request(server: &Path, query: &GetPullRequest) -> Result<PathBuf, std::io::Error> {
         let base_repo = server.join(&query.base_repo);
         let id = get_pr_path(server, &query.base_repo, &query.id);
-        Self::validate_id(&id)?;
         Self::validate_repo(&base_repo)?;
+        Self::validate_id(&id)?;
         Ok(id) // Si pasa la validacion, devuelve la ruta del PR
     }
 

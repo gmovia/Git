@@ -64,6 +64,7 @@ impl MergePullRequest {
                 commit_message: None,
                 merge_method: None
             };
+            
             match pull_request.merge_pr(merge_pr) {
                 Ok( response ) => send_response(stream, response),
                 Err( code_error ) => send_error(stream, code_error.to_string()),

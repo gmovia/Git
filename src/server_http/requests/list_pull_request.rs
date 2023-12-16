@@ -3,7 +3,7 @@ use std::net::TcpStream;
 
 use serde::{Serialize, Deserialize};
 
-use crate::{server_http::sender::send_response, pull_request::controllers::pull_request::PullRequest};
+use crate::{server_http::sender::{send_response, send_error}, pull_request::controllers::pull_request::PullRequest};
 
 #[derive(Serialize, Deserialize)]
 pub struct StructListPR{
@@ -37,7 +37,12 @@ impl ListPullRequests {
                     username: request.username,
                     per_page: request.per_page,
                 };
-                send_response(stream, pull_request.find_all(list)?)
+
+                match pull_request.find_all(list){
+                    Ok(response) => send_response(stream, response),
+                    Err(error_code) => send_error(stream, error_code.to_string())
+                }
+
             };
             Ok(())
         }
@@ -51,7 +56,12 @@ impl ListPullRequests {
                     username: request.username,
                     per_page: request.per_page,
                 };
-                send_response(stream, pull_request.find_all(list)?);
+
+                match pull_request.find_all(list){
+                    Ok(response) => send_response(stream, response),
+                    Err(error_code) => send_error(stream, error_code.to_string())
+                }
+                
             };
             Ok(())
         } else {
@@ -63,7 +73,12 @@ impl ListPullRequests {
                 username: None,
                 per_page: None,
             };
-            send_response(stream, pull_request.find_all(list)?);
+
+            match pull_request.find_all(list){
+                Ok(response) => send_response(stream, response),
+                Err(error_code) => send_error(stream, error_code.to_string())
+            }
+
             Ok(())
         }
     }
