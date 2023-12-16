@@ -13,7 +13,7 @@ impl ListCommitsPullRequest {
         
         let reponse = pull_request.find_commits(list_commits)?;
         send_response(stream, reponse);
-        return Ok(())
+        Ok(())
         
     }
 

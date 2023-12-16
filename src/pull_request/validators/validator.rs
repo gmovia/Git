@@ -14,7 +14,7 @@ impl Validator{
         Self::validate_repo(&head_repo)?;
         Self::validate_branch(&base_repo, &pr.base)?;
         Self::validate_branch(&head_repo, &pr.head)?;
-        Self::validate_creation_pr(&server, &pr)?;
+        Self::validate_creation_pr(server, pr)?;
         Self::validate_not_changes(&base_repo, &head_repo, pr)?;
         Ok(())
     }
@@ -42,7 +42,7 @@ impl Validator{
         Self::validate_id(&id)?;
         
         if let Some(base) = &pr.base{
-            Self::validate_branch(&base_repo, &base)?;
+            Self::validate_branch(&base_repo, base)?;
         }
         
         Ok(id)
@@ -121,7 +121,7 @@ impl Validator{
         }
 
     pub fn validate_branch(repo: &Path, branch: &str) -> Result<(), std::io::Error>{
-        let branches = Branch::get_branches(&repo)?;
+        let branches = Branch::get_branches(repo)?;
         if !branches.contains(&branch.to_string()){
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,

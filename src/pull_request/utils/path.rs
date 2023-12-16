@@ -17,7 +17,7 @@ pub fn create_prs_file(server: &Path, repo: &String) -> PathBuf{
 }
 
 pub fn create_table(prs_path: &Path, id: &String, pr: &CreatePullRequest) -> Result<PathBuf, std::io::Error>{
-    let head_repo: Vec<&str> = pr.head_repo.split("/").collect();
+    let head_repo: Vec<&str> = pr.head_repo.split('/').collect();
     let format = format!("{}_{}_{}", head_repo[1], pr.head, pr.base);
     let table = prs_path.join(format);
     let _ = OpenOptions::new()

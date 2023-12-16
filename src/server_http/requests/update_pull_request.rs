@@ -40,11 +40,11 @@ impl UpdatePullRequest {
                 Ok( response ) => send_response(stream, response),
                 Err( code_error ) => send_error(stream, code_error.to_string()),
             }
-            return Ok(())
+            Ok(())
         } else {
             send_server_error_msg(stream);
-            return Ok(())
-        };
+            Ok(())
+        }
     }
 
 

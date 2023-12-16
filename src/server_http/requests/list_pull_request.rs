@@ -41,7 +41,7 @@ impl ListPullRequests {
                 Ok( response ) => send_response(stream, response),
                 Err( code_error ) => send_error(stream, code_error.to_string()),
             }
-            return Ok(())
+            Ok(())
         } else {
             let list = ListPullRequests {
                 base_repo,
@@ -55,8 +55,8 @@ impl ListPullRequests {
                 Ok( response ) => send_response(stream, response),
                 Err( code_error ) => send_error(stream, code_error.to_string()),
             }
-            return Ok(())
-        };
+            Ok(())
+        }
     }
 
 
