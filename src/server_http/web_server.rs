@@ -3,7 +3,7 @@ use std::io::{prelude::*, self};
 use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::thread;
-use serde::{Deserialize, Serialize};
+
 use crate::pull_request::controllers::pull_request::PullRequest;
 use crate::server_http::requests::create_pull_request::CreatePullRequest;
 use crate::server_http::requests::get_pull_request::GetPullRequest;
@@ -13,10 +13,6 @@ use crate::server_http::requests::merge_pull_request::MergePullRequest;
 use crate::server_http::requests::update_pull_request::UpdatePullRequest;
 use crate::server_http::sender::send_bad_request_msg;
 
-#[derive(Serialize, Deserialize)]
-pub struct Mensaje {
-    mensaje: String,
-}
 pub struct WebServer;
 
 impl WebServer {
@@ -67,6 +63,7 @@ impl WebServer {
     
         match stream.read(&mut buffer) {
             Ok(bytes_read) => {
+                println!("BUFFER: {:?}", &buffer[..bytes_read]);
                 let request_str = String::from_utf8_lossy(&buffer[..bytes_read]).to_string();
                 println!("Received request: {}", request_str);
 
