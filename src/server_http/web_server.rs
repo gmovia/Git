@@ -101,7 +101,7 @@ impl WebServer {
             ("GET", 6) => {let _ = ListCommitsPullRequest::list_commits_pull_request(stream, pull_request, format!("{}/{}",path[2],path[3]), path[5].to_string());},
             ("PUT", 6) => {let _ = MergePullRequest::merge_pull_request(json_body, stream, format!("{}/{}",path[2],path[3]), path[5].to_string(), pull_request, media_type);},
             ("PATCH", 5) => {let _ = UpdatePullRequest::update_pull_request(json_body, stream, format!("{}/{}",path[2],path[3]), path[5].to_owned(), pull_request,  &media_type);},
-            _ => send_bad_request_msg(&stream),
+            _ => send_bad_request_msg(stream),
         }
     
         println!("            -----> {}", received_request);
