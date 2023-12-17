@@ -70,23 +70,38 @@ impl Merge {
             if conflicts.is_empty() {
                 add_changes(&mut repository, &changes_current_repository);
                 add_changes(&mut repository, &changes_branch_repository);
-                CommitsTable::write(&current, &current_branch, &MERGE.to_string(), config, &repository)?;
+                CommitsTable::write(
+                    &current,
+                    &current_branch,
+                    &MERGE.to_string(),
+                    config,
+                    &repository,
+                )?;
                 Checkout::update_cd(&current)?;
             }
         }
         Ok(conflicts)
     }
 
-    pub fn merge_pr(username: &str, head: &str, base: &str, head_path: &Path, base_path: &Path, potential_conflicts: HashMap<String, Conflict>) -> Result<HashMap<String, Conflict>, std::io::Error> {
+    pub fn merge_pr(
+        username: &str,
+        head: &str,
+        base: &str,
+        head_path: &Path,
+        base_path: &Path,
+        potential_conflicts: HashMap<String, Conflict>,
+    ) -> Result<HashMap<String, Conflict>, std::io::Error> {
         let base_commits_table = CommitsTable::read(base_path.to_path_buf(), base)?;
         let head_commits_table = CommitsTable::read(head_path.to_path_buf(), head)?;
-        
+
         let mut conflicts: HashMap<String, Conflict> = HashMap::new();
 
         let current_commit_of_base_commits_table = CurrentCommit::read_for_branch(base_path, base)?;
         let current_commit_of_head_commits_table = CurrentCommit::read_for_branch(head_path, head)?;
 
-        if let Some(parent_commit) = CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table){
+        if let Some(parent_commit) =
+            CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table)
+        {
             let base_repository = Repository::read_repository_of_commit(
                 base_path.to_path_buf(),
                 base,
@@ -105,8 +120,7 @@ impl Merge {
                 &parent_commit.hash,
             )?;
 
-            let mut changes_base_repository =
-                Diff::diff(&parent_repository, &base_repository);
+            let mut changes_base_repository = Diff::diff(&parent_repository, &base_repository);
             let mut changes_head_repository = Diff::diff(&parent_repository, &head_repository);
 
             resolve_conflicts(
@@ -121,7 +135,13 @@ impl Merge {
                 add_changes(&mut parent_repository, &changes_base_repository);
                 add_changes(&mut parent_repository, &changes_head_repository);
                 println!("LA BASE ES {}", base);
-                CommitsTable::write(base_path, base, &MERGE.to_string(), (username.to_string(), username.to_string()), &parent_repository)?;
+                CommitsTable::write(
+                    base_path,
+                    base,
+                    &MERGE.to_string(),
+                    (username.to_string(), username.to_string()),
+                    &parent_repository,
+                )?;
                 Checkout::update_cd(base_path)?;
             }
         }
@@ -129,14 +149,21 @@ impl Merge {
         Ok(conflicts)
     }
 
-    pub fn are_conflicts(head: &str, base: &str, head_path: &Path, base_path: &Path) -> Result<bool, std::io::Error> {
+    pub fn are_conflicts(
+        head: &str,
+        base: &str,
+        head_path: &Path,
+        base_path: &Path,
+    ) -> Result<bool, std::io::Error> {
         let base_commits_table = CommitsTable::read(base_path.to_path_buf(), base)?;
         let head_commits_table = CommitsTable::read(head_path.to_path_buf(), head)?;
-        
+
         let current_commit_of_base_commits_table = CurrentCommit::read_for_branch(base_path, base)?;
         let current_commit_of_head_commits_table = CurrentCommit::read_for_branch(head_path, head)?;
 
-        if let Some(parent_commit) = CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table){
+        if let Some(parent_commit) =
+            CommitsTable::get_parent_commit(&base_commits_table, &head_commits_table)
+        {
             let base_repository = Repository::read_repository_of_commit(
                 base_path.to_path_buf(),
                 base,
@@ -155,11 +182,11 @@ impl Merge {
                 &parent_commit.hash,
             )?;
 
-            let changes_base_repository =
-                Diff::diff(&parent_repository, &base_repository);
+            let changes_base_repository = Diff::diff(&parent_repository, &base_repository);
             let changes_head_repository = Diff::diff(&parent_repository, &head_repository);
 
-            let conflicts: HashMap<String, Conflict> = conflicts_search(&changes_base_repository, &changes_head_repository);
+            let conflicts: HashMap<String, Conflict> =
+                conflicts_search(&changes_base_repository, &changes_head_repository);
 
             return Ok(!conflicts.is_empty());
         }

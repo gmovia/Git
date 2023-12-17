@@ -349,7 +349,7 @@ impl RustInterface {
         handle_pull(self);
         handle_push(self);
         handle_logs_errors(self);
-        
+
         self.window.show_all();
         gtk::main();
 

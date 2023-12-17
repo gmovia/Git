@@ -25,6 +25,7 @@ pub mod vcs {
     pub mod ls_tree;
     pub mod merge;
     pub mod pull;
+    pub mod pull_request;
     pub mod push;
     pub mod rebase;
     pub mod remote;
@@ -34,7 +35,6 @@ pub mod vcs {
     pub mod show_ref;
     pub mod status;
     pub mod tag;
-    pub mod pull_request;
 }
 
 pub mod tests_functions;

@@ -9,7 +9,8 @@ use crate::{
     constants::constant::{HOST, PUERTO},
     packfiles::packfile::{process_line, to_pkt_line},
     protocol::receive_pack::start_handler_receive,
-    vcs::commands::push::Push, server_http::web_server::WebServer,
+    server_http::web_server::WebServer,
+    vcs::commands::push::Push,
 };
 
 use super::upload_pack::start_handler_upload;
@@ -50,8 +51,8 @@ impl Server {
 
     fn conect_web_server(server_path: PathBuf) {
         let _ = thread::spawn(move || {
-            if let Err( e ) = WebServer::new_listen(server_path) {
-                println!("Error conecting with Web Server: {}",e)
+            if let Err(e) = WebServer::new_listen(server_path) {
+                println!("Error conecting with Web Server: {}", e)
             }
         });
     }

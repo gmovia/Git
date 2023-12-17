@@ -110,7 +110,8 @@ impl Client {
     fn handler_query(
         query: &str,
         socket: &mut TcpStream,
-        command_type: &str, owner_repo: &Path
+        command_type: &str,
+        owner_repo: &Path,
     ) -> Result<(), std::io::Error> {
         let current_repo = CurrentRepository::read()?;
         match query {

@@ -1,11 +1,11 @@
 use std::net::TcpStream;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_xml_rs::from_str as xml_from_str;
 
 use crate::{
-    server_http::sender::{send_server_error_msg, send_response, send_error},
     pull_request::controllers::pull_request::PullRequest,
+    server_http::sender::{send_error, send_response, send_server_error_msg},
 };
 
 #[derive(Serialize, Deserialize)]

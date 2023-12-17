@@ -1,9 +1,9 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::vcs::entities::commit_entity::CommitEntity;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PullRequestEntry{
+pub struct PullRequestEntry {
     pub id: String,
     pub title: String,
     pub body: String,
@@ -25,6 +25,5 @@ pub struct CommitsPullRequest {
     pub hash: String,
     pub message: String,
     pub date: String,
-    pub info: CommitEntity
+    pub info: CommitEntity,
 }
-

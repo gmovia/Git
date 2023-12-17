@@ -1,11 +1,10 @@
 use super::{current_commit::CurrentCommit, current_repository::CurrentRepository};
 use crate::{
     utils::randoms::random::Random,
-    vcs::
-        entities::{
-            commit_entity::CommitEntity, commit_table_entry::CommitTableEntry,
-            entity::convert_to_entities, tree_entity::TreeEntity,
-        },
+    vcs::entities::{
+        commit_entity::CommitEntity, commit_table_entry::CommitTableEntry,
+        entity::convert_to_entities, tree_entity::TreeEntity,
+    },
 };
 use chrono::Local;
 use std::{
@@ -85,8 +84,10 @@ impl CommitsTable {
             .append(true)
             .open(repo_path.join(".rust_git").join("logs").join(branch))?;
 
-        let entities =
-            convert_to_entities(repository, &format!("{}/", &repo_path.display().to_string()));
+        let entities = convert_to_entities(
+            repository,
+            &format!("{}/", &repo_path.display().to_string()),
+        );
         let tree_hash = TreeEntity::write(repo_path, &entities)?;
 
         let commit_entity = CommitEntity {

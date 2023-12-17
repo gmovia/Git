@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     constants::constant::{COMMIT_CODE, COMMIT_INIT_HASH},

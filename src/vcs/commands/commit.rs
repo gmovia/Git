@@ -38,7 +38,13 @@ impl Commit {
         let config = Config::read_config()?;
         let current_repository = CurrentRepository::read()?;
         let current_branch = &Init::get_current_branch(&current_repository)?;
-        CommitsTable::write(&current_repository, current_branch, &message, config, &repository)?;
+        CommitsTable::write(
+            &current_repository,
+            current_branch,
+            &message,
+            config,
+            &repository,
+        )?;
         Index::clear()?;
         Ok(repository)
     }

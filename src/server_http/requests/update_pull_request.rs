@@ -1,10 +1,13 @@
+use serde::{Deserialize, Serialize};
 use std::net::TcpStream;
-use serde::{Serialize, Deserialize};
 
 // Agrega la nueva dependencia
 use serde_xml_rs;
 
-use crate::{server_http::sender::{send_response, send_error, send_server_error_msg}, pull_request::controllers::pull_request::PullRequest};
+use crate::{
+    pull_request::controllers::pull_request::PullRequest,
+    server_http::sender::{send_error, send_response, send_server_error_msg},
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct StructUpdatePR {
@@ -25,8 +28,14 @@ pub struct UpdatePullRequest {
 }
 
 impl UpdatePullRequest {
-    
-    pub fn update_pull_request(body: &str, stream: &mut TcpStream, base_repo: String, id: String, pull_request: PullRequest, media_type: &str) -> Result<(), std::io::Error> {
+    pub fn update_pull_request(
+        body: &str,
+        stream: &mut TcpStream,
+        base_repo: String,
+        id: String,
+        pull_request: PullRequest,
+        media_type: &str,
+    ) -> Result<(), std::io::Error> {
         if media_type == "application/json" {
             if let Ok(request) = serde_json::from_str::<StructUpdatePR>(body) {
                 let update_pr = UpdatePullRequest {

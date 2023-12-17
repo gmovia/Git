@@ -2,20 +2,20 @@ pub mod constants {
     pub mod constant;
 }
 
-pub mod pull_request{
-    pub mod db{
+pub mod pull_request {
+    pub mod db {
         pub mod queries;
     }
-    pub mod controllers{
+    pub mod controllers {
         pub mod pull_request;
     }
-    pub mod schemas{
+    pub mod schemas {
         pub mod schema;
     }
-    pub mod validators{
+    pub mod validators {
         pub mod validator;
     }
-    pub mod utils{
+    pub mod utils {
         pub mod path;
         pub mod refresh;
     }
@@ -60,8 +60,8 @@ pub mod servers {
 }
 
 pub mod server_http {
-    pub mod web_server;
     pub mod sender;
+    pub mod web_server;
     pub mod requests {
         pub mod create_pull_request;
         pub mod get_pull_request;
@@ -167,7 +167,6 @@ pub mod vcs {
         pub mod tag_entity;
         pub mod tree_entity;
     }
-
 
     pub mod version_control_system;
 }
