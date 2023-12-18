@@ -33,5 +33,6 @@ Name | Code | Email
 
 ## Docs
 [PPTX First Version](https://docs.google.com/presentation/d/1ItS433G38uea7VKZZSDba7yxDmGYxZAx/edit?usp=sharing)
-[PPTX Secod Version](https://docs.google.com/presentation/d/1P8Syx5S3MPJGLxoDYLBmzRJVE5fTkq3g2zO2d653LiY/edit?usp=sharing)
+[PPTX Second Version](https://docs.google.com/presentation/d/1P8Syx5S3MPJGLxoDYLBmzRJVE5fTkq3g2zO2d653LiY/edit?usp=sharing)
+[PPTX Third Version](https://docs.google.com/presentation/d/1Sq6KGmGb2cZ0UixUsXUea_S3SWRcjpXLXQBITOwpe3A/edit#slide=id.g2828ebf7bd9_0_0)
 [Paper](https://www.overleaf.com/read/dfjrtzpyhrgv#af0d1c)
