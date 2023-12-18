@@ -22,6 +22,9 @@ The first version includes the following functionalities.
 ## Second Version
 The second version includes complementary commands: check-ignore, ls-files, ls-tree, show-ref, rebase and tag. Also, includes the config file and the log file.
 
+## Third Version
+The latest version of Git has been enhanced with a set of features that streamline and improve collaborative code management. Users can now create, modify, and review pull requests directly from the command-line interface. This new functionality enables smoother collaboration as developers can view commits, review pending pull requests, and obtain detailed information about each of them. With these enhancements, the collaborative experience in Git projects becomes more efficient and accessible, facilitating coordination among development teams.
+
 ## Authors
 
 Name | Code | Email
